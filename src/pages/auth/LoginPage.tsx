@@ -52,8 +52,8 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-accent/30 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background to-accent/30 p-4 safe-area-pt safe-area-pb safe-area-px">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2">
             <Shield className="h-12 w-12 text-primary" />
@@ -72,7 +72,7 @@ export function LoginPage() {
               <Input id="password" type="password" {...register('password')} />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button type="submit" className="w-full min-h-12" disabled={isSubmitting}>
               Sign in
             </Button>
           </form>

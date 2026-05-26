@@ -20,7 +20,7 @@ export function CompletionChart({ completed, remaining, title = 'Completion Rate
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="h-64">
+      <CardContent className="h-52 sm:h-64 min-w-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={2} dataKey="value">

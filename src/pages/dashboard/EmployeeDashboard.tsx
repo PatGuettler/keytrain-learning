@@ -1,6 +1,7 @@
 import { GraduationCap, Clock, Award } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { ProgressTable } from '@/components/dashboard/ProgressTable'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { useDashboardStats } from '@/hooks/useDashboardStats'
 import { useAssignments } from '@/hooks/useAssignments'
 import { Link } from 'react-router-dom'
@@ -11,14 +12,16 @@ export function EmployeeDashboard() {
   const { data: assignments = [] } = useAssignments()
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-2xl font-bold">My Dashboard</h2>
-        <Button asChild>
-          <Link to="/employee/training">Continue Training</Link>
-        </Button>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+    <div className="space-y-5 sm:space-y-6">
+      <PageHeader
+        title="My Dashboard"
+        action={
+          <Button asChild className="w-full sm:w-auto min-h-11">
+            <Link to="/employee/training">Continue Training</Link>
+          </Button>
+        }
+      />
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
         <StatCard title="Assigned" value={assignments.length} icon={GraduationCap} />
         <StatCard title="In Progress" value={stats.inProgressCount} icon={Clock} />
         <StatCard title="Avg Score" value={`${stats.avgScore}%`} icon={Award} />

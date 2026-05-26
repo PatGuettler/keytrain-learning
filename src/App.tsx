@@ -19,6 +19,7 @@ import { ProfilePage } from '@/pages/employee/ProfilePage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { useAuthStore } from '@/store/authStore'
 import { ROLE_DASHBOARD } from '@/lib/constants'
+import { getRouterBasename } from '@/lib/paths'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 60_000, retry: 1 } },
@@ -35,7 +36,7 @@ function HomeRedirect() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <BrowserRouter basename={getRouterBasename()}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

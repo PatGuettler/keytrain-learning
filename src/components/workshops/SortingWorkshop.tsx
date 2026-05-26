@@ -140,7 +140,7 @@ export function SortingWorkshop({
             <DraggableCard key={c.id} id={c.id} text={c.text} />
           ))}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
           {config.categories.map((cat) => (
             <div key={cat.id} onClick={() => handleTapPlace(cat.id)} className="md:contents">
               <DropColumn id={cat.id} label={cat.label} cards={cardsIn(cat.id)} locked={submitted ? locked : undefined} />

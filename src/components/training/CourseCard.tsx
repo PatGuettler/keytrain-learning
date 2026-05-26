@@ -34,7 +34,7 @@ export function CourseCard({ course, assignment, playHref }: CourseCardProps) {
           <Clock className="h-4 w-4" />
           {course.estimated_minutes} min
         </span>
-        <Button asChild size="sm">
+        <Button asChild size="sm" className="min-h-10 min-w-[5rem]">
           <Link to={playHref}>Start</Link>
         </Button>
       </CardContent>

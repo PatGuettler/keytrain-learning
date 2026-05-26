@@ -72,7 +72,7 @@ export function QuizRenderer({
                   disabled={submitted}
                   onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt.id }))}
                   className={cn(
-                    'w-full text-left rounded-md border px-4 py-3 text-sm transition-colors',
+                    'w-full text-left rounded-lg border px-4 py-3 text-sm min-h-[48px] transition-colors active:bg-accent/50',
                     selected && 'border-primary bg-primary/5',
                     showResult && isCorrect && 'border-emerald-500 bg-emerald-50',
                     showResult && selected && !isCorrect && 'border-destructive bg-destructive/5'

@@ -16,7 +16,7 @@ export function ModuleProgress({
   sequential = true,
 }: ModuleProgressProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible">
+    <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin snap-x snap-mandatory lg:mx-0 lg:px-0 lg:flex-col lg:overflow-visible lg:snap-none">
       {modules.map((m, i) => {
         const done = completedIndices.has(i)
         const current = i === currentIndex
@@ -26,7 +26,7 @@ export function ModuleProgress({
           <div
             key={m.id}
             className={cn(
-              'flex items-center gap-2 rounded-md px-3 py-2 text-sm min-w-[140px] lg:min-w-0',
+              'flex items-center gap-2 rounded-md px-3 py-2.5 text-sm min-w-[min(100%,10rem)] snap-start shrink-0 lg:min-w-0 lg:shrink',
               current && 'bg-primary/10 border border-primary',
               done && 'text-emerald-700',
               locked && 'opacity-50'

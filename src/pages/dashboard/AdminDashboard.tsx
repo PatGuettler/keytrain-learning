@@ -5,6 +5,7 @@ import { ActivityFeed } from '@/components/dashboard/ActivityFeed'
 import { useDashboardStats } from '@/hooks/useDashboardStats'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageHeader } from '@/components/layout/PageHeader'
 
 const scoreData = [
   { course: 'Clinical Incidents', score: 88 },
@@ -15,15 +16,15 @@ export function AdminDashboard() {
   const stats = useDashboardStats('admin')
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Organization Dashboard</h2>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="space-y-5 sm:space-y-6">
+      <PageHeader title="Organization Dashboard" />
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <StatCard title="Total Users" value={stats.totalUsers} icon={Users} />
         <StatCard title="Courses" value={`${stats.publishedCourses}/${stats.totalCourses}`} subtitle="published" icon={BookOpen} />
         <StatCard title="Completion Rate" value={`${stats.completionRate}%`} icon={TrendingUp} />
         <StatCard title="Overdue" value={stats.overdueCount} icon={AlertTriangle} />
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-5 sm:gap-6 grid-cols-1 lg:grid-cols-2">
         <CompletionChart completed={stats.completionRate} remaining={100 - stats.completionRate} />
         <Card>
           <CardHeader>

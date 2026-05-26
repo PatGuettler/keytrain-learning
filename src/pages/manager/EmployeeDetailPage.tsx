@@ -52,11 +52,12 @@ export function EmployeeDetailPage() {
                   Due {formatDate(a.due_date)} · {STATUS_LABELS[a.status]}
                 </p>
               </div>
-              <div className="flex gap-2 flex-wrap">
-                <Badge>{a.status}</Badge>
+              <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
+                <Badge className="w-fit">{a.status}</Badge>
                 <Button
                   size="sm"
                   variant="outline"
+                  className="min-h-10 flex-1 xs:flex-none"
                   onClick={() => update.mutate({ id: a.id, patch: { status: 'completed' } })}
                 >
                   Mark Complete
@@ -64,6 +65,7 @@ export function EmployeeDetailPage() {
                 <Button
                   size="sm"
                   variant="outline"
+                  className="min-h-10 flex-1 xs:flex-none"
                   onClick={() => update.mutate({ id: a.id, patch: { force_retake: true, status: 'pending' } })}
                 >
                   Push Retake

@@ -30,6 +30,7 @@ jobs:
       - run: npm run build
         env:
           GITHUB_PAGES: 'true'
+          GH_PAGES_BASE: /guardian-md/
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 

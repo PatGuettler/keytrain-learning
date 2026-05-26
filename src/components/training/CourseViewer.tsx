@@ -65,8 +65,8 @@ export function CourseViewer({
   }
 
   return (
-    <div className="grid lg:grid-cols-[240px_1fr] gap-6">
-      <aside className="lg:sticky lg:top-4 lg:self-start">
+    <div className="grid lg:grid-cols-[minmax(0,240px)_1fr] gap-4 lg:gap-6">
+      <aside className="lg:sticky lg:top-4 lg:self-start -mx-1 lg:mx-0">
         <ModuleProgress
           modules={modules}
           currentIndex={currentIndex}
@@ -74,7 +74,7 @@ export function CourseViewer({
         />
       </aside>
       <div>
-        <h2 className="text-xl font-bold mb-4">{module.title}</h2>
+        <h2 className="text-lg sm:text-xl font-bold mb-4">{module.title}</h2>
         {renderModule()}
         {!moduleComplete && module.type === 'workshop' && (
           <p className="text-sm text-muted-foreground mt-4">Complete all activities to continue.</p>

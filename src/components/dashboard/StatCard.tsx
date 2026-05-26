@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
 
 interface StatCardProps {
@@ -6,11 +7,12 @@ interface StatCardProps {
   value: string | number
   subtitle?: string
   icon?: LucideIcon
+  className?: string
 }
 
-export function StatCard({ title, value, subtitle, icon: Icon }: StatCardProps) {
+export function StatCard({ title, value, subtitle, icon: Icon, className }: StatCardProps) {
   return (
-    <Card>
+    <Card className={cn(className)}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}

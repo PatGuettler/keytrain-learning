@@ -1,3 +1,4 @@
+import { absoluteAppUrl } from '@/lib/paths'
 import { getSupabase } from './supabase'
 import { DEMO_USERS } from '@/lib/constants'
 import { demoProfiles } from './demo-data'
@@ -38,7 +39,7 @@ export async function resetPassword(email: string) {
   const supabase = getSupabase()
   if (!supabase) throw new Error('Configure Supabase to use password reset')
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/reset-password`,
+    redirectTo: absoluteAppUrl('reset-password'),
   })
   if (error) throw error
 }

@@ -11,6 +11,7 @@ import { useAuthStore } from '@/store/authStore'
 import { updateAssignment } from '@/services/assignments.service'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDuration } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 
 export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
   const { courseId } = useParams<{ courseId: string }>()
@@ -66,7 +67,7 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
   }
 
   if (isLoading || !course) {
-    return <Skeleton className="h-96 w-full" />
+    return <Skeleton className="h-64 sm:h-96 w-full" />
   }
 
   if (finished) {
@@ -74,12 +75,12 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6"
+        className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 px-4"
       >
-        <PartyPopper className="h-16 w-16 text-primary" />
-        <h2 className="text-3xl font-bold">Course Complete!</h2>
-        <p className="text-muted-foreground">Great work on {course.title}</p>
-        <Button size="lg" onClick={() => navigate(dashboardPath)}>
+        <PartyPopper className="h-14 w-14 sm:h-16 sm:w-16 text-primary" />
+        <h2 className="text-2xl sm:text-3xl font-bold">Course Complete!</h2>
+        <p className="text-muted-foreground text-sm sm:text-base">Great work on {course.title}</p>
+        <Button size="lg" className="w-full max-w-xs min-h-12" onClick={() => navigate(dashboardPath)}>
           Return to Dashboard
         </Button>
       </motion.div>
@@ -87,14 +88,15 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
   }
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-          <ChevronLeft className="h-4 w-4" /> Back
+    <div className="space-y-4 max-w-5xl mx-auto pb-24 lg:pb-4">
+      <div className="flex items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" className="h-11 -ml-2" onClick={() => navigate(-1)}>
+          <ChevronLeft className="h-4 w-4" />
+          <span className="hidden xs:inline">Back</span>
         </Button>
-        <span className="text-sm text-muted-foreground">{formatDuration(elapsed)}</span>
+        <span className="text-xs sm:text-sm text-muted-foreground tabular-nums">{formatDuration(elapsed)}</span>
       </div>
-      <h1 className="text-2xl font-bold">{course.title}</h1>
+      <h1 className="text-xl sm:text-2xl font-bold leading-tight">{course.title}</h1>
       <CourseViewer
         modules={modules}
         currentIndex={currentIndex}
@@ -106,20 +108,31 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
           else if (passed) setModuleReady(true)
         }}
       />
-      <div className="flex justify-between border-t pt-4 sticky bottom-16 lg:bottom-0 bg-background">
-        <Button
-          variant="outline"
-          disabled={currentIndex === 0}
-          onClick={() => {
-            setCurrentIndex((i) => i - 1)
-            setModuleReady(completedIndices.has(currentIndex - 1))
-          }}
-        >
-          <ChevronLeft className="h-4 w-4" /> Previous
-        </Button>
-        <Button onClick={handleNext} disabled={!canNext}>
-          {isLast ? 'Finish' : 'Next'} <ChevronRight className="h-4 w-4" />
-        </Button>
+      <div
+        className={cn(
+          'fixed left-0 right-0 z-30 border-t bg-background/95 backdrop-blur p-3 safe-area-px safe-area-pb',
+          'bottom-mobile-nav lg:bottom-0 lg:sticky lg:mt-4 lg:border-t lg:p-0 lg:bg-background lg:backdrop-blur-none'
+        )}
+      >
+        <div className="flex gap-2 max-w-5xl mx-auto lg:pt-4">
+          <Button
+            variant="outline"
+            className="flex-1 min-h-12"
+            disabled={currentIndex === 0}
+            onClick={() => {
+              setCurrentIndex((i) => i - 1)
+              setModuleReady(completedIndices.has(currentIndex - 1))
+            }}
+          >
+            <ChevronLeft className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Previous</span>
+            <span className="sm:hidden">Prev</span>
+          </Button>
+          <Button className="flex-1 min-h-12" onClick={handleNext} disabled={!canNext}>
+            <span>{isLast ? 'Finish' : 'Next'}</span>
+            <ChevronRight className="h-4 w-4 shrink-0" />
+          </Button>
+        </div>
       </div>
     </div>
   )
