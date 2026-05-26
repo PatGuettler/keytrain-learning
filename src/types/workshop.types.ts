@@ -9,6 +9,8 @@ export interface WorkshopContent {
 
 export interface NodeMapConfig {
   background_image: string
+  /** Minimum score (0–100) to mark module as passed. Default 60. */
+  passing_score?: number
   nodes: {
     id: string
     x_percent: number

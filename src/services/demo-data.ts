@@ -401,6 +401,7 @@ export const demoModules: Module[] = [
         'Explore the ward floor plan and tap each alert pin. Read the scenario at that location and classify the incident.',
       config: {
         background_image: '',
+        passing_score: 60,
         nodes: [
           {
             id: 'node_1',

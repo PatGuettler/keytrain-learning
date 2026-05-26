@@ -6,9 +6,11 @@ import { cn } from '@/lib/utils'
 import { LessonIllustration, resolveIllustrationKey } from './lesson-illustrations'
 
 export function LessonRenderer({
+  moduleId,
   content,
   onComplete,
 }: {
+  moduleId: string
   content: LessonContent
   onComplete: () => void
 }) {
@@ -20,10 +22,11 @@ export function LessonRenderer({
 
   useEffect(() => {
     setIndex(0)
-  }, [slides])
+  }, [moduleId])
 
   const safeIndex = slides.length > 0 ? Math.min(index, slides.length - 1) : 0
-  const slide = slides[safeIndex]
+  const slide: LessonSlide | undefined = slides[safeIndex]
+  const layout = slide?.layout ?? 'image-right'
   const isLast = slides.length === 0 || safeIndex >= slides.length - 1
 
   const next = () => {
@@ -47,20 +50,27 @@ export function LessonRenderer({
   }
 
   if (!slide) {
-    return null
+    return (
+      <div className="rounded-lg border bg-card p-6 space-y-4">
+        <p className="text-muted-foreground">Unable to load this slide.</p>
+        <Button onClick={() => setIndex(0)} className="min-h-11">
+          Restart lesson
+        </Button>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
       <AnimatePresence mode="wait">
         <motion.div
-          key={slide.id}
+          key={`${moduleId}-${slide.id}-${safeIndex}`}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           className={cn(
             'rounded-lg border bg-card p-4 sm:p-6',
-            slide.layout === 'full-bleed' && 'bg-primary/5'
+            layout === 'full-bleed' && 'bg-primary/5'
           )}
         >
           <SlideView slide={slide} />

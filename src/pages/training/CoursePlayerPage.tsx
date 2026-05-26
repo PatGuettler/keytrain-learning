@@ -164,6 +164,7 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
       </div>
       <h1 className="text-xl sm:text-2xl font-bold leading-tight">{course.title}</h1>
       <CourseViewer
+        key={modules[currentIndex]?.id ?? `module-${currentIndex}`}
         modules={modules}
         currentIndex={currentIndex}
         completedIndices={completedIndices}

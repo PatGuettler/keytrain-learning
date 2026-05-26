@@ -5,15 +5,11 @@ import { NodeMapWorkshop } from '@/components/workshops/NodeMapWorkshop'
 import { SortingWorkshop } from '@/components/workshops/SortingWorkshop'
 import { DecisionTreeWorkshop } from '@/components/workshops/DecisionTreeWorkshop'
 import { HotspotWorkshop } from '@/components/workshops/HotspotWorkshop'
-import type { LessonContent, QuizContent } from '@/types/course.types'
+import type { QuizContent } from '@/types/course.types'
 import type { Module } from '@/types/course.types'
 import type { ModuleCompletePayload } from '@/types/training.types'
 import type { WorkshopContent } from '@/types/workshop.types'
-
-function parseLessonContent(raw: Record<string, unknown>): LessonContent {
-  const slides = Array.isArray(raw.slides) ? raw.slides : []
-  return { slides: slides as LessonContent['slides'] }
-}
+import { parseLessonContent } from '@/lib/lesson-content'
 
 interface CourseViewerProps {
   modules: Module[]
@@ -41,6 +37,7 @@ export function CourseViewer({
         return (
           <LessonRenderer
             key={module.id}
+            moduleId={module.id}
             content={parseLessonContent(module.content)}
             onComplete={() => onModuleComplete({ score: 100, passed: true })}
           />
@@ -58,10 +55,7 @@ export function CourseViewer({
         switch (wc.workshop_type) {
           case 'node_map':
             return (
-              <NodeMapWorkshop
-                content={wc}
-                onComplete={() => onModuleComplete({ score: 100, passed: true })}
-              />
+              <NodeMapWorkshop key={module.id} content={wc} onComplete={onModuleComplete} />
             )
           case 'sorting':
             return (
@@ -95,11 +89,6 @@ export function CourseViewer({
     }
   }
 
-  const showWorkshopHint =
-    module.type === 'workshop' &&
-    (module.content as unknown as WorkshopContent).workshop_type === 'node_map' &&
-    !moduleComplete
-
   return (
     <div className="grid lg:grid-cols-[minmax(0,240px)_1fr] gap-4 lg:gap-6">
       <aside className="lg:sticky lg:top-4 lg:self-start -mx-1 lg:mx-0">
@@ -112,11 +101,6 @@ export function CourseViewer({
       <div>
         <h2 className="text-lg sm:text-xl font-bold mb-4">{module.title}</h2>
         {renderModule()}
-        {showWorkshopHint && (
-          <p className="text-sm text-muted-foreground mt-4">
-            Complete all map alerts to continue.
-          </p>
-        )}
       </div>
     </div>
   )
