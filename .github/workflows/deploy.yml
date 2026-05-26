@@ -26,11 +26,13 @@ jobs:
 
       - run: npm ci
 
+      # GITHUB_REPOSITORY (e.g. PatGuettler/guardian-md) sets Vite base to /guardian-md/
       - run: npm run build
         env:
           GITHUB_PAGES: 'true'
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          # Optional override if base path is wrong: GH_PAGES_BASE: /your-repo-name/
 
       - uses: actions/upload-pages-artifact@v3
         with:

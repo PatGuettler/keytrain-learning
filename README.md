@@ -2,7 +2,7 @@
 
 Healthcare training platform for clinical incident reporting, compliance courses, and interactive workshops. Built for hospital organizations with **admin**, **manager**, and **employee** roles.
 
-**Live demo:** Enable GitHub Pages on the `gh-pages` branch after deploying from `main`. URL: `https://<username>.github.io/guardian-md/`
+**Live demo:** After a successful deploy, open `https://patguettler.github.io/<repo-name>/` (use your exact GitHub repo name, e.g. `guardian-md` or `guardian-md-`, with a trailing slash). CI sets the Vite `base` path automatically from `GITHUB_REPOSITORY`.
 
 ## Features by role
 
