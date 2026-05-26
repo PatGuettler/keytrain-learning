@@ -135,6 +135,17 @@ The workflow file is valid; GitHub only auto-starts it when all of these are tru
 
 If the **build** job runs but **deploy** does not, use **Settings → Pages → Source: GitHub Actions** and ensure the `github-pages` environment exists (first deploy may require approving the environment).
 
+### “Failed to queue workflow run” on **Run workflow**
+
+Push-to-`main` deploys are the reliable path (see green runs in Actions). If manual **Run workflow** fails to queue:
+
+1. **Cancel** any in-progress “Deploy to GitHub Pages” or “pages-build-deployment” runs.
+2. **Settings → Environments → `github-pages`** — remove **Required reviewers** and **Wait timer** (personal repos often block manual runs otherwise).
+3. **Settings → Actions → General → Workflow permissions** — choose **Read and write permissions**.
+4. Wait a minute and retry, or **`git push origin main`** instead (same workflow).
+
+The deploy workflow intentionally omits `environment.url` tied to step outputs; that pattern can prevent manual runs from queuing on some repos.
+
 1. Installs dependencies and builds `dist/`
 2. Uploads the artifact and deploys via GitHub’s official Pages actions (`upload-pages-artifact` + `deploy-pages`)
 
