@@ -58,6 +58,7 @@ export function CourseViewer({
           case 'sorting':
             return (
               <SortingWorkshop
+                key={module.id}
                 content={wc}
                 modules={modules}
                 onComplete={onModuleComplete}
@@ -67,6 +68,7 @@ export function CourseViewer({
           case 'decision_tree':
             return (
               <DecisionTreeWorkshop
+                key={module.id}
                 content={wc}
                 onComplete={() => onModuleComplete({ score: 100, passed: true })}
               />
@@ -74,6 +76,7 @@ export function CourseViewer({
           case 'hotspot':
             return (
               <HotspotWorkshop
+                key={module.id}
                 content={wc}
                 onComplete={() => onModuleComplete({ score: 100, passed: true })}
               />
@@ -88,16 +91,16 @@ export function CourseViewer({
   }
 
   return (
-    <div className="grid lg:grid-cols-[minmax(0,240px)_1fr] gap-4 lg:gap-6">
-      <aside className="lg:sticky lg:top-4 lg:self-start -mx-1 lg:mx-0">
+    <div className="grid w-full min-w-0 max-w-full lg:grid-cols-[minmax(0,240px)_1fr] gap-4 lg:gap-6">
+      <aside className="w-full min-w-0 lg:sticky lg:top-4 lg:self-start">
         <ModuleProgress
           modules={modules}
           currentIndex={currentIndex}
           completedIndices={completedIndices}
         />
       </aside>
-      <div>
-        <h2 className="text-lg sm:text-xl font-bold mb-4">{module.title}</h2>
+      <div className="min-w-0 w-full max-w-full overflow-hidden">
+        <h2 className="text-lg sm:text-xl font-bold mb-4 leading-snug break-anywhere">{module.title}</h2>
         {renderModule()}
       </div>
     </div>

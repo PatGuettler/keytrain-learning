@@ -96,4 +96,14 @@
   .scrollbar-thin {
     scrollbar-width: thin;
   }
+
+  .break-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .contain-layout {
+    min-width: 0;
+    max-width: 100%;
+  }
 }

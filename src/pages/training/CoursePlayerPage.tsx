@@ -154,15 +154,15 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
   }
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto pb-24 lg:pb-4">
-      <div className="flex items-center justify-between gap-2">
-        <Button variant="ghost" size="sm" className="h-11 -ml-2" onClick={() => navigate(-1)}>
+    <div className="space-y-4 w-full min-w-0 max-w-5xl mx-auto pb-[calc(var(--mobile-nav-height)+7rem)] lg:pb-4">
+      <div className="flex items-center justify-between gap-2 min-w-0">
+        <Button variant="ghost" size="sm" className="h-11 shrink-0" onClick={() => navigate(-1)}>
           <ChevronLeft className="h-4 w-4" />
           <span className="hidden xs:inline">Back</span>
         </Button>
         <span className="text-xs sm:text-sm text-muted-foreground tabular-nums">{formatDuration(elapsed)}</span>
       </div>
-      <h1 className="text-xl sm:text-2xl font-bold leading-tight">{course.title}</h1>
+      <h1 className="text-lg sm:text-2xl font-bold leading-snug break-anywhere pr-1">{course.title}</h1>
       <CourseViewer
         key={modules[currentIndex]?.id ?? `module-${currentIndex}`}
         modules={modules}
@@ -177,7 +177,7 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
           'bottom-mobile-nav lg:bottom-0 lg:sticky lg:mt-4 lg:border-t lg:p-0 lg:bg-background lg:backdrop-blur-none'
         )}
       >
-        <div className="flex gap-2 max-w-5xl mx-auto lg:pt-4">
+        <div className="flex gap-2 w-full max-w-5xl mx-auto px-0 lg:pt-4">
           <Button
             variant="outline"
             className="flex-1 min-h-12"

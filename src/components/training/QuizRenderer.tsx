@@ -53,11 +53,11 @@ export function QuizRenderer({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8 min-w-0 w-full max-w-full">
       <p className="text-sm text-muted-foreground">Passing score: {content.passing_score}%</p>
       {questions.map((q, qi) => (
-        <div key={q.id} className="space-y-3 rounded-lg border p-4">
-          <p className="font-medium">
+        <div key={q.id} className="space-y-3 rounded-lg border p-4 min-w-0">
+          <p className="font-medium break-anywhere">
             {qi + 1}. {q.text}
             {q.type === 'multi_select' && (
               <span className="block text-sm font-normal text-muted-foreground mt-1">

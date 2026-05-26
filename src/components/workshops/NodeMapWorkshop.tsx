@@ -72,11 +72,11 @@ export function NodeMapWorkshop({
   if (showResults) {
     const wrongNodes = config.nodes.filter((n) => completed[n.id] === 'wrong')
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 min-w-0 w-full max-w-full">
         <Card className={cn('border-2', passed ? 'border-emerald-500/50' : 'border-amber-500/50')}>
           <CardHeader className="pb-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <CardTitle className="text-lg">Floor map results</CardTitle>
+              <CardTitle className="text-lg break-anywhere">Floor map results</CardTitle>
               <Badge variant={passed ? 'success' : 'warning'}>
                 {score}% — {passed ? 'Passed' : 'Review recommended'}
               </Badge>
@@ -134,7 +134,7 @@ export function NodeMapWorkshop({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-0 w-full max-w-full overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <p className="text-sm text-muted-foreground">{content.instructions}</p>
         <Badge variant="secondary" className="w-fit shrink-0">
