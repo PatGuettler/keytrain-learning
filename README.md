@@ -118,13 +118,14 @@ npm run preview  # Preview production build
 
 On push to `main`, `.github/workflows/deploy.yml`:
 
-1. Installs dependencies
-2. Builds with secrets `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
-3. Publishes `dist/` to `gh-pages` via `peaceiris/actions-gh-pages`
+1. Installs dependencies and builds `dist/`
+2. Uploads the artifact and deploys via GitHub’s official Pages actions (`upload-pages-artifact` + `deploy-pages`)
 
 **Repository secrets to add:** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
-Enable GitHub Pages: Settings → Pages → Source: **Deploy from branch** → `gh-pages` / root.
+**Enable GitHub Pages:** Repository **Settings → Pages → Build and deployment → Source:** **GitHub Actions** (not “Deploy from branch”).
+
+If you use the older `peaceiris/actions-gh-pages` action instead, set workflow permission **Contents: Read and write** (or add `contents: write` to the workflow `permissions` block).
 
 ## Database schema
 
