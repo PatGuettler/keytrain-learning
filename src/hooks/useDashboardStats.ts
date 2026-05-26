@@ -7,7 +7,6 @@ import { isSupabaseConfigured } from '@/services/supabase'
 
 export function useDashboardStats(scope: 'admin' | 'manager' | 'employee') {
   const userId = useAuthStore((s) => s.userId)
-  const profile = useAuthStore((s) => s.profile)
   const { data: assignments = [] } = useAssignments(scope === 'employee' ? userId ?? undefined : undefined)
   const { data: courses = [] } = useCourses(false)
 

@@ -1,11 +1,22 @@
 import { getSupabase, isSupabaseConfigured } from './supabase'
-import {
-  demoCourses,
-  demoModules,
-  getDemoCourses,
-  getDemoModules,
-} from './demo-data'
+import { demoCourses, getDemoCourses, getDemoModules } from './demo-data'
 import type { Course, Module } from '@/types/course.types'
+import type { Database, Json } from '@/types/database.types'
+
+type CourseInsert = Database['public']['Tables']['courses']['Insert']
+type CourseUpdate = Database['public']['Tables']['courses']['Update']
+type ModuleInsert = Database['public']['Tables']['modules']['Insert']
+type ModuleUpdate = Database['public']['Tables']['modules']['Update']
+
+function toModuleInsert(
+  module: Partial<Module> & { course_id: string; title: string; type: Module['type'] }
+): ModuleInsert {
+  const { content, ...rest } = module
+  return {
+    ...rest,
+    content: content as Json | undefined,
+  }
+}
 
 export async function fetchCourses(orgId: string, publishedOnly = false): Promise<Course[]> {
   if (!isSupabaseConfigured) return getDemoCourses(publishedOnly)
@@ -39,11 +50,16 @@ export async function upsertCourse(course: Partial<Course> & { org_id: string; t
   if (!isSupabaseConfigured) return course as Course
   const supabase = getSupabase()!
   if (course.id) {
-    const { data, error } = await supabase.from('courses').update(course).eq('id', course.id).select().single()
+    const { data, error } = await supabase
+      .from('courses')
+      .update(course as CourseUpdate)
+      .eq('id', course.id)
+      .select()
+      .single()
     if (error) throw error
     return data as Course
   }
-  const { data, error } = await supabase.from('courses').insert(course).select().single()
+  const { data, error } = await supabase.from('courses').insert(course as CourseInsert).select().single()
   if (error) throw error
   return data as Course
 }
@@ -51,12 +67,18 @@ export async function upsertCourse(course: Partial<Course> & { org_id: string; t
 export async function upsertModule(module: Partial<Module> & { course_id: string; title: string; type: Module['type'] }) {
   if (!isSupabaseConfigured) return module as Module
   const supabase = getSupabase()!
+  const row = toModuleInsert(module)
   if (module.id) {
-    const { data, error } = await supabase.from('modules').update(module).eq('id', module.id).select().single()
+    const { data, error } = await supabase
+      .from('modules')
+      .update(row as ModuleUpdate)
+      .eq('id', module.id)
+      .select()
+      .single()
     if (error) throw error
     return data as Module
   }
-  const { data, error } = await supabase.from('modules').insert(module).select().single()
+  const { data, error } = await supabase.from('modules').insert(row).select().single()
   if (error) throw error
   return data as Module
 }

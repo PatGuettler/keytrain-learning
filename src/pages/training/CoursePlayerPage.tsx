@@ -40,7 +40,7 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
   }, [])
 
   const onModuleComplete = useCallback(
-    (score?: number, passed?: boolean) => {
+    (_score?: number, passed?: boolean) => {
       setCompletedIndices((prev) => new Set(prev).add(currentIndex))
       setModuleReady(true)
       if (modules[currentIndex]?.type === 'quiz' && passed === false) {

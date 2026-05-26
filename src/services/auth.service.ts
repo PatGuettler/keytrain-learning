@@ -1,4 +1,4 @@
-import { getSupabase, isSupabaseConfigured } from './supabase'
+import { getSupabase } from './supabase'
 import { DEMO_USERS } from '@/lib/constants'
 import { demoProfiles } from './demo-data'
 import type { Profile } from '@/types/user.types'

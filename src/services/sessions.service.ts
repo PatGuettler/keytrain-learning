@@ -1,6 +1,21 @@
 import { getSupabase, isSupabaseConfigured } from './supabase'
 import { createDemoSession, updateDemoSession } from './demo-data'
 import type { ModuleAttempt, TrainingSession } from '@/types/course.types'
+import type { Database, Json } from '@/types/database.types'
+
+type ModuleAttemptInsert = Database['public']['Tables']['module_attempts']['Insert']
+type ModuleAttemptUpdate = Database['public']['Tables']['module_attempts']['Update']
+
+function toAttemptRow(
+  attempt: Partial<ModuleAttempt> & { session_id: string; module_id: string; user_id: string }
+): ModuleAttemptInsert {
+  const { answers, interactions, ...rest } = attempt
+  return {
+    ...rest,
+    answers: answers as Json | null | undefined,
+    interactions: interactions as Json | null | undefined,
+  }
+}
 
 export async function startSession(
   assignmentId: string,
@@ -45,12 +60,18 @@ export async function completeSession(
 export async function saveModuleAttempt(attempt: Partial<ModuleAttempt> & { session_id: string; module_id: string; user_id: string }) {
   if (!isSupabaseConfigured) return attempt as ModuleAttempt
   const supabase = getSupabase()!
+  const row = toAttemptRow(attempt)
   if (attempt.id) {
-    const { data, error } = await supabase.from('module_attempts').update(attempt).eq('id', attempt.id).select().single()
+    const { data, error } = await supabase
+      .from('module_attempts')
+      .update(row as ModuleAttemptUpdate)
+      .eq('id', attempt.id)
+      .select()
+      .single()
     if (error) throw error
     return data as ModuleAttempt
   }
-  const { data, error } = await supabase.from('module_attempts').insert(attempt).select().single()
+  const { data, error } = await supabase.from('module_attempts').insert(row).select().single()
   if (error) throw error
   return data as ModuleAttempt
 }
