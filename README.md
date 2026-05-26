@@ -121,7 +121,19 @@ npm run preview:pages # Build + preview at http://localhost:4173/guardian-md/
 
 ## Deployment (GitHub Actions)
 
-On push to `main`, `.github/workflows/deploy.yml`:
+On every push to **`main`**, or manually via **Actions → Deploy to GitHub Pages → Run workflow**, `.github/workflows/deploy.yml`:
+
+### Workflow did not run after `git push`?
+
+The workflow file is valid; GitHub only auto-starts it when all of these are true:
+
+1. **Push landed on `main`** — not `master` or another branch. Check: `git branch --show-current` and `git log origin/main -1`.
+2. **Push went to the Pages repo** — [github.com/PatGuettler/guardian-md](https://github.com/PatGuettler/guardian-md), not a differently named fork or `guardian-md-` remote.
+3. **`.github/workflows/deploy.yml` exists on GitHub `main`** — open that path on the repo in the browser; if it is missing, commit and push the workflow.
+4. **Actions are enabled** — repo **Settings → Actions → General → Allow all actions** (or allow for this repo).
+5. **You are viewing the Actions tab on the same repo** you pushed to.
+
+If the **build** job runs but **deploy** does not, use **Settings → Pages → Source: GitHub Actions** and ensure the `github-pages` environment exists (first deploy may require approving the environment).
 
 1. Installs dependencies and builds `dist/`
 2. Uploads the artifact and deploys via GitHub’s official Pages actions (`upload-pages-artifact` + `deploy-pages`)
