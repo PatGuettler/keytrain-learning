@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertCircle, Check, X } from 'lucide-react'
+import { AlertCircle, Check, MapPin, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { HospitalFloorPlan } from './HospitalFloorPlan'
 import type { WorkshopContent } from '@/types/workshop.types'
 import type { NodeMapConfig } from '@/types/workshop.types'
 
@@ -19,7 +21,9 @@ export function NodeMapWorkshop({
   const [selected, setSelected] = useState<string | null>(null)
 
   const node = config.nodes.find((n) => n.id === activeNode)
+  const completedCount = config.nodes.filter((n) => completed[n.id] === 'correct').length
   const allDone = config.nodes.every((n) => completed[n.id] === 'correct')
+  const useBuiltInFloor = !config.background_image?.trim()
 
   const submitAnswer = () => {
     if (!node || !selected) return
@@ -32,7 +36,13 @@ export function NodeMapWorkshop({
   if (allDone) {
     return (
       <div className="text-center py-8 space-y-4">
-        <p className="text-emerald-700 font-semibold">All nodes completed!</p>
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-600">
+          <Check className="h-8 w-8" />
+        </div>
+        <p className="text-lg font-semibold text-emerald-700">Floor sweep complete!</p>
+        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+          You identified and classified all reportable incidents on this ward.
+        </p>
         <Button onClick={onComplete} className="min-h-12 w-full max-w-xs">
           Continue
         </Button>
@@ -42,35 +52,84 @@ export function NodeMapWorkshop({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">{content.instructions}</p>
-      <div className="relative aspect-[4/3] sm:aspect-video rounded-lg border bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 overflow-hidden touch-pan-x touch-pan-y">
-        {config.background_image ? (
-          <img src={config.background_image} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm px-4 text-center">
-            Hospital floor plan — tap each alert
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <p className="text-sm text-muted-foreground">{content.instructions}</p>
+        <Badge variant="secondary" className="w-fit shrink-0">
+          {completedCount} / {config.nodes.length} resolved
+        </Badge>
+      </div>
+
+      {/* Scrollable map on mobile for panning a larger floor plan */}
+      <div className="rounded-xl border bg-muted/30 overflow-hidden">
+        <div className="overflow-x-auto overflow-y-hidden scrollbar-thin">
+          <div className="relative min-w-[min(100%,640px)] sm:min-w-0 w-full aspect-[800/520] sm:aspect-[16/10]">
+            {useBuiltInFloor ? (
+              <HospitalFloorPlan className="absolute inset-0 w-full h-full text-foreground" />
+            ) : (
+              <img
+                src={config.background_image}
+                alt="Hospital floor plan"
+                className="absolute inset-0 w-full h-full object-contain"
+              />
+            )}
+
+            {config.nodes.map((n) => {
+              const status = completed[n.id]
+              const isActive = activeNode === n.id
+              return (
+                <div
+                  key={n.id}
+                  className="absolute -translate-x-1/2 -translate-y-full"
+                  style={{ left: `${n.x_percent}%`, top: `${n.y_percent}%` }}
+                >
+                  {/* Zone label */}
+                  <span
+                    className={cn(
+                      'absolute bottom-full left-1/2 -translate-x-1/2 mb-1 whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-semibold shadow-sm',
+                      isActive ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground border'
+                    )}
+                  >
+                    {n.label}
+                  </span>
+                  <button
+                    type="button"
+                    className={cn(
+                      'relative flex min-h-[52px] min-w-[52px] items-center justify-center rounded-full shadow-lg ring-4 ring-background transition-transform',
+                      'hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      status === 'correct' && 'bg-emerald-500 text-white animate-none',
+                      status === 'wrong' && 'bg-destructive text-white',
+                      !status && 'bg-amber-500 text-white animate-pulse',
+                      isActive && !status && 'ring-primary scale-110'
+                    )}
+                    onClick={() => {
+                      setActiveNode(n.id)
+                      setSelected(null)
+                    }}
+                    aria-label={`Investigate incident at ${n.label}`}
+                  >
+                    {status === 'correct' ? (
+                      <Check className="h-6 w-6" />
+                    ) : status === 'wrong' ? (
+                      <X className="h-6 w-6" />
+                    ) : (
+                      <AlertCircle className="h-6 w-6" />
+                    )}
+                  </button>
+                  <MapPin
+                    className="absolute top-full left-1/2 -translate-x-1/2 -mt-0.5 h-3 w-3 text-amber-600 drop-shadow"
+                    fill="currentColor"
+                    aria-hidden
+                  />
+                </div>
+              )
+            })}
           </div>
+        </div>
+        {useBuiltInFloor && (
+          <p className="text-xs text-muted-foreground px-3 py-2 border-t bg-card/50 sm:hidden">
+            Swipe sideways to explore the full floor plan
+          </p>
         )}
-        {config.nodes.map((n) => {
-          const status = completed[n.id]
-          return (
-            <button
-              key={n.id}
-              type="button"
-              style={{ left: `${n.x_percent}%`, top: `${n.y_percent}%` }}
-              className={cn(
-                'absolute -translate-x-1/2 -translate-y-1/2 min-h-[48px] min-w-[48px] rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95',
-                status === 'correct' && 'bg-emerald-500 text-white',
-                status === 'wrong' && 'bg-destructive text-white',
-                !status && 'bg-amber-500 text-white animate-pulse'
-              )}
-              onClick={() => setActiveNode(n.id)}
-              aria-label={n.label}
-            >
-              {status === 'correct' ? <Check className="h-5 w-5" /> : status === 'wrong' ? <X className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-            </button>
-          )
-        })}
       </div>
 
       <AnimatePresence>
@@ -93,12 +152,22 @@ export function NodeMapWorkshop({
               className={cn(
                 'z-50 overflow-y-auto bg-card shadow-xl',
                 'fixed inset-x-0 bottom-0 max-h-[85dvh] rounded-t-2xl border-t p-4 pb-6 safe-area-pb',
-                'lg:relative lg:inset-auto lg:max-h-none lg:rounded-lg lg:border lg:p-6 lg:shadow-none'
+                'lg:relative lg:inset-auto lg:max-h-none lg:rounded-xl lg:border lg:p-6 lg:shadow-md'
               )}
             >
               <div className="lg:hidden w-10 h-1 rounded-full bg-muted mx-auto mb-4" aria-hidden />
-              <h3 className="font-bold text-lg mb-2">{node.label}</h3>
-              <p className="text-sm text-muted-foreground mb-4">{node.scenario}</p>
+              <div className="flex items-start gap-2 mb-3">
+                <div className="rounded-lg bg-amber-500/15 p-2 text-amber-600 shrink-0">
+                  <AlertCircle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">{node.label}</h3>
+                  <p className="text-xs text-muted-foreground">Incident scenario</p>
+                </div>
+              </div>
+              <p className="text-sm leading-relaxed mb-4 rounded-lg bg-muted/50 p-3 border-l-4 border-amber-500">
+                {node.scenario}
+              </p>
               <p className="font-medium mb-3">{node.question.text}</p>
               <div className="space-y-2 mb-4">
                 {node.question.options.map((opt) => (
@@ -107,26 +176,35 @@ export function NodeMapWorkshop({
                     type="button"
                     onClick={() => setSelected(opt.id)}
                     className={cn(
-                      'w-full text-left rounded-lg border px-4 py-3 text-sm min-h-[48px]',
-                      selected === opt.id && 'border-primary bg-primary/5'
+                      'w-full text-left rounded-lg border px-4 py-3 text-sm min-h-[48px] transition-colors',
+                      selected === opt.id && 'border-primary bg-primary/10 ring-1 ring-primary'
                     )}
                   >
                     {opt.text}
                   </button>
                 ))}
               </div>
+              {completed[node.id] === 'wrong' && (
+                <p className="text-sm text-destructive mb-3">Incorrect — review the scenario and try again.</p>
+              )}
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button onClick={submitAnswer} disabled={!selected} className="min-h-12 flex-1">
-                  Submit
+                  Submit classification
                 </Button>
                 <Button variant="outline" onClick={() => setActiveNode(null)} className="min-h-12 flex-1">
-                  Close
+                  Back to map
                 </Button>
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
+
+      {!activeNode && (
+        <p className="text-center text-xs text-muted-foreground">
+          Tap each pulsing alert on the map to read the scenario and classify the incident type.
+        </p>
+      )}
     </div>
   )
 }

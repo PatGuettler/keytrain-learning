@@ -44,12 +44,22 @@ export const demoModules: Module[] = [
           heading: 'What is a Clinical Incident?',
           body: 'A clinical incident is any event that could have or did harm a patient during care delivery. This includes medication errors, falls, wrong-site procedures, and near-misses.',
           layout: 'image-right',
+          illustration: {
+            key: 'clinical_incident',
+            alt: 'Clinical incident alert at point of care',
+            caption: 'When in doubt, stop and report — patient safety comes first.',
+          },
         },
         {
           id: 'slide_2',
           heading: 'Why Reporting Matters',
-          body: 'Timely reporting enables root cause analysis, prevents recurrence, and fulfills regulatory obligations.',
-          layout: 'full-bleed',
+          body: 'Timely reporting enables root cause analysis, prevents recurrence, and fulfills regulatory obligations. Every report helps protect the next patient.',
+          layout: 'image-top',
+          illustration: {
+            key: 'reporting',
+            alt: 'Completed incident report with checkmark',
+            caption: 'Reports feed quality improvement and compliance workflows.',
+          },
         },
       ],
     },
@@ -101,35 +111,37 @@ export const demoModules: Module[] = [
     content: {
       workshop_type: 'node_map',
       title: 'Identify the Incident Type',
-      instructions: 'Click each alert icon to reveal the scenario and classify the incident.',
+      instructions:
+        'Explore the ward floor plan and tap each alert pin. Read the scenario at that location and classify the incident.',
       config: {
         background_image: '',
         nodes: [
           {
             id: 'node_1',
-            x_percent: 25,
-            y_percent: 40,
+            x_percent: 50,
+            y_percent: 38,
             icon: 'alert',
             label: 'Nurses Station',
             scenario:
-              'A nurse notices a patient chart accessed 12 times in one hour by the same unauthorized user.',
+              'The EHR shows a patient chart accessed 12 times in one hour by a user who is not on the care team. No one on shift recognizes the login.',
             question: {
               text: 'What type of incident is this?',
               options: [
                 { id: 'a', text: 'Clinical' },
                 { id: 'b', text: 'Cybersecurity / Privacy' },
-                { id: 'c', text: 'Physical' },
+                { id: 'c', text: 'Physical / Facilities' },
               ],
               correct_id: 'b',
             },
           },
           {
             id: 'node_2',
-            x_percent: 65,
-            y_percent: 55,
+            x_percent: 81,
+            y_percent: 22,
             icon: 'alert',
-            label: 'Patient Room 204',
-            scenario: 'A patient received double the prescribed dose of insulin.',
+            label: 'Room 204',
+            scenario:
+              'A patient received double the prescribed dose of insulin. The error was caught during the bedside barcode scan after administration.',
             question: {
               text: 'What type of incident is this?',
               options: [
@@ -138,6 +150,60 @@ export const demoModules: Module[] = [
                 { id: 'c', text: 'Administrative' },
               ],
               correct_id: 'a',
+            },
+          },
+          {
+            id: 'node_3',
+            x_percent: 12,
+            y_percent: 72,
+            icon: 'alert',
+            label: 'Pharmacy',
+            scenario:
+              'Two look-alike medication vials were stored next to each other. A technician nearly dispensed the wrong drug before catching the similar packaging.',
+            question: {
+              text: 'What type of incident is this?',
+              options: [
+                { id: 'a', text: 'Clinical (medication safety)' },
+                { id: 'b', text: 'Cybersecurity' },
+                { id: 'c', text: 'Physical only' },
+              ],
+              correct_id: 'a',
+            },
+          },
+          {
+            id: 'node_4',
+            x_percent: 20,
+            y_percent: 88,
+            icon: 'alert',
+            label: 'Waiting Area',
+            scenario:
+              'A visitor slipped on a wet floor near reception. No signage was posted after housekeeping mopped the area.',
+            question: {
+              text: 'What type of incident is this?',
+              options: [
+                { id: 'a', text: 'Clinical' },
+                { id: 'b', text: 'Physical / Facilities' },
+                { id: 'c', text: 'Administrative' },
+              ],
+              correct_id: 'b',
+            },
+          },
+          {
+            id: 'node_5',
+            x_percent: 73,
+            y_percent: 88,
+            icon: 'alert',
+            label: 'IT / EHR',
+            scenario:
+              'A workstation was left unlocked in the server room corridor with patient schedules visible on screen during a fire drill evacuation.',
+            question: {
+              text: 'What type of incident is this?',
+              options: [
+                { id: 'a', text: 'Clinical' },
+                { id: 'b', text: 'Cybersecurity / Privacy' },
+                { id: 'c', text: 'Physical' },
+              ],
+              correct_id: 'b',
             },
           },
         ],

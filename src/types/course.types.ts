@@ -68,7 +68,10 @@ export interface LessonSlide {
   body: string
   layout?: 'image-right' | 'image-left' | 'image-top' | 'full-bleed'
   illustration?: {
-    url: string
+    /** Remote image URL (Supabase Storage, etc.) */
+    url?: string
+    /** Built-in SVG illustration id when url is empty */
+    key?: string
     alt: string
     caption?: string
   }

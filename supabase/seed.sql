@@ -44,16 +44,21 @@ INSERT INTO modules (id, course_id, title, type, order_index, content) VALUES
           "body": "A clinical incident is any event that could have or did harm a patient during care delivery. This includes medication errors, falls, wrong-site procedures, and near-misses.",
           "layout": "image-right",
           "illustration": {
-            "url": "",
-            "alt": "Stop and Report infographic",
-            "caption": "When in doubt, report it"
+            "key": "clinical_incident",
+            "alt": "Clinical incident alert at point of care",
+            "caption": "When in doubt, stop and report — patient safety comes first."
           }
         },
         {
           "id": "slide_2",
           "heading": "Why Reporting Matters",
           "body": "Timely reporting enables root cause analysis, prevents recurrence, and fulfills regulatory obligations. Non-reporting puts patients and the organization at risk.",
-          "layout": "full-bleed"
+          "layout": "image-top",
+          "illustration": {
+            "key": "reporting",
+            "alt": "Completed incident report with checkmark",
+            "caption": "Reports feed quality improvement and compliance workflows."
+          }
         }
       ]
     }'::jsonb
@@ -102,42 +107,93 @@ INSERT INTO modules (id, course_id, title, type, order_index, content) VALUES
     '{
       "workshop_type": "node_map",
       "title": "Identify the Incident Type",
-      "instructions": "Click each alert icon to reveal the scenario and classify the incident.",
+      "instructions": "Explore the ward floor plan and tap each alert pin. Read the scenario and classify the incident.",
       "config": {
         "background_image": "",
         "nodes": [
           {
             "id": "node_1",
-            "x_percent": 25,
-            "y_percent": 40,
+            "x_percent": 50,
+            "y_percent": 38,
             "icon": "alert",
             "label": "Nurses Station",
-            "scenario": "A nurse notices a patient chart accessed 12 times in one hour by the same unauthorized user.",
+            "scenario": "The EHR shows a patient chart accessed 12 times in one hour by a user not on the care team.",
             "question": {
               "text": "What type of incident is this?",
               "options": [
-                { "id": "a", "text": "Clinical", "correct": false },
-                { "id": "b", "text": "Cybersecurity / Privacy", "correct": true },
-                { "id": "c", "text": "Physical", "correct": false }
+                { "id": "a", "text": "Clinical" },
+                { "id": "b", "text": "Cybersecurity / Privacy" },
+                { "id": "c", "text": "Physical / Facilities" }
               ],
               "correct_id": "b"
             }
           },
           {
             "id": "node_2",
-            "x_percent": 65,
-            "y_percent": 55,
+            "x_percent": 81,
+            "y_percent": 22,
             "icon": "alert",
-            "label": "Patient Room 204",
+            "label": "Room 204",
             "scenario": "A patient received double the prescribed dose of insulin.",
             "question": {
               "text": "What type of incident is this?",
               "options": [
-                { "id": "a", "text": "Clinical", "correct": true },
-                { "id": "b", "text": "Cybersecurity", "correct": false },
-                { "id": "c", "text": "Administrative", "correct": false }
+                { "id": "a", "text": "Clinical" },
+                { "id": "b", "text": "Cybersecurity" },
+                { "id": "c", "text": "Administrative" }
               ],
               "correct_id": "a"
+            }
+          },
+          {
+            "id": "node_3",
+            "x_percent": 12,
+            "y_percent": 72,
+            "icon": "alert",
+            "label": "Pharmacy",
+            "scenario": "Look-alike medication vials stored together; wrong drug nearly dispensed.",
+            "question": {
+              "text": "What type of incident is this?",
+              "options": [
+                { "id": "a", "text": "Clinical (medication safety)" },
+                { "id": "b", "text": "Cybersecurity" },
+                { "id": "c", "text": "Physical only" }
+              ],
+              "correct_id": "a"
+            }
+          },
+          {
+            "id": "node_4",
+            "x_percent": 20,
+            "y_percent": 88,
+            "icon": "alert",
+            "label": "Waiting Area",
+            "scenario": "Visitor slipped on wet floor; no warning signage after mopping.",
+            "question": {
+              "text": "What type of incident is this?",
+              "options": [
+                { "id": "a", "text": "Clinical" },
+                { "id": "b", "text": "Physical / Facilities" },
+                { "id": "c", "text": "Administrative" }
+              ],
+              "correct_id": "b"
+            }
+          },
+          {
+            "id": "node_5",
+            "x_percent": 73,
+            "y_percent": 88,
+            "icon": "alert",
+            "label": "IT / EHR",
+            "scenario": "Unlocked workstation with patient schedules visible during evacuation.",
+            "question": {
+              "text": "What type of incident is this?",
+              "options": [
+                { "id": "a", "text": "Clinical" },
+                { "id": "b", "text": "Cybersecurity / Privacy" },
+                { "id": "c", "text": "Physical" }
+              ],
+              "correct_id": "b"
             }
           }
         ]

@@ -40,9 +40,26 @@ export interface DecisionTreeConfig {
   >
 }
 
+export interface SortingCategoryGuide {
+  summary: string
+  /** Module index in course to review (0 = first lesson, etc.) */
+  review_module_index?: number
+}
+
+export interface SortingCard {
+  id: string
+  text: string
+  category_id: string
+  /** Shown when the learner sorts this card incorrectly */
+  hint?: string
+}
+
 export interface SortingConfig {
   categories: { id: string; label: string }[]
-  cards: { id: string; text: string; category_id: string }[]
+  cards: SortingCard[]
+  /** Quick reference per category for memory refresh */
+  category_guides?: Record<string, SortingCategoryGuide>
+  passing_score?: number
 }
 
 export interface HotspotConfig {
