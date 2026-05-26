@@ -2,7 +2,11 @@
 
 Healthcare training platform for clinical incident reporting, compliance courses, and interactive workshops. Built for hospital organizations with **admin**, **manager**, and **employee** roles.
 
-**Live demo:** After a successful deploy, open `https://patguettler.github.io/<repo-name>/` (use your exact GitHub repo name, e.g. `guardian-md` or `guardian-md-`, with a trailing slash). CI sets the Vite `base` path automatically from `GITHUB_REPOSITORY`.
+**Live demo:** [https://patguettler.github.io/guardian-md/](https://patguettler.github.io/guardian-md/)
+
+**Repository:** [github.com/PatGuettler/guardian-md](https://github.com/PatGuettler/guardian-md)
+
+CI builds with base path `/guardian-md/` (from `GITHUB_REPOSITORY` on push to `main`).
 
 ## Features by role
 
@@ -69,7 +73,7 @@ flowchart LR
 Without Supabase env vars, the app runs in **demo mode** with seeded courses and three demo accounts.
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/PatGuettler/guardian-md.git
 cd guardian-md
 npm install
 npm run dev
@@ -109,9 +113,10 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 ## Development
 
 ```bash
-npm run dev      # Vite dev server + HMR
-npm run build    # Production build
-npm run preview  # Preview production build
+npm run dev           # Vite dev server + HMR
+npm run build         # Production build (local, base /)
+npm run build:pages   # Production build matching GitHub Pages (/guardian-md/)
+npm run preview:pages # Build + preview at http://localhost:4173/guardian-md/
 ```
 
 ## Deployment (GitHub Actions)

@@ -9,9 +9,13 @@ function getPagesBase(): string {
     const base = process.env.GH_PAGES_BASE
     return base.endsWith('/') ? base : `${base}/`
   }
-  if (process.env.GITHUB_PAGES === 'true' && process.env.GITHUB_REPOSITORY) {
-    const repo = process.env.GITHUB_REPOSITORY.split('/')[1]
-    return `/${repo}/`
+  if (process.env.GITHUB_PAGES === 'true') {
+    if (process.env.GITHUB_REPOSITORY) {
+      const repo = process.env.GITHUB_REPOSITORY.split('/')[1]
+      return `/${repo}/`
+    }
+    // Fallback: https://patguettler.github.io/guardian-md/
+    return '/guardian-md/'
   }
   return '/'
 }
