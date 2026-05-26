@@ -10,6 +10,11 @@ import type { Module } from '@/types/course.types'
 import type { ModuleCompletePayload } from '@/types/training.types'
 import type { WorkshopContent } from '@/types/workshop.types'
 
+function parseLessonContent(raw: Record<string, unknown>): LessonContent {
+  const slides = Array.isArray(raw.slides) ? raw.slides : []
+  return { slides: slides as LessonContent['slides'] }
+}
+
 interface CourseViewerProps {
   modules: Module[]
   currentIndex: number
@@ -35,13 +40,15 @@ export function CourseViewer({
       case 'lesson':
         return (
           <LessonRenderer
-            content={module.content as unknown as LessonContent}
+            key={module.id}
+            content={parseLessonContent(module.content)}
             onComplete={() => onModuleComplete({ score: 100, passed: true })}
           />
         )
       case 'quiz':
         return (
           <QuizRenderer
+            key={module.id}
             content={module.content as unknown as QuizContent}
             onComplete={(score, passed) => onModuleComplete({ score, passed })}
           />

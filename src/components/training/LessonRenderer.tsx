@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import type { LessonContent, LessonSlide } from '@/types/course.types'
@@ -12,13 +12,42 @@ export function LessonRenderer({
   content: LessonContent
   onComplete: () => void
 }) {
+  const slides = useMemo(
+    () => (Array.isArray(content.slides) ? content.slides.filter(Boolean) : []),
+    [content.slides]
+  )
   const [index, setIndex] = useState(0)
-  const slide = content.slides[index]
-  const isLast = index >= content.slides.length - 1
+
+  useEffect(() => {
+    setIndex(0)
+  }, [slides])
+
+  const safeIndex = slides.length > 0 ? Math.min(index, slides.length - 1) : 0
+  const slide = slides[safeIndex]
+  const isLast = slides.length === 0 || safeIndex >= slides.length - 1
 
   const next = () => {
+    if (slides.length === 0) {
+      onComplete()
+      return
+    }
     if (isLast) onComplete()
-    else setIndex((i) => i + 1)
+    else setIndex((i) => Math.min(i + 1, slides.length - 1))
+  }
+
+  if (slides.length === 0) {
+    return (
+      <div className="rounded-lg border bg-card p-6 space-y-4">
+        <p className="text-muted-foreground">This lesson has no slides yet.</p>
+        <Button onClick={onComplete} className="min-h-11">
+          Continue
+        </Button>
+      </div>
+    )
+  }
+
+  if (!slide) {
+    return null
   }
 
   return (
@@ -39,7 +68,7 @@ export function LessonRenderer({
       </AnimatePresence>
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center text-sm text-muted-foreground">
         <span>
-          Slide {index + 1} of {content.slides.length}
+          Slide {safeIndex + 1} of {slides.length}
         </span>
         <Button onClick={next} className="min-h-11 w-full sm:w-auto">
           {isLast ? 'Complete Lesson' : 'Next Slide'}
@@ -54,13 +83,14 @@ function SlideView({ slide }: { slide: LessonSlide }) {
   const imageUrl = illustration?.url?.trim()
   const illustrationKey = resolveIllustrationKey(illustration?.key, slide.heading)
   const alt = illustration?.alt ?? slide.heading
+  const layout = slide.layout ?? 'image-right'
   const showVisual =
     Boolean(imageUrl) ||
     Boolean(illustration?.key) ||
-    slide.layout === 'image-right' ||
-    slide.layout === 'image-left' ||
-    slide.layout === 'image-top' ||
-    (slide.layout === 'full-bleed' && illustration !== undefined)
+    layout === 'image-right' ||
+    layout === 'image-left' ||
+    layout === 'image-top' ||
+    (layout === 'full-bleed' && illustration !== undefined)
 
   const visualBlock = (
     <figure className="rounded-lg overflow-hidden border bg-muted/50">
@@ -77,7 +107,7 @@ function SlideView({ slide }: { slide: LessonSlide }) {
     </figure>
   )
 
-  if (slide.layout === 'full-bleed') {
+  if (layout === 'full-bleed') {
     return (
       <div className="space-y-6">
         {showVisual && visualBlock}
@@ -89,7 +119,7 @@ function SlideView({ slide }: { slide: LessonSlide }) {
     )
   }
 
-  if (slide.layout === 'image-top') {
+  if (layout === 'image-top') {
     return (
       <div className="space-y-6">
         {showVisual && visualBlock}
@@ -105,8 +135,8 @@ function SlideView({ slide }: { slide: LessonSlide }) {
     <div
       className={cn(
         'grid gap-6',
-        showVisual && slide.layout === 'image-right' && 'md:grid-cols-2',
-        showVisual && slide.layout === 'image-left' && 'md:grid-cols-2 md:[direction:rtl] md:*:[direction:ltr]'
+        showVisual && layout === 'image-right' && 'md:grid-cols-2',
+        showVisual && layout === 'image-left' && 'md:grid-cols-2 md:[direction:rtl] md:*:[direction:ltr]'
       )}
     >
       <div>
