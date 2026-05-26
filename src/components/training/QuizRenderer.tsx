@@ -72,10 +72,16 @@ export function QuizRenderer({
                   disabled={submitted}
                   onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt.id }))}
                   className={cn(
-                    'w-full text-left rounded-lg border px-4 py-3 text-sm min-h-[48px] transition-colors active:bg-accent/50',
-                    selected && 'border-primary bg-primary/5',
-                    showResult && isCorrect && 'border-emerald-500 bg-emerald-50',
-                    showResult && selected && !isCorrect && 'border-destructive bg-destructive/5'
+                    'w-full text-left rounded-lg border px-4 py-3 text-sm min-h-[48px] transition-colors text-foreground',
+                    'active:bg-accent/50',
+                    !submitted && selected && 'border-primary bg-primary/10',
+                    showResult &&
+                      isCorrect &&
+                      'border-emerald-600 bg-emerald-500/15 dark:border-emerald-500 dark:bg-emerald-950/50',
+                    showResult &&
+                      selected &&
+                      !isCorrect &&
+                      'border-destructive bg-destructive/15 dark:bg-destructive/25'
                   )}
                 >
                   {opt.text}
@@ -93,8 +99,15 @@ export function QuizRenderer({
           Submit Quiz
         </Button>
       ) : (
-        <div className="rounded-lg bg-accent p-4">
-          <p className="font-semibold">
+        <div
+          className={cn(
+            'rounded-lg border p-4',
+            score >= content.passing_score
+              ? 'border-emerald-600/50 bg-emerald-500/10 dark:bg-emerald-950/40'
+              : 'border-amber-600/50 bg-amber-500/10 dark:bg-amber-950/40'
+          )}
+        >
+          <p className="font-semibold text-foreground">
             Score: {score}% — {score >= content.passing_score ? 'Passed' : 'Did not pass'}
           </p>
         </div>

@@ -7,6 +7,7 @@ import { DecisionTreeWorkshop } from '@/components/workshops/DecisionTreeWorksho
 import { HotspotWorkshop } from '@/components/workshops/HotspotWorkshop'
 import type { LessonContent, QuizContent } from '@/types/course.types'
 import type { Module } from '@/types/course.types'
+import type { ModuleCompletePayload } from '@/types/training.types'
 import type { WorkshopContent } from '@/types/workshop.types'
 
 interface CourseViewerProps {
@@ -14,7 +15,8 @@ interface CourseViewerProps {
   currentIndex: number
   completedIndices: Set<number>
   moduleComplete: boolean
-  onModuleComplete: (score?: number, passed?: boolean) => void
+  onModuleComplete: (payload: ModuleCompletePayload) => void
+  onReviewLesson: (moduleIndex: number) => void
 }
 
 export function CourseViewer({
@@ -23,6 +25,7 @@ export function CourseViewer({
   completedIndices,
   moduleComplete,
   onModuleComplete,
+  onReviewLesson,
 }: CourseViewerProps) {
   const module = modules[currentIndex]
   if (!module) return null
@@ -33,28 +36,49 @@ export function CourseViewer({
         return (
           <LessonRenderer
             content={module.content as unknown as LessonContent}
-            onComplete={() => onModuleComplete(100, true)}
+            onComplete={() => onModuleComplete({ score: 100, passed: true })}
           />
         )
       case 'quiz':
         return (
           <QuizRenderer
             content={module.content as unknown as QuizContent}
-            onComplete={(score, passed) => onModuleComplete(score, passed)}
+            onComplete={(score, passed) => onModuleComplete({ score, passed })}
           />
         )
       case 'workshop': {
         const wc = module.content as unknown as WorkshopContent
-        const onDone = () => onModuleComplete(100, true)
         switch (wc.workshop_type) {
           case 'node_map':
-            return <NodeMapWorkshop content={wc} onComplete={onDone} />
+            return (
+              <NodeMapWorkshop
+                content={wc}
+                onComplete={() => onModuleComplete({ score: 100, passed: true })}
+              />
+            )
           case 'sorting':
-            return <SortingWorkshop content={wc} onComplete={onDone} />
+            return (
+              <SortingWorkshop
+                content={wc}
+                modules={modules}
+                onComplete={onModuleComplete}
+                onReviewLesson={onReviewLesson}
+              />
+            )
           case 'decision_tree':
-            return <DecisionTreeWorkshop content={wc} onComplete={onDone} />
+            return (
+              <DecisionTreeWorkshop
+                content={wc}
+                onComplete={() => onModuleComplete({ score: 100, passed: true })}
+              />
+            )
           case 'hotspot':
-            return <HotspotWorkshop content={wc} onComplete={onDone} />
+            return (
+              <HotspotWorkshop
+                content={wc}
+                onComplete={() => onModuleComplete({ score: 100, passed: true })}
+              />
+            )
           default:
             return <p>Unknown workshop type</p>
         }
@@ -63,6 +87,11 @@ export function CourseViewer({
         return null
     }
   }
+
+  const showWorkshopHint =
+    module.type === 'workshop' &&
+    (module.content as WorkshopContent).workshop_type === 'node_map' &&
+    !moduleComplete
 
   return (
     <div className="grid lg:grid-cols-[minmax(0,240px)_1fr] gap-4 lg:gap-6">
@@ -76,8 +105,10 @@ export function CourseViewer({
       <div>
         <h2 className="text-lg sm:text-xl font-bold mb-4">{module.title}</h2>
         {renderModule()}
-        {!moduleComplete && module.type === 'workshop' && (
-          <p className="text-sm text-muted-foreground mt-4">Complete all activities to continue.</p>
+        {showWorkshopHint && (
+          <p className="text-sm text-muted-foreground mt-4">
+            Complete all map alerts to continue.
+          </p>
         )}
       </div>
     </div>

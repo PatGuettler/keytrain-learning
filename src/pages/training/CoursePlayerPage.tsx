@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, PartyPopper } from 'lucide-react'
@@ -9,9 +9,18 @@ import { useAssignments } from '@/hooks/useAssignments'
 import { useTrainingSession } from '@/hooks/useTrainingSession'
 import { useAuthStore } from '@/store/authStore'
 import { updateAssignment } from '@/services/assignments.service'
+import { saveModuleAttempt } from '@/services/sessions.service'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDuration } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import type { ModuleCompletePayload } from '@/types/training.types'
+
+interface ModuleScoreRecord {
+  moduleId: string
+  title: string
+  score: number
+  passed: boolean
+}
 
 export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
   const { courseId } = useParams<{ courseId: string }>()
@@ -26,13 +35,15 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
   const [completedIndices, setCompletedIndices] = useState<Set<number>>(new Set())
   const [moduleReady, setModuleReady] = useState(false)
   const [finished, setFinished] = useState(false)
+  const [courseScore, setCourseScore] = useState<number | null>(null)
   const [elapsed, setElapsed] = useState(0)
+  const moduleScoresRef = useRef<ModuleScoreRecord[]>([])
 
-  const { finish } = useTrainingSession(
+  const { session, finish } = useTrainingSession(
     assignment?.id ?? 'demo',
     userId,
     courseId!,
-    Boolean(assignment || !assignment)
+    Boolean(userId && courseId)
   )
 
   useEffect(() => {
@@ -40,30 +51,67 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
     return () => clearInterval(t)
   }, [])
 
-  const onModuleComplete = useCallback(
-    (_score?: number, passed?: boolean) => {
+  const handleModuleComplete = useCallback(
+    async (payload: ModuleCompletePayload) => {
+      const mod = modules[currentIndex]
+      if (!mod) return
+
       setCompletedIndices((prev) => new Set(prev).add(currentIndex))
-      setModuleReady(true)
-      if (modules[currentIndex]?.type === 'quiz' && passed === false) {
+      moduleScoresRef.current = [
+        ...moduleScoresRef.current.filter((m) => m.moduleId !== mod.id),
+        { moduleId: mod.id, title: mod.title, score: payload.score, passed: payload.passed },
+      ]
+
+      if (session?.id) {
+        await saveModuleAttempt({
+          session_id: session.id,
+          module_id: mod.id,
+          user_id: userId,
+          score: payload.score,
+          completed_at: new Date().toISOString(),
+          time_spent_seconds: 0,
+          interactions: payload.interactions ?? { passed: payload.passed },
+        })
+      }
+
+      if (mod.type === 'quiz' && !payload.passed) {
         setModuleReady(false)
+      } else {
+        setModuleReady(true)
       }
     },
-    [currentIndex, modules]
+    [currentIndex, modules, session?.id, userId]
   )
 
   const canNext = moduleReady || completedIndices.has(currentIndex)
   const isLast = currentIndex >= modules.length - 1
 
+  const handleReviewLesson = (moduleIndex: number) => {
+    setCurrentIndex(moduleIndex)
+    setModuleReady(completedIndices.has(moduleIndex))
+  }
+
   const handleNext = async () => {
     if (!canNext) return
     if (isLast) {
-      await finish(100, true)
-      if (assignment) await updateAssignment(assignment.id, { status: 'completed' })
+      const scores = moduleScoresRef.current
+      const avg =
+        scores.length > 0
+          ? Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length)
+          : 100
+      const allPassed = scores.every((s) => s.passed)
+      setCourseScore(avg)
+      await finish(avg, allPassed)
+      if (assignment) {
+        await updateAssignment(assignment.id, {
+          status: 'completed',
+        })
+      }
       setFinished(true)
       return
     }
     setCurrentIndex((i) => i + 1)
-    setModuleReady(false)
+    setModuleReady(completedIndices.has(currentIndex + 1))
   }
 
   if (isLoading || !course) {
@@ -71,15 +119,33 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
   }
 
   if (finished) {
+    const scores = moduleScoresRef.current
     return (
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 px-4"
+        className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 px-4 max-w-lg mx-auto"
       >
         <PartyPopper className="h-14 w-14 sm:h-16 sm:w-16 text-primary" />
         <h2 className="text-2xl sm:text-3xl font-bold">Course Complete!</h2>
-        <p className="text-muted-foreground text-sm sm:text-base">Great work on {course.title}</p>
+        <p className="text-muted-foreground text-sm sm:text-base">
+          {course.title} — saved to your training profile
+        </p>
+        {courseScore !== null && (
+          <div className="w-full rounded-lg border bg-card p-4 text-left space-y-2">
+            <p className="font-semibold text-center text-lg">Overall score: {courseScore}%</p>
+            <ul className="text-sm space-y-1">
+              {scores.map((s) => (
+                <li key={s.moduleId} className="flex justify-between gap-2">
+                  <span className="text-muted-foreground truncate">{s.title}</span>
+                  <span className={s.passed ? 'text-emerald-600 font-medium' : 'text-amber-600'}>
+                    {s.score}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <Button size="lg" className="w-full max-w-xs min-h-12" onClick={() => navigate(dashboardPath)}>
           Return to Dashboard
         </Button>
@@ -102,11 +168,8 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
         currentIndex={currentIndex}
         completedIndices={completedIndices}
         moduleComplete={canNext}
-        onModuleComplete={(score, passed) => {
-          onModuleComplete(score, passed)
-          if (modules[currentIndex]?.type !== 'quiz') setModuleReady(true)
-          else if (passed) setModuleReady(true)
-        }}
+        onModuleComplete={handleModuleComplete}
+        onReviewLesson={handleReviewLesson}
       />
       <div
         className={cn(

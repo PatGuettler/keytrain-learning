@@ -1,5 +1,5 @@
 import { getSupabase, isSupabaseConfigured } from './supabase'
-import { createDemoSession, updateDemoSession } from './demo-data'
+import { createDemoSession, saveDemoModuleAttempt, updateDemoSession } from './demo-data'
 import type { ModuleAttempt, TrainingSession } from '@/types/course.types'
 import type { Database, Json } from '@/types/database.types'
 
@@ -57,8 +57,23 @@ export async function completeSession(
     .eq('id', sessionId)
 }
 
-export async function saveModuleAttempt(attempt: Partial<ModuleAttempt> & { session_id: string; module_id: string; user_id: string }) {
-  if (!isSupabaseConfigured) return attempt as ModuleAttempt
+export async function saveModuleAttempt(
+  attempt: Partial<ModuleAttempt> & { session_id: string; module_id: string; user_id: string }
+) {
+  if (!isSupabaseConfigured) {
+    return saveDemoModuleAttempt({
+      session_id: attempt.session_id,
+      module_id: attempt.module_id,
+      user_id: attempt.user_id,
+      started_at: attempt.started_at,
+      completed_at: attempt.completed_at ?? new Date().toISOString(),
+      time_spent_seconds: attempt.time_spent_seconds ?? 0,
+      score: attempt.score ?? null,
+      answers: attempt.answers ?? null,
+      interactions: attempt.interactions ?? null,
+      id: attempt.id,
+    })
+  }
   const supabase = getSupabase()!
   const row = toAttemptRow(attempt)
   if (attempt.id) {

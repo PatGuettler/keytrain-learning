@@ -1,4 +1,4 @@
-import type { Assignment, Course, Module, TrainingSession } from '@/types/course.types'
+import type { Assignment, Course, Module, ModuleAttempt, TrainingSession } from '@/types/course.types'
 import type { Profile } from '@/types/user.types'
 import { DEMO_ORG_ID, DEMO_USERS } from '@/lib/constants'
 
@@ -222,19 +222,72 @@ export const demoModules: Module[] = [
       title: 'Incident Sorting Challenge',
       instructions: 'Drag each incident card into the correct category.',
       config: {
+        passing_score: 70,
         categories: [
           { id: 'clinical', label: 'Clinical' },
           { id: 'cyber', label: 'Cybersecurity' },
           { id: 'physical', label: 'Physical' },
           { id: 'admin', label: 'Administrative' },
         ],
+        category_guides: {
+          clinical: {
+            summary:
+              'Clinical incidents directly affect patient safety: medications, falls, treatment errors, and near-misses.',
+            review_module_index: 0,
+          },
+          cyber: {
+            summary:
+              'Cybersecurity incidents involve data breaches, phishing, ransomware, and unauthorized access to PHI.',
+            review_module_index: 1,
+          },
+          physical: {
+            summary:
+              'Physical/facilities incidents cover building systems, slips, equipment failures — not direct clinical care errors.',
+            review_module_index: 0,
+          },
+          admin: {
+            summary:
+              'Administrative incidents include consent, scheduling, billing, and documentation process failures.',
+            review_module_index: 0,
+          },
+        },
         cards: [
-          { id: 'c1', text: 'Wrong medication administered', category_id: 'clinical' },
-          { id: 'c2', text: 'Phishing email clicked by staff', category_id: 'cyber' },
-          { id: 'c3', text: 'Broken elevator strands patients', category_id: 'physical' },
-          { id: 'c4', text: 'Missing consent form', category_id: 'admin' },
-          { id: 'c5', text: 'Patient fall with injury', category_id: 'clinical' },
-          { id: 'c6', text: 'Ransomware on workstation', category_id: 'cyber' },
+          {
+            id: 'c1',
+            text: 'Wrong medication administered',
+            category_id: 'clinical',
+            hint: 'Medication errors that reach or could reach a patient are clinical incidents.',
+          },
+          {
+            id: 'c2',
+            text: 'Phishing email clicked by staff',
+            category_id: 'cyber',
+            hint: 'Phishing and unauthorized data access are cybersecurity/privacy incidents.',
+          },
+          {
+            id: 'c3',
+            text: 'Broken elevator strands patients',
+            category_id: 'physical',
+            hint: 'Facilities and infrastructure issues without a direct care error are physical incidents.',
+          },
+          {
+            id: 'c4',
+            text: 'Missing consent form',
+            category_id: 'admin',
+            hint: 'Consent and paperwork gaps are administrative — not clinical or facilities.',
+          },
+          {
+            id: 'c5',
+            text: 'Patient fall with injury',
+            category_id: 'clinical',
+            hint: 'Patient falls with injury are clinical incidents because they harm patient safety.',
+          },
+          {
+            id: 'c6',
+            text: 'Ransomware on workstation',
+            category_id: 'cyber',
+            hint: 'Ransomware attacks on hospital systems are cybersecurity incidents.',
+          },
         ],
       },
     },
@@ -293,6 +346,30 @@ let demoAssignments: Assignment[] = [
 ]
 
 const demoSessions: TrainingSession[] = []
+const demoModuleAttempts: ModuleAttempt[] = []
+
+const DEMO_ATTEMPTS_KEY = 'guardianmd-module-attempts'
+
+function loadPersistedAttempts(): void {
+  try {
+    const raw = localStorage.getItem(DEMO_ATTEMPTS_KEY)
+    if (!raw) return
+    const parsed = JSON.parse(raw) as ModuleAttempt[]
+    demoModuleAttempts.push(...parsed)
+  } catch {
+    /* ignore */
+  }
+}
+
+function persistAttempts() {
+  try {
+    localStorage.setItem(DEMO_ATTEMPTS_KEY, JSON.stringify(demoModuleAttempts))
+  } catch {
+    /* ignore */
+  }
+}
+
+if (typeof window !== 'undefined') loadPersistedAttempts()
 
 export function getDemoAssignments(userId?: string) {
   return demoAssignments
@@ -346,4 +423,34 @@ export function updateDemoSession(id: string, patch: Partial<TrainingSession>) {
   const s = demoSessions.find((x) => x.id === id)
   if (s) Object.assign(s, patch)
   return s
+}
+
+export function saveDemoModuleAttempt(
+  attempt: Omit<ModuleAttempt, 'id'> & { id?: string }
+) {
+  const record: ModuleAttempt = {
+    id: attempt.id ?? crypto.randomUUID(),
+    session_id: attempt.session_id,
+    module_id: attempt.module_id,
+    user_id: attempt.user_id,
+    started_at: attempt.started_at ?? new Date().toISOString(),
+    completed_at: attempt.completed_at ?? new Date().toISOString(),
+    time_spent_seconds: attempt.time_spent_seconds ?? 0,
+    score: attempt.score ?? null,
+    answers: attempt.answers ?? null,
+    interactions: attempt.interactions ?? null,
+  }
+  const idx = demoModuleAttempts.findIndex(
+    (a) => a.session_id === record.session_id && a.module_id === record.module_id
+  )
+  if (idx >= 0) demoModuleAttempts[idx] = record
+  else demoModuleAttempts.push(record)
+  persistAttempts()
+  return record
+}
+
+export function getDemoModuleAttempts(userId: string, sessionId?: string) {
+  return demoModuleAttempts.filter(
+    (a) => a.user_id === userId && (!sessionId || a.session_id === sessionId)
+  )
 }
