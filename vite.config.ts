@@ -26,12 +26,25 @@ function ghPagesSpaFallback(): Plugin {
     closeBundle() {
       if (process.env.GITHUB_PAGES !== 'true') return
       const dist = path.resolve(__dirname, 'dist')
-      const index = path.join(dist, 'index.html')
-      const fallback = path.join(dist, '404.html')
-      if (fs.existsSync(index)) {
-        fs.copyFileSync(index, fallback)
-      }
-      // Prevent Jekyll from skipping asset folders on legacy gh-pages branch deploys
+      const base = getPagesBase()
+      const baseUrl = base.endsWith('/') ? base : `${base}/`
+
+      // GitHub Pages serves 404.html for unknown paths — redirect to app root, then
+      // main.tsx restores the deep link (see restoreGhPagesSpaRedirect).
+      const fallbackHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GuardianMD</title>
+  <script>
+    sessionStorage.setItem('redirect', location.href);
+    location.replace(location.origin + ${JSON.stringify(baseUrl)});
+  </script>
+</head>
+<body></body>
+</html>
+`
+      fs.writeFileSync(path.join(dist, '404.html'), fallbackHtml, 'utf-8')
       fs.writeFileSync(path.join(dist, '.nojekyll'), '')
     },
   }

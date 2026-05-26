@@ -168,7 +168,6 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
         modules={modules}
         currentIndex={currentIndex}
         completedIndices={completedIndices}
-        moduleComplete={canNext}
         onModuleComplete={handleModuleComplete}
         onReviewLesson={handleReviewLesson}
       />

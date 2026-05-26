@@ -132,6 +132,10 @@ On push to `main`, `.github/workflows/deploy.yml`:
 
 If you use the older `peaceiris/actions-gh-pages` action instead, set workflow permission **Contents: Read and write** (or add `contents: write` to the workflow `permissions` block).
 
+### Direct links / refresh on a course URL
+
+GitHub Pages only serves `index.html` at the site root. Deep paths like `/guardian-md/employee/training/play/<courseId>` need a `404.html` that redirects to the app root; the app then restores the URL client-side. The Vite build writes this file when `GITHUB_PAGES=true` (set in the deploy workflow). After deploying, hard-refresh or open the course from **My Training** once, then bookmarking and refresh should work.
+
 ## Database schema
 
 See [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql) for tables:

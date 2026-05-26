@@ -15,7 +15,6 @@ interface CourseViewerProps {
   modules: Module[]
   currentIndex: number
   completedIndices: Set<number>
-  moduleComplete: boolean
   onModuleComplete: (payload: ModuleCompletePayload) => void
   onReviewLesson: (moduleIndex: number) => void
 }
@@ -24,7 +23,6 @@ export function CourseViewer({
   modules,
   currentIndex,
   completedIndices,
-  moduleComplete,
   onModuleComplete,
   onReviewLesson,
 }: CourseViewerProps) {
