@@ -179,7 +179,7 @@ export function SortingWorkshop({
                 <DraggableCard key={c.id} id={c.id} text={c.text} />
               ))}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
               {config.categories.map((cat) => (
                 <div key={cat.id} onClick={() => handleTapPlace(cat.id)} className="md:contents">
                   <DropColumn
@@ -230,7 +230,7 @@ export function SortingWorkshop({
           </Card>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 opacity-90">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 opacity-90">
               {config.categories.map((cat) => (
                 <DropColumn
                   key={cat.id}

@@ -90,7 +90,7 @@ export function CourseViewer({
 
   const showWorkshopHint =
     module.type === 'workshop' &&
-    (module.content as WorkshopContent).workshop_type === 'node_map' &&
+    (module.content as unknown as WorkshopContent).workshop_type === 'node_map' &&
     !moduleComplete
 
   return (

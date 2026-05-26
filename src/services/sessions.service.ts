@@ -65,7 +65,7 @@ export async function saveModuleAttempt(
       session_id: attempt.session_id,
       module_id: attempt.module_id,
       user_id: attempt.user_id,
-      started_at: attempt.started_at,
+      started_at: attempt.started_at ?? new Date().toISOString(),
       completed_at: attempt.completed_at ?? new Date().toISOString(),
       time_spent_seconds: attempt.time_spent_seconds ?? 0,
       score: attempt.score ?? null,

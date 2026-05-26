@@ -59,10 +59,18 @@ export function QuizRenderer({
         <div key={q.id} className="space-y-3 rounded-lg border p-4">
           <p className="font-medium">
             {qi + 1}. {q.text}
+            {q.type === 'multi_select' && (
+              <span className="block text-sm font-normal text-muted-foreground mt-1">
+                Select all that apply.
+              </span>
+            )}
           </p>
           <div className="space-y-2">
             {q.options.map((opt) => {
-              const selected = answers[q.id] === opt.id
+              const selected =
+                q.type === 'multi_select'
+                  ? ((answers[q.id] as string[] | undefined) ?? []).includes(opt.id)
+                  : answers[q.id] === opt.id
               const showResult = submitted
               const isCorrect = opt.correct
               return (
@@ -70,7 +78,19 @@ export function QuizRenderer({
                   key={opt.id}
                   type="button"
                   disabled={submitted}
-                  onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt.id }))}
+                  onClick={() => {
+                    if (q.type === 'multi_select') {
+                      setAnswers((a) => {
+                        const cur = (a[q.id] as string[] | undefined) ?? []
+                        const next = cur.includes(opt.id)
+                          ? cur.filter((id) => id !== opt.id)
+                          : [...cur, opt.id]
+                        return { ...a, [q.id]: next }
+                      })
+                    } else {
+                      setAnswers((a) => ({ ...a, [q.id]: opt.id }))
+                    }
+                  }}
                   className={cn(
                     'w-full text-left rounded-lg border px-4 py-3 text-sm min-h-[48px] transition-colors text-foreground',
                     'active:bg-accent/50',
@@ -95,7 +115,16 @@ export function QuizRenderer({
         </div>
       ))}
       {!submitted ? (
-        <Button onClick={handleSubmit} disabled={Object.keys(answers).length < questions.length}>
+        <Button
+          onClick={handleSubmit}
+          disabled={
+            !questions.every((q) => {
+              const a = answers[q.id]
+              if (q.type === 'multi_select') return Array.isArray(a) && a.length > 0
+              return typeof a === 'string' && a.length > 0
+            })
+          }
+        >
           Submit Quiz
         </Button>
       ) : (
