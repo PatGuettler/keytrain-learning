@@ -1,5 +1,6 @@
 import { backend } from '@/backend'
 import { PLATFORM_ORG_ID } from '@/lib/constants'
+import { isEdgeFunctionUnavailable } from '@/lib/edge-functions'
 import { deleteOrganizationById } from '@/services/user-management.service'
 import type { Organization } from '@/types/user.types'
 
@@ -21,7 +22,7 @@ export async function updateOrganization(id: string, name: string) {
   return backend.organizations.updateOrganization(id, { name })
 }
 
-import { isEdgeFunctionUnavailable } from '@/lib/edge-functions'
+export async function deleteOrganization(id: string) {
   if (id === PLATFORM_ORG_ID) {
     throw new Error('The platform administration organization cannot be deleted.')
   }

@@ -9,6 +9,14 @@ export type LessonIllustrationKey =
   | 'cybersecurity'
   | 'team_safety'
 
+export const LESSON_ILLUSTRATION_KEYS: { value: LessonIllustrationKey; label: string }[] = [
+  { value: 'clinical_incident', label: 'Clinical incident' },
+  { value: 'stop_report', label: 'Stop & report' },
+  { value: 'reporting', label: 'Reporting / checklist' },
+  { value: 'cybersecurity', label: 'Cybersecurity' },
+  { value: 'team_safety', label: 'Team safety' },
+]
+
 type IllustrationProps = SVGProps<SVGSVGElement>
 
 export function ClinicalIncidentIllustration({ className }: IllustrationProps) {

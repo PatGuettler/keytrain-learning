@@ -1,0 +1,181 @@
+import type { LessonContent, Module, QuizContent } from '@/types/course.types'
+import type { WorkshopContent, WorkshopType } from '@/types/workshop.types'
+
+const selectLayouts = ['image-right', 'image-left', 'image-top', 'full-bleed'] as const
+
+export function newSlideId(): string {
+  return `slide_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+}
+
+export function newQuestionId(): string {
+  return `q_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+}
+
+export function newNodeId(): string {
+  return `node_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+}
+
+export function defaultLessonContent(): LessonContent {
+  return {
+    slides: [
+      {
+        id: newSlideId(),
+        heading: 'Lesson heading',
+        body: 'Write the lesson content here. Explain key concepts clearly for clinical staff.',
+        layout: 'image-right',
+        illustration: {
+          key: 'clinical_incident',
+          alt: 'Illustration for this slide',
+          caption: '',
+        },
+      },
+    ],
+  }
+}
+
+export function defaultQuizContent(): QuizContent {
+  return {
+    passing_score: 80,
+    randomize_questions: true,
+    questions: [
+      {
+        id: newQuestionId(),
+        text: 'Sample question — replace with your own',
+        type: 'single_select',
+        options: [
+          { id: 'a', text: 'Correct answer', correct: true },
+          { id: 'b', text: 'Incorrect option', correct: false },
+          { id: 'c', text: 'Another incorrect option', correct: false },
+        ],
+        explanation: 'Explain why the correct answer is right.',
+      },
+    ],
+  }
+}
+
+function defaultWorkshopConfig(type: WorkshopType) {
+  switch (type) {
+    case 'node_map':
+      return {
+        background_image: '',
+        passing_score: 60,
+        nodes: [
+          {
+            id: newNodeId(),
+            x_percent: 50,
+            y_percent: 40,
+            icon: 'alert',
+            label: 'Location 1',
+            scenario: 'Describe what staff observe at this location.',
+            question: {
+              text: 'What type of incident is this?',
+              options: [
+                { id: 'a', text: 'Clinical' },
+                { id: 'b', text: 'Cybersecurity / Privacy' },
+                { id: 'c', text: 'Physical / Facilities' },
+              ],
+              correct_id: 'a',
+            },
+          },
+        ],
+      }
+    case 'sorting':
+      return {
+        categories: [
+          { id: 'clinical', label: 'Clinical' },
+          { id: 'cyber', label: 'Cybersecurity' },
+          { id: 'physical', label: 'Physical' },
+          { id: 'admin', label: 'Administrative' },
+        ],
+        cards: [
+          { id: 'c1', text: 'Example incident — edit or add more cards', category_id: 'clinical' },
+        ],
+        passing_score: 80,
+      }
+    case 'decision_tree':
+      return {
+        start_node_id: 'start',
+        nodes: {
+          start: {
+            id: 'start',
+            title: 'Scenario start',
+            description: 'Describe the opening scenario.',
+            choices: [
+              { id: 'good', label: 'Take the safe action', next_node_id: 'good_end' },
+              { id: 'bad', label: 'Take the risky action', next_node_id: 'bad_end' },
+            ],
+          },
+          good_end: {
+            id: 'good_end',
+            title: 'Good outcome',
+            description: 'Explain what went well.',
+            outcome: 'good',
+            teachable_moment: 'Key takeaway for staff.',
+          },
+          bad_end: {
+            id: 'bad_end',
+            title: 'Needs improvement',
+            description: 'Explain what should have been done differently.',
+            outcome: 'bad',
+            teachable_moment: 'What to do next time.',
+          },
+        },
+      }
+    case 'hotspot':
+      return {
+        background_image: '',
+        regions: [],
+      }
+  }
+}
+
+export function defaultWorkshopContent(type: WorkshopType = 'node_map'): WorkshopContent {
+  return {
+    workshop_type: type,
+    title: type === 'sorting' ? 'Sorting challenge' : 'Interactive workshop',
+    instructions:
+      type === 'node_map'
+        ? 'Explore the floor plan and tap each alert pin. Read the scenario and classify the incident.'
+        : type === 'sorting'
+          ? 'Drag each incident card into the correct category.'
+          : 'Follow the instructions to complete this activity.',
+    config: defaultWorkshopConfig(type),
+  }
+}
+
+export function createEmptyModule(
+  type: 'lesson' | 'quiz' | 'workshop',
+  orderIndex: number,
+  courseId = 'new'
+): Module {
+  const content =
+    type === 'lesson'
+      ? defaultLessonContent()
+      : type === 'quiz'
+        ? defaultQuizContent()
+        : defaultWorkshopContent('node_map')
+
+  return {
+    id: `temp-${Date.now()}-${orderIndex}`,
+    course_id: courseId,
+    title: type === 'lesson' ? 'New lesson' : type === 'quiz' ? 'Knowledge check' : 'Interactive workshop',
+    type,
+    order_index: orderIndex,
+    content: content as unknown as Record<string, unknown>,
+    created_at: new Date().toISOString(),
+  }
+}
+
+/** Clone modules for the builder with fresh temp ids (keeps content intact). */
+export function cloneModulesForBuilder(modules: Module[], courseId = 'new'): Module[] {
+  return modules.map((m, index) => ({
+    ...m,
+    id: `temp-${Date.now()}-${index}`,
+    course_id: courseId,
+    order_index: index,
+    content: JSON.parse(JSON.stringify(m.content)) as Record<string, unknown>,
+    created_at: new Date().toISOString(),
+  }))
+}
+
+export const LESSON_LAYOUTS = selectLayouts
