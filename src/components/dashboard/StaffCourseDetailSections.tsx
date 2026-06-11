@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { StaffCourseResultsTable } from '@/components/dashboard/StaffCourseResultsTable'
+import { STATUS_LABELS } from '@/lib/constants'
 import {
   buildScoreHistory,
   extractModuleIssues,
@@ -10,49 +10,89 @@ import { formatDate } from '@/lib/utils'
 import type { ModuleAttempt, TrainingSession } from '@/types/course.types'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
-function courseTitleForSession(session: TrainingSession, rows: StaffTrainingRow[]): string {
-  return rows.find((r) => r.courseId === session.course_id)?.courseTitle ?? 'Course'
+const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
+  pending: 'secondary',
+  in_progress: 'default',
+  completed: 'success',
+  overdue: 'destructive',
 }
 
-export function StaffTrainingDetailSections({
-  trainingRows,
+export function StaffCourseDetailSections({
+  courseRow,
   sessions,
   moduleAttempts,
 }: {
-  trainingRows: StaffTrainingRow[]
+  courseRow: StaffTrainingRow
   sessions: TrainingSession[]
   moduleAttempts: ModuleAttempt[]
 }) {
-  const scoreHistory = buildScoreHistory(sessions)
-  const completedSessions = sessions
+  const courseSessions = sessions.filter((s) => s.course_id === courseRow.courseId)
+  const courseModuleAttempts = moduleAttempts.filter(
+    (a) => a.module?.course_id === courseRow.courseId
+  )
+  const scoreHistory = buildScoreHistory(courseSessions)
+  const completedSessions = courseSessions
     .filter((s) => s.completed_at)
     .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime())
 
   return (
     <>
-      <StaffCourseResultsTable rows={trainingRows} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Course summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+            <div>
+              <dt className="text-muted-foreground">Status</dt>
+              <dd className="mt-1">
+                <Badge variant={statusVariant[courseRow.status]}>{STATUS_LABELS[courseRow.status]}</Badge>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Score</dt>
+              <dd className="mt-1 font-medium tabular-nums">
+                {courseRow.score != null ? `${courseRow.score}%` : '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Attempts</dt>
+              <dd className="mt-1 font-medium tabular-nums">
+                {courseRow.attemptsUsed}/{courseRow.maxAttempts}
+                {courseRow.locked && (
+                  <Badge variant="destructive" className="ml-2">
+                    Locked
+                  </Badge>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Due</dt>
+              <dd className="mt-1 font-medium">{formatDate(courseRow.dueDate)}</dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
 
-      <div className="grid gap-5 lg:grid-cols-1">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Scores over time</CardTitle>
-          </CardHeader>
-          <CardContent className="h-48">
-            {scoreHistory.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-16">No completed sessions yet.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={scoreHistory}>
-                  <XAxis dataKey="date" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="score" stroke="#0d9488" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Scores over time</CardTitle>
+        </CardHeader>
+        <CardContent className="h-48">
+          {scoreHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-16">No completed attempts yet.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={scoreHistory}>
+                <XAxis dataKey="date" />
+                <YAxis domain={[0, 100]} />
+                <Tooltip />
+                <Line type="monotone" dataKey="score" stroke="#0d9488" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -69,16 +109,14 @@ export function StaffTrainingDetailSections({
                   className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-3"
                 >
                   <div>
-                    <p className="font-medium text-sm">
-                      {courseTitleForSession(session, trainingRows)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(session.completed_at)}
-                    </p>
+                    <p className="font-medium text-sm">Attempt {session.attempt_number}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(session.completed_at)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {session.score != null && (
-                      <span className="text-sm font-medium tabular-nums">{Math.round(Number(session.score))}%</span>
+                      <span className="text-sm font-medium tabular-nums">
+                        {Math.round(Number(session.score))}%
+                      </span>
                     )}
                     <Badge variant={session.passed ? 'success' : 'warning'}>
                       {session.passed ? 'Passed' : 'Failed'}
@@ -96,11 +134,11 @@ export function StaffTrainingDetailSections({
           <CardTitle className="text-base">Module attempts & mistakes</CardTitle>
         </CardHeader>
         <CardContent>
-          {moduleAttempts.length === 0 ? (
+          {courseModuleAttempts.length === 0 ? (
             <p className="text-sm text-muted-foreground">No module attempts recorded yet.</p>
           ) : (
             <ul className="space-y-3">
-              {moduleAttempts.map((attempt) => {
+              {courseModuleAttempts.map((attempt) => {
                 const issues = extractModuleIssues(attempt)
                 const passed =
                   attempt.interactions?.passed === true ||

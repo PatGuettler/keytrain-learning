@@ -3,18 +3,18 @@ import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Award, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react'
 import { fetchAssignments } from '@/services/assignments.service'
-import { fetchUserModuleAttempts, fetchSessions } from '@/services/sessions.service'
 import { fetchOrgMembers } from '@/services/users.service'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { StatCard } from '@/components/dashboard/StatCard'
+import { StaffCourseDirectory } from '@/components/dashboard/StaffCourseDirectory'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { StaffTrainingDetailSections } from '@/components/dashboard/StaffTrainingDetailSections'
 import {
   buildStaffSummaryRows,
   buildStaffTrainingRows,
   staffOverallStatus,
 } from '@/lib/dashboard-stats'
+
 const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
   completed: 'success',
   in_progress: 'default',
@@ -43,18 +43,6 @@ export function AdminStaffTrainingPage() {
   const { data: assignments = [] } = useQuery({
     queryKey: ['assignments', userId],
     queryFn: () => fetchAssignments(userId),
-    enabled: Boolean(userId),
-  })
-
-  const { data: sessions = [] } = useQuery({
-    queryKey: ['training-sessions', userId],
-    queryFn: () => fetchSessions(userId),
-    enabled: Boolean(userId),
-  })
-
-  const { data: moduleAttempts = [] } = useQuery({
-    queryKey: ['user-module-attempts', userId],
-    queryFn: () => fetchUserModuleAttempts(userId!),
     enabled: Boolean(userId),
   })
 
@@ -116,10 +104,11 @@ export function AdminStaffTrainingPage() {
         </div>
       )}
 
-      <StaffTrainingDetailSections
-        trainingRows={trainingRows}
-        sessions={sessions}
-        moduleAttempts={moduleAttempts}
+      <StaffCourseDirectory
+        rows={trainingRows}
+        getCourseDetailPath={(courseId) =>
+          `/admin/dashboard/${orgId}/staff/${userId}/courses/${courseId}`
+        }
       />
     </div>
   )

@@ -58,8 +58,7 @@ export function OrgStaffDirectory({
         <div>
           <CardTitle className="text-base">{title}</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Search by name or email, then open a staff member to view course scores, attempts, and
-            mistakes.
+            Search by name or email, then open a staff member to view their courses.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

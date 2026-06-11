@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Award, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react'
 import { fetchProfiles } from '@/services/users.service'
 import { fetchAssignments } from '@/services/assignments.service'
-import { fetchSessions, fetchUserModuleAttempts } from '@/services/sessions.service'
 import { formatDate } from '@/lib/utils'
 import {
   buildStaffSummaryRows,
@@ -14,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { StatCard } from '@/components/dashboard/StatCard'
-import { StaffTrainingDetailSections } from '@/components/dashboard/StaffTrainingDetailSections'
+import { StaffCourseDirectory } from '@/components/dashboard/StaffCourseDirectory'
 import { useAuthStore } from '@/store/authStore'
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
@@ -48,18 +47,6 @@ export function EmployeeDetailPage() {
   const { data: assignments = [] } = useQuery({
     queryKey: ['assignments', employeeId],
     queryFn: () => fetchAssignments(employeeId),
-    enabled: Boolean(employeeId),
-  })
-
-  const { data: sessions = [] } = useQuery({
-    queryKey: ['training-sessions', employeeId],
-    queryFn: () => fetchSessions(employeeId),
-    enabled: Boolean(employeeId),
-  })
-
-  const { data: moduleAttempts = [] } = useQuery({
-    queryKey: ['user-module-attempts', employeeId],
-    queryFn: () => fetchUserModuleAttempts(employeeId!),
     enabled: Boolean(employeeId),
   })
 
@@ -116,10 +103,9 @@ export function EmployeeDetailPage() {
         </div>
       )}
 
-      <StaffTrainingDetailSections
-        trainingRows={trainingRows}
-        sessions={sessions}
-        moduleAttempts={moduleAttempts}
+      <StaffCourseDirectory
+        rows={trainingRows}
+        getCourseDetailPath={(courseId) => `/manager/team/${employeeId}/courses/${courseId}`}
       />
     </div>
   )
