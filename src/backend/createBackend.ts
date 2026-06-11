@@ -454,46 +454,18 @@ function createSupabaseBackend(): Backend {
         if (error) throw error
       },
       async recordCourseAttemptResult(assignmentId, passed, maxAttempts) {
-        const { data: assignment, error: fetchError } = await supabase
-          .from('assignments')
-          .select('attempts_used, locked_at')
-          .eq('id', assignmentId)
-          .single()
-        if (fetchError) throw fetchError
-
-        if (passed) {
-          const { error } = await supabase
-            .from('assignments')
-            .update({ status: 'completed', locked_at: null })
-            .eq('id', assignmentId)
-          if (error) throw error
-          return {
-            passed: true,
-            attemptsUsed: assignment.attempts_used,
-            maxAttempts,
-            locked: false,
-            attemptsRemaining: maxAttempts - assignment.attempts_used,
-          }
-        }
-
-        const attemptsUsed = assignment.attempts_used + 1
-        const locked = attemptsUsed >= maxAttempts
-        const { error } = await supabase
-          .from('assignments')
-          .update({
-            attempts_used: attemptsUsed,
-            status: 'in_progress',
-            locked_at: locked ? new Date().toISOString() : null,
-          })
-          .eq('id', assignmentId)
+        const { data, error } = await supabase.rpc('record_course_attempt_result', {
+          p_assignment_id: assignmentId,
+          p_passed: passed,
+          p_max_attempts: maxAttempts,
+        })
         if (error) throw error
-
-        return {
-          passed: false,
-          attemptsUsed,
-          maxAttempts,
-          locked,
-          attemptsRemaining: Math.max(0, maxAttempts - attemptsUsed),
+        return data as {
+          passed: boolean
+          attemptsUsed: number
+          maxAttempts: number
+          locked: boolean
+          attemptsRemaining: number
         }
       },
       async requestCourseUnlock({ assignmentId, userId, courseId, orgId, message }) {

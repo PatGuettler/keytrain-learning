@@ -372,6 +372,20 @@ export interface Database {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      record_course_attempt_result: {
+        Args: {
+          p_assignment_id: string
+          p_passed: boolean
+          p_max_attempts: number
+        }
+        Returns: {
+          passed: boolean
+          attemptsUsed: number
+          maxAttempts: number
+          locked: boolean
+          attemptsRemaining: number
+        }
+      }
     }
     Enums: {
       user_role: UserRole

@@ -1,0 +1,72 @@
+-- Employees cannot UPDATE assignments directly (RLS: manager/admin only).
+-- Course finish uses this RPC so staff can record pass/fail and attempt counts.
+
+CREATE OR REPLACE FUNCTION record_course_attempt_result(
+  p_assignment_id UUID,
+  p_passed BOOLEAN,
+  p_max_attempts INT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_user_id UUID;
+  v_attempts_used INT;
+  v_locked_at TIMESTAMPTZ;
+  v_new_attempts INT;
+  v_locked BOOLEAN;
+BEGIN
+  SELECT user_id, attempts_used, locked_at
+  INTO v_user_id, v_attempts_used, v_locked_at
+  FROM assignments
+  WHERE id = p_assignment_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Assignment not found.';
+  END IF;
+
+  IF v_user_id IS DISTINCT FROM auth.uid() AND auth_user_role() <> 'admin' THEN
+    RAISE EXCEPTION 'Not allowed to update this assignment.';
+  END IF;
+
+  IF v_locked_at IS NOT NULL THEN
+    RAISE EXCEPTION 'Course is locked.';
+  END IF;
+
+  IF p_passed THEN
+    UPDATE assignments
+    SET status = 'completed', locked_at = NULL
+    WHERE id = p_assignment_id;
+
+    RETURN jsonb_build_object(
+      'passed', true,
+      'attemptsUsed', v_attempts_used,
+      'maxAttempts', p_max_attempts,
+      'locked', false,
+      'attemptsRemaining', p_max_attempts - v_attempts_used
+    );
+  END IF;
+
+  v_new_attempts := v_attempts_used + 1;
+  v_locked := v_new_attempts >= p_max_attempts;
+
+  UPDATE assignments
+  SET
+    attempts_used = v_new_attempts,
+    status = 'in_progress',
+    locked_at = CASE WHEN v_locked THEN now() ELSE NULL END
+  WHERE id = p_assignment_id;
+
+  RETURN jsonb_build_object(
+    'passed', false,
+    'attemptsUsed', v_new_attempts,
+    'maxAttempts', p_max_attempts,
+    'locked', v_locked,
+    'attemptsRemaining', GREATEST(0, p_max_attempts - v_new_attempts)
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION record_course_attempt_result(UUID, BOOLEAN, INT) TO authenticated;
