@@ -5,6 +5,7 @@ import {
   fetchPublicationsForCourse,
   publishCourseToOrg,
   setCourseAvailability,
+  unpublishCourseEverywhere,
   unpublishCourseFromOrg,
 } from '@/services/course-publications.service'
 import { Button } from '@/components/ui/button'
@@ -45,13 +46,20 @@ export function CoursePublishPanel({
     queryFn: () => fetchPublicationsForCourse(courseId),
   })
 
+  const activePublications = publications.filter(isActive)
   const selectedPub = publications.find((p) => p.org_id === orgId)
   const activePub = selectedPub && isActive(selectedPub)
+  const unpublishedOrgs = new Set(
+    publications.filter((p) => p.unpublished_at).map((p) => p.org_id)
+  )
 
   const invalidate = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['course-publications', courseId] }),
+      queryClient.invalidateQueries({ queryKey: ['all-course-publications'] }),
       queryClient.invalidateQueries({ queryKey: ['courses'] }),
+      queryClient.invalidateQueries({ queryKey: ['hospital-courses'] }),
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] }),
       queryClient.invalidateQueries({ queryKey: ['course-notices'] }),
       queryClient.invalidateQueries({ queryKey: ['assignments'] }),
     ])
@@ -87,10 +95,24 @@ export function CoursePublishPanel({
     })
   }
 
-  const handleUnpublishNow = () => {
-    if (!orgId) return
+  const handleUnpublishOrg = (targetOrgId: string, hospitalName: string) => {
+    const confirmed = window.confirm(
+      `Unpublish this course from ${hospitalName}? Staff will no longer see or start it. Completed records are kept.`
+    )
+    if (!confirmed) return
     void run(async () => {
-      await unpublishCourseFromOrg(courseId, orgId)
+      await unpublishCourseFromOrg(courseId, targetOrgId)
+    })
+  }
+
+  const handleUnpublishAll = () => {
+    if (activePublications.length === 0) return
+    const confirmed = window.confirm(
+      `Unpublish this course from all ${activePublications.length} hospital(s)? No staff will be able to take it until you publish again.`
+    )
+    if (!confirmed) return
+    void run(async () => {
+      await unpublishCourseEverywhere(courseId)
     })
   }
 
@@ -110,16 +132,66 @@ export function CoursePublishPanel({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Publish to organization</CardTitle>
+        <CardTitle className="text-base">Publish &amp; unpublish</CardTitle>
         <CardDescription>
-          Publishing makes this course required for every manager and employee in the hospital — not
-          a frozen copy. All staff receive the assignment automatically; managers do not assign
-          courses manually. Optionally set when the course will be removed from their catalog.
+          Publishing makes this course required for every manager and employee in the selected
+          hospital. Unpublishing removes it from their training catalog immediately — they cannot
+          start or continue it (completed records are kept).
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
+        {activePublications.length > 0 && (
+          <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-medium">Currently published to</p>
+              {activePublications.length > 1 && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  disabled={loading}
+                  onClick={handleUnpublishAll}
+                >
+                  Unpublish from all hospitals
+                </Button>
+              )}
+            </div>
+            <ul className="space-y-2">
+              {activePublications.map((pub) => {
+                const org = hospitals.find((h) => h.id === pub.org_id)
+                return (
+                  <li
+                    key={pub.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 text-sm"
+                  >
+                    <div>
+                      <p className="font-medium">{org?.name ?? pub.org_id}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Since {formatDate(pub.published_at)}
+                        {pub.available_until
+                          ? ` · take by ${formatDate(pub.available_until)}`
+                          : ' · no deadline'}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                      disabled={loading}
+                      onClick={() => handleUnpublishOrg(pub.org_id, org?.name ?? 'this hospital')}
+                    >
+                      Unpublish
+                    </Button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
+
         <div className="space-y-2">
-          <Label htmlFor="publish-org">Hospital</Label>
+          <Label htmlFor="publish-org">Publish to hospital</Label>
           <select
             id="publish-org"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -133,6 +205,11 @@ export function CoursePublishPanel({
             {hospitals.map((h) => (
               <option key={h.id} value={h.id}>
                 {h.name}
+                {activePublications.some((p) => p.org_id === h.id)
+                  ? ' (published)'
+                  : unpublishedOrgs.has(h.id)
+                    ? ' (previously unpublished)'
+                    : ''}
               </option>
             ))}
           </select>
@@ -141,7 +218,7 @@ export function CoursePublishPanel({
         {selectedPub && (
           <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-1">
             <div className="flex items-center gap-2">
-              <span className="font-medium">Status</span>
+              <span className="font-medium">Selected hospital</span>
               {activePub ? (
                 <Badge variant="success">Published</Badge>
               ) : selectedPub.unpublished_at ? (
@@ -150,22 +227,16 @@ export function CoursePublishPanel({
                 <Badge variant="secondary">Expired</Badge>
               )}
             </div>
-            <p className="text-muted-foreground">
-              Published {formatDate(selectedPub.published_at)}
-            </p>
-            {activePub && selectedPub.available_until && (
-              <p className="text-amber-700 dark:text-amber-400 font-medium">
-                Take by {formatDate(selectedPub.available_until)}
+            {selectedPub.unpublished_at && (
+              <p className="text-muted-foreground">
+                Unpublished {formatDate(selectedPub.unpublished_at)}
               </p>
-            )}
-            {activePub && !selectedPub.available_until && (
-              <p className="text-muted-foreground">No removal deadline</p>
             )}
           </div>
         )}
 
         <div className="space-y-2">
-          <Label>Availability</Label>
+          <Label>Availability deadline</Label>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -195,9 +266,6 @@ export function CoursePublishPanel({
               days
             </label>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Staff will see &quot;Take by [date]&quot; when a deadline is set.
-          </p>
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -209,33 +277,11 @@ export function CoursePublishPanel({
             </Button>
           )}
           {activePub && (
-            <>
-              <Button type="button" variant="outline" disabled={loading || !orgId} onClick={handleSetDeadline}>
-                {loading ? 'Saving…' : 'Update deadline'}
-              </Button>
-              <Button type="button" variant="destructive" disabled={loading || !orgId} onClick={handleUnpublishNow}>
-                {loading ? 'Removing…' : 'Unpublish now'}
-              </Button>
-            </>
+            <Button type="button" variant="outline" disabled={loading || !orgId} onClick={handleSetDeadline}>
+              {loading ? 'Saving…' : 'Update deadline'}
+            </Button>
           )}
         </div>
-
-        {publications.filter(isActive).length > 0 && (
-          <div className="pt-2 border-t">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Active publications</p>
-            <ul className="text-sm space-y-1">
-              {publications.filter(isActive).map((p) => {
-                const org = hospitals.find((h) => h.id === p.org_id)
-                return (
-                  <li key={p.id}>
-                    {org?.name ?? p.org_id}
-                    {p.available_until ? ` — take by ${formatDate(p.available_until)}` : ' — no deadline'}
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        )}
       </CardContent>
     </Card>
   )

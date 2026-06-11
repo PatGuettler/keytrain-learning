@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { BookOpen } from 'lucide-react'
 import { CourseBuilder } from '@/components/admin/CourseBuilder'
 import { CoursePublishPanel } from '@/components/admin/CoursePublishPanel'
+import { DeleteCourseCard } from '@/components/admin/DeleteCourseCard'
 import { useCourse, useModules } from '@/hooks/useCourses'
 import { getIncidentAwarenessTemplate } from '@/lib/course-templates'
 import { createEmptyModule } from '@/lib/module-defaults'
@@ -172,6 +173,10 @@ export function CourseEditPage() {
       </div>
 
       {savedCourseId && <CoursePublishPanel courseId={savedCourseId} publishedBy={userId} />}
+
+      {savedCourseId && !isNew && (
+        <DeleteCourseCard courseId={savedCourseId} courseTitle={course?.title ?? title} />
+      )}
     </div>
   )
 }

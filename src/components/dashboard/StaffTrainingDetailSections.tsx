@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { STATUS_LABELS } from '@/lib/constants'
+import { StaffCourseResultsTable } from '@/components/dashboard/StaffCourseResultsTable'
 import {
   buildScoreHistory,
   extractModuleIssues,
@@ -30,37 +30,9 @@ export function StaffTrainingDetailSections({
 
   return (
     <>
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Course results</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {trainingRows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No course assignments.</p>
-            ) : (
-              trainingRows.map((row) => (
-                <div
-                  key={row.assignmentId}
-                  className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 last:border-0"
-                >
-                  <div>
-                    <p className="font-medium text-sm">{row.courseTitle}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Score {row.score != null ? `${row.score}%` : '—'} · Attempts {row.attemptsUsed}/
-                      {row.maxAttempts}
-                      {row.locked ? ' · Locked' : ''}
-                    </p>
-                  </div>
-                  <Badge variant={row.status === 'completed' ? 'success' : 'secondary'}>
-                    {STATUS_LABELS[row.status]}
-                  </Badge>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+      <StaffCourseResultsTable rows={trainingRows} />
 
+      <div className="grid gap-5 lg:grid-cols-1">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Scores over time</CardTitle>

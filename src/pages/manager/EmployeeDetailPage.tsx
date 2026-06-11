@@ -1,14 +1,37 @@
 import { Link, useParams } from 'react-router-dom'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Award, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react'
 import { fetchProfiles } from '@/services/users.service'
 import { fetchAssignments } from '@/services/assignments.service'
 import { fetchSessions, fetchUserModuleAttempts } from '@/services/sessions.service'
 import { formatDate } from '@/lib/utils'
-import { buildStaffTrainingRows } from '@/lib/dashboard-stats'
+import {
+  buildStaffSummaryRows,
+  buildStaffTrainingRows,
+  staffOverallStatus,
+} from '@/lib/dashboard-stats'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { StatCard } from '@/components/dashboard/StatCard'
 import { StaffTrainingDetailSections } from '@/components/dashboard/StaffTrainingDetailSections'
 import { useAuthStore } from '@/store/authStore'
+
+const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
+  completed: 'success',
+  in_progress: 'default',
+  pending: 'secondary',
+  overdue: 'destructive',
+  none: 'secondary',
+}
+
+const statusLabel: Record<string, string> = {
+  completed: 'All complete',
+  in_progress: 'In progress',
+  pending: 'Not started',
+  overdue: 'Overdue',
+  none: 'No courses',
+}
 
 export function EmployeeDetailPage() {
   const { employeeId } = useParams<{ employeeId: string }>()
@@ -41,10 +64,16 @@ export function EmployeeDetailPage() {
   })
 
   const trainingRows = buildStaffTrainingRows(assignments, employee ? [employee] : [])
+  const summary = useMemo(() => {
+    if (!employee) return null
+    return buildStaffSummaryRows([employee], assignments)[0] ?? null
+  }, [employee, assignments])
 
   if (!employee) {
     return <p className="text-sm text-muted-foreground">Employee not found.</p>
   }
+
+  const overall = summary ? staffOverallStatus(summary) : 'none'
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -60,7 +89,32 @@ export function EmployeeDetailPage() {
         <p className="text-muted-foreground">
           {employee.email ?? 'No email'} · Joined {formatDate(employee.created_at)}
         </p>
+        <div className="flex flex-wrap gap-2 mt-2">
+          <Badge variant="secondary" className="capitalize">
+            {employee.role}
+          </Badge>
+          {summary && (
+            <Badge variant={statusVariant[overall]}>{statusLabel[overall]}</Badge>
+          )}
+        </div>
       </div>
+
+      {summary && (
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Courses complete"
+            value={`${summary.completedCourses}/${summary.totalCourses}`}
+            icon={BookOpen}
+          />
+          <StatCard title="Completion rate" value={`${summary.completionRate}%`} icon={TrendingUp} />
+          <StatCard
+            title="Avg score"
+            value={summary.avgScore != null ? `${summary.avgScore}%` : '—'}
+            icon={Award}
+          />
+          <StatCard title="Overdue" value={summary.overdueCourses} icon={AlertTriangle} />
+        </div>
+      )}
 
       <StaffTrainingDetailSections
         trainingRows={trainingRows}

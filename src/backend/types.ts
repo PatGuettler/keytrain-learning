@@ -51,6 +51,7 @@ export interface CoursesBackend {
   fetchLearnerCourse(courseId: string, orgId: string): Promise<Course | null>
   fetchModules(courseId: string): Promise<Module[]>
   upsertCourse(course: Partial<Course> & { org_id: string; title: string }): Promise<Course>
+  deleteCourse(id: string): Promise<void>
   upsertModule(module: Partial<Module> & { course_id: string; title: string; type: Module['type'] }): Promise<Module>
   deleteModule(id: string): Promise<void>
   /** Remove modules not in keepIds so edits replace the live course (no version history). */
@@ -63,6 +64,7 @@ export interface CoursesBackend {
     availableDays?: number | null
   }): Promise<CoursePublication>
   unpublishCourseFromOrg(courseId: string, orgId: string): Promise<void>
+  unpublishCourseEverywhere(courseId: string): Promise<void>
   setCourseAvailability(courseId: string, orgId: string, availableDays: number | null): Promise<CoursePublication>
   fetchUnacknowledgedNotices(userId: string, orgId: string): Promise<CoursePublicationNotice[]>
   acknowledgeCourseNotice(publicationId: string, userId: string): Promise<void>

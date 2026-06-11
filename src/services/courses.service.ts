@@ -25,6 +25,10 @@ export async function upsertCourse(course: Partial<Course> & { org_id: string; t
   return backend.courses.upsertCourse(course)
 }
 
+export async function deleteCourse(id: string) {
+  return backend.courses.deleteCourse(id)
+}
+
 export async function upsertModule(module: Partial<Module> & { course_id: string; title: string; type: Module['type'] }) {
   return backend.courses.upsertModule(module)
 }

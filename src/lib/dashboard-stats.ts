@@ -99,6 +99,64 @@ export interface StaffTrainingRow {
   dueDate: string | null
 }
 
+export interface StaffSummaryRow {
+  userId: string
+  userName: string
+  userEmail: string | null
+  role: Profile['role']
+  isActive: boolean
+  totalCourses: number
+  completedCourses: number
+  inProgressCourses: number
+  overdueCourses: number
+  pendingCourses: number
+  lockedCourses: number
+  avgScore: number | null
+  completionRate: number
+}
+
+export function buildStaffSummaryRows(users: Profile[], assignments: Assignment[]): StaffSummaryRow[] {
+  return users
+    .map((user) => {
+      const userAssignments = assignments.filter((a) => a.user_id === user.id)
+      const completed = userAssignments.filter((a) => a.status === 'completed')
+      const scores = completed
+        .map(resolveAssignmentScore)
+        .filter((s): s is number => s != null)
+
+      return {
+        userId: user.id,
+        userName: user.full_name,
+        userEmail: user.email,
+        role: user.role,
+        isActive: user.is_active,
+        totalCourses: userAssignments.length,
+        completedCourses: completed.length,
+        inProgressCourses: userAssignments.filter((a) => a.status === 'in_progress').length,
+        overdueCourses: userAssignments.filter((a) => a.status === 'overdue').length,
+        pendingCourses: userAssignments.filter((a) => a.status === 'pending').length,
+        lockedCourses: userAssignments.filter((a) => a.locked_at).length,
+        avgScore:
+          scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length) : null,
+        completionRate:
+          userAssignments.length > 0
+            ? Math.round((completed.length / userAssignments.length) * 100)
+            : 0,
+      }
+    })
+    .sort((a, b) => a.userName.localeCompare(b.userName))
+}
+
+export function staffOverallStatus(
+  row: StaffSummaryRow
+): 'completed' | 'overdue' | 'in_progress' | 'pending' | 'none' {
+  if (row.totalCourses === 0) return 'none'
+  if (row.completedCourses === row.totalCourses) return 'completed'
+  if (row.overdueCourses > 0) return 'overdue'
+  if (row.inProgressCourses > 0 || row.completedCourses > 0) return 'in_progress'
+  return 'pending'
+}
+
 export function buildStaffTrainingRows(
   assignments: Assignment[],
   users?: { id: string; full_name: string; email?: string | null }[]

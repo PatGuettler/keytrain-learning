@@ -18,6 +18,10 @@ export async function unpublishCourseFromOrg(courseId: string, orgId: string): P
   return backend.courses.unpublishCourseFromOrg(courseId, orgId)
 }
 
+export async function unpublishCourseEverywhere(courseId: string): Promise<void> {
+  return backend.courses.unpublishCourseEverywhere(courseId)
+}
+
 export async function setCourseAvailability(
   courseId: string,
   orgId: string,

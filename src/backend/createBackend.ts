@@ -32,6 +32,26 @@ function isPublicationActive(pub: CoursePublication): boolean {
   return true
 }
 
+async function syncCoursePublishedFlag(
+  supabase: NonNullable<ReturnType<typeof getSupabase>>,
+  courseId: string
+) {
+  const { data: publications, error } = await supabase
+    .from('course_publications')
+    .select('published_at, available_until, unpublished_at')
+    .eq('course_id', courseId)
+  if (error) throw error
+
+  const hasActive = (publications ?? []).some((row) =>
+    isPublicationActive(row as CoursePublication)
+  )
+  const { error: updateError } = await supabase
+    .from('courses')
+    .update({ is_published: hasActive })
+    .eq('id', courseId)
+  if (updateError) throw updateError
+}
+
 function addDaysIso(days: number): string {
   return new Date(Date.now() + days * 86_400_000).toISOString()
 }
@@ -110,12 +130,14 @@ function createUnconfiguredBackend(): Backend {
       fetchLearnerCourse: fail,
       fetchModules: fail,
       upsertCourse: fail,
+      deleteCourse: fail,
       upsertModule: fail,
       deleteModule: fail,
       syncCourseModules: fail,
       fetchPublicationsForCourse: fail,
       publishCourseToOrg: fail,
       unpublishCourseFromOrg: fail,
+      unpublishCourseEverywhere: fail,
       setCourseAvailability: fail,
       fetchUnacknowledgedNotices: fail,
       acknowledgeCourseNotice: fail,
@@ -325,6 +347,15 @@ function createSupabaseBackend(): Backend {
         const { error: deleteError } = await supabase.from('modules').delete().in('id', orphanIds)
         if (deleteError) throw deleteError
       },
+      async deleteCourse(id) {
+        const { data, error } = await supabase.from('courses').delete().eq('id', id).select('id')
+        if (error) throw error
+        if (!data?.length) {
+          throw new Error(
+            'Could not delete course. You may not have permission — contact your administrator.'
+          )
+        }
+      },
       async fetchPublicationsForCourse(courseId) {
         const { data, error } = await supabase
           .from('course_publications')
@@ -396,7 +427,18 @@ function createSupabaseBackend(): Backend {
           .update({ unpublished_at: new Date().toISOString() })
           .eq('course_id', courseId)
           .eq('org_id', orgId)
+          .is('unpublished_at', null)
         if (error) throw error
+        await syncCoursePublishedFlag(supabase, courseId)
+      },
+      async unpublishCourseEverywhere(courseId) {
+        const { error } = await supabase
+          .from('course_publications')
+          .update({ unpublished_at: new Date().toISOString() })
+          .eq('course_id', courseId)
+          .is('unpublished_at', null)
+        if (error) throw error
+        await syncCoursePublishedFlag(supabase, courseId)
       },
       async setCourseAvailability(courseId, orgId, availableDays) {
         const availableUntil = availableDays != null && availableDays > 0 ? addDaysIso(availableDays) : null
@@ -663,9 +705,40 @@ function createSupabaseBackend(): Backend {
 
         const { data, error } = await q.order('assigned_at', { ascending: false })
         if (error) throw error
-        return (data ?? []).map((row) =>
-          enrichAssignment(row as Assignment & { training_sessions?: TrainingSession[] })
-        )
+
+        let rows = (data ?? []) as (Assignment & { training_sessions?: TrainingSession[] })[]
+
+        if (opts?.userId) {
+          const { data: authData } = await supabase.auth.getUser()
+          const isOwnAssignments = authData.user?.id === opts.userId
+
+          if (isOwnAssignments) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('org_id, role')
+              .eq('id', opts.userId)
+              .maybeSingle()
+
+            if (profile?.org_id && profile.role !== 'admin') {
+              const { data: publications } = await supabase
+                .from('course_publications')
+                .select('course_id, published_at, available_until, unpublished_at')
+                .eq('org_id', profile.org_id)
+
+              const activeCourseIds = new Set(
+                (publications ?? [])
+                  .filter((pub) => isPublicationActive(pub as CoursePublication))
+                  .map((pub) => pub.course_id)
+              )
+
+              rows = rows.filter(
+                (row) => row.status === 'completed' || activeCourseIds.has(row.course_id)
+              )
+            }
+          }
+        }
+
+        return rows.map((row) => enrichAssignment(row))
       },
       async createAssignment(payload) {
         const { data, error } = await supabase
