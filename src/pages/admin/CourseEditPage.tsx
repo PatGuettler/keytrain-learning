@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useMatch, useNavigate, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { CourseBuilder } from '@/components/admin/CourseBuilder'
 import { CoursePublishPanel } from '@/components/admin/CoursePublishPanel'
@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 export function CourseEditPage() {
-  const { courseId } = useParams<{ courseId: string }>()
-  const isNew = courseId === 'new'
+  const { courseId } = useParams<{ courseId?: string }>()
+  const isCreateRoute = useMatch('/admin/courses/create')
+  const isNew = Boolean(isCreateRoute) || courseId === 'new'
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const orgId = useAuthStore((s) => s.profile?.org_id)!

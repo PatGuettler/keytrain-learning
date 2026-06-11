@@ -1,5 +1,7 @@
 import { absoluteAppUrl } from '@/lib/paths'
+import { isEdgeFunctionUnavailable } from '@/lib/edge-functions'
 import { getSupabase } from '@/services/supabase'
+import { updateProfile } from '@/services/users.service'
 import type { Profile, UserRole } from '@/types/user.types'
 
 export interface ImportUserRowResult {
@@ -94,13 +96,35 @@ export async function updateOrgUser(
     is_active?: boolean
   }
 ): Promise<Profile> {
-  const data = await invokeManageUsers<{ profile: Profile }>({
-    action: 'update_user',
-    org_id: orgId,
-    user_id: userId,
-    ...patch,
-  })
-  return data.profile
+  if (patch.role === 'admin') {
+    throw new Error('Cannot assign platform admin role from an organization.')
+  }
+
+  const normalizedPatch = { ...patch }
+  if (normalizedPatch.role === 'manager') {
+    normalizedPatch.manager_id = null
+  }
+
+  try {
+    const data = await invokeManageUsers<{ profile: Profile }>({
+      action: 'update_user',
+      org_id: orgId,
+      user_id: userId,
+      ...normalizedPatch,
+    })
+    return data.profile
+  } catch (edgeError) {
+    if (!isEdgeFunctionUnavailable(edgeError)) throw edgeError
+
+    const profile = await updateProfile(userId, normalizedPatch)
+    if (profile.org_id !== orgId) {
+      throw new Error('User not in this organization.')
+    }
+    if (profile.role === 'admin') {
+      throw new Error('Cannot update platform admin accounts from organization settings.')
+    }
+    return profile
+  }
 }
 
 export async function deleteOrganizationById(orgId: string): Promise<void> {

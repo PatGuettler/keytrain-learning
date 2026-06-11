@@ -20,6 +20,8 @@ function restoreGhPagesSpaRedirect() {
     const current = window.location.pathname + window.location.search + window.location.hash
     if (path !== current) {
       window.history.replaceState(null, '', path)
+      // Notify React Router after restoring a GitHub Pages deep link.
+      window.dispatchEvent(new PopStateEvent('popstate'))
     }
   } catch {
     /* ignore malformed URL */

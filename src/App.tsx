@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthGuard } from '@/guards/AuthGuard'
 import { RoleGuard } from '@/guards/RoleGuard'
@@ -59,17 +59,25 @@ export default function App() {
               element={<RoleGuard roles={['admin']}><AdminStaffTrainingPage /></RoleGuard>}
             />
             <Route
-              path="/admin/courses"
-              element={<RoleGuard roles={['admin']}><CourseManagementPage /></RoleGuard>}
-            />
-            <Route
               path="/admin/courses/new"
-              element={<Navigate to="/admin/courses/new/edit" replace />}
+              element={<Navigate to="/admin/courses/create" replace />}
             />
             <Route
-              path="/admin/courses/:courseId/edit"
-              element={<RoleGuard roles={['admin']}><CourseEditPage /></RoleGuard>}
+              path="/admin/courses/new/edit"
+              element={<Navigate to="/admin/courses/create" replace />}
             />
+            <Route
+              path="/admin/courses"
+              element={
+                <RoleGuard roles={['admin']}>
+                  <Outlet />
+                </RoleGuard>
+              }
+            >
+              <Route index element={<CourseManagementPage />} />
+              <Route path="create" element={<CourseEditPage />} />
+              <Route path=":courseId/edit" element={<CourseEditPage />} />
+            </Route>
             <Route
               path="/admin/unlock-requests"
               element={<RoleGuard roles={['admin']}><UnlockRequestsPage /></RoleGuard>}

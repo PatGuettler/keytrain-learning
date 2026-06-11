@@ -21,16 +21,7 @@ export async function updateOrganization(id: string, name: string) {
   return backend.organizations.updateOrganization(id, { name })
 }
 
-function isEdgeFunctionUnavailable(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error)
-  return (
-    message.includes('Failed to send a request to the Edge Function') ||
-    message.includes('FunctionsRelayError') ||
-    message.includes('FunctionsFetchError')
-  )
-}
-
-export async function deleteOrganization(id: string) {
+import { isEdgeFunctionUnavailable } from '@/lib/edge-functions'
   if (id === PLATFORM_ORG_ID) {
     throw new Error('The platform administration organization cannot be deleted.')
   }
