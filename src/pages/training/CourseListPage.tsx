@@ -19,7 +19,12 @@ export function CourseListPage({ basePath }: { basePath: string }) {
 
   return (
     <div className="space-y-4 sm:space-y-6 w-full min-w-0 max-w-full">
-      <h2 className="text-xl sm:text-2xl font-bold">Courses</h2>
+      <div className="space-y-1">
+        <h2 className="text-xl sm:text-2xl font-bold">Required Training</h2>
+        <p className="text-sm text-muted-foreground">
+          All published courses are required for every staff member in your organization.
+        </p>
+      </div>
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {courses.map((course) => {
           const assignment = assignments.find((a) => a.course_id === course.id)

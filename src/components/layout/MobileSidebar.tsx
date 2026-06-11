@@ -28,11 +28,11 @@ const navByRole = {
   manager: [
     { to: '/manager/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/manager/team', label: 'My Team', icon: Users },
-    { to: '/manager/assignments', label: 'Assignments', icon: ClipboardList },
+    { to: '/manager/training', label: 'Required Training', icon: GraduationCap },
   ],
   employee: [
     { to: '/employee/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/employee/training', label: 'My Training', icon: GraduationCap },
+    { to: '/employee/training', label: 'Required Training', icon: GraduationCap },
     { to: '/employee/profile', label: 'Profile', icon: Settings },
   ],
 }

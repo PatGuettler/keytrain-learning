@@ -12,6 +12,25 @@ export interface Course {
   created_by: string | null
   created_at: string
   updated_at: string
+  /** Active publication for the viewer's org, when loaded via publish flow */
+  publication?: CoursePublication | null
+}
+
+export interface CoursePublication {
+  id: string
+  course_id: string
+  org_id: string
+  published_at: string
+  available_until: string | null
+  unpublished_at: string | null
+  published_by: string | null
+  created_at: string
+  course?: Course
+}
+
+export interface CoursePublicationNotice {
+  publication: CoursePublication
+  course: Course
 }
 
 export interface Module {

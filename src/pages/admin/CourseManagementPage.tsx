@@ -30,6 +30,9 @@ export function CourseManagementPage() {
                 <Badge variant={c.is_published ? 'success' : 'secondary'}>
                   {c.is_published ? 'Published' : 'Draft'}
                 </Badge>
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  Publish to orgs on edit page
+                </span>
                 <Button variant="outline" size="sm" asChild>
                   <Link to={`/admin/courses/${c.id}/edit`}>Edit</Link>
                 </Button>

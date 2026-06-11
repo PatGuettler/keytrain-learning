@@ -5,6 +5,11 @@ export async function fetchAssignments(userId?: string): Promise<Assignment[]> {
   return backend.assignments.fetchAssignments(userId)
 }
 
+/** Ensures the user has assignments for every active published course in their org. */
+export async function syncRequiredAssignmentsForUser(userId: string): Promise<void> {
+  return backend.assignments.syncRequiredAssignmentsForUser(userId)
+}
+
 export async function fetchAssignmentsForOrg(orgId: string): Promise<Assignment[]> {
   return backend.assignments.fetchAssignments({ orgId })
 }

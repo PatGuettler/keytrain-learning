@@ -4,9 +4,7 @@ import { fetchProfiles } from '@/services/users.service'
 import { fetchAssignments } from '@/services/assignments.service'
 import { formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAssignmentMutations } from '@/hooks/useAssignments'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { STATUS_LABELS } from '@/lib/constants'
 
@@ -18,7 +16,6 @@ const scoreHistory = [
 
 export function EmployeeDetailPage() {
   const { employeeId } = useParams<{ employeeId: string }>()
-  const { update } = useAssignmentMutations()
   const { data: profiles = [] } = useQuery({
     queryKey: ['profiles'],
     queryFn: () => fetchProfiles(),
@@ -44,35 +41,27 @@ export function EmployeeDetailPage() {
           <CardTitle>Training Overview</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {assignments.map((a) => (
-            <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 last:border-0">
-              <div>
-                <p className="font-medium">{a.course?.title ?? 'Course'}</p>
-                <p className="text-sm text-muted-foreground">
-                  Due {formatDate(a.due_date)} · {STATUS_LABELS[a.status]}
-                </p>
-              </div>
-              <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
-                <Badge className="w-fit">{a.status}</Badge>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="min-h-10 flex-1 xs:flex-none"
-                  onClick={() => update.mutate({ id: a.id, patch: { status: 'completed' } })}
+          {assignments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No required courses assigned yet.</p>
+          ) : (
+            assignments.map((a) => (
+              <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 last:border-0">
+                <div>
+                  <p className="font-medium">{a.course?.title ?? 'Course'}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {a.due_date ? `Take by ${formatDate(a.due_date)}` : 'Required'} ·{' '}
+                    {STATUS_LABELS[a.status]}
+                  </p>
+                </div>
+                <Badge
+                  variant={a.status === 'completed' ? 'success' : 'secondary'}
+                  className="w-fit capitalize"
                 >
-                  Mark Complete
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="min-h-10 flex-1 xs:flex-none"
-                  onClick={() => update.mutate({ id: a.id, patch: { force_retake: true, status: 'pending' } })}
-                >
-                  Push Retake
-                </Button>
+                  {STATUS_LABELS[a.status]}
+                </Badge>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </CardContent>
       </Card>
 

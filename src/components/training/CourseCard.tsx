@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { Assignment, Course } from '@/types/course.types'
 import { STATUS_LABELS } from '@/lib/constants'
+import { formatDate } from '@/lib/utils'
 
 interface CourseCardProps {
   course: Course
@@ -13,6 +14,8 @@ interface CourseCardProps {
 }
 
 export function CourseCard({ course, assignment, playHref }: CourseCardProps) {
+  const takeBy = course.publication?.available_until ?? assignment?.due_date
+
   return (
     <Card className="flex flex-col h-full hover:shadow-md transition-shadow overflow-hidden">
       <div className="h-28 sm:h-32 bg-gradient-to-br from-primary/20 to-accent rounded-t-lg flex items-center justify-center shrink-0">
@@ -21,18 +24,28 @@ export function CourseCard({ course, assignment, playHref }: CourseCardProps) {
       <CardHeader className="space-y-3 pb-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <CardTitle className="text-base sm:text-lg leading-snug min-w-0">{course.title}</CardTitle>
-          {assignment && (
-            <Badge
-              variant={assignment.status === 'completed' ? 'success' : 'secondary'}
-              className="w-fit shrink-0 self-start"
-            >
-              {STATUS_LABELS[assignment.status]}
+          <div className="flex flex-wrap gap-1.5 shrink-0 self-start">
+            <Badge variant="outline" className="w-fit">
+              Required
             </Badge>
-          )}
+            {assignment && (
+              <Badge
+                variant={assignment.status === 'completed' ? 'success' : 'secondary'}
+                className="w-fit"
+              >
+                {STATUS_LABELS[assignment.status]}
+              </Badge>
+            )}
+          </div>
         </div>
         <CardDescription className="line-clamp-3 sm:line-clamp-2 text-sm leading-relaxed">
           {course.description}
         </CardDescription>
+        {takeBy && (
+          <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+            Take by {formatDate(takeBy)}
+          </p>
+        )}
       </CardHeader>
       <CardContent className="mt-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-0">
         <span className="text-sm text-muted-foreground flex items-center gap-1.5 shrink-0">

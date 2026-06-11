@@ -13,8 +13,8 @@ CI builds with base path `/guardian-md/` (from `GITHUB_REPOSITORY` on push to `m
 | Role | Capabilities |
 |------|----------------|
 | **Admin** | Org dashboard, course management (builder, publish), user management |
-| **Manager** | Team dashboard, employee progress, assign courses, retake overrides |
-| **Employee** | Personal dashboard, assigned training, course player (lessons, quizzes, workshops), profile |
+| **Manager** | Team dashboard, employee progress, required training (same as staff) |
+| **Employee** | Personal dashboard, required training, course player (lessons, quizzes, workshops), profile |
 
 ### Workshop types
 
@@ -88,6 +88,9 @@ Open http://localhost:5173 and sign in with a user created in Supabase Auth.
    - `supabase/migrations/002_platform_admin_and_profile_email.sql`
    - `supabase/migrations/003_org_admin_delete.sql` (required for deleting hospitals)
    - `supabase/migrations/004_admin_assignments_select.sql` (platform dashboard stats)
+   - `supabase/migrations/005_course_publications.sql` (publish courses to orgs + deadlines)
+   - `supabase/migrations/006_course_access_via_publication.sql` (block removed courses)
+   - `supabase/migrations/007_required_course_assignments.sql` (auto-required training for all staff)
 3. Run `supabase/seed.sql` to create the default organization and courses
 4. Bootstrap your admin account with `supabase/bootstrap-admin.sql` (see file comments)
 5. *(Optional, dev only)* Run `supabase/bootstrap-test-users.sql` for manager/employee test logins (see file for credentials)

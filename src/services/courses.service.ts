@@ -13,6 +13,10 @@ export async function fetchCourse(id: string): Promise<Course | null> {
   return backend.courses.fetchCourse(id)
 }
 
+export async function fetchLearnerCourse(courseId: string, orgId: string): Promise<Course | null> {
+  return backend.courses.fetchLearnerCourse(courseId, orgId)
+}
+
 export async function fetchModules(courseId: string): Promise<Module[]> {
   return backend.courses.fetchModules(courseId)
 }
@@ -27,4 +31,8 @@ export async function upsertModule(module: Partial<Module> & { course_id: string
 
 export async function deleteModule(id: string) {
   return backend.courses.deleteModule(id)
+}
+
+export async function syncCourseModules(courseId: string, keepModuleIds: string[]) {
+  return backend.courses.syncCourseModules(courseId, keepModuleIds)
 }

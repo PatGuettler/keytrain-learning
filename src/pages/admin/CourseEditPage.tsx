@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { CourseBuilder } from '@/components/admin/CourseBuilder'
+import { CoursePublishPanel } from '@/components/admin/CoursePublishPanel'
 import { useCourse, useModules } from '@/hooks/useCourses'
-import { upsertCourse, upsertModule } from '@/services/courses.service'
+import { syncCourseModules, upsertCourse, upsertModule } from '@/services/courses.service'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 export function CourseEditPage() {
   const { courseId } = useParams<{ courseId: string }>()
   const isNew = courseId === 'new'
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const orgId = useAuthStore((s) => s.profile?.org_id)!
   const userId = useAuthStore((s) => s.userId)!
   const { data: course } = useCourse(isNew ? '' : courseId!)
@@ -16,8 +19,8 @@ export function CourseEditPage() {
 
   const [title, setTitle] = useState(course?.title ?? 'New Course')
   const [description, setDescription] = useState(course?.description ?? '')
-  const [published, setPublished] = useState(course?.is_published ?? false)
   const [modules, setModules] = useState(isNew ? [] : fetchedModules)
+  const [savedCourseId, setSavedCourseId] = useState(isNew ? '' : courseId!)
 
   useEffect(() => {
     if (!isNew && fetchedModules.length) setModules(fetchedModules)
@@ -29,14 +32,23 @@ export function CourseEditPage() {
       org_id: orgId,
       title,
       description,
-      is_published: published,
+      is_published: course?.is_published ?? false,
       estimated_minutes: 30,
       created_by: userId,
     })
+    const savedModuleIds: string[] = []
     for (const m of modules) {
-      await upsertModule({ ...m, course_id: saved.id })
+      const mod = await upsertModule({ ...m, course_id: saved.id })
+      savedModuleIds.push(mod.id)
     }
-    navigate('/admin/courses')
+    await syncCourseModules(saved.id, savedModuleIds)
+    await queryClient.invalidateQueries({ queryKey: ['courses'] })
+    await queryClient.invalidateQueries({ queryKey: ['course', saved.id] })
+    await queryClient.invalidateQueries({ queryKey: ['modules', saved.id] })
+    setSavedCourseId(saved.id)
+    if (isNew) {
+      navigate(`/admin/courses/${saved.id}/edit`, { replace: true })
+    }
   }
 
   const addModule = (type: 'lesson' | 'quiz' | 'workshop') => {
@@ -63,6 +75,10 @@ export function CourseEditPage() {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">{isNew ? 'Create Course' : 'Edit Course'}</h2>
+      <p className="text-sm text-muted-foreground max-w-2xl">
+        There is one live version of each course — no history. Saving updates the course for every
+        organization it is published to.
+      </p>
       <CourseBuilder
         title={title}
         description={description}
@@ -71,10 +87,14 @@ export function CourseEditPage() {
         onDescriptionChange={setDescription}
         onModulesReorder={setModules}
         onAddModule={addModule}
-        isPublished={published}
-        onPublishToggle={setPublished}
       />
-      <Button onClick={save}>Save Course</Button>
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={save}>Save course</Button>
+        <Button variant="outline" onClick={() => navigate('/admin/courses')}>
+          Back to courses
+        </Button>
+      </div>
+      {savedCourseId && <CoursePublishPanel courseId={savedCourseId} publishedBy={userId} />}
     </div>
   )
 }

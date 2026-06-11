@@ -1,4 +1,13 @@
-import type { Assignment, AssignmentStatus, Course, Module, ModuleAttempt, TrainingSession } from '@/types/course.types'
+import type {
+  Assignment,
+  AssignmentStatus,
+  Course,
+  CoursePublication,
+  CoursePublicationNotice,
+  Module,
+  ModuleAttempt,
+  TrainingSession,
+} from '@/types/course.types'
 import type { AdminProfileUpdate, Organization, Profile, UserRole } from '@/types/user.types'
 
 export interface AuthSignInResult {
@@ -37,10 +46,24 @@ export interface CoursesBackend {
   fetchCourses(orgId: string, publishedOnly?: boolean): Promise<Course[]>
   fetchHospitalCourses(): Promise<Course[]>
   fetchCourse(id: string): Promise<Course | null>
+  fetchLearnerCourse(courseId: string, orgId: string): Promise<Course | null>
   fetchModules(courseId: string): Promise<Module[]>
   upsertCourse(course: Partial<Course> & { org_id: string; title: string }): Promise<Course>
   upsertModule(module: Partial<Module> & { course_id: string; title: string; type: Module['type'] }): Promise<Module>
   deleteModule(id: string): Promise<void>
+  /** Remove modules not in keepIds so edits replace the live course (no version history). */
+  syncCourseModules(courseId: string, keepModuleIds: string[]): Promise<void>
+  fetchPublicationsForCourse(courseId: string): Promise<CoursePublication[]>
+  publishCourseToOrg(payload: {
+    courseId: string
+    orgId: string
+    publishedBy: string
+    availableDays?: number | null
+  }): Promise<CoursePublication>
+  unpublishCourseFromOrg(courseId: string, orgId: string): Promise<void>
+  setCourseAvailability(courseId: string, orgId: string, availableDays: number | null): Promise<CoursePublication>
+  fetchUnacknowledgedNotices(userId: string, orgId: string): Promise<CoursePublicationNotice[]>
+  acknowledgeCourseNotice(publicationId: string, userId: string): Promise<void>
 }
 
 export interface AssignmentFilters {
@@ -50,6 +73,7 @@ export interface AssignmentFilters {
 
 export interface AssignmentsBackend {
   fetchAssignments(filters?: string | AssignmentFilters): Promise<Assignment[]>
+  syncRequiredAssignmentsForUser(userId: string): Promise<void>
   createAssignment(payload: { course_id: string; user_id: string; assigned_by: string; due_date?: string }): Promise<Assignment>
   updateAssignment(
     id: string,

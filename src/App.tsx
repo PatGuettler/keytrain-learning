@@ -16,7 +16,6 @@ import { OrganizationDetailPage } from '@/pages/admin/OrganizationDetailPage'
 import { PlatformAdminsPage } from '@/pages/admin/PlatformAdminsPage'
 import { EmployeeListPage } from '@/pages/manager/EmployeeListPage'
 import { EmployeeDetailPage } from '@/pages/manager/EmployeeDetailPage'
-import { AssignmentsPage } from '@/pages/manager/AssignmentsPage'
 import { MyTrainingPage } from '@/pages/employee/MyTrainingPage'
 import { ProfilePage } from '@/pages/employee/ProfilePage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
@@ -88,9 +87,21 @@ export default function App() {
               path="/manager/team/:employeeId"
               element={<RoleGuard roles={['manager']}><EmployeeDetailPage /></RoleGuard>}
             />
+            <Route path="/manager/assignments" element={<Navigate to="/manager/training" replace />} />
             <Route
-              path="/manager/assignments"
-              element={<RoleGuard roles={['manager']}><AssignmentsPage /></RoleGuard>}
+              path="/manager/training"
+              element={<RoleGuard roles={['manager']}><MyTrainingPage basePath="/manager/training" /></RoleGuard>}
+            />
+            <Route
+              path="/manager/training/play/:courseId"
+              element={
+                <RoleGuard roles={['manager']}>
+                  <CoursePlayerPage
+                    dashboardPath="/manager/dashboard"
+                    trainingPath="/manager/training"
+                  />
+                </RoleGuard>
+              }
             />
 
             <Route
@@ -103,7 +114,14 @@ export default function App() {
             />
             <Route
               path="/employee/training/play/:courseId"
-              element={<RoleGuard roles={['employee']}><CoursePlayerPage dashboardPath="/employee/dashboard" /></RoleGuard>}
+              element={
+                <RoleGuard roles={['employee']}>
+                  <CoursePlayerPage
+                    dashboardPath="/employee/dashboard"
+                    trainingPath="/employee/training"
+                  />
+                </RoleGuard>
+              }
             />
             <Route
               path="/employee/profile"

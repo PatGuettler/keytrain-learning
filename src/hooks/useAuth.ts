@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/store/authStore'
 import { signIn, signOut } from '@/services/auth.service'
+import { syncRequiredAssignmentsForUser } from '@/services/assignments.service'
 import { ROLE_DASHBOARD } from '@/lib/constants'
 import type { UserRole } from '@/types/user.types'
 
@@ -13,6 +14,9 @@ export function useAuth() {
       email: result.user.email ?? email,
       profile: result.profile,
     })
+    if (result.profile.role !== 'admin') {
+      await syncRequiredAssignmentsForUser(result.user.id)
+    }
     return ROLE_DASHBOARD[result.profile.role]
   }
 

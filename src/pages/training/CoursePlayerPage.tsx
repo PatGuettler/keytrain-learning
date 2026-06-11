@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, PartyPopper } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -8,8 +9,9 @@ import { useCourse, useModules } from '@/hooks/useCourses'
 import { useAssignments } from '@/hooks/useAssignments'
 import { useTrainingSession } from '@/hooks/useTrainingSession'
 import { useAuthStore } from '@/store/authStore'
-import { updateAssignment } from '@/services/assignments.service'
+import { syncRequiredAssignmentsForUser, updateAssignment } from '@/services/assignments.service'
 import { saveModuleAttempt } from '@/services/sessions.service'
+import { CourseUnavailable } from '@/components/training/CourseUnavailable'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDuration } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -22,11 +24,18 @@ interface ModuleScoreRecord {
   passed: boolean
 }
 
-export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
+export function CoursePlayerPage({
+  dashboardPath,
+  trainingPath = '/employee/training',
+}: {
+  dashboardPath: string
+  trainingPath?: string
+}) {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const userId = useAuthStore((s) => s.userId)!
-  const { data: course } = useCourse(courseId!)
+  const queryClient = useQueryClient()
+  const { data: course, isLoading: courseLoading, isFetched: courseFetched } = useCourse(courseId!)
   const { data: modules = [], isLoading } = useModules(courseId!)
   const { data: assignments = [] } = useAssignments(userId)
   const assignment = assignments.find((a) => a.course_id === courseId)
@@ -50,6 +59,13 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
     const t = setInterval(() => setElapsed((e) => e + 1), 1000)
     return () => clearInterval(t)
   }, [])
+
+  useEffect(() => {
+    if (!course || assignment || !userId) return
+    void syncRequiredAssignmentsForUser(userId).then(() => {
+      void queryClient.invalidateQueries({ queryKey: ['assignments', userId] })
+    })
+  }, [course, assignment, userId, queryClient])
 
   const handleModuleComplete = useCallback(
     async (payload: ModuleCompletePayload) => {
@@ -114,7 +130,15 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
     setModuleReady(completedIndices.has(currentIndex + 1))
   }
 
-  if (isLoading || !course) {
+  if (isLoading || courseLoading) {
+    return <Skeleton className="h-64 sm:h-96 w-full" />
+  }
+
+  if (courseFetched && !course) {
+    return <CourseUnavailable trainingPath={trainingPath} />
+  }
+
+  if (!course) {
     return <Skeleton className="h-64 sm:h-96 w-full" />
   }
 

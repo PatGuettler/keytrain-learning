@@ -2,7 +2,15 @@ import { PLATFORM_ORG_ID } from '@/lib/constants'
 import { absoluteAppUrl } from '@/lib/paths'
 import { getSupabase, isSupabaseConfigured } from '@/services/supabase'
 import type { Backend } from './types'
-import type { Assignment, Course, Module, ModuleAttempt, TrainingSession } from '@/types/course.types'
+import type {
+  Assignment,
+  Course,
+  CoursePublication,
+  CoursePublicationNotice,
+  Module,
+  ModuleAttempt,
+  TrainingSession,
+} from '@/types/course.types'
 import type { Database, Json } from '@/types/database.types'
 import type { Organization, Profile } from '@/types/user.types'
 
@@ -15,6 +23,22 @@ type ModuleAttemptUpdate = Database['public']['Tables']['module_attempts']['Upda
 
 const NOT_CONFIGURED =
   'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
+
+function isPublicationActive(pub: CoursePublication): boolean {
+  if (pub.unpublished_at) return false
+  if (new Date(pub.published_at) > new Date()) return false
+  if (pub.available_until && new Date(pub.available_until) <= new Date()) return false
+  return true
+}
+
+function addDaysIso(days: number): string {
+  return new Date(Date.now() + days * 86_400_000).toISOString()
+}
+
+function toDueDate(availableUntil: string | null): string | undefined {
+  if (!availableUntil) return undefined
+  return availableUntil.split('T')[0]
+}
 
 function toModuleInsert(
   module: Partial<Module> & { course_id: string; title: string; type: Module['type'] }
@@ -58,13 +82,22 @@ function createUnconfiguredBackend(): Backend {
       fetchCourses: fail,
       fetchHospitalCourses: fail,
       fetchCourse: fail,
+      fetchLearnerCourse: fail,
       fetchModules: fail,
       upsertCourse: fail,
       upsertModule: fail,
       deleteModule: fail,
+      syncCourseModules: fail,
+      fetchPublicationsForCourse: fail,
+      publishCourseToOrg: fail,
+      unpublishCourseFromOrg: fail,
+      setCourseAvailability: fail,
+      fetchUnacknowledgedNotices: fail,
+      acknowledgeCourseNotice: fail,
     },
     assignments: {
       fetchAssignments: fail,
+      syncRequiredAssignmentsForUser: fail,
       createAssignment: fail,
       updateAssignment: fail,
       deleteAssignment: fail,
@@ -155,9 +188,23 @@ function createSupabaseBackend(): Backend {
     },
     courses: {
       async fetchCourses(orgId, publishedOnly = false) {
-        let q = supabase.from('courses').select('*').eq('org_id', orgId).order('title')
-        if (publishedOnly) q = q.eq('is_published', true)
-        const { data, error } = await q
+        if (publishedOnly) {
+          const { data, error } = await supabase
+            .from('course_publications')
+            .select('*, course:courses(*)')
+            .eq('org_id', orgId)
+            .is('unpublished_at', null)
+          if (error) throw error
+          return (data ?? [])
+            .filter((row) => isPublicationActive(row as CoursePublication))
+            .map((row) => {
+              const pub = row as CoursePublication & { course: Course }
+              return { ...pub.course, publication: pub }
+            })
+            .sort((a, b) => a.title.localeCompare(b.title))
+        }
+
+        const { data, error } = await supabase.from('courses').select('*').eq('org_id', orgId).order('title')
         if (error) throw error
         return data as Course[]
       },
@@ -174,6 +221,20 @@ function createSupabaseBackend(): Backend {
         const { data, error } = await supabase.from('courses').select('*').eq('id', id).single()
         if (error) return null
         return data as Course
+      },
+      async fetchLearnerCourse(courseId, orgId) {
+        const { data, error } = await supabase
+          .from('course_publications')
+          .select('*, course:courses(*)')
+          .eq('course_id', courseId)
+          .eq('org_id', orgId)
+          .is('unpublished_at', null)
+          .maybeSingle()
+        if (error) throw error
+        if (!data) return null
+        const pub = data as CoursePublication & { course: Course }
+        if (!isPublicationActive(pub) || !pub.course) return null
+        return { ...pub.course, publication: pub }
       },
       async fetchModules(courseId) {
         const { data, error } = await supabase
@@ -201,25 +262,191 @@ function createSupabaseBackend(): Backend {
       },
       async upsertModule(module) {
         const row = toModuleInsert(module)
-        if (module.id) {
+        const isPersistedId = module.id && !module.id.startsWith('temp-')
+        if (isPersistedId) {
           const { data, error } = await supabase
             .from('modules')
             .update(row as ModuleUpdate)
-            .eq('id', module.id)
+            .eq('id', module.id!)
             .select()
             .single()
           if (error) throw error
           return data as Module
         }
-        const { data, error } = await supabase.from('modules').insert(row).select().single()
+        const { id: _omit, ...insertRow } = row as ModuleInsert & { id?: string }
+        const { data, error } = await supabase.from('modules').insert(insertRow).select().single()
         if (error) throw error
         return data as Module
       },
       async deleteModule(id) {
         await supabase.from('modules').delete().eq('id', id)
       },
+      async syncCourseModules(courseId, keepModuleIds) {
+        const { data: existing, error } = await supabase
+          .from('modules')
+          .select('id')
+          .eq('course_id', courseId)
+        if (error) throw error
+        const keep = new Set(keepModuleIds)
+        const orphanIds = (existing ?? []).filter((m) => !keep.has(m.id)).map((m) => m.id)
+        if (orphanIds.length === 0) return
+        const { error: deleteError } = await supabase.from('modules').delete().in('id', orphanIds)
+        if (deleteError) throw deleteError
+      },
+      async fetchPublicationsForCourse(courseId) {
+        const { data, error } = await supabase
+          .from('course_publications')
+          .select('*')
+          .eq('course_id', courseId)
+          .order('published_at', { ascending: false })
+        if (error) throw error
+        return data as CoursePublication[]
+      },
+      async publishCourseToOrg({ courseId, orgId, publishedBy, availableDays }) {
+        const availableUntil =
+          availableDays != null && availableDays > 0 ? addDaysIso(availableDays) : null
+
+        const { data: pub, error } = await supabase
+          .from('course_publications')
+          .upsert(
+            {
+              course_id: courseId,
+              org_id: orgId,
+              published_at: new Date().toISOString(),
+              available_until: availableUntil,
+              unpublished_at: null,
+              published_by: publishedBy,
+            },
+            { onConflict: 'course_id,org_id' }
+          )
+          .select()
+          .single()
+        if (error) throw error
+
+        await supabase.from('course_publication_acknowledgments').delete().eq('publication_id', pub.id)
+        await supabase.from('courses').update({ is_published: true }).eq('id', courseId)
+
+        const { data: members, error: membersError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('org_id', orgId)
+          .eq('is_active', true)
+          .in('role', ['employee', 'manager'])
+        if (membersError) throw membersError
+
+        const dueDate = toDueDate(availableUntil)
+        for (const member of members ?? []) {
+          const { data: existing } = await supabase
+            .from('assignments')
+            .select('id, status')
+            .eq('course_id', courseId)
+            .eq('user_id', member.id)
+            .maybeSingle()
+
+          if (!existing) {
+            await supabase.from('assignments').insert({
+              course_id: courseId,
+              user_id: member.id,
+              assigned_by: publishedBy,
+              due_date: dueDate ?? null,
+              status: 'pending',
+            })
+          } else if (existing.status !== 'completed' && dueDate) {
+            await supabase.from('assignments').update({ due_date: dueDate }).eq('id', existing.id)
+          }
+        }
+
+        return pub as CoursePublication
+      },
+      async unpublishCourseFromOrg(courseId, orgId) {
+        const { error } = await supabase
+          .from('course_publications')
+          .update({ unpublished_at: new Date().toISOString() })
+          .eq('course_id', courseId)
+          .eq('org_id', orgId)
+        if (error) throw error
+      },
+      async setCourseAvailability(courseId, orgId, availableDays) {
+        const availableUntil = availableDays != null && availableDays > 0 ? addDaysIso(availableDays) : null
+        const { data, error } = await supabase
+          .from('course_publications')
+          .update({
+            available_until: availableUntil,
+            unpublished_at: null,
+          })
+          .eq('course_id', courseId)
+          .eq('org_id', orgId)
+          .select()
+          .single()
+        if (error) throw error
+
+        const dueDate = toDueDate(availableUntil)
+        if (dueDate) {
+          const { data: members } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('org_id', orgId)
+            .eq('is_active', true)
+            .in('role', ['employee', 'manager'])
+
+          for (const member of members ?? []) {
+            const { data: assignment } = await supabase
+              .from('assignments')
+              .select('id, status')
+              .eq('course_id', courseId)
+              .eq('user_id', member.id)
+              .maybeSingle()
+            if (assignment && assignment.status !== 'completed') {
+              await supabase.from('assignments').update({ due_date: dueDate }).eq('id', assignment.id)
+            }
+          }
+        }
+
+        return data as CoursePublication
+      },
+      async fetchUnacknowledgedNotices(userId, orgId) {
+        const { data: publications, error } = await supabase
+          .from('course_publications')
+          .select('*, course:courses(*)')
+          .eq('org_id', orgId)
+          .is('unpublished_at', null)
+        if (error) throw error
+
+        const { data: acks, error: ackError } = await supabase
+          .from('course_publication_acknowledgments')
+          .select('publication_id')
+          .eq('user_id', userId)
+        if (ackError) throw ackError
+
+        const acknowledged = new Set((acks ?? []).map((a) => a.publication_id))
+
+        return (publications ?? [])
+          .filter((row) => isPublicationActive(row as CoursePublication))
+          .filter((row) => !acknowledged.has(row.id))
+          .map((row) => {
+            const pub = row as CoursePublication & { course: Course }
+            return { publication: pub, course: pub.course }
+          }) as CoursePublicationNotice[]
+      },
+      async acknowledgeCourseNotice(publicationId, userId) {
+        const { error } = await supabase.from('course_publication_acknowledgments').upsert(
+          {
+            publication_id: publicationId,
+            user_id: userId,
+            acknowledged_at: new Date().toISOString(),
+          },
+          { onConflict: 'publication_id,user_id' }
+        )
+        if (error) throw error
+      },
     },
     assignments: {
+      async syncRequiredAssignmentsForUser(userId) {
+        const { error } = await supabase.rpc('sync_user_required_assignments', {
+          p_user_id: userId,
+        })
+        if (error) throw error
+      },
       async fetchAssignments(filters) {
         const opts = typeof filters === 'string' ? { userId: filters } : filters
 

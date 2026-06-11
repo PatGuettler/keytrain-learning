@@ -1,5 +1,5 @@
 import { CourseListPage } from '@/pages/training/CourseListPage'
 
-export function MyTrainingPage() {
-  return <CourseListPage basePath="/employee/training" />
+export function MyTrainingPage({ basePath = '/employee/training' }: { basePath?: string }) {
+  return <CourseListPage basePath={basePath} />
 }

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { BookOpen, ClipboardList, GraduationCap, LayoutDashboard, User, Users } from 'lucide-react'
+import { BookOpen, GraduationCap, LayoutDashboard, User, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRole } from '@/hooks/useRole'
 
@@ -17,7 +17,7 @@ export function MobileNav() {
         ? [
             { to: '/manager/dashboard', icon: LayoutDashboard, label: 'Home' },
             { to: '/manager/team', icon: Users, label: 'Team' },
-            { to: '/manager/assignments', icon: ClipboardList, label: 'Assign' },
+            { to: '/manager/training', icon: GraduationCap, label: 'Training' },
           ]
         : isAdmin
           ? [
