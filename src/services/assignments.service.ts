@@ -14,6 +14,10 @@ export async function fetchAssignmentsForOrg(orgId: string): Promise<Assignment[
   return backend.assignments.fetchAssignments({ orgId })
 }
 
+export async function fetchAssignmentsForManager(managerId: string): Promise<Assignment[]> {
+  return backend.assignments.fetchAssignments({ managerId })
+}
+
 export async function fetchAllAssignments(): Promise<Assignment[]> {
   return backend.assignments.fetchAssignments()
 }

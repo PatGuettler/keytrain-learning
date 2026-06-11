@@ -67,6 +67,8 @@ export function CoursePlayerPage({
   const [courseScore, setCourseScore] = useState<number | null>(null)
   const [sessionKey, setSessionKey] = useState(0)
   const [elapsed, setElapsed] = useState(0)
+  const [finishError, setFinishError] = useState('')
+  const [finishing, setFinishing] = useState(false)
   const moduleScoresRef = useRef<ModuleScoreRecord[]>([])
 
   const canStartSession = Boolean(
@@ -90,6 +92,8 @@ export function CoursePlayerPage({
     if (!course || assignment || !userId) return
     void syncRequiredAssignmentsForUser(userId).then(() => {
       void queryClient.invalidateQueries({ queryKey: ['assignments', userId] })
+      void queryClient.invalidateQueries({ queryKey: ['training-sessions', userId] })
+      void queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
     })
   }, [course, assignment, userId, queryClient])
 
@@ -134,21 +138,35 @@ export function CoursePlayerPage({
   }
 
   const handleNext = async () => {
-    if (!canNext || !assignment) return
+    if (!canNext || !assignment || finishing) return
     if (isLast) {
-      const scores = moduleScoresRef.current
-      const avg =
-        scores.length > 0
-          ? Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length)
-          : 100
-      const allPassed = scores.every((s) => s.passed)
-      setCourseScore(avg)
-      await finish(avg, allPassed)
-      const result = await recordCourseAttemptResult(assignment.id, allPassed, maxAttempts)
-      setAttemptInfo(result)
-      setOutcome(allPassed ? 'passed' : result.locked ? 'locked' : 'failed')
-      setFinished(true)
-      void queryClient.invalidateQueries({ queryKey: ['assignments', userId] })
+      setFinishing(true)
+      setFinishError('')
+      try {
+        const scores = moduleScoresRef.current
+        const avg =
+          scores.length > 0
+            ? Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length)
+            : 100
+        const allPassed = scores.every((s) => s.passed)
+        setCourseScore(avg)
+        await finish(avg, allPassed)
+        const result = await recordCourseAttemptResult(assignment.id, allPassed, maxAttempts, avg)
+        setAttemptInfo(result)
+        setOutcome(allPassed ? 'passed' : result.locked ? 'locked' : 'failed')
+        setFinished(true)
+        void queryClient.invalidateQueries({ queryKey: ['assignments', userId] })
+        void queryClient.invalidateQueries({ queryKey: ['training-sessions', userId] })
+        void queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
+      } catch (e) {
+        setFinishError(
+          e instanceof Error
+            ? e.message
+            : 'Could not save course result. Ask your admin to run migration 011_assignments_update_own.sql.'
+        )
+      } finally {
+        setFinishing(false)
+      }
       return
     }
     setCurrentIndex((i) => i + 1)
@@ -313,24 +331,29 @@ export function CoursePlayerPage({
           'bottom-mobile-nav lg:bottom-0 lg:sticky lg:mt-4 lg:border-t lg:p-0 lg:bg-background lg:backdrop-blur-none'
         )}
       >
-        <div className="flex gap-2 w-full max-w-5xl mx-auto px-0 lg:pt-4">
-          <Button
-            variant="outline"
-            className="flex-1 min-h-12"
-            disabled={currentIndex === 0}
-            onClick={() => {
-              setCurrentIndex((i) => i - 1)
-              setModuleReady(completedIndices.has(currentIndex - 1))
-            }}
-          >
-            <ChevronLeft className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline">Previous</span>
-            <span className="sm:hidden">Prev</span>
-          </Button>
-          <Button className="flex-1 min-h-12" onClick={handleNext} disabled={!canNext}>
-            <span>{isLast ? 'Finish' : 'Next'}</span>
-            <ChevronRight className="h-4 w-4 shrink-0" />
-          </Button>
+        <div className="flex flex-col gap-2 w-full max-w-5xl mx-auto px-0 lg:pt-4">
+          {finishError && (
+            <p className="text-sm text-destructive text-center px-2">{finishError}</p>
+          )}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 min-h-12"
+              disabled={currentIndex === 0 || finishing}
+              onClick={() => {
+                setCurrentIndex((i) => i - 1)
+                setModuleReady(completedIndices.has(currentIndex - 1))
+              }}
+            >
+              <ChevronLeft className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Prev</span>
+            </Button>
+            <Button className="flex-1 min-h-12" onClick={() => void handleNext()} disabled={!canNext || finishing}>
+              <span>{finishing ? 'Saving…' : isLast ? 'Finish' : 'Next'}</span>
+              <ChevronRight className="h-4 w-4 shrink-0" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,44 @@
-import type { Assignment, Course } from '@/types/course.types'
+import type { Assignment, Course, TrainingSession } from '@/types/course.types'
 import type { Profile } from '@/types/user.types'
+
+/** Best display score for an assignment (stored value or latest completed session). */
+export function resolveAssignmentScore(assignment: Assignment): number | null {
+  if (assignment.last_score != null) {
+    return Math.round(Number(assignment.last_score))
+  }
+
+  const sessions = assignment.training_sessions ?? []
+  const completed = sessions
+    .filter((s) => s.completed_at != null && s.score != null)
+    .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime())
+
+  if (completed.length === 0) return null
+
+  const best = completed.find((s) => s.passed) ?? completed[0]
+  return Math.round(Number(best.score))
+}
+
+/** Average score across completed assignments that have a recorded score. */
+export function computeAvgScore(assignments: Assignment[]): number {
+  const scores = assignments
+    .filter((a) => a.status === 'completed')
+    .map(resolveAssignmentScore)
+    .filter((s): s is number => s != null)
+
+  if (scores.length === 0) return 0
+  return Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
+}
+
+export function buildScoreHistory(sessions: TrainingSession[]) {
+  return sessions
+    .filter((s) => s.completed_at && s.score != null)
+    .sort((a, b) => new Date(a.completed_at!).getTime() - new Date(b.completed_at!).getTime())
+    .map((s) => ({
+      date: new Date(s.completed_at!).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+      score: Math.round(Number(s.score)),
+      courseId: s.course_id,
+    }))
+}
 
 export interface OrgDashboardMetrics {
   userCount: number

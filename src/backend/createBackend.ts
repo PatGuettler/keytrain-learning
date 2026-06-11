@@ -36,6 +36,30 @@ function addDaysIso(days: number): string {
   return new Date(Date.now() + days * 86_400_000).toISOString()
 }
 
+function enrichAssignment(
+  row: Assignment & { training_sessions?: TrainingSession[] }
+): Assignment {
+  const sessions = row.training_sessions ?? []
+  let lastScore = row.last_score != null ? Math.round(Number(row.last_score)) : null
+
+  if (lastScore == null && sessions.length > 0) {
+    const completed = sessions
+      .filter((s) => s.completed_at && s.score != null)
+      .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime())
+    if (completed.length > 0) {
+      const best = completed.find((s) => s.passed) ?? completed[0]
+      lastScore = Math.round(Number(best.score))
+    }
+  }
+
+  const { training_sessions: _sessions, ...rest } = row
+  return {
+    ...rest,
+    last_score: lastScore,
+    training_sessions: sessions.length > 0 ? sessions : undefined,
+  }
+}
+
 function toDueDate(availableUntil: string | null): string | undefined {
   if (!availableUntil) return undefined
   return availableUntil.split('T')[0]
@@ -453,19 +477,81 @@ function createSupabaseBackend(): Backend {
         })
         if (error) throw error
       },
-      async recordCourseAttemptResult(assignmentId, passed, maxAttempts) {
+      async recordCourseAttemptResult(assignmentId, passed, maxAttempts, score) {
         const { data, error } = await supabase.rpc('record_course_attempt_result', {
           p_assignment_id: assignmentId,
           p_passed: passed,
           p_max_attempts: maxAttempts,
+          p_score: score ?? null,
         })
-        if (error) throw error
-        return data as {
-          passed: boolean
-          attemptsUsed: number
-          maxAttempts: number
-          locked: boolean
-          attemptsRemaining: number
+
+        if (!error && data) {
+          return data as {
+            passed: boolean
+            attemptsUsed: number
+            maxAttempts: number
+            locked: boolean
+            attemptsRemaining: number
+            score: number | null
+          }
+        }
+
+        const rpcMissing =
+          error?.code === 'PGRST202' ||
+          error?.code === '42883' ||
+          error?.message?.includes('record_course_attempt_result')
+
+        if (!rpcMissing) throw error
+
+        // Fallback when RPC migration not applied yet (requires 011_assignments_update_own RLS)
+        const { data: assignment, error: fetchError } = await supabase
+          .from('assignments')
+          .select('attempts_used, locked_at')
+          .eq('id', assignmentId)
+          .single()
+        if (fetchError) throw fetchError
+
+        if (passed) {
+          const { error: updateError } = await supabase
+            .from('assignments')
+            .update({
+              status: 'completed',
+              locked_at: null,
+              last_score: score ?? null,
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', assignmentId)
+          if (updateError) throw updateError
+          return {
+            passed: true,
+            attemptsUsed: assignment.attempts_used,
+            maxAttempts,
+            locked: false,
+            attemptsRemaining: maxAttempts - assignment.attempts_used,
+            score: score ?? null,
+          }
+        }
+
+        const attemptsUsed = assignment.attempts_used + 1
+        const locked = attemptsUsed >= maxAttempts
+        const { error: updateError } = await supabase
+          .from('assignments')
+          .update({
+            attempts_used: attemptsUsed,
+            status: 'in_progress',
+            locked_at: locked ? new Date().toISOString() : null,
+            last_score: score ?? null,
+          })
+          .eq('id', assignmentId)
+        if (updateError) throw updateError
+
+        return {
+          passed: false,
+          attemptsUsed,
+          maxAttempts,
+          locked,
+          attemptsRemaining: Math.max(0, maxAttempts - attemptsUsed),
+          score: score ?? null,
         }
       },
       async requestCourseUnlock({ assignmentId, userId, courseId, orgId, message }) {
@@ -534,6 +620,8 @@ function createSupabaseBackend(): Backend {
               attempts_used: 0,
               status: 'in_progress',
               force_retake: true,
+              last_score: null,
+              completed_at: null,
             })
             .eq('id', request.assignment_id)
           if (unlockError) throw unlockError
@@ -542,10 +630,23 @@ function createSupabaseBackend(): Backend {
       async fetchAssignments(filters) {
         const opts = typeof filters === 'string' ? { userId: filters } : filters
 
-        let q = supabase.from('assignments').select('*, course:courses(*)')
+        let q = supabase
+          .from('assignments')
+          .select(
+            '*, course:courses(*), training_sessions(score, passed, completed_at, started_at, course_id)'
+          )
 
         if (opts?.userId) {
           q = q.eq('user_id', opts.userId)
+        } else if (opts?.managerId) {
+          const { data: members, error: membersError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('manager_id', opts.managerId)
+          if (membersError) throw membersError
+          const memberIds = members?.map((m) => m.id) ?? []
+          if (memberIds.length === 0) return []
+          q = q.in('user_id', memberIds)
         } else if (opts?.orgId) {
           const { data: members, error: membersError } = await supabase
             .from('profiles')
@@ -560,7 +661,9 @@ function createSupabaseBackend(): Backend {
 
         const { data, error } = await q.order('assigned_at', { ascending: false })
         if (error) throw error
-        return data as Assignment[]
+        return (data ?? []).map((row) =>
+          enrichAssignment(row as Assignment & { training_sessions?: TrainingSession[] })
+        )
       },
       async createAssignment(payload) {
         const { data, error } = await supabase

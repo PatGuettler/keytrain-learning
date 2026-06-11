@@ -55,7 +55,11 @@ export interface Assignment {
   force_retake: boolean
   attempts_used: number
   locked_at: string | null
+  last_score: number | null
+  completed_at: string | null
   course?: Course
+  /** Populated when loading assignments with session history */
+  training_sessions?: TrainingSession[]
 }
 
 export type UnlockRequestStatus = 'pending' | 'approved' | 'denied'

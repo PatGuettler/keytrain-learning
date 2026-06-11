@@ -1,14 +1,21 @@
+import { useQuery } from '@tanstack/react-query'
 import { Users, TrendingUp, AlertTriangle, Award } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { CompletionChart } from '@/components/dashboard/CompletionChart'
 import { ProgressTable } from '@/components/dashboard/ProgressTable'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useDashboardStats } from '@/hooks/useDashboardStats'
-import { useAssignments } from '@/hooks/useAssignments'
+import { useAuthStore } from '@/store/authStore'
+import { fetchAssignmentsForManager } from '@/services/assignments.service'
 
 export function ManagerDashboard() {
   const stats = useDashboardStats('manager')
-  const { data: assignments = [] } = useAssignments()
+  const managerId = useAuthStore((s) => s.userId)
+  const { data: assignments = [] } = useQuery({
+    queryKey: ['assignments', 'manager', managerId],
+    queryFn: () => fetchAssignmentsForManager(managerId!),
+    enabled: Boolean(managerId),
+  })
 
   return (
     <div className="space-y-5 sm:space-y-6">

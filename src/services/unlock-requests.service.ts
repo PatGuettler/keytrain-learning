@@ -4,9 +4,10 @@ import type { CourseUnlockRequest, UnlockRequestStatus } from '@/types/course.ty
 export async function recordCourseAttemptResult(
   assignmentId: string,
   passed: boolean,
-  maxAttempts: number
+  maxAttempts: number,
+  score?: number
 ) {
-  return backend.assignments.recordCourseAttemptResult(assignmentId, passed, maxAttempts)
+  return backend.assignments.recordCourseAttemptResult(assignmentId, passed, maxAttempts, score)
 }
 
 export async function requestCourseUnlock(payload: {

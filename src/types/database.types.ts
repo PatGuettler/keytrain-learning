@@ -128,6 +128,8 @@ export interface Database {
           force_retake: boolean
           attempts_used: number
           locked_at: string | null
+          last_score: number | null
+          completed_at: string | null
         }
         Insert: {
           id?: string
@@ -140,6 +142,8 @@ export interface Database {
           force_retake?: boolean
           attempts_used?: number
           locked_at?: string | null
+          last_score?: number | null
+          completed_at?: string | null
         }
         Update: Partial<{
           course_id: string
@@ -150,6 +154,8 @@ export interface Database {
           force_retake: boolean
           attempts_used: number
           locked_at: string | null
+          last_score: number | null
+          completed_at: string | null
         }>
         Relationships: [
           {
@@ -196,7 +202,15 @@ export interface Database {
           score: number | null
           passed: boolean | null
         }>
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'training_sessions_assignment_id_fkey'
+            columns: ['assignment_id']
+            isOneToOne: false
+            referencedRelation: 'assignments'
+            referencedColumns: ['id']
+          },
+        ]
       }
       module_attempts: {
         Row: {
@@ -377,6 +391,7 @@ export interface Database {
           p_assignment_id: string
           p_passed: boolean
           p_max_attempts: number
+          p_score?: number | null
         }
         Returns: {
           passed: boolean
@@ -384,6 +399,7 @@ export interface Database {
           maxAttempts: number
           locked: boolean
           attemptsRemaining: number
+          score: number | null
         }
       }
     }

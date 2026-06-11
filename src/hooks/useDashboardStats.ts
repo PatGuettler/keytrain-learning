@@ -3,12 +3,22 @@ import { useQuery } from '@tanstack/react-query'
 import { useAssignments } from './useAssignments'
 import { useCourses } from './useCourses'
 import { useAuthStore } from '@/store/authStore'
+import { fetchAssignmentsForManager } from '@/services/assignments.service'
 import { fetchProfiles } from '@/services/users.service'
+import { computeAvgScore } from '@/lib/dashboard-stats'
 
 export function useDashboardStats(scope: 'admin' | 'manager' | 'employee') {
   const userId = useAuthStore((s) => s.userId)
   const orgId = useAuthStore((s) => s.profile?.org_id)
-  const { data: assignments = [] } = useAssignments(scope === 'employee' ? userId ?? undefined : undefined)
+  const { data: ownAssignments = [] } = useAssignments(scope === 'employee' ? userId ?? undefined : undefined)
+
+  const { data: teamAssignments = [] } = useQuery({
+    queryKey: ['assignments', 'manager', userId],
+    queryFn: () => fetchAssignmentsForManager(userId!),
+    enabled: scope === 'manager' && Boolean(userId),
+  })
+
+  const assignments = scope === 'manager' ? teamAssignments : ownAssignments
   const { data: courses = [] } = useCourses(false)
 
   const { data: profiles = [] } = useQuery({
@@ -44,7 +54,7 @@ export function useDashboardStats(scope: 'admin' | 'manager' | 'employee') {
       completionRate,
       overdueCount: assignments.filter((a) => a.status === 'overdue').length,
       inProgressCount: assignments.filter((a) => a.status === 'in_progress').length,
-      avgScore: 0,
+      avgScore: computeAvgScore(assignments),
       recentActivity: [] as { user: string; action: string; course: string; at: string }[],
     }
   }, [assignments, courses, profiles, scope, userId])

@@ -71,6 +71,7 @@ export interface CoursesBackend {
 export interface AssignmentFilters {
   userId?: string
   orgId?: string
+  managerId?: string
 }
 
 export interface CourseAttemptResult {
@@ -79,12 +80,18 @@ export interface CourseAttemptResult {
   maxAttempts: number
   locked: boolean
   attemptsRemaining: number
+  score: number | null
 }
 
 export interface AssignmentsBackend {
   fetchAssignments(filters?: string | AssignmentFilters): Promise<Assignment[]>
   syncRequiredAssignmentsForUser(userId: string): Promise<void>
-  recordCourseAttemptResult(assignmentId: string, passed: boolean, maxAttempts: number): Promise<CourseAttemptResult>
+  recordCourseAttemptResult(
+    assignmentId: string,
+    passed: boolean,
+    maxAttempts: number,
+    score?: number
+  ): Promise<CourseAttemptResult>
   requestCourseUnlock(payload: {
     assignmentId: string
     userId: string
