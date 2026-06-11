@@ -254,7 +254,29 @@ export interface Database {
           answers: Json | null
           interactions: Json | null
         }>
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'module_attempts_session_id_fkey'
+            columns: ['session_id']
+            isOneToOne: false
+            referencedRelation: 'training_sessions'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'module_attempts_module_id_fkey'
+            columns: ['module_id']
+            isOneToOne: false
+            referencedRelation: 'modules'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'module_attempts_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
       }
       course_publications: {
         Row: {
