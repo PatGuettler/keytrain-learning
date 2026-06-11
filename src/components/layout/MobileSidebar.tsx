@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   BookOpen,
-  ClipboardList,
   GraduationCap,
   LayoutDashboard,
   Settings,

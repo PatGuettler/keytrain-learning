@@ -218,9 +218,63 @@ export interface Database {
         }>
         Relationships: []
       }
+      course_publications: {
+        Row: {
+          id: string
+          course_id: string
+          org_id: string
+          published_at: string
+          available_until: string | null
+          unpublished_at: string | null
+          published_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          course_id: string
+          org_id: string
+          published_at?: string
+          available_until?: string | null
+          unpublished_at?: string | null
+          published_by?: string | null
+          created_at?: string
+        }
+        Update: Partial<{
+          course_id: string
+          org_id: string
+          published_at: string
+          available_until: string | null
+          unpublished_at: string | null
+          published_by: string | null
+        }>
+        Relationships: []
+      }
+      course_publication_acknowledgments: {
+        Row: {
+          publication_id: string
+          user_id: string
+          acknowledged_at: string
+        }
+        Insert: {
+          publication_id: string
+          user_id: string
+          acknowledged_at?: string
+        }
+        Update: Partial<{
+          publication_id: string
+          user_id: string
+          acknowledged_at: string
+        }>
+        Relationships: []
+      }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      sync_user_required_assignments: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+    }
     Enums: {
       user_role: UserRole
       module_type: ModuleType
