@@ -54,6 +54,10 @@ export function DeleteHospitalCard({
     e.preventDefault()
   }
 
+  const blockDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
   return (
     <Card className="border-destructive/50">
       <CardHeader>
@@ -110,7 +114,8 @@ export function DeleteHospitalCard({
                   setError('')
                 }}
                 onPaste={blockPaste}
-                onDrop={blockPaste}
+                onDragOver={blockDrop}
+                onDrop={blockDrop}
                 autoComplete="off"
                 spellCheck={false}
                 placeholder="Type the hospital name"
