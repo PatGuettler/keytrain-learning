@@ -96,23 +96,33 @@ export interface StaffTrainingRow {
   attemptsUsed: number
   maxAttempts: number
   locked: boolean
+  dueDate: string | null
 }
 
-export function buildStaffTrainingRows(assignments: Assignment[]): StaffTrainingRow[] {
+export function buildStaffTrainingRows(
+  assignments: Assignment[],
+  users?: { id: string; full_name: string; email?: string | null }[]
+): StaffTrainingRow[] {
+  const userMap = new Map(users?.map((u) => [u.id, u]) ?? [])
+
   return assignments
-    .map((a) => ({
-      assignmentId: a.id,
-      userId: a.user_id,
-      userName: a.user?.full_name ?? 'Unknown',
-      userEmail: a.user?.email ?? null,
-      courseId: a.course_id,
-      courseTitle: a.course?.title ?? 'Course',
-      status: a.status,
-      score: resolveAssignmentScore(a),
-      attemptsUsed: a.attempts_used ?? 0,
-      maxAttempts: a.course?.max_attempts ?? 3,
-      locked: Boolean(a.locked_at),
-    }))
+    .map((a) => {
+      const profile = a.user ?? userMap.get(a.user_id)
+      return {
+        assignmentId: a.id,
+        userId: a.user_id,
+        userName: profile?.full_name ?? 'Unknown',
+        userEmail: profile?.email ?? null,
+        courseId: a.course_id,
+        courseTitle: a.course?.title ?? 'Course',
+        status: a.status,
+        score: resolveAssignmentScore(a),
+        attemptsUsed: a.attempts_used ?? 0,
+        maxAttempts: a.course?.max_attempts ?? 3,
+        locked: Boolean(a.locked_at),
+        dueDate: a.due_date,
+      }
+    })
     .sort((a, b) => a.userName.localeCompare(b.userName) || a.courseTitle.localeCompare(b.courseTitle))
 }
 
@@ -137,7 +147,7 @@ function modulePassed(attempt: ModuleAttempt): boolean {
   return attempt.score >= passing
 }
 
-function extractIssues(attempt: ModuleAttempt): string[] {
+export function extractModuleIssues(attempt: ModuleAttempt): string[] {
   const issues: string[] = []
   const i = attempt.interactions
   if (!i) return issues
@@ -200,7 +210,7 @@ export function computeTrainingNeeds(
 
     const issueCounts = new Map<string, number>()
     for (const attempt of moduleAttempts) {
-      for (const issue of extractIssues(attempt)) {
+      for (const issue of extractModuleIssues(attempt)) {
         issueCounts.set(issue, (issueCounts.get(issue) ?? 0) + 1)
       }
     }

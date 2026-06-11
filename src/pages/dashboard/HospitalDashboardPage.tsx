@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Award, BookOpen, Building2, TrendingUp, Users, AlertTriangle } from 'lucide-react'
 import { CompletionChart } from '@/components/dashboard/CompletionChart'
 import { OrgCourseTable } from '@/components/dashboard/OrgCourseTable'
-import { OrgStaffTrainingTable } from '@/components/dashboard/OrgStaffTrainingTable'
+import { StaffTrainingTable } from '@/components/dashboard/OrgStaffTrainingTable'
 import { OrgTrainingNeedsPanel } from '@/components/dashboard/OrgTrainingNeedsPanel'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -12,9 +12,9 @@ import { buildStaffTrainingRows, computeAvgScore, computeTrainingNeeds } from '@
 
 export function HospitalDashboardPage() {
   const { orgId } = useParams<{ orgId: string }>()
-  const { org, courses, assignments, moduleAttempts, metrics, isLoading } = useOrgDashboard(orgId)
+  const { org, users, courses, assignments, moduleAttempts, metrics, isLoading } = useOrgDashboard(orgId)
 
-  const staffRows = buildStaffTrainingRows(assignments)
+  const staffRows = buildStaffTrainingRows(assignments, users)
   const trainingNeeds = computeTrainingNeeds(moduleAttempts, courses)
   const avgScore = computeAvgScore(assignments)
 
@@ -74,7 +74,10 @@ export function HospitalDashboardPage() {
         <OrgTrainingNeedsPanel needs={trainingNeeds} />
       </div>
 
-      <OrgStaffTrainingTable rows={staffRows} orgId={org.id} />
+      <StaffTrainingTable
+        rows={staffRows}
+        getStaffDetailPath={(userId) => `/admin/dashboard/${org.id}/staff/${userId}`}
+      />
 
       <OrgCourseTable courses={courses} assignments={assignments} />
     </div>

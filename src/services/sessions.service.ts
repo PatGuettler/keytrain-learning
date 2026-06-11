@@ -33,3 +33,7 @@ export async function fetchSessions(userId?: string): Promise<TrainingSession[]>
 export async function fetchOrgModuleAttempts(orgId: string) {
   return backend.training.fetchOrgModuleAttempts(orgId)
 }
+
+export async function fetchUserModuleAttempts(userId: string) {
+  return backend.training.fetchUserModuleAttempts(userId)
+}

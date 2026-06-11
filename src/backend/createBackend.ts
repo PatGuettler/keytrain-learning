@@ -139,6 +139,7 @@ function createUnconfiguredBackend(): Backend {
       saveModuleAttempt: fail,
       fetchSessions: fail,
       fetchOrgModuleAttempts: fail,
+      fetchUserModuleAttempts: fail,
     },
   }
 }
@@ -765,6 +766,16 @@ function createSupabaseBackend(): Backend {
             '*, module:modules(id, title, type, course_id, content), user:profiles!module_attempts_user_id_fkey(full_name, email)'
           )
           .in('user_id', memberIds)
+          .not('completed_at', 'is', null)
+          .order('completed_at', { ascending: false })
+        if (error) throw error
+        return (data ?? []) as ModuleAttempt[]
+      },
+      async fetchUserModuleAttempts(userId) {
+        const { data, error } = await supabase
+          .from('module_attempts')
+          .select('*, module:modules(id, title, type, course_id, content)')
+          .eq('user_id', userId)
           .not('completed_at', 'is', null)
           .order('completed_at', { ascending: false })
         if (error) throw error

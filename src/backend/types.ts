@@ -123,6 +123,7 @@ export interface TrainingBackend {
   saveModuleAttempt(attempt: Partial<ModuleAttempt> & { session_id: string; module_id: string; user_id: string }): Promise<ModuleAttempt>
   fetchSessions(userId?: string): Promise<TrainingSession[]>
   fetchOrgModuleAttempts(orgId: string): Promise<ModuleAttempt[]>
+  fetchUserModuleAttempts(userId: string): Promise<ModuleAttempt[]>
 }
 
 export interface Backend {
