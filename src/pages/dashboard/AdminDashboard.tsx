@@ -1,9 +1,11 @@
 import { Building2, BookOpen, Users, AlertTriangle } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { CompletionChart } from '@/components/dashboard/CompletionChart'
+import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { HospitalOverviewList } from '@/components/dashboard/HospitalOverviewList'
 import { useAdminDashboard } from '@/hooks/useAdminDashboard'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { exportPlatformDashboardPdf } from '@/lib/pdf/dashboard-reports'
 
 export function AdminDashboard() {
   const { hospitals, platformTotals, isLoading } = useAdminDashboard()
@@ -13,6 +15,12 @@ export function AdminDashboard() {
       <PageHeader
         title="Platform Dashboard"
         description="Overview across all hospitals — select a hospital to view course details"
+        action={
+          <ExportPdfButton
+            disabled={isLoading}
+            onExport={() => exportPlatformDashboardPdf(hospitals, platformTotals)}
+          />
+        }
       />
 
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">

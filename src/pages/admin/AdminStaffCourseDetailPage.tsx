@@ -7,8 +7,10 @@ import { fetchUserModuleAttempts, fetchSessions } from '@/services/sessions.serv
 import { fetchOrgMembers } from '@/services/users.service'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
+import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { StaffCourseDetailSections } from '@/components/dashboard/StaffCourseDetailSections'
 import { buildStaffTrainingRows } from '@/lib/dashboard-stats'
+import { exportStaffCoursePdf } from '@/lib/pdf/dashboard-reports'
 
 export function AdminStaffCourseDetailPage() {
   const { orgId, userId, courseId } = useParams<{
@@ -64,12 +66,17 @@ export function AdminStaffCourseDetailPage() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <Button variant="ghost" size="sm" asChild>
-        <Link to={`/admin/dashboard/${orgId}/staff/${userId}`}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to {user.full_name}
-        </Link>
-      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" asChild>
+          <Link to={`/admin/dashboard/${orgId}/staff/${userId}`}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to {user.full_name}
+          </Link>
+        </Button>
+        <ExportPdfButton
+          onExport={() => exportStaffCoursePdf(user, courseRow, sessions, moduleAttempts)}
+        />
+      </div>
 
       <PageHeader
         title={courseRow.courseTitle}

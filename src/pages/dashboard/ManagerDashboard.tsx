@@ -2,8 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Users, TrendingUp, AlertTriangle, Award } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { CompletionChart } from '@/components/dashboard/CompletionChart'
+import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { OrgStaffDirectory } from '@/components/dashboard/OrgStaffDirectory'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { exportTeamDashboardPdf } from '@/lib/pdf/dashboard-reports'
 import { useDashboardStats } from '@/hooks/useDashboardStats'
 import { useAuthStore } from '@/store/authStore'
 import { fetchAssignmentsForManager } from '@/services/assignments.service'
@@ -28,7 +30,26 @@ export function ManagerDashboard() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <PageHeader title="Team Dashboard" />
+      <PageHeader
+        title="Team Dashboard"
+        action={
+          <ExportPdfButton
+            onExport={() =>
+              exportTeamDashboardPdf(
+                'Team Dashboard',
+                'Manager team training overview',
+                {
+                  totalUsers: stats.totalUsers,
+                  completionRate: stats.completionRate,
+                  inProgressCount: stats.inProgressCount,
+                  overdueCount: stats.overdueCount,
+                },
+                staffSummaries
+              )
+            }
+          />
+        }
+      />
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <StatCard title="Team Members" value={stats.totalUsers} icon={Users} />
         <StatCard title="Completion Rate" value={`${stats.completionRate}%`} icon={TrendingUp} />

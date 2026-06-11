@@ -6,8 +6,10 @@ import { fetchAssignments } from '@/services/assignments.service'
 import { fetchUserModuleAttempts, fetchSessions } from '@/services/sessions.service'
 import { fetchProfiles } from '@/services/users.service'
 import { Button } from '@/components/ui/button'
+import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { StaffCourseDetailSections } from '@/components/dashboard/StaffCourseDetailSections'
 import { buildStaffTrainingRows } from '@/lib/dashboard-stats'
+import { exportStaffCoursePdf } from '@/lib/pdf/dashboard-reports'
 import { useAuthStore } from '@/store/authStore'
 
 export function ManagerStaffCourseDetailPage() {
@@ -61,12 +63,17 @@ export function ManagerStaffCourseDetailPage() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <Button variant="ghost" size="sm" asChild>
-        <Link to={`/manager/team/${employeeId}`}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to {employee.full_name}
-        </Link>
-      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" asChild>
+          <Link to={`/manager/team/${employeeId}`}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to {employee.full_name}
+          </Link>
+        </Button>
+        <ExportPdfButton
+          onExport={() => exportStaffCoursePdf(employee, courseRow, sessions, moduleAttempts)}
+        />
+      </div>
 
       <div>
         <h2 className="text-2xl font-bold">{courseRow.courseTitle}</h2>

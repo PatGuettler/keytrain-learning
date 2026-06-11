@@ -13,7 +13,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { StatCard } from '@/components/dashboard/StatCard'
+import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { StaffCourseDirectory } from '@/components/dashboard/StaffCourseDirectory'
+import { exportStaffDashboardPdf } from '@/lib/pdf/dashboard-reports'
 import { useAuthStore } from '@/store/authStore'
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
@@ -64,12 +66,19 @@ export function EmployeeDetailPage() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <Button variant="ghost" size="sm" asChild>
-        <Link to="/manager/dashboard">
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to team dashboard
-        </Link>
-      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/manager/dashboard">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to team dashboard
+          </Link>
+        </Button>
+        {summary && (
+          <ExportPdfButton
+            onExport={() => exportStaffDashboardPdf(employee, summary, trainingRows)}
+          />
+        )}
+      </div>
 
       <div>
         <h2 className="text-2xl font-bold">{employee.full_name}</h2>

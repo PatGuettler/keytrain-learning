@@ -6,8 +6,10 @@ import { fetchAssignments } from '@/services/assignments.service'
 import { fetchOrgMembers } from '@/services/users.service'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { StatCard } from '@/components/dashboard/StatCard'
+import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { StaffCourseDirectory } from '@/components/dashboard/StaffCourseDirectory'
 import { Button } from '@/components/ui/button'
+import { exportStaffDashboardPdf } from '@/lib/pdf/dashboard-reports'
 import { Badge } from '@/components/ui/badge'
 import {
   buildStaffSummaryRows,
@@ -65,12 +67,19 @@ export function AdminStaffTrainingPage() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <Button variant="ghost" size="sm" asChild>
-        <Link to={`/admin/dashboard/${orgId}`}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to hospital dashboard
-        </Link>
-      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" asChild>
+          <Link to={`/admin/dashboard/${orgId}`}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to hospital dashboard
+          </Link>
+        </Button>
+        {summary && (
+          <ExportPdfButton
+            onExport={() => exportStaffDashboardPdf(user, summary, trainingRows)}
+          />
+        )}
+      </div>
 
       <div className="space-y-2">
         <PageHeader

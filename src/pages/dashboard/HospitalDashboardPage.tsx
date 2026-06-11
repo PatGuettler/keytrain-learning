@@ -1,10 +1,12 @@
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Award, BookOpen, Building2, TrendingUp, Users, AlertTriangle } from 'lucide-react'
 import { CompletionChart } from '@/components/dashboard/CompletionChart'
+import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { OrgCourseTable } from '@/components/dashboard/OrgCourseTable'
 import { OrgStaffDirectory } from '@/components/dashboard/OrgStaffDirectory'
 import { OrgTrainingNeedsPanel } from '@/components/dashboard/OrgTrainingNeedsPanel'
 import { StatCard } from '@/components/dashboard/StatCard'
+import { exportOrgDashboardPdf } from '@/lib/pdf/dashboard-reports'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { useOrgDashboard } from '@/hooks/useAdminDashboard'
@@ -35,19 +37,34 @@ export function HospitalDashboardPage() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/admin/dashboard">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            All hospitals
-          </Link>
-        </Button>
-        <Button variant="outline" size="sm" asChild>
-          <Link to={`/admin/organizations/${org.id}`}>
-            <Building2 className="h-4 w-4 mr-1" />
-            Manage staff
-          </Link>
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/admin/dashboard">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              All hospitals
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/admin/organizations/${org.id}`}>
+              <Building2 className="h-4 w-4 mr-1" />
+              Manage staff
+            </Link>
+          </Button>
+        </div>
+        <ExportPdfButton
+          onExport={() =>
+            exportOrgDashboardPdf(
+              org.name,
+              metrics,
+              avgScore,
+              staffSummaries,
+              courses,
+              assignments,
+              trainingNeeds
+            )
+          }
+        />
       </div>
 
       <PageHeader title={org.name} description="Course and training overview for this hospital" />
