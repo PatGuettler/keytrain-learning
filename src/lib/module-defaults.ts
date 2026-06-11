@@ -1,5 +1,12 @@
 import type { LessonContent, Module, QuizContent } from '@/types/course.types'
-import type { WorkshopContent, WorkshopType } from '@/types/workshop.types'
+import type {
+  DecisionTreeConfig,
+  HotspotConfig,
+  NodeMapConfig,
+  SortingConfig,
+  WorkshopContent,
+  WorkshopType,
+} from '@/types/workshop.types'
 
 const selectLayouts = ['image-right', 'image-left', 'image-top', 'full-bleed'] as const
 
@@ -53,93 +60,115 @@ export function defaultQuizContent(): QuizContent {
   }
 }
 
-function defaultWorkshopConfig(type: WorkshopType) {
-  switch (type) {
-    case 'node_map':
-      return {
-        background_image: '',
-        passing_score: 60,
-        nodes: [
-          {
-            id: newNodeId(),
-            x_percent: 50,
-            y_percent: 40,
-            icon: 'alert',
-            label: 'Location 1',
-            scenario: 'Describe what staff observe at this location.',
-            question: {
-              text: 'What type of incident is this?',
-              options: [
-                { id: 'a', text: 'Clinical' },
-                { id: 'b', text: 'Cybersecurity / Privacy' },
-                { id: 'c', text: 'Physical / Facilities' },
-              ],
-              correct_id: 'a',
-            },
-          },
-        ],
-      }
-    case 'sorting':
-      return {
-        categories: [
-          { id: 'clinical', label: 'Clinical' },
-          { id: 'cyber', label: 'Cybersecurity' },
-          { id: 'physical', label: 'Physical' },
-          { id: 'admin', label: 'Administrative' },
-        ],
-        cards: [
-          { id: 'c1', text: 'Example incident — edit or add more cards', category_id: 'clinical' },
-        ],
-        passing_score: 80,
-      }
-    case 'decision_tree':
-      return {
-        start_node_id: 'start',
-        nodes: {
-          start: {
-            id: 'start',
-            title: 'Scenario start',
-            description: 'Describe the opening scenario.',
-            choices: [
-              { id: 'good', label: 'Take the safe action', next_node_id: 'good_end' },
-              { id: 'bad', label: 'Take the risky action', next_node_id: 'bad_end' },
-            ],
-          },
-          good_end: {
-            id: 'good_end',
-            title: 'Good outcome',
-            description: 'Explain what went well.',
-            outcome: 'good',
-            teachable_moment: 'Key takeaway for staff.',
-          },
-          bad_end: {
-            id: 'bad_end',
-            title: 'Needs improvement',
-            description: 'Explain what should have been done differently.',
-            outcome: 'bad',
-            teachable_moment: 'What to do next time.',
-          },
+function defaultNodeMapConfig(): NodeMapConfig {
+  return {
+    background_image: '',
+    passing_score: 60,
+    nodes: [
+      {
+        id: newNodeId(),
+        x_percent: 50,
+        y_percent: 40,
+        icon: 'alert',
+        label: 'Location 1',
+        scenario: 'Describe what staff observe at this location.',
+        question: {
+          text: 'What type of incident is this?',
+          options: [
+            { id: 'a', text: 'Clinical' },
+            { id: 'b', text: 'Cybersecurity / Privacy' },
+            { id: 'c', text: 'Physical / Facilities' },
+          ],
+          correct_id: 'a',
         },
-      }
-    case 'hotspot':
-      return {
-        background_image: '',
-        regions: [],
-      }
+      },
+    ],
+  }
+}
+
+function defaultSortingConfig(): SortingConfig {
+  return {
+    categories: [
+      { id: 'clinical', label: 'Clinical' },
+      { id: 'cyber', label: 'Cybersecurity' },
+      { id: 'physical', label: 'Physical' },
+      { id: 'admin', label: 'Administrative' },
+    ],
+    cards: [{ id: 'c1', text: 'Example incident — edit or add more cards', category_id: 'clinical' }],
+    passing_score: 80,
+  }
+}
+
+function defaultDecisionTreeConfig(): DecisionTreeConfig {
+  return {
+    start_node_id: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        title: 'Scenario start',
+        description: 'Describe the opening scenario.',
+        choices: [
+          { id: 'good', label: 'Take the safe action', next_node_id: 'good_end' },
+          { id: 'bad', label: 'Take the risky action', next_node_id: 'bad_end' },
+        ],
+      },
+      good_end: {
+        id: 'good_end',
+        title: 'Good outcome',
+        description: 'Explain what went well.',
+        outcome: 'good',
+        teachable_moment: 'Key takeaway for staff.',
+      },
+      bad_end: {
+        id: 'bad_end',
+        title: 'Needs improvement',
+        description: 'Explain what should have been done differently.',
+        outcome: 'bad',
+        teachable_moment: 'What to do next time.',
+      },
+    },
+  }
+}
+
+function defaultHotspotConfig(): HotspotConfig {
+  return {
+    background_image: '',
+    regions: [],
   }
 }
 
 export function defaultWorkshopContent(type: WorkshopType = 'node_map'): WorkshopContent {
-  return {
-    workshop_type: type,
-    title: type === 'sorting' ? 'Sorting challenge' : 'Interactive workshop',
-    instructions:
-      type === 'node_map'
-        ? 'Explore the floor plan and tap each alert pin. Read the scenario and classify the incident.'
-        : type === 'sorting'
-          ? 'Drag each incident card into the correct category.'
-          : 'Follow the instructions to complete this activity.',
-    config: defaultWorkshopConfig(type),
+  switch (type) {
+    case 'sorting':
+      return {
+        workshop_type: 'sorting',
+        title: 'Sorting challenge',
+        instructions: 'Drag each incident card into the correct category.',
+        config: defaultSortingConfig(),
+      }
+    case 'decision_tree':
+      return {
+        workshop_type: 'decision_tree',
+        title: 'Interactive workshop',
+        instructions: 'Follow the instructions to complete this activity.',
+        config: defaultDecisionTreeConfig(),
+      }
+    case 'hotspot':
+      return {
+        workshop_type: 'hotspot',
+        title: 'Interactive workshop',
+        instructions: 'Follow the instructions to complete this activity.',
+        config: defaultHotspotConfig(),
+      }
+    case 'node_map':
+    default:
+      return {
+        workshop_type: 'node_map',
+        title: 'Interactive workshop',
+        instructions:
+          'Explore the floor plan and tap each alert pin. Read the scenario and classify the incident.',
+        config: defaultNodeMapConfig(),
+      }
   }
 }
 
