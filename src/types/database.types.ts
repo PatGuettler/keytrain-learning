@@ -142,7 +142,15 @@ export interface Database {
           status: AssignmentStatus
           force_retake: boolean
         }>
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'assignments_course_id_fkey'
+            columns: ['course_id']
+            isOneToOne: false
+            referencedRelation: 'courses'
+            referencedColumns: ['id']
+          },
+        ]
       }
       training_sessions: {
         Row: {
@@ -247,7 +255,22 @@ export interface Database {
           unpublished_at: string | null
           published_by: string | null
         }>
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'course_publications_course_id_fkey'
+            columns: ['course_id']
+            isOneToOne: false
+            referencedRelation: 'courses'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'course_publications_org_id_fkey'
+            columns: ['org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
       }
       course_publication_acknowledgments: {
         Row: {
