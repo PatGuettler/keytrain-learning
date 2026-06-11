@@ -4,6 +4,7 @@ import { fetchAllAssignments, fetchAssignmentsForOrg } from '@/services/assignme
 import { fetchCourses, fetchHospitalCourses } from '@/services/courses.service'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
 import { fetchProfiles } from '@/services/users.service'
+import { fetchOrgModuleAttempts } from '@/services/sessions.service'
 import { computeOrgMetrics, type OrgDashboardMetrics } from '@/lib/dashboard-stats'
 import type { Organization } from '@/types/user.types'
 
@@ -87,6 +88,12 @@ export function useOrgDashboard(orgId: string | undefined) {
     enabled: Boolean(orgId),
   })
 
+  const { data: moduleAttempts = [], isLoading: attemptsLoading } = useQuery({
+    queryKey: ['org-module-attempts', orgId],
+    queryFn: () => fetchOrgModuleAttempts(orgId!),
+    enabled: Boolean(orgId),
+  })
+
   const org = hospitals.find((h) => h.id === orgId)
 
   const metrics = useMemo(
@@ -99,7 +106,8 @@ export function useOrgDashboard(orgId: string | undefined) {
     users,
     courses,
     assignments,
+    moduleAttempts,
     metrics,
-    isLoading: usersLoading || coursesLoading || assignmentsLoading,
+    isLoading: usersLoading || coursesLoading || assignmentsLoading || attemptsLoading,
   }
 }

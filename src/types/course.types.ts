@@ -58,6 +58,7 @@ export interface Assignment {
   last_score: number | null
   completed_at: string | null
   course?: Course
+  user?: { id: string; full_name: string; email: string | null }
   /** Populated when loading assignments with session history */
   training_sessions?: TrainingSession[]
 }
@@ -104,6 +105,8 @@ export interface ModuleAttempt {
   score: number | null
   answers: Record<string, unknown> | null
   interactions: Record<string, unknown> | null
+  user?: { full_name: string; email: string | null }
+  module?: Pick<Module, 'id' | 'title' | 'type' | 'course_id' | 'content'>
 }
 
 export interface LessonSlide {

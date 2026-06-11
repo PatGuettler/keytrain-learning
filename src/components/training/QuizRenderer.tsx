@@ -2,13 +2,14 @@ import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { QuizContent } from '@/types/course.types'
+import type { ModuleCompletePayload } from '@/types/training.types'
 
 export function QuizRenderer({
   content,
   onComplete,
 }: {
   content: QuizContent
-  onComplete: (score: number, passed: boolean) => void
+  onComplete: (payload: ModuleCompletePayload) => void
 }) {
   const questions = useMemo(() => {
     const q = [...content.questions]
@@ -37,19 +38,33 @@ export function QuizRenderer({
 
   const handleSubmit = () => {
     let correct = 0
+    const wrongQuestions: { id: string; text: string }[] = []
     questions.forEach((q) => {
       const selected = answers[q.id]
       const correctIds = q.options.filter((o) => o.correct).map((o) => o.id)
+      let isCorrect = false
       if (q.type === 'single_select') {
-        if (correctIds.includes(selected as string)) correct++
+        isCorrect = correctIds.includes(selected as string)
       } else {
         const sel = (selected as string[]) ?? []
-        if (correctIds.length === sel.length && correctIds.every((id) => sel.includes(id))) correct++
+        isCorrect = correctIds.length === sel.length && correctIds.every((id) => sel.includes(id))
       }
+      if (isCorrect) correct++
+      else wrongQuestions.push({ id: q.id, text: q.text })
     })
     const finalScore = Math.round((correct / questions.length) * 100)
+    const passed = finalScore >= content.passing_score
     setSubmitted(true)
-    onComplete(finalScore, finalScore >= content.passing_score)
+    onComplete({
+      score: finalScore,
+      passed,
+      interactions: {
+        type: 'quiz',
+        passed,
+        wrong_questions: wrongQuestions,
+        answers,
+      },
+    })
   }
 
   return (

@@ -45,7 +45,7 @@ export function CourseViewer({
           <QuizRenderer
             key={module.id}
             content={module.content as unknown as QuizContent}
-            onComplete={(score, passed) => onModuleComplete({ score, passed })}
+            onComplete={onModuleComplete}
           />
         )
       case 'workshop': {

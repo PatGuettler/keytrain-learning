@@ -1,16 +1,22 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, BookOpen, Building2, TrendingUp, Users, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Award, BookOpen, Building2, TrendingUp, Users, AlertTriangle } from 'lucide-react'
 import { CompletionChart } from '@/components/dashboard/CompletionChart'
 import { OrgCourseTable } from '@/components/dashboard/OrgCourseTable'
-import { ProgressTable } from '@/components/dashboard/ProgressTable'
+import { OrgStaffTrainingTable } from '@/components/dashboard/OrgStaffTrainingTable'
+import { OrgTrainingNeedsPanel } from '@/components/dashboard/OrgTrainingNeedsPanel'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { useOrgDashboard } from '@/hooks/useAdminDashboard'
+import { buildStaffTrainingRows, computeAvgScore, computeTrainingNeeds } from '@/lib/dashboard-stats'
 
 export function HospitalDashboardPage() {
   const { orgId } = useParams<{ orgId: string }>()
-  const { org, courses, assignments, metrics, isLoading } = useOrgDashboard(orgId)
+  const { org, courses, assignments, moduleAttempts, metrics, isLoading } = useOrgDashboard(orgId)
+
+  const staffRows = buildStaffTrainingRows(assignments)
+  const trainingNeeds = computeTrainingNeeds(moduleAttempts, courses)
+  const avgScore = computeAvgScore(assignments)
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading hospital dashboard…</p>
@@ -46,7 +52,7 @@ export function HospitalDashboardPage() {
 
       <PageHeader title={org.name} description="Course and training overview for this hospital" />
 
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-5">
         <StatCard title="Staff" value={metrics.userCount} icon={Users} />
         <StatCard
           title="Courses"
@@ -55,6 +61,7 @@ export function HospitalDashboardPage() {
           icon={BookOpen}
         />
         <StatCard title="Completion Rate" value={`${metrics.completionRate}%`} icon={TrendingUp} />
+        <StatCard title="Avg Score" value={`${avgScore}%`} icon={Award} />
         <StatCard title="Overdue" value={metrics.overdueCount} icon={AlertTriangle} />
       </div>
 
@@ -64,8 +71,10 @@ export function HospitalDashboardPage() {
           remaining={100 - metrics.completionRate}
           title="Hospital Completion"
         />
-        <ProgressTable assignments={assignments} />
+        <OrgTrainingNeedsPanel needs={trainingNeeds} />
       </div>
+
+      <OrgStaffTrainingTable rows={staffRows} orgId={org.id} />
 
       <OrgCourseTable courses={courses} assignments={assignments} />
     </div>

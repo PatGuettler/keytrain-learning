@@ -13,7 +13,7 @@ export function CourseManagementPage() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Course Management</h2>
         <Button asChild>
-          <Link to="/admin/courses/new">
+          <Link to="/admin/courses/new/edit">
             <Plus className="h-4 w-4 mr-1" /> New Course
           </Link>
         </Button>

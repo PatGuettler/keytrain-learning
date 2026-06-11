@@ -138,6 +138,7 @@ function createUnconfiguredBackend(): Backend {
       completeSession: fail,
       saveModuleAttempt: fail,
       fetchSessions: fail,
+      fetchOrgModuleAttempts: fail,
     },
   }
 }
@@ -633,7 +634,7 @@ function createSupabaseBackend(): Backend {
         let q = supabase
           .from('assignments')
           .select(
-            '*, course:courses(*), training_sessions(score, passed, completed_at, started_at, course_id)'
+            '*, course:courses(*), user:profiles!assignments_user_id_fkey(id, full_name, email), training_sessions(score, passed, completed_at, started_at, course_id)'
           )
 
         if (opts?.userId) {
@@ -747,6 +748,27 @@ function createSupabaseBackend(): Backend {
         const { data, error } = await q.order('started_at', { ascending: false })
         if (error) throw error
         return data as TrainingSession[]
+      },
+      async fetchOrgModuleAttempts(orgId) {
+        const { data: members, error: membersError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('org_id', orgId)
+          .neq('role', 'admin')
+        if (membersError) throw membersError
+        const memberIds = members?.map((m) => m.id) ?? []
+        if (memberIds.length === 0) return []
+
+        const { data, error } = await supabase
+          .from('module_attempts')
+          .select(
+            '*, module:modules(id, title, type, course_id, content), user:profiles!module_attempts_user_id_fkey(full_name, email)'
+          )
+          .in('user_id', memberIds)
+          .not('completed_at', 'is', null)
+          .order('completed_at', { ascending: false })
+        if (error) throw error
+        return (data ?? []) as ModuleAttempt[]
       },
     },
   }

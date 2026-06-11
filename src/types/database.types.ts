@@ -165,6 +165,13 @@ export interface Database {
             referencedRelation: 'courses'
             referencedColumns: ['id']
           },
+          {
+            foreignKeyName: 'assignments_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
         ]
       }
       training_sessions: {

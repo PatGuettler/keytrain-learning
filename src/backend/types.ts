@@ -122,6 +122,7 @@ export interface TrainingBackend {
   completeSession(sessionId: string, payload: { score: number; passed: boolean; time_spent_seconds: number }): Promise<void>
   saveModuleAttempt(attempt: Partial<ModuleAttempt> & { session_id: string; module_id: string; user_id: string }): Promise<ModuleAttempt>
   fetchSessions(userId?: string): Promise<TrainingSession[]>
+  fetchOrgModuleAttempts(orgId: string): Promise<ModuleAttempt[]>
 }
 
 export interface Backend {

@@ -95,6 +95,7 @@ Open http://localhost:5173 and sign in with a user created in Supabase Auth.
    - `supabase/migrations/009_assignment_attempt_result_rpc.sql` (employees can finish courses via RPC)
    - `supabase/migrations/010_assignment_scores.sql` (persist course scores on assignments for dashboards)
    - `supabase/migrations/011_assignments_update_own.sql` (**required** — employees can finish courses)
+   - `supabase/migrations/012_admin_training_analytics_rls.sql` (admin cross-hospital training analytics)
 3. Run `supabase/seed.sql` to create the default organization and courses
 4. Bootstrap your admin account with `supabase/bootstrap-admin.sql` (see file comments)
 5. *(Optional, dev only)* Run `supabase/bootstrap-test-users.sql` for manager/employee test logins (see file for credentials)

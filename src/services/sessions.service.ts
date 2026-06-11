@@ -29,3 +29,7 @@ export async function saveModuleAttempt(
 export async function fetchSessions(userId?: string): Promise<TrainingSession[]> {
   return backend.training.fetchSessions(userId)
 }
+
+export async function fetchOrgModuleAttempts(orgId: string) {
+  return backend.training.fetchOrgModuleAttempts(orgId)
+}

@@ -15,6 +15,7 @@ import { OrganizationsPage } from '@/pages/admin/OrganizationsPage'
 import { OrganizationDetailPage } from '@/pages/admin/OrganizationDetailPage'
 import { PlatformAdminsPage } from '@/pages/admin/PlatformAdminsPage'
 import { UnlockRequestsPage } from '@/pages/admin/UnlockRequestsPage'
+import { AdminStaffTrainingPage } from '@/pages/admin/AdminStaffTrainingPage'
 import { EmployeeListPage } from '@/pages/manager/EmployeeListPage'
 import { EmployeeDetailPage } from '@/pages/manager/EmployeeDetailPage'
 import { MyTrainingPage } from '@/pages/employee/MyTrainingPage'
@@ -54,8 +55,16 @@ export default function App() {
               element={<RoleGuard roles={['admin']}><HospitalDashboardPage /></RoleGuard>}
             />
             <Route
+              path="/admin/dashboard/:orgId/staff/:userId"
+              element={<RoleGuard roles={['admin']}><AdminStaffTrainingPage /></RoleGuard>}
+            />
+            <Route
               path="/admin/courses"
               element={<RoleGuard roles={['admin']}><CourseManagementPage /></RoleGuard>}
+            />
+            <Route
+              path="/admin/courses/new"
+              element={<Navigate to="/admin/courses/new/edit" replace />}
             />
             <Route
               path="/admin/courses/:courseId/edit"

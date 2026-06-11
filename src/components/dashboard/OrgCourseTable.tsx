@@ -36,7 +36,7 @@ export function OrgCourseTable({
       </CardHeader>
       <CardContent>
         <ul className="md:hidden space-y-3">
-          {rows.map(({ course, assignmentCount, completedCount, completionRate, overdueCount }) => (
+          {rows.map(({ course, assignmentCount, completedCount, completionRate, overdueCount, avgScore }) => (
             <li key={course.id} className="rounded-lg border p-4 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <p className="font-medium text-sm leading-snug">{course.title}</p>
@@ -45,8 +45,8 @@ export function OrgCourseTable({
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                {course.estimated_minutes} min · {assignmentCount} assigned · {completedCount} completed ·{' '}
-                {completionRate}% rate
+                {course.estimated_minutes} min · {assignmentCount} assigned · {completedCount} completed
+                {avgScore != null ? ` · ${avgScore}% avg` : ''} · {completionRate}% rate
                 {overdueCount > 0 ? ` · ${overdueCount} overdue` : ''}
               </p>
               <Button variant="outline" size="sm" asChild>
@@ -65,12 +65,13 @@ export function OrgCourseTable({
                 <th className="pb-2 pr-4">Duration</th>
                 <th className="pb-2 pr-4">Assigned</th>
                 <th className="pb-2 pr-4">Completed</th>
+                <th className="pb-2 pr-4">Avg score</th>
                 <th className="pb-2 pr-4">Rate</th>
                 <th className="pb-2" />
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ course, assignmentCount, completedCount, completionRate, overdueCount }) => (
+              {rows.map(({ course, assignmentCount, completedCount, completionRate, overdueCount, avgScore }) => (
                 <tr key={course.id} className="border-b last:border-0">
                   <td className="py-3 pr-4 font-medium">{course.title}</td>
                   <td className="py-3 pr-4">
@@ -86,6 +87,7 @@ export function OrgCourseTable({
                       <span className="text-destructive ml-1">({overdueCount} overdue)</span>
                     )}
                   </td>
+                  <td className="py-3 pr-4 tabular-nums">{avgScore != null ? `${avgScore}%` : '—'}</td>
                   <td className="py-3 pr-4">{completionRate}%</td>
                   <td className="py-3 text-right">
                     <Button variant="outline" size="sm" asChild>
