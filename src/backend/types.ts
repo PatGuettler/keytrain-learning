@@ -4,9 +4,11 @@ import type {
   Course,
   CoursePublication,
   CoursePublicationNotice,
+  CourseUnlockRequest,
   Module,
   ModuleAttempt,
   TrainingSession,
+  UnlockRequestStatus,
 } from '@/types/course.types'
 import type { AdminProfileUpdate, Organization, Profile, UserRole } from '@/types/user.types'
 
@@ -71,13 +73,38 @@ export interface AssignmentFilters {
   orgId?: string
 }
 
+export interface CourseAttemptResult {
+  passed: boolean
+  attemptsUsed: number
+  maxAttempts: number
+  locked: boolean
+  attemptsRemaining: number
+}
+
 export interface AssignmentsBackend {
   fetchAssignments(filters?: string | AssignmentFilters): Promise<Assignment[]>
   syncRequiredAssignmentsForUser(userId: string): Promise<void>
+  recordCourseAttemptResult(assignmentId: string, passed: boolean, maxAttempts: number): Promise<CourseAttemptResult>
+  requestCourseUnlock(payload: {
+    assignmentId: string
+    userId: string
+    courseId: string
+    orgId: string
+    message?: string
+  }): Promise<CourseUnlockRequest>
+  fetchUnlockRequests(status?: UnlockRequestStatus): Promise<CourseUnlockRequest[]>
+  fetchPendingUnlockForAssignment(assignmentId: string, userId: string): Promise<CourseUnlockRequest | null>
+  resolveUnlockRequest(requestId: string, approved: boolean, adminId: string): Promise<void>
   createAssignment(payload: { course_id: string; user_id: string; assigned_by: string; due_date?: string }): Promise<Assignment>
   updateAssignment(
     id: string,
-    patch: Partial<{ status: AssignmentStatus; force_retake: boolean; due_date: string | null }>
+    patch: Partial<{
+      status: AssignmentStatus
+      force_retake: boolean
+      due_date: string | null
+      attempts_used: number
+      locked_at: string | null
+    }>
   ): Promise<Assignment | undefined>
   deleteAssignment(id: string): Promise<void>
 }

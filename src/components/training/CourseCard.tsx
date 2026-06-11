@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Clock, Play } from 'lucide-react'
+import { Clock, Lock, Play } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -15,11 +15,18 @@ interface CourseCardProps {
 
 export function CourseCard({ course, assignment, playHref }: CourseCardProps) {
   const takeBy = course.publication?.available_until ?? assignment?.due_date
+  const maxAttempts = course.max_attempts ?? 3
+  const isLocked = Boolean(assignment?.locked_at)
+  const attemptsUsed = assignment?.attempts_used ?? 0
 
   return (
     <Card className="flex flex-col h-full hover:shadow-md transition-shadow overflow-hidden">
       <div className="h-28 sm:h-32 bg-gradient-to-br from-primary/20 to-accent rounded-t-lg flex items-center justify-center shrink-0">
-        <Play className="h-10 w-10 text-primary opacity-60" />
+        {isLocked ? (
+          <Lock className="h-10 w-10 text-destructive opacity-80" />
+        ) : (
+          <Play className="h-10 w-10 text-primary opacity-60" />
+        )}
       </div>
       <CardHeader className="space-y-3 pb-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
@@ -28,6 +35,11 @@ export function CourseCard({ course, assignment, playHref }: CourseCardProps) {
             <Badge variant="outline" className="w-fit">
               Required
             </Badge>
+            {assignment && isLocked && (
+              <Badge variant="destructive" className="w-fit">
+                Locked
+              </Badge>
+            )}
             {assignment && (
               <Badge
                 variant={assignment.status === 'completed' ? 'success' : 'secondary'}
@@ -46,6 +58,13 @@ export function CourseCard({ course, assignment, playHref }: CourseCardProps) {
             Take by {formatDate(takeBy)}
           </p>
         )}
+        {assignment && assignment.status !== 'completed' && (
+          <p className="text-xs text-muted-foreground">
+            {isLocked
+              ? `All ${maxAttempts} attempts used — request unlock to continue`
+              : `${attemptsUsed} of ${maxAttempts} attempts used`}
+          </p>
+        )}
       </CardHeader>
       <CardContent className="mt-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-0">
         <span className="text-sm text-muted-foreground flex items-center gap-1.5 shrink-0">
@@ -53,7 +72,7 @@ export function CourseCard({ course, assignment, playHref }: CourseCardProps) {
           {course.estimated_minutes} min
         </span>
         <Button asChild size="sm" className="min-h-11 w-full sm:w-auto sm:min-w-[5.5rem]">
-          <Link to={playHref}>Start</Link>
+          <Link to={playHref}>{isLocked ? 'View' : assignment?.status === 'in_progress' ? 'Continue' : 'Start'}</Link>
         </Button>
       </CardContent>
     </Card>

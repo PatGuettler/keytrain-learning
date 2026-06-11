@@ -7,6 +7,8 @@ import { useCourse, useModules } from '@/hooks/useCourses'
 import { syncCourseModules, upsertCourse, upsertModule } from '@/services/courses.service'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 export function CourseEditPage() {
   const { courseId } = useParams<{ courseId: string }>()
   const isNew = courseId === 'new'
@@ -20,11 +22,16 @@ export function CourseEditPage() {
   const [title, setTitle] = useState(course?.title ?? 'New Course')
   const [description, setDescription] = useState(course?.description ?? '')
   const [modules, setModules] = useState(isNew ? [] : fetchedModules)
+  const [maxAttempts, setMaxAttempts] = useState(course?.max_attempts ?? 3)
   const [savedCourseId, setSavedCourseId] = useState(isNew ? '' : courseId!)
 
   useEffect(() => {
     if (!isNew && fetchedModules.length) setModules(fetchedModules)
   }, [isNew, fetchedModules])
+
+  useEffect(() => {
+    if (course?.max_attempts) setMaxAttempts(course.max_attempts)
+  }, [course?.max_attempts])
 
   const save = async () => {
     const saved = await upsertCourse({
@@ -33,6 +40,7 @@ export function CourseEditPage() {
       title,
       description,
       is_published: course?.is_published ?? false,
+      max_attempts: Math.max(1, maxAttempts),
       estimated_minutes: 30,
       created_by: userId,
     })
@@ -79,6 +87,20 @@ export function CourseEditPage() {
         There is one live version of each course — no history. Saving updates the course for every
         organization it is published to.
       </p>
+      <div className="max-w-xs space-y-2">
+        <Label htmlFor="max-attempts">Max attempts per user</Label>
+        <Input
+          id="max-attempts"
+          type="number"
+          min={1}
+          value={maxAttempts}
+          onChange={(e) => setMaxAttempts(parseInt(e.target.value, 10) || 1)}
+        />
+        <p className="text-xs text-muted-foreground">
+          After this many failed completions, the user is locked until an admin approves an unlock
+          request.
+        </p>
+      </div>
       <CourseBuilder
         title={title}
         description={description}

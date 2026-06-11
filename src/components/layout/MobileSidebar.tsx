@@ -4,11 +4,11 @@ import {
   BookOpen,
   GraduationCap,
   LayoutDashboard,
-  Settings,
   Shield,
   Building2,
   ShieldCheck,
   Users,
+  LockKeyhole,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -23,6 +23,7 @@ const navByRole = {
     { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
     { to: '/admin/organizations', label: 'Organizations', icon: Building2 },
     { to: '/admin/courses', label: 'Courses', icon: BookOpen },
+    { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
   ],
   manager: [
     { to: '/manager/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -32,7 +33,6 @@ const navByRole = {
   employee: [
     { to: '/employee/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/employee/training', label: 'Required Training', icon: GraduationCap },
-    { to: '/employee/profile', label: 'Profile', icon: Settings },
   ],
 }
 

@@ -9,6 +9,7 @@ export interface Course {
   thumbnail_url: string | null
   estimated_minutes: number
   is_published: boolean
+  max_attempts: number
   created_by: string | null
   created_at: string
   updated_at: string
@@ -52,7 +53,27 @@ export interface Assignment {
   due_date: string | null
   status: AssignmentStatus
   force_retake: boolean
+  attempts_used: number
+  locked_at: string | null
   course?: Course
+}
+
+export type UnlockRequestStatus = 'pending' | 'approved' | 'denied'
+
+export interface CourseUnlockRequest {
+  id: string
+  assignment_id: string
+  user_id: string
+  course_id: string
+  org_id: string
+  status: UnlockRequestStatus
+  message: string | null
+  requested_at: string
+  resolved_at: string | null
+  resolved_by: string | null
+  user?: { full_name: string; email: string | null }
+  course?: { title: string }
+  organization?: { name: string }
 }
 
 export interface TrainingSession {

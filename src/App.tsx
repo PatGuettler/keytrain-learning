@@ -14,10 +14,10 @@ import { CourseEditPage } from '@/pages/admin/CourseEditPage'
 import { OrganizationsPage } from '@/pages/admin/OrganizationsPage'
 import { OrganizationDetailPage } from '@/pages/admin/OrganizationDetailPage'
 import { PlatformAdminsPage } from '@/pages/admin/PlatformAdminsPage'
+import { UnlockRequestsPage } from '@/pages/admin/UnlockRequestsPage'
 import { EmployeeListPage } from '@/pages/manager/EmployeeListPage'
 import { EmployeeDetailPage } from '@/pages/manager/EmployeeDetailPage'
 import { MyTrainingPage } from '@/pages/employee/MyTrainingPage'
-import { ProfilePage } from '@/pages/employee/ProfilePage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { useAuthStore } from '@/store/authStore'
 import { ROLE_DASHBOARD } from '@/lib/constants'
@@ -60,6 +60,10 @@ export default function App() {
             <Route
               path="/admin/courses/:courseId/edit"
               element={<RoleGuard roles={['admin']}><CourseEditPage /></RoleGuard>}
+            />
+            <Route
+              path="/admin/unlock-requests"
+              element={<RoleGuard roles={['admin']}><UnlockRequestsPage /></RoleGuard>}
             />
             <Route
               path="/admin/admins"
@@ -123,10 +127,7 @@ export default function App() {
                 </RoleGuard>
               }
             />
-            <Route
-              path="/employee/profile"
-              element={<RoleGuard roles={['employee']}><ProfilePage /></RoleGuard>}
-            />
+            <Route path="/employee/profile" element={<Navigate to="/employee/dashboard" replace />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

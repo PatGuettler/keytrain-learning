@@ -58,6 +58,7 @@ export interface Database {
           thumbnail_url: string | null
           estimated_minutes: number
           is_published: boolean
+          max_attempts: number
           created_by: string | null
           created_at: string
           updated_at: string
@@ -70,6 +71,7 @@ export interface Database {
           thumbnail_url?: string | null
           estimated_minutes?: number
           is_published?: boolean
+          max_attempts?: number
           created_by?: string | null
           created_at?: string
           updated_at?: string
@@ -81,6 +83,7 @@ export interface Database {
           thumbnail_url: string | null
           estimated_minutes: number
           is_published: boolean
+          max_attempts: number
           created_by: string | null
         }>
         Relationships: []
@@ -123,6 +126,8 @@ export interface Database {
           due_date: string | null
           status: AssignmentStatus
           force_retake: boolean
+          attempts_used: number
+          locked_at: string | null
         }
         Insert: {
           id?: string
@@ -133,6 +138,8 @@ export interface Database {
           due_date?: string | null
           status?: AssignmentStatus
           force_retake?: boolean
+          attempts_used?: number
+          locked_at?: string | null
         }
         Update: Partial<{
           course_id: string
@@ -141,6 +148,8 @@ export interface Database {
           due_date: string | null
           status: AssignmentStatus
           force_retake: boolean
+          attempts_used: number
+          locked_at: string | null
         }>
         Relationships: [
           {
@@ -289,6 +298,72 @@ export interface Database {
           acknowledged_at: string
         }>
         Relationships: []
+      }
+      course_unlock_requests: {
+        Row: {
+          id: string
+          assignment_id: string
+          user_id: string
+          course_id: string
+          org_id: string
+          status: string
+          message: string | null
+          requested_at: string
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          id?: string
+          assignment_id: string
+          user_id: string
+          course_id: string
+          org_id: string
+          status?: string
+          message?: string | null
+          requested_at?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: Partial<{
+          assignment_id: string
+          user_id: string
+          course_id: string
+          org_id: string
+          status: string
+          message: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+        }>
+        Relationships: [
+          {
+            foreignKeyName: 'course_unlock_requests_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'course_unlock_requests_course_id_fkey'
+            columns: ['course_id']
+            isOneToOne: false
+            referencedRelation: 'courses'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'course_unlock_requests_org_id_fkey'
+            columns: ['org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'course_unlock_requests_assignment_id_fkey'
+            columns: ['assignment_id']
+            isOneToOne: false
+            referencedRelation: 'assignments'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: Record<string, never>

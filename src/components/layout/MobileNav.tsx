@@ -11,7 +11,6 @@ export function MobileNav() {
       ? [
           { to: '/employee/dashboard', icon: LayoutDashboard, label: 'Home' },
           { to: '/employee/training', icon: GraduationCap, label: 'Training' },
-          { to: '/employee/profile', icon: User, label: 'Profile' },
         ]
       : isManager
         ? [

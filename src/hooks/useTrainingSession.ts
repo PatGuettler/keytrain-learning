@@ -7,11 +7,18 @@ export function useTrainingSession(
   assignmentId: string,
   userId: string,
   courseId: string,
-  enabled: boolean
+  enabled: boolean,
+  restartKey = 0
 ) {
   const [session, setSession] = useState<TrainingSession | null>(null)
   const elapsedRef = useRef(0)
   const sessionIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    setSession(null)
+    sessionIdRef.current = null
+    elapsedRef.current = 0
+  }, [restartKey])
 
   useEffect(() => {
     if (!enabled || session) return
@@ -19,7 +26,7 @@ export function useTrainingSession(
       setSession(s)
       sessionIdRef.current = s.id
     })
-  }, [enabled, assignmentId, userId, courseId, session])
+  }, [enabled, assignmentId, userId, courseId, session, restartKey])
 
   useEffect(() => {
     if (!sessionIdRef.current) return

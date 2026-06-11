@@ -7,6 +7,7 @@ import type {
   Course,
   CoursePublication,
   CoursePublicationNotice,
+  CourseUnlockRequest,
   Module,
   ModuleAttempt,
   TrainingSession,
@@ -98,6 +99,11 @@ function createUnconfiguredBackend(): Backend {
     assignments: {
       fetchAssignments: fail,
       syncRequiredAssignmentsForUser: fail,
+      recordCourseAttemptResult: fail,
+      requestCourseUnlock: fail,
+      fetchUnlockRequests: fail,
+      fetchPendingUnlockForAssignment: fail,
+      resolveUnlockRequest: fail,
       createAssignment: fail,
       updateAssignment: fail,
       deleteAssignment: fail,
@@ -447,6 +453,120 @@ function createSupabaseBackend(): Backend {
         })
         if (error) throw error
       },
+      async recordCourseAttemptResult(assignmentId, passed, maxAttempts) {
+        const { data: assignment, error: fetchError } = await supabase
+          .from('assignments')
+          .select('attempts_used, locked_at')
+          .eq('id', assignmentId)
+          .single()
+        if (fetchError) throw fetchError
+
+        if (passed) {
+          const { error } = await supabase
+            .from('assignments')
+            .update({ status: 'completed', locked_at: null })
+            .eq('id', assignmentId)
+          if (error) throw error
+          return {
+            passed: true,
+            attemptsUsed: assignment.attempts_used,
+            maxAttempts,
+            locked: false,
+            attemptsRemaining: maxAttempts - assignment.attempts_used,
+          }
+        }
+
+        const attemptsUsed = assignment.attempts_used + 1
+        const locked = attemptsUsed >= maxAttempts
+        const { error } = await supabase
+          .from('assignments')
+          .update({
+            attempts_used: attemptsUsed,
+            status: 'in_progress',
+            locked_at: locked ? new Date().toISOString() : null,
+          })
+          .eq('id', assignmentId)
+        if (error) throw error
+
+        return {
+          passed: false,
+          attemptsUsed,
+          maxAttempts,
+          locked,
+          attemptsRemaining: Math.max(0, maxAttempts - attemptsUsed),
+        }
+      },
+      async requestCourseUnlock({ assignmentId, userId, courseId, orgId, message }) {
+        const { data, error } = await supabase
+          .from('course_unlock_requests')
+          .insert({
+            assignment_id: assignmentId,
+            user_id: userId,
+            course_id: courseId,
+            org_id: orgId,
+            message: message?.trim() || null,
+            status: 'pending',
+          })
+          .select()
+          .single()
+        if (error) throw error
+        return data as CourseUnlockRequest
+      },
+      async fetchUnlockRequests(status) {
+        let q = supabase
+          .from('course_unlock_requests')
+          .select(
+            '*, user:profiles!course_unlock_requests_user_id_fkey(full_name, email), course:courses(title), organization:organizations(name)'
+          )
+          .order('requested_at', { ascending: false })
+        if (status) q = q.eq('status', status)
+        const { data, error } = await q
+        if (error) throw error
+        return (data ?? []) as CourseUnlockRequest[]
+      },
+      async fetchPendingUnlockForAssignment(assignmentId, userId) {
+        const { data, error } = await supabase
+          .from('course_unlock_requests')
+          .select('*')
+          .eq('assignment_id', assignmentId)
+          .eq('user_id', userId)
+          .eq('status', 'pending')
+          .maybeSingle()
+        if (error) throw error
+        return data as CourseUnlockRequest | null
+      },
+      async resolveUnlockRequest(requestId, approved, adminId) {
+        const { data: request, error: fetchError } = await supabase
+          .from('course_unlock_requests')
+          .select('assignment_id, status')
+          .eq('id', requestId)
+          .single()
+        if (fetchError) throw fetchError
+        if (request.status !== 'pending') throw new Error('Request already resolved.')
+
+        const { error: updateError } = await supabase
+          .from('course_unlock_requests')
+          .update({
+            status: approved ? 'approved' : 'denied',
+            resolved_at: new Date().toISOString(),
+            resolved_by: adminId,
+          })
+          .eq('id', requestId)
+        if (updateError) throw updateError
+
+        if (approved) {
+          const { error: unlockError } = await supabase
+            .from('assignments')
+            .update({
+              locked_at: null,
+              attempts_used: 0,
+              status: 'in_progress',
+              force_retake: true,
+            })
+            .eq('id', request.assignment_id)
+          if (unlockError) throw unlockError
+        }
+      },
       async fetchAssignments(filters) {
         const opts = typeof filters === 'string' ? { userId: filters } : filters
 
@@ -490,9 +610,32 @@ function createSupabaseBackend(): Backend {
     },
     training: {
       async startSession(assignmentId, userId, courseId) {
+        const { data: assignment, error: assignmentError } = await supabase
+          .from('assignments')
+          .select('locked_at, status')
+          .eq('id', assignmentId)
+          .single()
+        if (assignmentError) throw assignmentError
+        if (assignment.locked_at) {
+          throw new Error('This course is locked. Request an unlock from your administrator.')
+        }
+        if (assignment.status === 'completed') {
+          throw new Error('You have already completed this course.')
+        }
+
+        const { count } = await supabase
+          .from('training_sessions')
+          .select('*', { count: 'exact', head: true })
+          .eq('assignment_id', assignmentId)
+
         const { data, error } = await supabase
           .from('training_sessions')
-          .insert({ assignment_id: assignmentId, user_id: userId, course_id: courseId })
+          .insert({
+            assignment_id: assignmentId,
+            user_id: userId,
+            course_id: courseId,
+            attempt_number: (count ?? 0) + 1,
+          })
           .select()
           .single()
         if (error) throw error

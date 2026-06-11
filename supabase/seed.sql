@@ -29,5 +29,4 @@ INSERT INTO courses (id, org_id, title, description, estimated_minutes, is_publi
   )
 ON CONFLICT (id) DO NOTHING;
 
--- Import modules from src/data/courses.ts (seedModules) via the admin course builder
--- or generate SQL from that file when seeding a new environment.
+-- Full module content for course 10000000-...001: run seed-incident-awareness-course.sql
