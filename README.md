@@ -2,7 +2,7 @@
 
 Healthcare training platform for clinical incident reporting, compliance courses, and interactive workshops. Built for hospital organizations with **admin**, **manager**, and **employee** roles.
 
-**Live demo:** [https://patguettler.github.io/guardian-md/](https://patguettler.github.io/guardian-md/)
+**Live site:** [https://patguettler.github.io/guardian-md/](https://patguettler.github.io/guardian-md/)
 
 **Repository:** [github.com/PatGuettler/guardian-md](https://github.com/PatGuettler/guardian-md)
 
@@ -66,41 +66,64 @@ flowchart LR
 
 - Node.js 20+
 - npm
-- (Optional) Supabase account for production data
+- Supabase account (required)
 
-### Install & run (demo mode)
-
-Without Supabase env vars, the app runs in **demo mode** with seeded courses and three demo accounts.
+### Install & run
 
 ```bash
 git clone https://github.com/PatGuettler/guardian-md.git
 cd guardian-md
 npm install
+cp .env.example .env   # add your Supabase URL and anon key
 npm run dev
 ```
 
-Open http://localhost:5173 and sign in with:
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@guardianmd.demo | demo-admin-123 |
-| Manager | manager@guardianmd.demo | demo-manager-123 |
-| Employee | employee@guardianmd.demo | demo-employee-123 |
+Open http://localhost:5173 and sign in with a user created in Supabase Auth.
 
 ### Supabase setup
 
 1. Create a project at [supabase.com](https://supabase.com)
-2. Run `supabase/migrations/001_initial_schema.sql` in the SQL editor
-3. Optionally run `supabase/seed.sql` (after creating matching auth users)
-4. Create a **training-images** storage bucket (public read for authenticated users)
-5. Copy `.env.example` to `.env`:
+2. Run migrations in order in the SQL editor:
+   - `supabase/migrations/001_initial_schema.sql`
+   - `supabase/migrations/002_platform_admin_and_profile_email.sql`
+   - `supabase/migrations/003_org_admin_delete.sql` (required for deleting hospitals)
+   - `supabase/migrations/004_admin_assignments_select.sql` (platform dashboard stats)
+3. Run `supabase/seed.sql` to create the default organization and courses
+4. Bootstrap your admin account with `supabase/bootstrap-admin.sql` (see file comments)
+5. *(Optional, dev only)* Run `supabase/bootstrap-test-users.sql` for manager/employee test logins (see file for credentials)
+6. Deploy the `manage-users` Edge Function (one-time, see below — required for inviting users)
+7. Import course modules from `src/data/courses.ts` via the admin course builder, or extend `seed.sql`
+8. Create a **training-images** storage bucket (public read for authenticated users)
+9. Copy `.env.example` to `.env`:
 
 ```env
 VITE_SUPABASE_URL=https://xxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-6. Restart `npm run dev`
+10. Restart `npm run dev`
+
+### Organizations & user management
+
+Admins use **Organizations** to manage hospitals. Each org has its own users (one org per user, one role per user).
+
+- **Add one user:** email + optional name; defaults to **employee**; pick role if needed
+- **Bulk CSV:** only `email` required; `full_name`, `role`, `manager_email` optional (role defaults to employee)
+- **Change roles:** edit role per user in the org user table
+
+**Deploy the Edge Function (one time):**
+
+```bash
+npm install -g supabase
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+supabase secrets set INVITE_REDIRECT_URL=https://patguettler.github.io/guardian-md/login
+supabase functions deploy manage-users
+```
+
+For local dev, set `INVITE_REDIRECT_URL=http://localhost:5173/login` instead.
+
+**Free tier:** GitHub Pages hosting is free. Supabase free tier includes Edge Functions, Auth, and Postgres — enough for a hospital pilot. Built-in auth emails are rate-limited (~4/hour); for hundreds of invites configure [custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp) in Supabase (SendGrid, Resend, etc. have free tiers).
 
 ### Environment variables
 
@@ -174,7 +197,8 @@ src/
   components/   # UI, layout, dashboard, training, workshops, admin
   pages/        # Route-level screens by role
   hooks/        # Data & auth hooks
-  services/     # Supabase + demo data layer
+  data/         # Seed course catalog (courses + modules)
+  services/     # Supabase API layer
   store/        # Zustand stores
   guards/       # Auth & role route guards
 supabase/       # SQL migrations & seed

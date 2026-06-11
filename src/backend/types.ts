@@ -1,10 +1,9 @@
 import type { Assignment, AssignmentStatus, Course, Module, ModuleAttempt, TrainingSession } from '@/types/course.types'
-import type { Profile, UserRole } from '@/types/user.types'
+import type { AdminProfileUpdate, Organization, Profile, UserRole } from '@/types/user.types'
 
 export interface AuthSignInResult {
   user: { id: string; email?: string }
   profile: Profile
-  demoMode: boolean
 }
 
 export interface AuthBackend {
@@ -16,12 +15,27 @@ export interface AuthBackend {
 }
 
 export interface UsersBackend {
-  fetchProfiles(filters?: { orgId?: string; managerId?: string; role?: UserRole }): Promise<Profile[]>
-  updateProfile(id: string, patch: Partial<Pick<Profile, 'full_name' | 'avatar_url'>>): Promise<Profile>
+  fetchProfiles(filters?: {
+    orgId?: string
+    managerId?: string
+    role?: UserRole
+    includeInactive?: boolean
+    /** Omit platform admins from org staff lists */
+    excludeAdmins?: boolean
+  }): Promise<Profile[]>
+  updateProfile(id: string, patch: AdminProfileUpdate): Promise<Profile>
+}
+
+export interface OrganizationsBackend {
+  fetchOrganizations(): Promise<Organization[]>
+  createOrganization(name: string): Promise<Organization>
+  updateOrganization(id: string, patch: { name: string }): Promise<Organization>
+  deleteOrganization(id: string): Promise<void>
 }
 
 export interface CoursesBackend {
   fetchCourses(orgId: string, publishedOnly?: boolean): Promise<Course[]>
+  fetchHospitalCourses(): Promise<Course[]>
   fetchCourse(id: string): Promise<Course | null>
   fetchModules(courseId: string): Promise<Module[]>
   upsertCourse(course: Partial<Course> & { org_id: string; title: string }): Promise<Course>
@@ -29,8 +43,13 @@ export interface CoursesBackend {
   deleteModule(id: string): Promise<void>
 }
 
+export interface AssignmentFilters {
+  userId?: string
+  orgId?: string
+}
+
 export interface AssignmentsBackend {
-  fetchAssignments(userId?: string): Promise<Assignment[]>
+  fetchAssignments(filters?: string | AssignmentFilters): Promise<Assignment[]>
   createAssignment(payload: { course_id: string; user_id: string; assigned_by: string; due_date?: string }): Promise<Assignment>
   updateAssignment(
     id: string,
@@ -50,10 +69,11 @@ export interface TrainingBackend {
 export interface Backend {
   auth: AuthBackend
   users: UsersBackend
+  organizations: OrganizationsBackend
   courses: CoursesBackend
   assignments: AssignmentsBackend
   training: TrainingBackend
-  /** Indicates which backend is active (demo/supabase/aws...). */
+  /** Indicates which backend is active (supabase/aws...). */
   kind: string
 }
 

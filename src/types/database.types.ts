@@ -19,6 +19,7 @@ export interface Database {
           org_id: string
           manager_id: string | null
           full_name: string
+          email: string | null
           role: UserRole
           avatar_url: string | null
           is_active: boolean
@@ -30,6 +31,7 @@ export interface Database {
           org_id: string
           manager_id?: string | null
           full_name: string
+          email?: string | null
           role?: UserRole
           avatar_url?: string | null
           is_active?: boolean
@@ -40,6 +42,7 @@ export interface Database {
           org_id: string
           manager_id: string | null
           full_name: string
+          email: string | null
           role: UserRole
           avatar_url: string | null
           is_active: boolean

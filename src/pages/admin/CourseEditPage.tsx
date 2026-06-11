@@ -1,12 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CourseBuilder } from '@/components/admin/CourseBuilder'
 import { useCourse, useModules } from '@/hooks/useCourses'
 import { upsertCourse, upsertModule } from '@/services/courses.service'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
-import { demoModules } from '@/services/demo-data'
-
 export function CourseEditPage() {
   const { courseId } = useParams<{ courseId: string }>()
   const isNew = courseId === 'new'
@@ -19,9 +17,11 @@ export function CourseEditPage() {
   const [title, setTitle] = useState(course?.title ?? 'New Course')
   const [description, setDescription] = useState(course?.description ?? '')
   const [published, setPublished] = useState(course?.is_published ?? false)
-  const [modules, setModules] = useState(
-    isNew ? [] : fetchedModules.length ? fetchedModules : demoModules.filter((m) => m.course_id === courseId)
-  )
+  const [modules, setModules] = useState(isNew ? [] : fetchedModules)
+
+  useEffect(() => {
+    if (!isNew && fetchedModules.length) setModules(fetchedModules)
+  }, [isNew, fetchedModules])
 
   const save = async () => {
     const saved = await upsertCourse({

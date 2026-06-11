@@ -15,7 +15,7 @@ export function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isSupabaseConfigured) {
-      setError('Configure Supabase to enable password reset. Use demo login in the meantime.')
+      setError('Configure Supabase to enable password reset.')
       return
     }
     try {

@@ -6,11 +6,14 @@ import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { AdminDashboard } from '@/pages/dashboard/AdminDashboard'
+import { HospitalDashboardPage } from '@/pages/dashboard/HospitalDashboardPage'
 import { ManagerDashboard } from '@/pages/dashboard/ManagerDashboard'
 import { EmployeeDashboard } from '@/pages/dashboard/EmployeeDashboard'
 import { CourseManagementPage } from '@/pages/admin/CourseManagementPage'
 import { CourseEditPage } from '@/pages/admin/CourseEditPage'
-import { UserManagementPage } from '@/pages/admin/UserManagementPage'
+import { OrganizationsPage } from '@/pages/admin/OrganizationsPage'
+import { OrganizationDetailPage } from '@/pages/admin/OrganizationDetailPage'
+import { PlatformAdminsPage } from '@/pages/admin/PlatformAdminsPage'
 import { EmployeeListPage } from '@/pages/manager/EmployeeListPage'
 import { EmployeeDetailPage } from '@/pages/manager/EmployeeDetailPage'
 import { AssignmentsPage } from '@/pages/manager/AssignmentsPage'
@@ -48,6 +51,10 @@ export default function App() {
               element={<RoleGuard roles={['admin']}><AdminDashboard /></RoleGuard>}
             />
             <Route
+              path="/admin/dashboard/:orgId"
+              element={<RoleGuard roles={['admin']}><HospitalDashboardPage /></RoleGuard>}
+            />
+            <Route
               path="/admin/courses"
               element={<RoleGuard roles={['admin']}><CourseManagementPage /></RoleGuard>}
             />
@@ -56,9 +63,18 @@ export default function App() {
               element={<RoleGuard roles={['admin']}><CourseEditPage /></RoleGuard>}
             />
             <Route
-              path="/admin/users"
-              element={<RoleGuard roles={['admin']}><UserManagementPage /></RoleGuard>}
+              path="/admin/admins"
+              element={<RoleGuard roles={['admin']}><PlatformAdminsPage /></RoleGuard>}
             />
+            <Route
+              path="/admin/organizations"
+              element={<RoleGuard roles={['admin']}><OrganizationsPage /></RoleGuard>}
+            />
+            <Route
+              path="/admin/organizations/:orgId"
+              element={<RoleGuard roles={['admin']}><OrganizationDetailPage /></RoleGuard>}
+            />
+            <Route path="/admin/users" element={<Navigate to="/admin/organizations" replace />} />
 
             <Route
               path="/manager/dashboard"

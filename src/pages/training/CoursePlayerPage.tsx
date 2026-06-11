@@ -40,10 +40,10 @@ export function CoursePlayerPage({ dashboardPath }: { dashboardPath: string }) {
   const moduleScoresRef = useRef<ModuleScoreRecord[]>([])
 
   const { session, finish } = useTrainingSession(
-    assignment?.id ?? 'demo',
+    assignment?.id ?? '',
     userId,
     courseId!,
-    Boolean(userId && courseId)
+    Boolean(userId && courseId && assignment?.id)
   )
 
   useEffect(() => {

@@ -8,6 +8,10 @@ export const isSupabaseConfigured = Boolean(url && anonKey && !url.includes('you
 
 let client: SupabaseClient<Database> | null = null
 
+export function getSupabaseUrl(): string | null {
+  return isSupabaseConfigured ? url! : null
+}
+
 export function getSupabase(): SupabaseClient<Database> | null {
   if (!isSupabaseConfigured) return null
   if (!client) {

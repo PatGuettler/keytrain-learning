@@ -5,8 +5,10 @@ import {
   LayoutDashboard,
   Settings,
   Shield,
-  Users,
+  Building2,
   GraduationCap,
+  ShieldCheck,
+  Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_NAME } from '@/lib/constants'
@@ -15,8 +17,9 @@ import { useRole } from '@/hooks/useRole'
 const navByRole = {
   admin: [
     { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
+    { to: '/admin/organizations', label: 'Organizations', icon: Building2 },
     { to: '/admin/courses', label: 'Courses', icon: BookOpen },
-    { to: '/admin/users', label: 'Users', icon: Users },
   ],
   manager: [
     { to: '/manager/dashboard', label: 'Dashboard', icon: LayoutDashboard },

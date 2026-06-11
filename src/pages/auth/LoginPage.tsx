@@ -9,13 +9,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
-import { APP_NAME, DEMO_USERS } from '@/lib/constants'
+import { APP_NAME } from '@/lib/constants'
 import { Link } from 'react-router-dom'
 import { isSupabaseConfigured } from '@/services/supabase'
 
 const schema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(5),
 })
 
 type FormData = z.infer<typeof schema>
@@ -27,7 +27,7 @@ export function LoginPage() {
   const [error, setError] = useState('')
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname
 
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { isSubmitting, errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { email: '', password: '' },
   })
@@ -46,11 +46,6 @@ export function LoginPage() {
     }
   }
 
-  const fillDemo = (key: keyof typeof DEMO_USERS) => {
-    const u = DEMO_USERS[key]
-    void onSubmit({ email: u.email, password: u.password })
-  }
-
   return (
     <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background to-accent/30 p-4 safe-area-pt safe-area-pb safe-area-px">
       <Card className="w-full max-w-md shadow-lg">
@@ -62,17 +57,24 @@ export function LoginPage() {
           <CardDescription>Healthcare training & incident reporting</CardDescription>
         </CardHeader>
         <CardContent>
+          {!isSupabaseConfigured && (
+            <p className="text-sm text-amber-600 dark:text-amber-500 mb-4 text-center">
+              Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.
+            </p>
+          )}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" {...register('email')} placeholder="you@hospital.org" />
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" {...register('password')} />
+              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full min-h-12" disabled={isSubmitting}>
+            <Button type="submit" className="w-full min-h-12" disabled={isSubmitting || !isSupabaseConfigured}>
               Sign in
             </Button>
           </form>
@@ -81,22 +83,6 @@ export function LoginPage() {
               Forgot password?
             </Link>
           </p>
-          {!isSupabaseConfigured && (
-            <div className="mt-6 pt-6 border-t space-y-2">
-              <p className="text-xs text-muted-foreground text-center">Demo accounts (no Supabase required)</p>
-              <div className="grid grid-cols-1 gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => fillDemo('admin')}>
-                  Admin — {DEMO_USERS.admin.email}
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => fillDemo('manager')}>
-                  Manager — {DEMO_USERS.manager.email}
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => fillDemo('employee')}>
-                  Employee — {DEMO_USERS.employee.email}
-                </Button>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

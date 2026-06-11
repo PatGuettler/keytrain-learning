@@ -1,17 +1,32 @@
 import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useAssignments } from './useAssignments'
 import { useCourses } from './useCourses'
 import { useAuthStore } from '@/store/authStore'
-import { demoProfiles } from '@/services/demo-data'
-import { isSupabaseConfigured } from '@/services/supabase'
+import { fetchProfiles } from '@/services/users.service'
 
 export function useDashboardStats(scope: 'admin' | 'manager' | 'employee') {
   const userId = useAuthStore((s) => s.userId)
+  const orgId = useAuthStore((s) => s.profile?.org_id)
   const { data: assignments = [] } = useAssignments(scope === 'employee' ? userId ?? undefined : undefined)
   const { data: courses = [] } = useCourses(false)
 
+  const { data: profiles = [] } = useQuery({
+    queryKey: ['dashboard-profiles', scope, userId, orgId],
+    queryFn: () =>
+      fetchProfiles(
+        scope === 'manager'
+          ? { managerId: userId! }
+          : scope === 'admin' && orgId
+            ? { orgId, excludeAdmins: true }
+            : scope === 'admin'
+              ? { excludeAdmins: true }
+              : undefined
+      ),
+    enabled: scope !== 'employee' && Boolean(userId),
+  })
+
   return useMemo(() => {
-    const totalUsers = isSupabaseConfigured ? 0 : demoProfiles.length
     const published = courses.filter((c) => c.is_published).length
     const completed = assignments.filter((a) => a.status === 'completed').length
     const total = assignments.length || 1
@@ -19,21 +34,18 @@ export function useDashboardStats(scope: 'admin' | 'manager' | 'employee') {
 
     const teamMembers =
       scope === 'manager'
-        ? demoProfiles.filter((p) => p.manager_id === userId)
-        : demoProfiles.filter((p) => p.role === 'employee')
+        ? profiles.filter((p) => p.manager_id === userId)
+        : profiles.filter((p) => p.role === 'employee')
 
     return {
-      totalUsers: scope === 'admin' ? totalUsers : teamMembers.length,
+      totalUsers: scope === 'admin' ? profiles.length : teamMembers.length,
       totalCourses: courses.length,
       publishedCourses: published,
       completionRate,
       overdueCount: assignments.filter((a) => a.status === 'overdue').length,
       inProgressCount: assignments.filter((a) => a.status === 'in_progress').length,
-      avgScore: 87,
-      recentActivity: [
-        { user: 'Sam Taylor', action: 'completed', course: 'Clinical Incident Reporting', at: '2h ago' },
-        { user: 'Jordan Chen', action: 'assigned', course: 'Cybersecurity Awareness', at: '5h ago' },
-      ],
+      avgScore: 0,
+      recentActivity: [] as { user: string; action: string; course: string; at: string }[],
     }
-  }, [assignments, courses, scope, userId])
+  }, [assignments, courses, profiles, scope, userId])
 }

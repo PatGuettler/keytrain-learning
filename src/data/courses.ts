@@ -1,36 +1,39 @@
-import type { Assignment, Course, Module, ModuleAttempt, TrainingSession } from '@/types/course.types'
-import type { Profile } from '@/types/user.types'
-import { DEMO_ORG_ID, DEMO_USERS } from '@/lib/constants'
+import type { Course, Module } from '@/types/course.types'
 
-export const demoCourses: Course[] = [
+/** Default organization ID used when seeding courses in Supabase. */
+export const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001'
+
+const now = () => new Date().toISOString()
+
+export const seedCourses: Course[] = [
   {
     id: '10000000-0000-0000-0000-000000000001',
-    org_id: DEMO_ORG_ID,
+    org_id: DEFAULT_ORG_ID,
     title: 'Incident Awareness & Reporting',
     description:
       'Healthcare Course 6: Recognize incident types, report promptly, and protect patients, privacy, and operations.',
     thumbnail_url: null,
     estimated_minutes: 60,
     is_published: true,
-    created_by: DEMO_USERS.admin.id,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_by: null,
+    created_at: now(),
+    updated_at: now(),
   },
   {
     id: '10000000-0000-0000-0000-000000000002',
-    org_id: DEMO_ORG_ID,
+    org_id: DEFAULT_ORG_ID,
     title: 'Cybersecurity Awareness',
     description: 'Protect patient data and hospital systems from phishing and social engineering.',
     thumbnail_url: null,
     estimated_minutes: 30,
     is_published: true,
-    created_by: DEMO_USERS.admin.id,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_by: null,
+    created_at: now(),
+    updated_at: now(),
   },
 ]
 
-export const demoModules: Module[] = [
+export const seedModules: Module[] = [
   {
     id: '20000000-0000-0000-0000-000000000001',
     course_id: '10000000-0000-0000-0000-000000000001',
@@ -597,163 +600,3 @@ export const demoModules: Module[] = [
     created_at: new Date().toISOString(),
   },
 ]
-
-export const demoProfiles: Profile[] = [
-  {
-    id: DEMO_USERS.admin.id,
-    org_id: DEMO_ORG_ID,
-    manager_id: null,
-    full_name: DEMO_USERS.admin.fullName,
-    role: 'admin',
-    avatar_url: null,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: DEMO_USERS.manager.id,
-    org_id: DEMO_ORG_ID,
-    manager_id: null,
-    full_name: DEMO_USERS.manager.fullName,
-    role: 'manager',
-    avatar_url: null,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: DEMO_USERS.employee.id,
-    org_id: DEMO_ORG_ID,
-    manager_id: DEMO_USERS.manager.id,
-    full_name: DEMO_USERS.employee.fullName,
-    role: 'employee',
-    avatar_url: null,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-]
-
-let demoAssignments: Assignment[] = [
-  {
-    id: '30000000-0000-0000-0000-000000000001',
-    course_id: '10000000-0000-0000-0000-000000000001',
-    user_id: DEMO_USERS.employee.id,
-    assigned_by: DEMO_USERS.manager.id,
-    assigned_at: new Date(Date.now() - 7 * 86400000).toISOString(),
-    due_date: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
-    status: 'in_progress',
-    force_retake: false,
-    course: demoCourses[0],
-  },
-]
-
-const demoSessions: TrainingSession[] = []
-const demoModuleAttempts: ModuleAttempt[] = []
-
-const DEMO_ATTEMPTS_KEY = 'guardianmd-module-attempts'
-
-function loadPersistedAttempts(): void {
-  try {
-    const raw = localStorage.getItem(DEMO_ATTEMPTS_KEY)
-    if (!raw) return
-    const parsed = JSON.parse(raw) as ModuleAttempt[]
-    demoModuleAttempts.push(...parsed)
-  } catch {
-    /* ignore */
-  }
-}
-
-function persistAttempts() {
-  try {
-    localStorage.setItem(DEMO_ATTEMPTS_KEY, JSON.stringify(demoModuleAttempts))
-  } catch {
-    /* ignore */
-  }
-}
-
-if (typeof window !== 'undefined') loadPersistedAttempts()
-
-export function getDemoAssignments(userId?: string) {
-  return demoAssignments
-    .filter((a) => !userId || a.user_id === userId)
-    .map((a) => ({ ...a, course: demoCourses.find((c) => c.id === a.course_id) }))
-}
-
-export function getDemoCourses(publishedOnly = false) {
-  return publishedOnly ? demoCourses.filter((c) => c.is_published) : demoCourses
-}
-
-export function getDemoModules(courseId: string) {
-  return demoModules.filter((m) => m.course_id === courseId).sort((a, b) => a.order_index - b.order_index)
-}
-
-export function getDemoProfiles(role?: string, managerId?: string) {
-  let list = [...demoProfiles]
-  if (role) list = list.filter((p) => p.role === role)
-  if (managerId) list = list.filter((p) => p.manager_id === managerId || p.id === managerId)
-  return list
-}
-
-export function upsertDemoAssignment(assignment: Assignment) {
-  const idx = demoAssignments.findIndex((a) => a.id === assignment.id)
-  if (idx >= 0) demoAssignments[idx] = assignment
-  else demoAssignments.push(assignment)
-}
-
-export function getDemoSessions(userId: string) {
-  return demoSessions.filter((s) => s.user_id === userId)
-}
-
-export function createDemoSession(assignmentId: string, userId: string, courseId: string): TrainingSession {
-  const session: TrainingSession = {
-    id: crypto.randomUUID(),
-    assignment_id: assignmentId,
-    user_id: userId,
-    course_id: courseId,
-    attempt_number: 1,
-    started_at: new Date().toISOString(),
-    completed_at: null,
-    time_spent_seconds: 0,
-    score: null,
-    passed: null,
-  }
-  demoSessions.push(session)
-  return session
-}
-
-export function updateDemoSession(id: string, patch: Partial<TrainingSession>) {
-  const s = demoSessions.find((x) => x.id === id)
-  if (s) Object.assign(s, patch)
-  return s
-}
-
-export function saveDemoModuleAttempt(
-  attempt: Omit<ModuleAttempt, 'id'> & { id?: string }
-) {
-  const record: ModuleAttempt = {
-    id: attempt.id ?? crypto.randomUUID(),
-    session_id: attempt.session_id,
-    module_id: attempt.module_id,
-    user_id: attempt.user_id,
-    started_at: attempt.started_at ?? new Date().toISOString(),
-    completed_at: attempt.completed_at ?? new Date().toISOString(),
-    time_spent_seconds: attempt.time_spent_seconds ?? 0,
-    score: attempt.score ?? null,
-    answers: attempt.answers ?? null,
-    interactions: attempt.interactions ?? null,
-  }
-  const idx = demoModuleAttempts.findIndex(
-    (a) => a.session_id === record.session_id && a.module_id === record.module_id
-  )
-  if (idx >= 0) demoModuleAttempts[idx] = record
-  else demoModuleAttempts.push(record)
-  persistAttempts()
-  return record
-}
-
-export function getDemoModuleAttempts(userId: string, sessionId?: string) {
-  return demoModuleAttempts.filter(
-    (a) => a.user_id === userId && (!sessionId || a.session_id === sessionId)
-  )
-}

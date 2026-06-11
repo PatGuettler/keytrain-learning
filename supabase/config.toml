@@ -1,0 +1,4 @@
+# Supabase local/dev config. See https://supabase.com/docs/guides/cli/config
+
+[functions.manage-users]
+verify_jwt = true

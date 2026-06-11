@@ -5,6 +5,10 @@ export async function fetchCourses(orgId: string, publishedOnly = false): Promis
   return backend.courses.fetchCourses(orgId, publishedOnly)
 }
 
+export async function fetchHospitalCourses(): Promise<Course[]> {
+  return backend.courses.fetchHospitalCourses()
+}
+
 export async function fetchCourse(id: string): Promise<Course | null> {
   return backend.courses.fetchCourse(id)
 }

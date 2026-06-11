@@ -6,8 +6,7 @@ interface AuthState {
   userId: string | null
   email: string | null
   profile: Profile | null
-  demoMode: boolean
-  setAuth: (payload: { userId: string; email: string; profile: Profile; demoMode?: boolean }) => void
+  setAuth: (payload: { userId: string; email: string; profile: Profile }) => void
   clearAuth: () => void
 }
 
@@ -17,10 +16,8 @@ export const useAuthStore = create<AuthState>()(
       userId: null,
       email: null,
       profile: null,
-      demoMode: false,
-      setAuth: ({ userId, email, profile, demoMode = false }) =>
-        set({ userId, email, profile, demoMode }),
-      clearAuth: () => set({ userId: null, email: null, profile: null, demoMode: false }),
+      setAuth: ({ userId, email, profile }) => set({ userId, email, profile }),
+      clearAuth: () => set({ userId: null, email: null, profile: null }),
     }),
     { name: 'guardianmd-auth' }
   )

@@ -3,13 +3,11 @@ import { LogOut, Moon, Shield, Sun, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { useUiStore } from '@/store/uiStore'
-import { isSupabaseConfigured } from '@/services/supabase'
-import { Badge } from '@/components/ui/badge'
 import { APP_NAME } from '@/lib/constants'
 
 export function Topbar() {
   const navigate = useNavigate()
-  const { profile, logout, demoMode } = useAuth()
+  const { profile, logout } = useAuth()
   const { theme, toggleTheme, setSidebarOpen } = useUiStore()
 
   const handleSignOut = async () => {
@@ -38,16 +36,6 @@ export function Topbar() {
         </h1>
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-        {!isSupabaseConfigured && (
-          <Badge variant="warning" className="hidden xs:inline-flex text-[10px] sm:text-xs">
-            Demo
-          </Badge>
-        )}
-        {demoMode && isSupabaseConfigured && (
-          <Badge variant="secondary" className="hidden sm:inline-flex">
-            Demo
-          </Badge>
-        )}
         <Button variant="ghost" size="icon" className="h-11 w-11" onClick={toggleTheme} aria-label="Toggle theme">
           {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
         </Button>

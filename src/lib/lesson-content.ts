@@ -37,7 +37,7 @@ function normalizeSlide(raw: unknown, index: number): LessonSlide | null {
   }
 }
 
-/** Normalize lesson module JSON from demo data, Supabase, or legacy shapes. */
+/** Normalize lesson module JSON from Supabase or legacy shapes. */
 export function parseLessonContent(content: unknown): LessonContent {
   if (Array.isArray(content)) {
     const slides = content

@@ -5,6 +5,14 @@ export async function fetchAssignments(userId?: string): Promise<Assignment[]> {
   return backend.assignments.fetchAssignments(userId)
 }
 
+export async function fetchAssignmentsForOrg(orgId: string): Promise<Assignment[]> {
+  return backend.assignments.fetchAssignments({ orgId })
+}
+
+export async function fetchAllAssignments(): Promise<Assignment[]> {
+  return backend.assignments.fetchAssignments()
+}
+
 export async function createAssignment(payload: {
   course_id: string
   user_id: string
