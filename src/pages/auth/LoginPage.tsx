@@ -13,10 +13,11 @@ import { APP_NAME, ROLE_DASHBOARD } from '@/lib/constants'
 import { Link } from 'react-router-dom'
 import { isBackendReady } from '@/backend'
 import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
+import { ACCOUNT_LOCKED_MESSAGE, INVALID_LOGIN_MESSAGE } from '@/lib/password'
 
 const schema = z.object({
-  email: z.string().email(),
-  password: z.string().min(5),
+  email: z.string().trim().min(1),
+  password: z.string().min(1),
 })
 
 type FormData = z.infer<typeof schema>
@@ -30,7 +31,7 @@ export function LoginPage() {
   const from = locationState?.from?.pathname
   const successMessage = locationState?.message
 
-  const { register, handleSubmit, formState: { isSubmitting, errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { email: '', password: '' },
   })
@@ -41,11 +42,16 @@ export function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     setError('')
+    if (!z.string().email().safeParse(data.email).success) {
+      setError(INVALID_LOGIN_MESSAGE)
+      return
+    }
     try {
       const dest = await login(data.email, data.password)
       navigate(from ?? dest, { replace: true })
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Login failed')
+      const message = e instanceof Error ? e.message : INVALID_LOGIN_MESSAGE
+      setError(message === ACCOUNT_LOCKED_MESSAGE ? message : INVALID_LOGIN_MESSAGE)
     }
   }
 
@@ -74,12 +80,10 @@ export function LoginPage() {
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" {...register('email')} placeholder="you@hospital.org" />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" {...register('password')} />
-              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full min-h-12" disabled={isSubmitting || !isBackendReady()}>

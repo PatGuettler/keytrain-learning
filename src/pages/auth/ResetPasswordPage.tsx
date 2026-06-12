@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { isBackendReady } from '@/backend'
 import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
 import { getSession, updatePassword } from '@/services/auth.service'
+import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, passwordLengthError } from '@/lib/password'
 
 function parseHashError(): string | null {
   const hash = window.location.hash.replace(/^#/, '')
@@ -66,8 +67,8 @@ export function ResetPasswordPage() {
     e.preventDefault()
     setError('')
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
+    if (!isPasswordLongEnough(password)) {
+      setError(passwordLengthError())
       return
     }
     if (password !== confirmPassword) {
@@ -134,7 +135,7 @@ export function ResetPasswordPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  minLength={8}
+                  minLength={MIN_PASSWORD_LENGTH}
                   required
                   autoComplete="new-password"
                 />
@@ -146,7 +147,7 @@ export function ResetPasswordPage() {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  minLength={8}
+                  minLength={MIN_PASSWORD_LENGTH}
                   required
                   autoComplete="new-password"
                 />

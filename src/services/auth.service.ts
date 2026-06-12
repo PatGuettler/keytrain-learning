@@ -1,10 +1,17 @@
 import { backend } from '@/backend'
 import { getResetPasswordRedirectUrl } from '@/lib/backend-config'
+import { ACCOUNT_LOCKED_MESSAGE, INVALID_LOGIN_MESSAGE } from '@/lib/password'
 import { updateProfile } from '@/services/users.service'
 import type { Profile } from '@/types/user.types'
 
 export async function signIn(email: string, password: string) {
-  return backend.auth.signIn(email, password)
+  try {
+    return await backend.auth.signIn(email, password)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : INVALID_LOGIN_MESSAGE
+    if (message === ACCOUNT_LOCKED_MESSAGE) throw err
+    throw new Error(INVALID_LOGIN_MESSAGE)
+  }
 }
 
 export async function signOut() {
