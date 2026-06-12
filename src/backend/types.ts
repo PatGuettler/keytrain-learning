@@ -25,6 +25,7 @@ export interface AuthBackend {
   signOut(): Promise<void>
   fetchProfile(userId: string): Promise<Profile>
   resetPassword(email: string, redirectTo: string): Promise<void>
+  updatePassword(password: string): Promise<void>
   getSession(): Promise<unknown | null>
 }
 

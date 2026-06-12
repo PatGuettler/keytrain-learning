@@ -12,7 +12,7 @@ export function PublishToAllOrgsDialog({
   open,
   onOpenChange,
   courseTitle,
-  hospitalCount,
+  organizationCount,
   alreadyPublishedCount = 0,
   publishing,
   onConfirm,
@@ -20,7 +20,7 @@ export function PublishToAllOrgsDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
   courseTitle: string
-  hospitalCount: number
+  organizationCount: number
   alreadyPublishedCount?: number
   publishing?: boolean
   onConfirm: () => void
@@ -34,14 +34,14 @@ export function PublishToAllOrgsDialog({
             {alreadyPublishedCount > 0 ? (
               <>
                 <span className="font-medium text-foreground">{courseTitle}</span> is already live in{' '}
-                {alreadyPublishedCount} hospital{alreadyPublishedCount === 1 ? '' : 's'}. This will
-                publish it to the remaining {hospitalCount} so every organization has it.
+                {alreadyPublishedCount} organization{alreadyPublishedCount === 1 ? '' : 's'}. This will
+                publish it to the remaining {organizationCount} so every organization has it.
               </>
             ) : (
               <>
                 This will publish <span className="font-medium text-foreground">{courseTitle}</span>{' '}
-                to all {hospitalCount} hospital{hospitalCount === 1 ? '' : 's'}. Every manager and
-                employee in those organizations will be required to complete it.
+                to all {organizationCount} organization{organizationCount === 1 ? '' : 's'}. Every
+                manager and employee in those organizations will be required to complete it.
               </>
             )}
           </DialogDescription>

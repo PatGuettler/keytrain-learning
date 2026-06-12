@@ -15,9 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: supabase/setup-cli@v1
+      - uses: actions/setup-node@v4
         with:
-          version: latest
+          node-version: '20'
 
       - name: Deploy manage-users
         env:
@@ -26,8 +26,24 @@ jobs:
           INVITE_REDIRECT_URL: https://patguettler.github.io/guardian-md/login
         run: |
           if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_PROJECT_REF" ]; then
-            echo "Skipping: add SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF repo secrets to auto-deploy Edge Functions."
+            echo "Skipping: add SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF repo secrets."
             exit 0
           fi
-          supabase secrets set "INVITE_REDIRECT_URL=$INVITE_REDIRECT_URL" --project-ref "$SUPABASE_PROJECT_REF"
-          supabase functions deploy manage-users --project-ref "$SUPABASE_PROJECT_REF"
+          npx --yes supabase@latest secrets set "INVITE_REDIRECT_URL=$INVITE_REDIRECT_URL" --project-ref "$SUPABASE_PROJECT_REF"
+          npx --yes supabase@latest functions deploy manage-users --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+
+      - name: Verify function exists
+        env:
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          if [ -z "$SUPABASE_PROJECT_REF" ]; then exit 0; fi
+          code=$(curl -s -o /dev/null -w "%{http_code}" -X OPTIONS \
+            "https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/manage-users" \
+            -H "Origin: https://patguettler.github.io" \
+            -H "Access-Control-Request-Method: POST" \
+            -H "Access-Control-Request-Headers: authorization,content-type,apikey")
+          echo "OPTIONS status: $code"
+          if [ "$code" = "404" ]; then
+            echo "ERROR: manage-users still returns 404 after deploy"
+            exit 1
+          fi

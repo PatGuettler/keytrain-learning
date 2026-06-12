@@ -583,6 +583,31 @@ Deno.serve(async (req) => {
       return jsonResponse({ deleted_id: orgId })
     }
 
+    if (action === 'delete_org_user') {
+      const userId = typeof body.user_id === 'string' ? body.user_id : ''
+      if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)
+
+      const { data: profile, error: profileError } = await adminClient
+        .from('profiles')
+        .select('id, role, org_id')
+        .eq('id', userId)
+        .eq('org_id', orgId)
+        .maybeSingle()
+
+      if (profileError) throw profileError
+      if (!profile) {
+        return jsonResponse({ error: 'User not found in this organization.' }, 404)
+      }
+      if (profile.role === 'admin') {
+        return jsonResponse({ error: 'Cannot delete platform admin accounts here.' }, 400)
+      }
+
+      const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(userId)
+      if (authDeleteError) throw authDeleteError
+
+      return jsonResponse({ deleted_id: userId })
+    }
+
     if (action === 'update_user') {
       const userId = typeof body.user_id === 'string' ? body.user_id : ''
       if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)

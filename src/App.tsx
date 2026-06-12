@@ -5,6 +5,7 @@ import { RoleGuard } from '@/guards/RoleGuard'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { AdminDashboard } from '@/pages/dashboard/AdminDashboard'
 import { HospitalDashboardPage } from '@/pages/dashboard/HospitalDashboardPage'
 import { AdminOrgCourseDetailPage } from '@/pages/dashboard/AdminOrgCourseDetailPage'
@@ -42,6 +43,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/" element={<HomeRedirect />} />
 
           <Route element={<AuthGuard><AppShell /></AuthGuard>}>

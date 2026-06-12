@@ -120,7 +120,7 @@ function CourseRowActions({
         open={publishOpen}
         onOpenChange={setPublishOpen}
         courseTitle={courseTitle}
-        hospitalCount={unpublishedOrgIds.length}
+        organizationCount={unpublishedOrgIds.length}
         alreadyPublishedCount={active.length}
         publishing={publishAllMutation.isPending}
         onConfirm={() => publishAllMutation.mutate()}

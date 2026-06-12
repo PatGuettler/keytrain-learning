@@ -26,7 +26,9 @@ export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const [error, setError] = useState('')
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname
+  const locationState = location.state as { from?: { pathname: string }; message?: string } | null
+  const from = locationState?.from?.pathname
+  const successMessage = locationState?.message
 
   const { register, handleSubmit, formState: { isSubmitting, errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -61,6 +63,11 @@ export function LoginPage() {
           {!isBackendReady() && (
             <p className="text-sm text-amber-600 dark:text-amber-500 mb-4 text-center">
               {BACKEND_NOT_CONFIGURED_MESSAGE}
+            </p>
+          )}
+          {successMessage && (
+            <p className="text-sm text-emerald-600 dark:text-emerald-400 mb-4 text-center">
+              {successMessage}
             </p>
           )}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

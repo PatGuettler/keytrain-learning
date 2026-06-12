@@ -1,5 +1,5 @@
+import { getPublicAppUrl } from '@/lib/backend-config'
 import { EDGE_FUNCTION_DEPLOY_HINT, isEdgeFunctionUnavailable } from '@/lib/edge-functions'
-import { absoluteAppUrl } from '@/lib/paths'
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
 import { updateProfile } from '@/services/users.service'
 import type { Profile, UserRole } from '@/types/user.types'
@@ -34,7 +34,7 @@ async function invokeManageUsers<T>(body: Record<string, unknown>): Promise<T> {
   const anonKey = getSupabaseAnonKey()
   if (!supabase || !baseUrl || !anonKey) throw new Error('Supabase is not configured.')
 
-  const payload = { ...body, redirect_to: absoluteAppUrl('login') }
+  const payload = { ...body, redirect_to: `${getPublicAppUrl()}/login` }
 
   const {
     data: { session },
@@ -59,20 +59,32 @@ async function invokeManageUsers<T>(body: Record<string, unknown>): Promise<T> {
     throw manageUsersDeployError()
   }
 
-  if (response.status === 404 || response.status === 401) {
+  const data = (await response.json().catch(() => null)) as
+    | (T & { error?: string; code?: string; message?: string })
+    | { error?: string; code?: string; message?: string }
+    | null
+
+  const notFound =
+    response.status === 404 ||
+    (data &&
+      typeof data === 'object' &&
+      'code' in data &&
+      (data as { code?: string }).code === 'NOT_FOUND')
+
+  if (notFound || response.status === 401) {
     throw manageUsersDeployError()
   }
-
-  const data = (await response.json().catch(() => null)) as
-    | (T & { error?: string })
-    | { error?: string }
-    | null
 
   if (!response.ok) {
     const message =
       data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
         ? data.error
-        : `Request failed (${response.status}).`
+        : data &&
+            typeof data === 'object' &&
+            'message' in data &&
+            typeof data.message === 'string'
+          ? data.message
+          : `Request failed (${response.status}).`
     if (response.status === 0 || message.includes('Failed to fetch')) {
       throw manageUsersDeployError()
     }
@@ -178,4 +190,8 @@ export async function updateOrgUser(
 
 export async function deleteOrganizationById(orgId: string): Promise<void> {
   await invokeManageUsers({ action: 'delete_organization', org_id: orgId })
+}
+
+export async function deleteOrgUser(orgId: string, userId: string): Promise<void> {
+  await invokeManageUsers({ action: 'delete_org_user', org_id: orgId, user_id: userId })
 }

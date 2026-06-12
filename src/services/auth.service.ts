@@ -18,6 +18,10 @@ export async function resetPassword(email: string) {
   return backend.auth.resetPassword(email, getResetPasswordRedirectUrl())
 }
 
+export async function updatePassword(password: string) {
+  return backend.auth.updatePassword(password)
+}
+
 export async function getSession() {
   return backend.auth.getSession()
 }

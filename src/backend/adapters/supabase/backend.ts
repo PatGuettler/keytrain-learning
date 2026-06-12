@@ -56,6 +56,10 @@ export function createSupabaseBackend(): Backend {
         const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
         if (error) throw error
       },
+      async updatePassword(password) {
+        const { error } = await supabase.auth.updateUser({ password })
+        if (error) throw error
+      },
       async getSession() {
         const { data } = await supabase.auth.getSession()
         return data.session
