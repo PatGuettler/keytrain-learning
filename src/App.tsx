@@ -50,19 +50,19 @@ export default function App() {
               element={<RoleGuard roles={['admin']}><AdminDashboard /></RoleGuard>}
             />
             <Route
-              path="/admin/dashboard/:orgId"
+              path="/admin/dashboard/:orgSlug"
               element={<RoleGuard roles={['admin']}><HospitalDashboardPage /></RoleGuard>}
             />
             <Route
-              path="/admin/dashboard/:orgId/courses/:courseId"
+              path="/admin/dashboard/:orgSlug/courses/:courseId"
               element={<RoleGuard roles={['admin']}><AdminOrgCourseDetailPage /></RoleGuard>}
             />
             <Route
-              path="/admin/dashboard/:orgId/staff/:userId"
+              path="/admin/dashboard/:orgSlug/staff/:userId"
               element={<RoleGuard roles={['admin']}><AdminStaffTrainingPage /></RoleGuard>}
             />
             <Route
-              path="/admin/dashboard/:orgId/staff/:userId/courses/:courseId"
+              path="/admin/dashboard/:orgSlug/staff/:userId/courses/:courseId"
               element={<RoleGuard roles={['admin']}><AdminStaffCourseDetailPage /></RoleGuard>}
             />
             <Route
@@ -98,7 +98,7 @@ export default function App() {
               element={<RoleGuard roles={['admin']}><OrganizationsPage /></RoleGuard>}
             />
             <Route
-              path="/admin/organizations/:orgId"
+              path="/admin/organizations/:orgSlug"
               element={<RoleGuard roles={['admin']}><OrganizationDetailPage /></RoleGuard>}
             />
             <Route path="/admin/users" element={<Navigate to="/admin/organizations" replace />} />

@@ -7,17 +7,17 @@ import type { TrainingNeed } from '@/lib/dashboard-stats'
 
 export function OrgTrainingNeedsPanel({
   needs,
-  orgId,
+  orgSlug,
   highlightModuleId,
 }: {
   needs: TrainingNeed[]
-  orgId: string
+  orgSlug: string
   highlightModuleId?: string | null
 }) {
   const navigate = useNavigate()
 
   const openCourse = (need: TrainingNeed) => {
-    navigate(`/admin/dashboard/${orgId}/courses/${need.courseId}?module=${need.moduleId}`)
+    navigate(`/admin/dashboard/${orgSlug}/courses/${need.courseId}?module=${need.moduleId}`)
   }
 
   return (

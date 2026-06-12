@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Building2, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getOrgSlug } from '@/lib/org-slugs'
 import type { HospitalDashboardSummary } from '@/hooks/useAdminDashboard'
 
 export function HospitalOverviewList({
@@ -10,6 +11,7 @@ export function HospitalOverviewList({
   hospitals: HospitalDashboardSummary[]
   isLoading?: boolean
 }) {
+  const orgs = hospitals.map((h) => h.org)
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading hospitals…</p>
   }
@@ -34,7 +36,7 @@ export function HospitalOverviewList({
           {hospitals.map(({ org, userCount, totalCourses, publishedCourses, completionRate, overdueCount }) => (
             <li key={org.id}>
               <Link
-                to={`/admin/dashboard/${org.id}`}
+                to={`/admin/dashboard/${getOrgSlug(org, orgs)}`}
                 className="flex items-center justify-between gap-3 px-4 py-4 sm:px-6 hover:bg-accent/50 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">

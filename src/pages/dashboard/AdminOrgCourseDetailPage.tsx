@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useOrgRoute } from '@/hooks/useOrgRoute'
+import { adminOrgDashboardPath } from '@/lib/org-slugs'
 import { ArrowLeft, BookOpen, TrendingUp, Award, AlertTriangle } from 'lucide-react'
 import { OrgCourseStaffDirectory } from '@/components/dashboard/OrgCourseStaffDirectory'
 import { OrgTrainingNeedsPanel } from '@/components/dashboard/OrgTrainingNeedsPanel'
@@ -15,7 +17,8 @@ import {
 } from '@/lib/dashboard-stats'
 
 export function AdminOrgCourseDetailPage() {
-  const { orgId, courseId } = useParams<{ orgId: string; courseId: string }>()
+  const { courseId } = useParams<{ courseId: string }>()
+  const { orgId, orgSlug } = useOrgRoute()
   const [searchParams] = useSearchParams()
   const highlightModuleId = searchParams.get('module')
 
@@ -51,7 +54,7 @@ export function AdminOrgCourseDetailPage() {
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Course not found.</p>
         <Button variant="outline" size="sm" asChild>
-          <Link to={`/admin/dashboard/${orgId}`}>Back to hospital dashboard</Link>
+          <Link to={adminOrgDashboardPath(orgSlug!)}>Back to hospital dashboard</Link>
         </Button>
       </div>
     )
@@ -60,7 +63,7 @@ export function AdminOrgCourseDetailPage() {
   return (
     <div className="space-y-5 sm:space-y-6">
       <Button variant="ghost" size="sm" asChild>
-        <Link to={`/admin/dashboard/${orgId}`}>
+        <Link to={adminOrgDashboardPath(orgSlug!)}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back to {org.name}
         </Link>
@@ -85,13 +88,13 @@ export function AdminOrgCourseDetailPage() {
       </div>
 
       {trainingNeeds.length > 0 && (
-        <OrgTrainingNeedsPanel needs={trainingNeeds} orgId={orgId!} highlightModuleId={highlightModuleId} />
+        <OrgTrainingNeedsPanel needs={trainingNeeds} orgSlug={orgSlug!} highlightModuleId={highlightModuleId} />
       )}
 
       <OrgCourseStaffDirectory
         rows={staffRows}
         getStaffCoursePath={(userId) =>
-          `/admin/dashboard/${orgId}/staff/${userId}/courses/${courseId}`
+          adminOrgDashboardPath(orgSlug!, 'staff', userId, 'courses', courseId!)
         }
       />
     </div>

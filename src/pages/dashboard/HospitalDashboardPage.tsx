@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArrowLeft, Award, BookOpen, Building2, TrendingUp, Users, AlertTriangle } from 'lucide-react'
 import { CompletionChart } from '@/components/dashboard/CompletionChart'
 import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
@@ -10,10 +10,12 @@ import { exportOrgDashboardPdf } from '@/lib/pdf/dashboard-reports'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { useOrgDashboard } from '@/hooks/useAdminDashboard'
+import { useOrgRoute } from '@/hooks/useOrgRoute'
+import { adminOrgDashboardPath, adminOrganizationPath } from '@/lib/org-slugs'
 import { buildStaffSummaryRows, computeAvgScore, computeTrainingNeeds } from '@/lib/dashboard-stats'
 
 export function HospitalDashboardPage() {
-  const { orgId } = useParams<{ orgId: string }>()
+  const { orgId, orgSlug } = useOrgRoute()
   const { org, users, courses, assignments, moduleAttempts, metrics, isLoading } = useOrgDashboard(orgId)
 
   const staffSummaries = buildStaffSummaryRows(users, assignments)
@@ -46,7 +48,7 @@ export function HospitalDashboardPage() {
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link to={`/admin/organizations/${org.id}`}>
+            <Link to={adminOrganizationPath(orgSlug!)}>
               <Building2 className="h-4 w-4 mr-1" />
               Manage staff
             </Link>
@@ -88,16 +90,16 @@ export function HospitalDashboardPage() {
           remaining={100 - metrics.completionRate}
           title="Hospital Completion"
         />
-        <OrgTrainingNeedsPanel needs={trainingNeeds} orgId={org.id} />
+        <OrgTrainingNeedsPanel needs={trainingNeeds} orgSlug={orgSlug!} />
       </div>
 
       <OrgStaffDirectory
         rows={staffSummaries}
-        getStaffDetailPath={(userId) => `/admin/dashboard/${org.id}/staff/${userId}`}
+        getStaffDetailPath={(userId) => adminOrgDashboardPath(orgSlug!, 'staff', userId)}
         title="Staff training"
       />
 
-      <OrgCourseTable orgId={org.id} courses={courses} assignments={assignments} />
+      <OrgCourseTable orgSlug={orgSlug!} courses={courses} assignments={assignments} />
     </div>
   )
 }

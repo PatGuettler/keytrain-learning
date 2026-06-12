@@ -6,11 +6,11 @@ import { computeCourseMetrics } from '@/lib/dashboard-stats'
 import type { Assignment, Course } from '@/types/course.types'
 
 export function OrgCourseTable({
-  orgId,
+  orgSlug,
   courses,
   assignments,
 }: {
-  orgId: string
+  orgSlug: string
   courses: Course[]
   assignments: Assignment[]
 }) {
@@ -18,7 +18,7 @@ export function OrgCourseTable({
   const rows = computeCourseMetrics(courses, assignments)
 
   const openCourse = (courseId: string) => {
-    navigate(`/admin/dashboard/${orgId}/courses/${courseId}`)
+    navigate(`/admin/dashboard/${orgSlug}/courses/${courseId}`)
   }
 
   if (courses.length === 0) {

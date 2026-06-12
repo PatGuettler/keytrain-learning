@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Building2, ChevronRight, Plus } from 'lucide-react'
+import { getOrgSlug } from '@/lib/org-slugs'
 import { fetchHospitalOrganizations, createOrganization } from '@/services/organizations.service'
 import { fetchProfiles } from '@/services/users.service'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -100,7 +101,7 @@ export function OrganizationsPage() {
           {orgs.map((org) => (
             <li key={org.id}>
               <Link
-                to={`/admin/organizations/${org.id}`}
+                to={`/admin/organizations/${getOrgSlug(org, orgs)}`}
                 className="flex items-center justify-between gap-3 rounded-lg border bg-card p-4 hover:bg-accent/50 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">

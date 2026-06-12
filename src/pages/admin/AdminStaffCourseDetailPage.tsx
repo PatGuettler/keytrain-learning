@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useOrgRoute } from '@/hooks/useOrgRoute'
+import { adminOrgDashboardPath } from '@/lib/org-slugs'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { fetchAssignments } from '@/services/assignments.service'
@@ -13,11 +15,11 @@ import { buildStaffTrainingRows } from '@/lib/dashboard-stats'
 import { exportStaffCoursePdf } from '@/lib/pdf/dashboard-reports'
 
 export function AdminStaffCourseDetailPage() {
-  const { orgId, userId, courseId } = useParams<{
-    orgId: string
+  const { userId, courseId } = useParams<{
     userId: string
     courseId: string
   }>()
+  const { orgId, orgSlug } = useOrgRoute()
 
   const { data: users = [] } = useQuery({
     queryKey: ['org-users', orgId],
@@ -58,7 +60,7 @@ export function AdminStaffCourseDetailPage() {
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Course not found for this staff member.</p>
         <Button variant="outline" size="sm" asChild>
-          <Link to={`/admin/dashboard/${orgId}/staff/${userId}`}>Back to staff record</Link>
+          <Link to={adminOrgDashboardPath(orgSlug!, 'staff', userId!)}>Back to staff record</Link>
         </Button>
       </div>
     )
@@ -68,7 +70,7 @@ export function AdminStaffCourseDetailPage() {
     <div className="space-y-5 sm:space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Button variant="ghost" size="sm" asChild>
-          <Link to={`/admin/dashboard/${orgId}/staff/${userId}`}>
+          <Link to={adminOrgDashboardPath(orgSlug!, 'staff', userId!)}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to {user.full_name}
           </Link>

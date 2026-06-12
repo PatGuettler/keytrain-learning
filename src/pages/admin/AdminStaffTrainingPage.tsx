@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useOrgRoute } from '@/hooks/useOrgRoute'
+import { adminOrgDashboardPath } from '@/lib/org-slugs'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Award, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react'
 import { fetchAssignments } from '@/services/assignments.service'
@@ -34,7 +36,8 @@ const statusLabel: Record<string, string> = {
 }
 
 export function AdminStaffTrainingPage() {
-  const { orgId, userId } = useParams<{ orgId: string; userId: string }>()
+  const { userId } = useParams<{ userId: string }>()
+  const { orgId, orgSlug } = useOrgRoute()
 
   const { data: users = [] } = useQuery({
     queryKey: ['org-users', orgId],
@@ -69,7 +72,7 @@ export function AdminStaffTrainingPage() {
     <div className="space-y-5 sm:space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Button variant="ghost" size="sm" asChild>
-          <Link to={`/admin/dashboard/${orgId}`}>
+          <Link to={adminOrgDashboardPath(orgSlug!)}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to hospital dashboard
           </Link>
@@ -116,7 +119,7 @@ export function AdminStaffTrainingPage() {
       <StaffCourseDirectory
         rows={trainingRows}
         getCourseDetailPath={(courseId) =>
-          `/admin/dashboard/${orgId}/staff/${userId}/courses/${courseId}`
+          adminOrgDashboardPath(orgSlug!, 'staff', userId!, 'courses', courseId)
         }
       />
     </div>
