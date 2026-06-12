@@ -1,6 +1,6 @@
 import { EDGE_FUNCTION_DEPLOY_HINT, isEdgeFunctionUnavailable } from '@/lib/edge-functions'
 import { absoluteAppUrl } from '@/lib/paths'
-import { getSupabase } from '@/services/supabase'
+import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
 import { updateProfile } from '@/services/users.service'
 import type { Profile, UserRole } from '@/types/user.types'
 
@@ -21,24 +21,68 @@ export interface ImportUsersResult {
   rows: ImportUserRowResult[]
 }
 
+function manageUsersDeployError(cause?: unknown): Error {
+  if (cause instanceof Error && !isEdgeFunctionUnavailable(cause)) {
+    return new Error(`${EDGE_FUNCTION_DEPLOY_HINT}\n\n(${cause.message})`)
+  }
+  return new Error(EDGE_FUNCTION_DEPLOY_HINT)
+}
+
 async function invokeManageUsers<T>(body: Record<string, unknown>): Promise<T> {
   const supabase = getSupabase()
-  if (!supabase) throw new Error('Supabase is not configured.')
+  const baseUrl = getSupabaseUrl()
+  const anonKey = getSupabaseAnonKey()
+  if (!supabase || !baseUrl || !anonKey) throw new Error('Supabase is not configured.')
 
-  const { data, error } = await supabase.functions.invoke('manage-users', {
-    body: {
-      ...body,
-      redirect_to: absoluteAppUrl('login'),
-    },
-  })
+  const payload = { ...body, redirect_to: absoluteAppUrl('login') }
 
-  if (error) {
-    if (isEdgeFunctionUnavailable(error)) {
-      throw new Error(EDGE_FUNCTION_DEPLOY_HINT)
-    }
-    throw new Error(error.message || 'Request failed.')
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession()
+  if (sessionError || !session?.access_token) {
+    throw new Error('You must be signed in to manage users.')
   }
-  if (data?.error) throw new Error(typeof data.error === 'string' ? data.error : 'Request failed.')
+
+  let response: Response
+  try {
+    response = await fetch(`${baseUrl}/functions/v1/manage-users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: anonKey,
+      },
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    throw manageUsersDeployError()
+  }
+
+  if (response.status === 404 || response.status === 401) {
+    throw manageUsersDeployError()
+  }
+
+  const data = (await response.json().catch(() => null)) as
+    | (T & { error?: string })
+    | { error?: string }
+    | null
+
+  if (!response.ok) {
+    const message =
+      data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : `Request failed (${response.status}).`
+    if (response.status === 0 || message.includes('Failed to fetch')) {
+      throw manageUsersDeployError()
+    }
+    throw new Error(message)
+  }
+
+  if (data && typeof data === 'object' && 'error' in data && data.error) {
+    throw new Error(typeof data.error === 'string' ? data.error : 'Request failed.')
+  }
+
   return data as T
 }
 

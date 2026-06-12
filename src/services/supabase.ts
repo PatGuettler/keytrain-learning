@@ -16,6 +16,10 @@ export function getSupabaseUrl(): string | null {
   return isSupabaseConfigured ? url! : null
 }
 
+export function getSupabaseAnonKey(): string | null {
+  return isSupabaseConfigured ? anonKey! : null
+}
+
 export function getSupabase(): SupabaseClient<Database> | null {
   if (!isSupabaseConfigured) return null
   if (!client) {

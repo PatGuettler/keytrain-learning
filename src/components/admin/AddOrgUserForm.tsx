@@ -129,7 +129,9 @@ export function AddOrgUserForm({
             />
             Send invite email
           </label>
-          {error && <p className="text-sm text-destructive sm:col-span-2">{error}</p>}
+          {error && (
+            <p className="text-sm text-destructive sm:col-span-2 whitespace-pre-line">{error}</p>
+          )}
           {message && <p className="text-sm text-emerald-600 dark:text-emerald-400 sm:col-span-2">{message}</p>}
           <Button type="submit" disabled={loading} className="sm:col-span-2 w-full sm:w-auto">
             {loading ? 'Adding…' : 'Add user'}

@@ -1,10 +1,5 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+import { corsHeaders } from '../_shared/cors.ts'
 
 const MAX_ROWS = 500
 const ROLE_ORDER: Record<string, number> = { admin: 0, manager: 1, employee: 2 }

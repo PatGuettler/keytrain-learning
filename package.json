@@ -10,7 +10,8 @@
     "build:pages": "GH_PAGES_BASE=/guardian-md/ GITHUB_PAGES=true npm run build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "preview:pages": "npm run build:pages && vite preview --base /guardian-md/"
+    "preview:pages": "npm run build:pages && vite preview --base /guardian-md/",
+    "deploy:manage-users": "bash scripts/deploy-manage-users.sh"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
