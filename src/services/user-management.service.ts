@@ -198,3 +198,22 @@ export async function deleteOrganizationById(orgId: string): Promise<void> {
 export async function deleteOrgUser(orgId: string, userId: string): Promise<void> {
   await invokeManageUsers({ action: 'delete_org_user', org_id: orgId, user_id: userId })
 }
+
+export async function sendUserPasswordReset(
+  orgId: string,
+  userId: string
+): Promise<{ message: string }> {
+  return invokeManageUsers({
+    action: 'send_password_reset',
+    org_id: orgId,
+    user_id: userId,
+  })
+}
+
+export async function unlockUserLogin(orgId: string, userId: string): Promise<{ message: string }> {
+  return invokeManageUsers({
+    action: 'unlock_user_login',
+    org_id: orgId,
+    user_id: userId,
+  })
+}

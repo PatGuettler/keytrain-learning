@@ -10,12 +10,24 @@ export interface Profile {
   avatar_url: string | null
   is_active: boolean
   invitation_pending: boolean
+  failed_login_attempts: number
+  login_locked_at: string | null
   created_at: string
   updated_at: string
 }
 
 export type AdminProfileUpdate = Partial<
-  Pick<Profile, 'full_name' | 'avatar_url' | 'role' | 'manager_id' | 'is_active' | 'invitation_pending'>
+  Pick<
+    Profile,
+    | 'full_name'
+    | 'avatar_url'
+    | 'role'
+    | 'manager_id'
+    | 'is_active'
+    | 'invitation_pending'
+    | 'failed_login_attempts'
+    | 'login_locked_at'
+  >
 >
 
 export interface Organization {

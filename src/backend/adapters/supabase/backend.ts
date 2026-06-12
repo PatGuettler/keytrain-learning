@@ -39,8 +39,27 @@ export function createSupabaseBackend(): Backend {
     kind: 'supabase',
     auth: {
       async signIn(email, password) {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
+        const normalizedEmail = email.trim().toLowerCase()
+
+        const { data: lockStatus, error: lockError } = await supabase.rpc('check_login_status', {
+          p_email: normalizedEmail,
+        })
+        if (lockError && lockError.code !== 'PGRST202') throw lockError
+        if (lockStatus && typeof lockStatus === 'object' && (lockStatus as { locked?: boolean }).locked) {
+          throw new Error('Account locked. Contact your manager or administrator to restore access.')
+        }
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        })
+        if (error) {
+          await supabase.rpc('record_failed_login', { p_email: normalizedEmail })
+          throw error
+        }
+
+        await supabase.rpc('clear_failed_login', { p_user_id: data.user.id })
+
         const profile = await this.fetchProfile(data.user.id)
         return { user: data.user, profile }
       },

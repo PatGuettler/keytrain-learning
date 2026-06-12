@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { updateOrgUser } from '@/services/user-management.service'
+import { updateOrgUser, sendUserPasswordReset, unlockUserLogin } from '@/services/user-management.service'
 import type { Profile, UserRole } from '@/types/user.types'
 
 const selectClass =
@@ -36,6 +36,8 @@ export function EditOrgUserDialog({
   const [managerId, setManagerId] = useState('')
   const [isActive, setIsActive] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [securityLoading, setSecurityLoading] = useState<'unlock' | 'reset' | null>(null)
+  const [securityMessage, setSecurityMessage] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -45,9 +47,42 @@ export function EditOrgUserDialog({
     setManagerId(user.manager_id ?? '')
     setIsActive(user.is_active)
     setError('')
+    setSecurityMessage('')
   }, [user, open])
 
   const managerOptions = managers.filter((m) => m.id !== user?.id)
+
+  const handleUnlockLogin = async () => {
+    if (!user) return
+    setSecurityLoading('unlock')
+    setSecurityMessage('')
+    setError('')
+    try {
+      const result = await unlockUserLogin(orgId, user.id)
+      setSecurityMessage(result.message)
+      onSaved()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unlock failed')
+    } finally {
+      setSecurityLoading(null)
+    }
+  }
+
+  const handleSendPasswordReset = async () => {
+    if (!user) return
+    setSecurityLoading('reset')
+    setSecurityMessage('')
+    setError('')
+    try {
+      const result = await sendUserPasswordReset(orgId, user.id)
+      setSecurityMessage(result.message)
+      onSaved()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not send reset email')
+    } finally {
+      setSecurityLoading(null)
+    }
+  }
 
   const handleSave = async () => {
     if (!user) return
@@ -158,6 +193,39 @@ export function EditOrgUserDialog({
               />
               Active account (can sign in and take training)
             </label>
+
+            <div className="rounded-lg border bg-muted/20 p-3 space-y-3">
+              <p className="text-sm font-medium">Account access</p>
+              {user.login_locked_at && (
+                <p className="text-sm text-destructive">
+                  Login locked after too many failed sign-in attempts.
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={securityLoading !== null}
+                  onClick={() => void handleUnlockLogin()}
+                >
+                  {securityLoading === 'unlock' ? 'Unlocking…' : 'Unlock login'}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={securityLoading !== null}
+                  onClick={() => void handleSendPasswordReset()}
+                >
+                  {securityLoading === 'reset' ? 'Sending…' : 'Send password reset'}
+                </Button>
+              </div>
+              {securityMessage && (
+                <p className="text-sm text-emerald-600 dark:text-emerald-400">{securityMessage}</p>
+              )}
+            </div>
+
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         )}

@@ -24,6 +24,8 @@ export interface Database {
           avatar_url: string | null
           is_active: boolean
           invitation_pending: boolean
+          failed_login_attempts: number
+          login_locked_at: string | null
           created_at: string
           updated_at: string
         }
@@ -37,6 +39,8 @@ export interface Database {
           avatar_url?: string | null
           is_active?: boolean
           invitation_pending?: boolean
+          failed_login_attempts?: number
+          login_locked_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -49,6 +53,8 @@ export interface Database {
           avatar_url: string | null
           is_active: boolean
           invitation_pending: boolean
+          failed_login_attempts: number
+          login_locked_at: string | null
         }>
         Relationships: []
       }

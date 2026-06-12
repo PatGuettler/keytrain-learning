@@ -611,6 +611,62 @@ Deno.serve(async (req) => {
       return jsonResponse({ deleted_id: userId })
     }
 
+    if (action === 'send_password_reset') {
+      const userId = typeof body.user_id === 'string' ? body.user_id : ''
+      if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)
+
+      const profileQuery = adminClient.from('profiles').select('id, email, org_id').eq('id', userId)
+      const { data: profile, error: profileError } =
+        orgId === PLATFORM_ORG_ID
+          ? await profileQuery.maybeSingle()
+          : await profileQuery.eq('org_id', orgId).maybeSingle()
+
+      if (profileError) throw profileError
+      if (!profile?.email) {
+        return jsonResponse({ error: 'User not found or has no email.' }, 404)
+      }
+
+      const resetRedirect =
+        typeof body.redirect_to === 'string' && body.redirect_to.length > 0
+          ? body.redirect_to
+          : (redirectTo?.replace('/accept-invite', '/reset-password') ??
+            'https://patguettler.github.io/guardian-md/reset-password')
+
+      const { error: resetError } = await adminClient.auth.resetPasswordForEmail(profile.email, {
+        redirectTo: resetRedirect,
+      })
+      if (resetError) throw resetError
+
+      await adminClient
+        .from('profiles')
+        .update({ failed_login_attempts: 0, login_locked_at: null })
+        .eq('id', userId)
+
+      return jsonResponse({ message: 'Password reset email sent.' })
+    }
+
+    if (action === 'unlock_user_login') {
+      const userId = typeof body.user_id === 'string' ? body.user_id : ''
+      if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)
+
+      const profileQuery = adminClient.from('profiles').select('id, org_id').eq('id', userId)
+      const { data: profile, error: profileError } =
+        orgId === PLATFORM_ORG_ID
+          ? await profileQuery.maybeSingle()
+          : await profileQuery.eq('org_id', orgId).maybeSingle()
+
+      if (profileError) throw profileError
+      if (!profile) return jsonResponse({ error: 'User not found.' }, 404)
+
+      const { error: unlockError } = await adminClient
+        .from('profiles')
+        .update({ failed_login_attempts: 0, login_locked_at: null })
+        .eq('id', userId)
+      if (unlockError) throw unlockError
+
+      return jsonResponse({ message: 'Account login unlocked.' })
+    }
+
     if (action === 'update_user') {
       const userId = typeof body.user_id === 'string' ? body.user_id : ''
       if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)
