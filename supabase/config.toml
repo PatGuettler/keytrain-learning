@@ -1,4 +1,16 @@
-# Supabase local/dev config. See https://supabase.com/docs/guides/cli/config
+# Supabase project config. Push to remote: supabase link && supabase config push
+# See scripts/deploy-manage-users.sh
+
+[auth]
+site_url = "https://patguettler.github.io/guardian-md"
+additional_redirect_urls = [
+  "https://patguettler.github.io/guardian-md/**",
+  "https://patguettler.github.io/guardian-md/accept-invite",
+  "https://patguettler.github.io/guardian-md/reset-password",
+  "https://patguettler.github.io/guardian-md/login",
+  "http://localhost:5173/**",
+  "http://localhost:3000/**",
+]
 
 # JWT is validated inside the function (admin check). Gateway verify_jwt must be false
 # so browser CORS preflight (OPTIONS) succeeds from GitHub Pages / localhost.

@@ -505,12 +505,9 @@ Deno.serve(async (req) => {
     const body = await req.json()
     const action = typeof body.action === 'string' ? body.action : 'import_csv'
     const sendInvites = body.send_invites !== false
-    // Prefer server secret so invite emails never use localhost from a dev session.
-    const DEFAULT_INVITE_REDIRECT = 'https://patguettler.github.io/guardian-md/accept-invite'
-    const redirectTo =
-      Deno.env.get('INVITE_REDIRECT_URL') ??
-      (typeof body.redirect_to === 'string' && body.redirect_to ? body.redirect_to : undefined) ??
-      DEFAULT_INVITE_REDIRECT
+    // Always use production invite URL — never trust the browser (localhost breaks invite emails).
+    const PRODUCTION_INVITE_REDIRECT = 'https://patguettler.github.io/guardian-md/accept-invite'
+    const redirectTo = Deno.env.get('INVITE_REDIRECT_URL') ?? PRODUCTION_INVITE_REDIRECT
 
     if (action === 'invite_platform_admin') {
       const email = typeof body.email === 'string' ? body.email : ''

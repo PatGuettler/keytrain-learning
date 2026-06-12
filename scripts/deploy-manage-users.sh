@@ -51,6 +51,16 @@ fi
 
 INVITE_URL="${INVITE_REDIRECT_URL:-https://patguettler.github.io/guardian-md/accept-invite}"
 
+echo "Linking project and pushing auth config (Site URL + redirect URLs)…"
+"${SUPABASE_CMD[@]}" link --project-ref "$PROJECT_REF" --yes || true
+if ! "${SUPABASE_CMD[@]}" config push --yes; then
+  echo ""
+  echo "WARNING: config push failed. Manually set in Supabase Dashboard → Authentication → URL configuration:"
+  echo "  Site URL: https://patguettler.github.io/guardian-md"
+  echo "  Redirect URLs: https://patguettler.github.io/guardian-md/**"
+  echo ""
+fi
+
 echo "Setting INVITE_REDIRECT_URL=$INVITE_URL"
 "${SUPABASE_CMD[@]}" secrets set "INVITE_REDIRECT_URL=$INVITE_URL" --project-ref "$PROJECT_REF"
 

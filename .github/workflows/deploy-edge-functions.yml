@@ -29,6 +29,8 @@ jobs:
             echo "Skipping: add SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF repo secrets."
             exit 0
           fi
+          npx --yes supabase@latest link --project-ref "$SUPABASE_PROJECT_REF" --yes || true
+          npx --yes supabase@latest config push --yes || true
           npx --yes supabase@latest secrets set "INVITE_REDIRECT_URL=$INVITE_REDIRECT_URL" --project-ref "$SUPABASE_PROJECT_REF"
           npx --yes supabase@latest functions deploy manage-users --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
 
