@@ -440,6 +440,30 @@ export interface Database {
           score: number | null
         }
       }
+      check_login_status: {
+        Args: { p_email: string }
+        Returns: { locked: boolean }
+      }
+      record_failed_login: {
+        Args: { p_email: string }
+        Returns: undefined
+      }
+      clear_failed_login: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      unlock_user_login: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      approve_course_unlock: {
+        Args: {
+          p_request_id: string
+          p_admin_id: string
+          p_approved: boolean
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: UserRole

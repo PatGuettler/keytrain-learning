@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,7 +27,7 @@ export function ResetPasswordPage() {
   const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [linkError, setLinkError] = useState<string | null>(() => parseHashError())
+  const linkError = parseHashError()
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const { ready, checking } = useRecoveryAuthSession()

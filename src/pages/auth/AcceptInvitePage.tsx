@@ -27,7 +27,7 @@ export function AcceptInvitePage() {
   const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [linkError, setLinkError] = useState<string | null>(() => parseHashError())
+  const linkError = parseHashError()
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const { ready, checking } = useRecoveryAuthSession()
