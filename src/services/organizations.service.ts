@@ -1,47 +1,24 @@
 import { backend } from '@/backend'
 import { PLATFORM_ORG_ID } from '@/lib/constants'
-import { isEdgeFunctionUnavailable } from '@/lib/edge-functions'
-import { deleteOrganizationById } from '@/services/user-management.service'
-import type { Organization } from '@/types/user.types'
+
+/** Hospital organizations (excludes the internal platform org). */
+export async function fetchHospitalOrganizations() {
+  const orgs = await backend.organizations.fetchOrganizations()
+  return orgs.filter((o) => o.id !== PLATFORM_ORG_ID)
+}
 
 export async function fetchOrganizations() {
   return backend.organizations.fetchOrganizations()
-}
-
-/** Hospital orgs only — excludes the internal platform admin org. */
-export async function fetchHospitalOrganizations(): Promise<Organization[]> {
-  const orgs = await fetchOrganizations()
-  return orgs.filter((o) => o.id !== PLATFORM_ORG_ID)
 }
 
 export async function createOrganization(name: string) {
   return backend.organizations.createOrganization(name)
 }
 
-export async function updateOrganization(id: string, name: string) {
-  return backend.organizations.updateOrganization(id, { name })
+export async function updateOrganization(id: string, patch: { name: string }) {
+  return backend.organizations.updateOrganization(id, patch)
 }
 
 export async function deleteOrganization(id: string) {
-  if (id === PLATFORM_ORG_ID) {
-    throw new Error('The platform administration organization cannot be deleted.')
-  }
-
-  try {
-    await backend.organizations.deleteOrganization(id)
-    return
-  } catch (directError) {
-    try {
-      await deleteOrganizationById(id)
-    } catch (edgeError) {
-      if (isEdgeFunctionUnavailable(edgeError)) {
-        throw directError instanceof Error
-          ? directError
-          : new Error(
-              'Could not delete organization. Run supabase/migrations/003_org_admin_delete.sql in the Supabase SQL Editor.'
-            )
-      }
-      throw edgeError instanceof Error ? edgeError : new Error(String(edgeError))
-    }
-  }
+  return backend.organizations.deleteOrganization(id)
 }

@@ -1,5 +1,5 @@
+import { EDGE_FUNCTION_DEPLOY_HINT, isEdgeFunctionUnavailable } from '@/lib/edge-functions'
 import { absoluteAppUrl } from '@/lib/paths'
-import { isEdgeFunctionUnavailable } from '@/lib/edge-functions'
 import { getSupabase } from '@/services/supabase'
 import { updateProfile } from '@/services/users.service'
 import type { Profile, UserRole } from '@/types/user.types'
@@ -32,7 +32,12 @@ async function invokeManageUsers<T>(body: Record<string, unknown>): Promise<T> {
     },
   })
 
-  if (error) throw new Error(error.message || 'Request failed.')
+  if (error) {
+    if (isEdgeFunctionUnavailable(error)) {
+      throw new Error(EDGE_FUNCTION_DEPLOY_HINT)
+    }
+    throw new Error(error.message || 'Request failed.')
+  }
   if (data?.error) throw new Error(typeof data.error === 'string' ? data.error : 'Request failed.')
   return data as T
 }

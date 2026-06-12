@@ -88,7 +88,7 @@ export function HospitalDashboardPage() {
           remaining={100 - metrics.completionRate}
           title="Hospital Completion"
         />
-        <OrgTrainingNeedsPanel needs={trainingNeeds} />
+        <OrgTrainingNeedsPanel needs={trainingNeeds} orgId={org.id} />
       </div>
 
       <OrgStaffDirectory
@@ -97,7 +97,7 @@ export function HospitalDashboardPage() {
         title="Staff training"
       />
 
-      <OrgCourseTable courses={courses} assignments={assignments} />
+      <OrgCourseTable orgId={org.id} courses={courses} assignments={assignments} />
     </div>
   )
 }

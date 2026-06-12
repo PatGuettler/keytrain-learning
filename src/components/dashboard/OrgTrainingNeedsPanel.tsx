@@ -1,11 +1,25 @@
-import { Link } from 'react-router-dom'
-import { AlertTriangle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { AlertTriangle, ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import type { TrainingNeed } from '@/lib/dashboard-stats'
 
-export function OrgTrainingNeedsPanel({ needs }: { needs: TrainingNeed[] }) {
+export function OrgTrainingNeedsPanel({
+  needs,
+  orgId,
+  highlightModuleId,
+}: {
+  needs: TrainingNeed[]
+  orgId: string
+  highlightModuleId?: string | null
+}) {
+  const navigate = useNavigate()
+
+  const openCourse = (need: TrainingNeed) => {
+    navigate(`/admin/dashboard/${orgId}/courses/${need.courseId}?module=${need.moduleId}`)
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -20,30 +34,38 @@ export function OrgTrainingNeedsPanel({ needs }: { needs: TrainingNeed[] }) {
             No significant gaps yet — staff are passing modules at a healthy rate.
           </p>
         ) : (
-          <ul className="space-y-4">
+          <ul className="space-y-3">
             {needs.slice(0, 8).map((need) => (
-              <li key={need.moduleId} className="rounded-lg border p-4 space-y-2">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <p className="font-medium text-sm">{need.moduleTitle}</p>
-                    <p className="text-xs text-muted-foreground">{need.courseTitle}</p>
+              <li key={need.moduleId}>
+                <button
+                  type="button"
+                  onClick={() => openCourse(need)}
+                  className={cn(
+                    'w-full rounded-lg border p-4 text-left space-y-2 hover:bg-muted/50 transition-colors',
+                    highlightModuleId === need.moduleId && 'ring-2 ring-primary/40 border-primary/40'
+                  )}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm text-foreground">{need.moduleTitle}</p>
+                      <p className="text-xs text-muted-foreground">{need.courseTitle}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 items-center shrink-0">
+                      <Badge variant={need.passRate < 50 ? 'destructive' : 'warning'}>
+                        {need.passRate}% pass
+                      </Badge>
+                      <Badge variant="outline">{need.avgScore}% avg</Badge>
+                      <Badge variant="secondary">{need.attemptCount} attempts</Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    <Badge variant={need.passRate < 50 ? 'destructive' : 'warning'}>
-                      {need.passRate}% pass
-                    </Badge>
-                    <Badge variant="outline">{need.avgScore}% avg</Badge>
-                    <Badge variant="secondary">{need.attemptCount} attempts</Badge>
-                  </div>
-                </div>
-                <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
-                  {need.issues.map((issue) => (
-                    <li key={issue}>{issue}</li>
-                  ))}
-                </ul>
-                <Button variant="outline" size="sm" asChild>
-                  <Link to={`/admin/courses/${need.courseId}/edit`}>Edit course</Link>
-                </Button>
+                  <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
+                    {need.issues.map((issue) => (
+                      <li key={issue}>{issue}</li>
+                    ))}
+                  </ul>
+                  <p className="text-xs text-primary sm:hidden">View course details →</p>
+                </button>
               </li>
             ))}
           </ul>

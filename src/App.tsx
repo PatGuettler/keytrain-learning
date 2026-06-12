@@ -7,6 +7,7 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { AdminDashboard } from '@/pages/dashboard/AdminDashboard'
 import { HospitalDashboardPage } from '@/pages/dashboard/HospitalDashboardPage'
+import { AdminOrgCourseDetailPage } from '@/pages/dashboard/AdminOrgCourseDetailPage'
 import { CourseManagementPage } from '@/pages/admin/CourseManagementPage'
 import { CourseEditPage } from '@/pages/admin/CourseEditPage'
 import { OrganizationsPage } from '@/pages/admin/OrganizationsPage'
@@ -51,6 +52,10 @@ export default function App() {
             <Route
               path="/admin/dashboard/:orgId"
               element={<RoleGuard roles={['admin']}><HospitalDashboardPage /></RoleGuard>}
+            />
+            <Route
+              path="/admin/dashboard/:orgId/courses/:courseId"
+              element={<RoleGuard roles={['admin']}><AdminOrgCourseDetailPage /></RoleGuard>}
             />
             <Route
               path="/admin/dashboard/:orgId/staff/:userId"

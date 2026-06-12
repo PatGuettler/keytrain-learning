@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { isBackendReady } from '@/backend'
+import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
 import { resetPassword } from '@/services/auth.service'
-import { isSupabaseConfigured } from '@/services/supabase'
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -14,8 +15,8 @@ export function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isSupabaseConfigured) {
-      setError('Configure Supabase to enable password reset.')
+    if (!isBackendReady()) {
+      setError(BACKEND_NOT_CONFIGURED_MESSAGE)
       return
     }
     try {

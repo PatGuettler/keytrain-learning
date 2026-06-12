@@ -1,4 +1,6 @@
 # Supabase local/dev config. See https://supabase.com/docs/guides/cli/config
 
+# JWT is validated inside the function (admin check). Gateway verify_jwt must be false
+# so browser CORS preflight (OPTIONS) succeeds from GitHub Pages / localhost.
 [functions.manage-users]
-verify_jwt = true
+verify_jwt = false

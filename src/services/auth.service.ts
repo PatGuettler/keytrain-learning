@@ -1,5 +1,5 @@
 import { backend } from '@/backend'
-import { getResetPasswordRedirectUrl } from '@/backend/createBackend'
+import { getResetPasswordRedirectUrl } from '@/lib/backend-config'
 import type { Profile } from '@/types/user.types'
 
 export async function signIn(email: string, password: string) {

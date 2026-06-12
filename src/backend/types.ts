@@ -11,6 +11,9 @@ import type {
   UnlockRequestStatus,
 } from '@/types/course.types'
 import type { AdminProfileUpdate, Organization, Profile, UserRole } from '@/types/user.types'
+import type { CourseAttemptResult } from '@/types/training.types'
+
+export type { CourseAttemptResult }
 
 export interface AuthSignInResult {
   user: { id: string; email?: string }
@@ -75,15 +78,6 @@ export interface AssignmentFilters {
   userId?: string
   orgId?: string
   managerId?: string
-}
-
-export interface CourseAttemptResult {
-  passed: boolean
-  attemptsUsed: number
-  maxAttempts: number
-  locked: boolean
-  attemptsRemaining: number
-  score: number | null
 }
 
 export interface AssignmentsBackend {

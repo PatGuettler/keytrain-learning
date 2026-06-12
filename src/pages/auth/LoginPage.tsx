@@ -11,7 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/hooks/useAuth'
 import { APP_NAME, ROLE_DASHBOARD } from '@/lib/constants'
 import { Link } from 'react-router-dom'
-import { isSupabaseConfigured } from '@/services/supabase'
+import { isBackendReady } from '@/backend'
+import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
 
 const schema = z.object({
   email: z.string().email(),
@@ -57,9 +58,9 @@ export function LoginPage() {
           <CardDescription>Healthcare training & incident reporting</CardDescription>
         </CardHeader>
         <CardContent>
-          {!isSupabaseConfigured && (
+          {!isBackendReady() && (
             <p className="text-sm text-amber-600 dark:text-amber-500 mb-4 text-center">
-              Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.
+              {BACKEND_NOT_CONFIGURED_MESSAGE}
             </p>
           )}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -74,7 +75,7 @@ export function LoginPage() {
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full min-h-12" disabled={isSubmitting || !isSupabaseConfigured}>
+            <Button type="submit" className="w-full min-h-12" disabled={isSubmitting || !isBackendReady()}>
               Sign in
             </Button>
           </form>

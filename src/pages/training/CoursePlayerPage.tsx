@@ -11,17 +11,18 @@ import { useCourse, useModules } from '@/hooks/useCourses'
 import { useAssignments } from '@/hooks/useAssignments'
 import { useTrainingSession } from '@/hooks/useTrainingSession'
 import { useAuthStore } from '@/store/authStore'
-import { syncRequiredAssignmentsForUser } from '@/services/assignments.service'
-import { saveModuleAttempt } from '@/services/sessions.service'
 import {
-  fetchPendingUnlockForAssignment,
   recordCourseAttemptResult,
-} from '@/services/unlock-requests.service'
+  syncRequiredAssignmentsForUser,
+} from '@/services/assignments.service'
+import { saveModuleAttempt } from '@/services/sessions.service'
+import { fetchPendingUnlockForAssignment } from '@/services/unlock-requests.service'
 import { Skeleton } from '@/components/ui/skeleton'
 import { resolveAttemptsUsed } from '@/lib/dashboard-stats'
 import { formatDuration } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import type { CourseAttemptResult } from '@/backend/types'
+import { SAVE_COURSE_RESULT_ERROR, toServiceErrorMessage } from '@/lib/service-errors'
+import type { CourseAttemptResult } from '@/types/training.types'
 import type { ModuleCompletePayload } from '@/types/training.types'
 
 interface ModuleScoreRecord {
@@ -153,11 +154,7 @@ export function CoursePlayerPage({
         void queryClient.invalidateQueries({ queryKey: ['training-sessions', userId] })
         void queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
       } catch (e) {
-        setFinishError(
-          e instanceof Error
-            ? e.message
-            : 'Could not save course result. Ask your admin to run migration 011_assignments_update_own.sql.'
-        )
+        setFinishError(toServiceErrorMessage(e, SAVE_COURSE_RESULT_ERROR))
       } finally {
         setFinishing(false)
       }

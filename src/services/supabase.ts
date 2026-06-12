@@ -1,3 +1,7 @@
+/**
+ * Supabase SDK client — import only from backend adapters (e.g. adapters/supabase).
+ * Pages, hooks, and components must use services/* instead.
+ */
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database.types'
 

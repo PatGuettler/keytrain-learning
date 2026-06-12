@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Download, Upload, FileSpreadsheet } from 'lucide-react'
+import { CsvImportPreviewDialog } from '@/components/admin/CsvImportPreviewDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { parseUserImportCsv } from '@/lib/csv-user-import'
+import type { CsvUserImportRow } from '@/lib/csv-user-import'
 import { importUsersFromCsv, type ImportUserRowResult } from '@/services/user-management.service'
 
 const SAMPLE_CSV = `email,full_name,role,manager_email
@@ -22,26 +24,17 @@ function downloadSampleCsv() {
   URL.revokeObjectURL(url)
 }
 
-function statusVariant(status: ImportUserRowResult['status']) {
-  switch (status) {
-    case 'invited':
-    case 'created':
-      return 'success' as const
-    case 'skipped':
-      return 'secondary' as const
-    case 'error':
-      return 'destructive' as const
-  }
-}
-
 export function OrgUserImportPanel({ orgId }: { orgId: string }) {
   const queryClient = useQueryClient()
   const fileRef = useRef<HTMLInputElement>(null)
   const [sendInvites, setSendInvites] = useState(true)
   const [fileName, setFileName] = useState<string | null>(null)
   const [csvText, setCsvText] = useState<string | null>(null)
+  const [previewRows, setPreviewRows] = useState<CsvUserImportRow[]>([])
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [parseError, setParseError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [importError, setImportError] = useState('')
   const [results, setResults] = useState<ImportUserRowResult[] | null>(null)
   const [summary, setSummary] = useState<{
     total: number
@@ -51,38 +44,62 @@ export function OrgUserImportPanel({ orgId }: { orgId: string }) {
     failed: number
   } | null>(null)
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    setError('')
+  const resetImportState = () => {
     setResults(null)
     setSummary(null)
+    setImportError('')
+  }
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    setParseError('')
+    resetImportState()
+    setPreviewOpen(false)
     if (!file) {
       setFileName(null)
       setCsvText(null)
+      setPreviewRows([])
       return
     }
     if (!file.name.toLowerCase().endsWith('.csv')) {
-      setError('Please upload a .csv file.')
+      setParseError('Please upload a .csv file.')
+      setFileName(null)
+      setCsvText(null)
+      setPreviewRows([])
       return
     }
     const reader = new FileReader()
     reader.onload = () => {
-      setCsvText(String(reader.result ?? ''))
+      const text = String(reader.result ?? '')
+      const parsed = parseUserImportCsv(text)
+      if (parsed.error) {
+        setParseError(parsed.error)
+        setFileName(null)
+        setCsvText(null)
+        setPreviewRows([])
+        return
+      }
+      setCsvText(text)
       setFileName(file.name)
+      setPreviewRows(parsed.rows)
     }
-    reader.onerror = () => setError('Could not read file.')
+    reader.onerror = () => setParseError('Could not read file.')
     reader.readAsText(file)
   }
 
-  const runImport = async () => {
-    if (!csvText) {
-      setError('Choose a CSV file first.')
+  const openPreview = () => {
+    if (!csvText || previewRows.length === 0) {
+      setParseError('Choose a valid CSV file first.')
       return
     }
+    resetImportState()
+    setPreviewOpen(true)
+  }
+
+  const runImport = async () => {
+    if (!csvText) return
     setLoading(true)
-    setError('')
-    setResults(null)
-    setSummary(null)
+    setImportError('')
     try {
       const data = await importUsersFromCsv(orgId, csvText, sendInvites)
       setResults(data.rows)
@@ -90,85 +107,91 @@ export function OrgUserImportPanel({ orgId }: { orgId: string }) {
       await queryClient.invalidateQueries({ queryKey: ['org-users', orgId] })
       await queryClient.invalidateQueries({ queryKey: ['organizations'] })
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Import failed')
+      setImportError(e instanceof Error ? e.message : 'Import failed')
     } finally {
       setLoading(false)
     }
   }
 
+  const handleDialogClose = (open: boolean) => {
+    setPreviewOpen(open)
+    if (!open && summary) {
+      setResults(null)
+      setSummary(null)
+    }
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <FileSpreadsheet className="h-4 w-4" />
-          Bulk import (CSV)
-        </CardTitle>
-        <CardDescription>
-          Only <strong>email</strong> is required. Role defaults to employee. List managers before employees.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Button type="button" variant="outline" size="sm" onClick={downloadSampleCsv}>
-          <Download className="h-4 w-4 mr-1" />
-          Download sample CSV
-        </Button>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            Bulk import (CSV)
+          </CardTitle>
+          <CardDescription>
+            Only <strong>email</strong> is required. Role defaults to employee. List managers before employees.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button type="button" variant="outline" size="sm" onClick={downloadSampleCsv}>
+            <Download className="h-4 w-4 mr-1" />
+            Download sample CSV
+          </Button>
 
-        <div className="space-y-2">
-          <Label htmlFor="user-csv">CSV file</Label>
-          <input
-            ref={fileRef}
-            id="user-csv"
-            type="file"
-            accept=".csv,text/csv"
-            className="block w-full text-sm file:mr-3 file:rounded-md file:border file:border-input file:bg-background file:px-3 file:py-2 file:text-sm"
-            onChange={onFileChange}
-          />
-          {fileName && <p className="text-xs text-muted-foreground">Selected: {fileName}</p>}
-        </div>
-
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={sendInvites}
-            onChange={(e) => setSendInvites(e.target.checked)}
-            className="rounded border-input"
-          />
-          Send invite emails
-        </label>
-
-        {error && <p className="text-sm text-destructive">{error}</p>}
-
-        <Button type="button" onClick={runImport} disabled={loading || !csvText} className="min-h-11">
-          <Upload className="h-4 w-4 mr-2" />
-          {loading ? 'Importing…' : 'Import CSV'}
-        </Button>
-
-        {summary && (
-          <p className="text-sm text-muted-foreground">
-            {summary.invited} invited · {summary.created} created · {summary.skipped} skipped ·{' '}
-            {summary.failed} failed
-          </p>
-        )}
-
-        {results && results.length > 0 && (
-          <div className="max-h-48 overflow-y-auto rounded-lg border text-sm">
-            <table className="w-full">
-              <tbody>
-                {results.map((row) => (
-                  <tr key={row.email} className="border-b last:border-0">
-                    <td className="p-2 font-mono text-xs">{row.email}</td>
-                    <td className="p-2">
-                      <Badge variant={statusVariant(row.status)} className="capitalize">
-                        {row.status}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-2">
+            <Label htmlFor="user-csv">CSV file</Label>
+            <input
+              ref={fileRef}
+              id="user-csv"
+              type="file"
+              accept=".csv,text/csv"
+              className="block w-full text-sm file:mr-3 file:rounded-md file:border file:border-input file:bg-background file:px-3 file:py-2 file:text-sm file:text-foreground"
+              onChange={onFileChange}
+            />
+            {fileName && (
+              <p className="text-xs text-muted-foreground">
+                Selected: {fileName} · {previewRows.length} user{previewRows.length === 1 ? '' : 's'} detected
+              </p>
+            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          <label className="flex items-center gap-2 text-sm cursor-pointer text-foreground">
+            <input
+              type="checkbox"
+              checked={sendInvites}
+              onChange={(e) => setSendInvites(e.target.checked)}
+              className="rounded border-input"
+            />
+            Send invite emails
+          </label>
+
+          {parseError && <p className="text-sm text-destructive">{parseError}</p>}
+
+          <Button
+            type="button"
+            onClick={openPreview}
+            disabled={!csvText || previewRows.length === 0}
+            className="min-h-11"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Review import
+          </Button>
+        </CardContent>
+      </Card>
+
+      <CsvImportPreviewDialog
+        open={previewOpen}
+        onOpenChange={handleDialogClose}
+        fileName={fileName}
+        rows={previewRows}
+        sendInvites={sendInvites}
+        importing={loading}
+        importError={importError}
+        results={results}
+        summary={summary}
+        onConfirmImport={runImport}
+      />
+    </>
   )
 }
