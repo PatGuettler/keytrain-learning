@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { getProfileStatusBadge } from '@/lib/user-status'
 import { fetchProfiles } from '@/services/users.service'
 import { invitePlatformAdmin } from '@/services/user-management.service'
 
@@ -135,9 +136,10 @@ export function PlatformAdminsPage() {
                     <td className="p-3 pr-4 font-medium">{admin.full_name}</td>
                     <td className="p-3 pr-4 text-muted-foreground">{admin.email ?? '—'}</td>
                     <td className="p-3">
-                      <Badge variant={admin.is_active ? 'success' : 'secondary'}>
-                        {admin.is_active ? 'Active' : 'Inactive'}
-                      </Badge>
+                      {(() => {
+                        const status = getProfileStatusBadge(admin)
+                        return <Badge variant={status.variant}>{status.label}</Badge>
+                      })()}
                     </td>
                   </tr>
                 ))}
