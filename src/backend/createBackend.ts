@@ -1,4 +1,6 @@
 import { PLATFORM_ORG_ID } from '@/lib/constants'
+import { isPublicationActive } from '@/lib/course-publications'
+import { resolveAttemptsUsed } from '@/lib/dashboard-stats'
 import { absoluteAppUrl } from '@/lib/paths'
 import { getSupabase, isSupabaseConfigured } from '@/services/supabase'
 import type { Backend } from './types'
@@ -24,13 +26,6 @@ type ModuleAttemptUpdate = Database['public']['Tables']['module_attempts']['Upda
 
 const NOT_CONFIGURED =
   'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
-
-function isPublicationActive(pub: CoursePublication): boolean {
-  if (pub.unpublished_at) return false
-  if (new Date(pub.published_at) > new Date()) return false
-  if (pub.available_until && new Date(pub.available_until) <= new Date()) return false
-  return true
-}
 
 async function syncCoursePublishedFlag(
   supabase: NonNullable<ReturnType<typeof getSupabase>>,
@@ -72,9 +67,13 @@ function enrichAssignment(
     }
   }
 
+  const enriched = { ...row, training_sessions: sessions.length > 0 ? sessions : undefined }
+  const attemptsUsed = resolveAttemptsUsed(enriched as Assignment)
+
   const { training_sessions: _sessions, ...rest } = row
   return {
     ...rest,
+    attempts_used: attemptsUsed,
     last_score: lastScore,
     training_sessions: sessions.length > 0 ? sessions : undefined,
   }
@@ -134,6 +133,7 @@ function createUnconfiguredBackend(): Backend {
       upsertModule: fail,
       deleteModule: fail,
       syncCourseModules: fail,
+      fetchPublicationsForOrg: fail,
       fetchPublicationsForCourse: fail,
       publishCourseToOrg: fail,
       unpublishCourseFromOrg: fail,
@@ -356,6 +356,14 @@ function createSupabaseBackend(): Backend {
           )
         }
       },
+      async fetchPublicationsForOrg(orgId) {
+        const { data, error } = await supabase
+          .from('course_publications')
+          .select('*')
+          .eq('org_id', orgId)
+        if (error) throw error
+        return data as CoursePublication[]
+      },
       async fetchPublicationsForCourse(courseId) {
         const { data, error } = await supabase
           .from('course_publications')
@@ -555,6 +563,8 @@ function createSupabaseBackend(): Backend {
           .single()
         if (fetchError) throw fetchError
 
+        const attemptsUsed = assignment.attempts_used + 1
+
         if (passed) {
           const { error: updateError } = await supabase
             .from('assignments')
@@ -563,20 +573,20 @@ function createSupabaseBackend(): Backend {
               locked_at: null,
               last_score: score ?? null,
               completed_at: new Date().toISOString(),
+              attempts_used: attemptsUsed,
             })
             .eq('id', assignmentId)
           if (updateError) throw updateError
           return {
             passed: true,
-            attemptsUsed: assignment.attempts_used,
+            attemptsUsed,
             maxAttempts,
             locked: false,
-            attemptsRemaining: maxAttempts - assignment.attempts_used,
+            attemptsRemaining: Math.max(0, maxAttempts - attemptsUsed),
             score: score ?? null,
           }
         }
 
-        const attemptsUsed = assignment.attempts_used + 1
         const locked = attemptsUsed >= maxAttempts
         const { error: updateError } = await supabase
           .from('assignments')
@@ -677,7 +687,7 @@ function createSupabaseBackend(): Backend {
         let q = supabase
           .from('assignments')
           .select(
-            '*, course:courses(*), user:profiles!assignments_user_id_fkey(id, full_name, email), training_sessions(score, passed, completed_at, started_at, course_id)'
+            '*, course:courses(*), user:profiles!assignments_user_id_fkey(id, full_name, email), training_sessions(id, score, passed, completed_at, started_at, course_id, attempt_number)'
           )
 
         if (opts?.userId) {
@@ -708,33 +718,34 @@ function createSupabaseBackend(): Backend {
 
         let rows = (data ?? []) as (Assignment & { training_sessions?: TrainingSession[] })[]
 
-        if (opts?.userId) {
-          const { data: authData } = await supabase.auth.getUser()
-          const isOwnAssignments = authData.user?.id === opts.userId
+        const filterByActivePublications = async (orgId: string) => {
+          const { data: publications } = await supabase
+            .from('course_publications')
+            .select('course_id, published_at, available_until, unpublished_at')
+            .eq('org_id', orgId)
 
-          if (isOwnAssignments) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('org_id, role')
-              .eq('id', opts.userId)
-              .maybeSingle()
+          const activeCourseIds = new Set(
+            (publications ?? [])
+              .filter((pub) => isPublicationActive(pub as CoursePublication))
+              .map((pub) => pub.course_id)
+          )
 
-            if (profile?.org_id && profile.role !== 'admin') {
-              const { data: publications } = await supabase
-                .from('course_publications')
-                .select('course_id, published_at, available_until, unpublished_at')
-                .eq('org_id', profile.org_id)
+          rows = rows.filter(
+            (row) => row.status === 'completed' || activeCourseIds.has(row.course_id)
+          )
+        }
 
-              const activeCourseIds = new Set(
-                (publications ?? [])
-                  .filter((pub) => isPublicationActive(pub as CoursePublication))
-                  .map((pub) => pub.course_id)
-              )
+        if (opts?.orgId) {
+          await filterByActivePublications(opts.orgId)
+        } else if (opts?.userId) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('org_id, role')
+            .eq('id', opts.userId)
+            .maybeSingle()
 
-              rows = rows.filter(
-                (row) => row.status === 'completed' || activeCourseIds.has(row.course_id)
-              )
-            }
+          if (profile?.org_id && profile.role !== 'admin') {
+            await filterByActivePublications(profile.org_id)
           }
         }
 

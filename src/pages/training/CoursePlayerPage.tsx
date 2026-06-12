@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, PartyPopper, RotateCcw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ClipboardX, PartyPopper } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CourseViewer } from '@/components/training/CourseViewer'
 import { CourseLockedScreen } from '@/components/training/CourseLockedScreen'
@@ -18,6 +18,7 @@ import {
   recordCourseAttemptResult,
 } from '@/services/unlock-requests.service'
 import { Skeleton } from '@/components/ui/skeleton'
+import { resolveAttemptsUsed } from '@/lib/dashboard-stats'
 import { formatDuration } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { CourseAttemptResult } from '@/backend/types'
@@ -33,10 +34,8 @@ interface ModuleScoreRecord {
 type FinishOutcome = 'passed' | 'failed' | 'locked'
 
 export function CoursePlayerPage({
-  dashboardPath,
   trainingPath = '/employee/training',
 }: {
-  dashboardPath: string
   trainingPath?: string
 }) {
   const { courseId } = useParams<{ courseId: string }>()
@@ -103,6 +102,7 @@ export function CoursePlayerPage({
       if (!mod) return
 
       setCompletedIndices((prev) => new Set(prev).add(currentIndex))
+
       moduleScoresRef.current = [
         ...moduleScoresRef.current.filter((m) => m.moduleId !== mod.id),
         { moduleId: mod.id, title: mod.title, score: payload.score, passed: payload.passed },
@@ -120,11 +120,7 @@ export function CoursePlayerPage({
         })
       }
 
-      if (mod.type === 'quiz' && !payload.passed) {
-        setModuleReady(false)
-      } else {
-        setModuleReady(true)
-      }
+      setModuleReady(true)
     },
     [currentIndex, modules, session?.id, userId]
   )
@@ -171,19 +167,6 @@ export function CoursePlayerPage({
     }
     setCurrentIndex((i) => i + 1)
     setModuleReady(completedIndices.has(currentIndex + 1))
-  }
-
-  const retryCourse = () => {
-    setFinished(false)
-    setOutcome(null)
-    setAttemptInfo(null)
-    setCourseScore(null)
-    setCurrentIndex(0)
-    setCompletedIndices(new Set())
-    setModuleReady(false)
-    setElapsed(0)
-    moduleScoresRef.current = []
-    setSessionKey((k) => k + 1)
   }
 
   if (isLoading || courseLoading) {
@@ -236,9 +219,9 @@ export function CoursePlayerPage({
           className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 px-4 max-w-lg mx-auto"
         >
           <PartyPopper className="h-14 w-14 sm:h-16 sm:w-16 text-primary" />
-          <h2 className="text-2xl sm:text-3xl font-bold">Course Complete!</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold">Exam passed</h2>
           <p className="text-muted-foreground text-sm sm:text-base">
-            {course.title} — saved to your training profile
+            {course.title} — your result has been saved
           </p>
           {courseScore !== null && (
             <div className="w-full rounded-lg border bg-card p-4 text-left space-y-2">
@@ -255,8 +238,8 @@ export function CoursePlayerPage({
               </ul>
             </div>
           )}
-          <Button size="lg" className="w-full max-w-xs min-h-12" onClick={() => navigate(dashboardPath)}>
-            Return to Dashboard
+          <Button size="lg" className="w-full max-w-xs min-h-12" onClick={() => navigate(trainingPath)}>
+            Back to training
           </Button>
         </motion.div>
       )
@@ -283,33 +266,32 @@ export function CoursePlayerPage({
         animate={{ scale: 1, opacity: 1 }}
         className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6 px-4 max-w-lg mx-auto"
       >
-        <RotateCcw className="h-12 w-12 text-amber-600" />
-        <h2 className="text-2xl font-bold">Not passed yet</h2>
-        <p className="text-sm text-muted-foreground">
+        <ClipboardX className="h-12 w-12 text-amber-600" />
+        <h2 className="text-2xl font-bold">Exam not passed</h2>
+        <p className="text-sm text-muted-foreground max-w-sm">
           {attemptInfo
-            ? `${attemptInfo.attemptsRemaining} attempt${attemptInfo.attemptsRemaining === 1 ? '' : 's'} remaining of ${maxAttempts}.`
-            : 'Review the material and try again.'}
+            ? attemptInfo.attemptsRemaining > 0
+              ? `This attempt has been recorded. You have ${attemptInfo.attemptsRemaining} more attempt${attemptInfo.attemptsRemaining === 1 ? '' : 's'} — start again from Required Training when ready.`
+              : 'You have used all allowed attempts for this course. Contact your administrator if you need access restored.'
+            : 'This attempt has been recorded. Return to Required Training to start a new attempt when one is available.'}
         </p>
-        <div className="flex flex-wrap gap-2 justify-center">
-          <Button onClick={retryCourse}>Try again</Button>
-          <Button variant="outline" onClick={() => navigate(trainingPath)}>
-            Back to training
-          </Button>
-        </div>
+        <Button size="lg" className="w-full max-w-xs min-h-12" onClick={() => navigate(trainingPath)}>
+          Back to training
+        </Button>
       </motion.div>
     )
   }
 
   const attemptLabel = assignment
-    ? `Attempt ${(assignment.attempts_used ?? 0) + 1} of ${maxAttempts}`
+    ? `Attempt ${session?.attempt_number ?? resolveAttemptsUsed(assignment) + 1} of ${maxAttempts}`
     : null
 
   return (
-    <div className="space-y-4 w-full min-w-0 max-w-5xl mx-auto pb-[calc(var(--mobile-nav-height)+7rem)] lg:pb-4">
+    <div className="space-y-3 sm:space-y-4 w-full min-w-0 max-w-5xl mx-auto pb-course-player-footer lg:pb-4">
       <div className="flex items-center justify-between gap-2 min-w-0">
         <Button variant="ghost" size="sm" className="h-11 shrink-0" onClick={() => navigate(-1)}>
           <ChevronLeft className="h-4 w-4" />
-          <span className="hidden xs:inline">Back</span>
+          <span className="hidden sm:inline">Back</span>
         </Button>
         <div className="text-xs sm:text-sm text-muted-foreground text-right">
           {attemptLabel && <p>{attemptLabel}</p>}
@@ -327,11 +309,13 @@ export function CoursePlayerPage({
       />
       <div
         className={cn(
-          'fixed left-0 right-0 z-30 border-t bg-background/95 backdrop-blur p-3 safe-area-px safe-area-pb',
-          'bottom-mobile-nav lg:bottom-0 lg:sticky lg:mt-4 lg:border-t lg:p-0 lg:bg-background lg:backdrop-blur-none'
+          'fixed left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90',
+          'p-3 safe-area-px safe-area-pb bottom-0',
+          'lg:static lg:z-auto lg:mt-4 lg:border-t-0 lg:p-0 lg:bg-transparent lg:backdrop-blur-none'
         )}
+        style={{ minHeight: 'var(--course-player-footer-height)' }}
       >
-        <div className="flex flex-col gap-2 w-full max-w-5xl mx-auto px-0 lg:pt-4">
+        <div className="flex flex-col gap-2 w-full max-w-5xl mx-auto">
           {finishError && (
             <p className="text-sm text-destructive text-center px-2">{finishError}</p>
           )}
@@ -346,11 +330,11 @@ export function CoursePlayerPage({
               }}
             >
               <ChevronLeft className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Previous</span>
+              <span className="hidden sm:inline">Previous module</span>
               <span className="sm:hidden">Prev</span>
             </Button>
             <Button className="flex-1 min-h-12" onClick={() => void handleNext()} disabled={!canNext || finishing}>
-              <span>{finishing ? 'Saving…' : isLast ? 'Finish' : 'Next'}</span>
+              <span>{finishing ? 'Submitting…' : isLast ? 'Submit exam' : 'Next module'}</span>
               <ChevronRight className="h-4 w-4 shrink-0" />
             </Button>
           </div>

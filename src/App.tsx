@@ -7,8 +7,6 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { AdminDashboard } from '@/pages/dashboard/AdminDashboard'
 import { HospitalDashboardPage } from '@/pages/dashboard/HospitalDashboardPage'
-import { ManagerDashboard } from '@/pages/dashboard/ManagerDashboard'
-import { EmployeeDashboard } from '@/pages/dashboard/EmployeeDashboard'
 import { CourseManagementPage } from '@/pages/admin/CourseManagementPage'
 import { CourseEditPage } from '@/pages/admin/CourseEditPage'
 import { OrganizationsPage } from '@/pages/admin/OrganizationsPage'
@@ -18,8 +16,6 @@ import { UnlockRequestsPage } from '@/pages/admin/UnlockRequestsPage'
 import { AdminStaffTrainingPage } from '@/pages/admin/AdminStaffTrainingPage'
 import { AdminStaffCourseDetailPage } from '@/pages/admin/AdminStaffCourseDetailPage'
 import { EmployeeListPage } from '@/pages/manager/EmployeeListPage'
-import { EmployeeDetailPage } from '@/pages/manager/EmployeeDetailPage'
-import { ManagerStaffCourseDetailPage } from '@/pages/manager/ManagerStaffCourseDetailPage'
 import { MyTrainingPage } from '@/pages/employee/MyTrainingPage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { useAuthStore } from '@/store/authStore'
@@ -102,21 +98,14 @@ export default function App() {
             />
             <Route path="/admin/users" element={<Navigate to="/admin/organizations" replace />} />
 
-            <Route
-              path="/manager/dashboard"
-              element={<RoleGuard roles={['manager']}><ManagerDashboard /></RoleGuard>}
-            />
+            <Route path="/manager/dashboard" element={<Navigate to="/manager/training" replace />} />
             <Route
               path="/manager/team"
               element={<RoleGuard roles={['manager']}><EmployeeListPage /></RoleGuard>}
             />
             <Route
-              path="/manager/team/:employeeId"
-              element={<RoleGuard roles={['manager']}><EmployeeDetailPage /></RoleGuard>}
-            />
-            <Route
-              path="/manager/team/:employeeId/courses/:courseId"
-              element={<RoleGuard roles={['manager']}><ManagerStaffCourseDetailPage /></RoleGuard>}
+              path="/manager/team/:employeeId/*"
+              element={<Navigate to="/manager/team" replace />}
             />
             <Route path="/manager/assignments" element={<Navigate to="/manager/training" replace />} />
             <Route
@@ -127,18 +116,12 @@ export default function App() {
               path="/manager/training/play/:courseId"
               element={
                 <RoleGuard roles={['manager']}>
-                  <CoursePlayerPage
-                    dashboardPath="/manager/dashboard"
-                    trainingPath="/manager/training"
-                  />
+                  <CoursePlayerPage trainingPath="/manager/training" />
                 </RoleGuard>
               }
             />
 
-            <Route
-              path="/employee/dashboard"
-              element={<RoleGuard roles={['employee']}><EmployeeDashboard /></RoleGuard>}
-            />
+            <Route path="/employee/dashboard" element={<Navigate to="/employee/training" replace />} />
             <Route
               path="/employee/training"
               element={<RoleGuard roles={['employee']}><MyTrainingPage /></RoleGuard>}
@@ -147,14 +130,11 @@ export default function App() {
               path="/employee/training/play/:courseId"
               element={
                 <RoleGuard roles={['employee']}>
-                  <CoursePlayerPage
-                    dashboardPath="/employee/dashboard"
-                    trainingPath="/employee/training"
-                  />
+                  <CoursePlayerPage trainingPath="/employee/training" />
                 </RoleGuard>
               }
             />
-            <Route path="/employee/profile" element={<Navigate to="/employee/dashboard" replace />} />
+            <Route path="/employee/profile" element={<Navigate to="/employee/training" replace />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

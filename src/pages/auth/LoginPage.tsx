@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
-import { APP_NAME } from '@/lib/constants'
+import { APP_NAME, ROLE_DASHBOARD } from '@/lib/constants'
 import { Link } from 'react-router-dom'
 import { isSupabaseConfigured } from '@/services/supabase'
 
@@ -33,7 +33,7 @@ export function LoginPage() {
   })
 
   useEffect(() => {
-    if (isAuthenticated) navigate(from ?? '/employee/dashboard', { replace: true })
+    if (isAuthenticated) navigate(from ?? ROLE_DASHBOARD.employee, { replace: true })
   }, [isAuthenticated, from, navigate])
 
   const onSubmit = async (data: FormData) => {

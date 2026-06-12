@@ -11,8 +11,9 @@ export const STATUS_LABELS: Record<string, string> = {
   overdue: 'Overdue',
 }
 
+/** Default landing route after login (admin-only analytics live under /admin/dashboard). */
 export const ROLE_DASHBOARD: Record<string, string> = {
   admin: '/admin/dashboard',
-  manager: '/manager/dashboard',
-  employee: '/employee/dashboard',
+  manager: '/manager/training',
+  employee: '/employee/training',
 }

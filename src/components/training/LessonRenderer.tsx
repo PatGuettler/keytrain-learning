@@ -83,9 +83,20 @@ export function LessonRenderer({
         <span className="text-center sm:text-left">
           Slide {safeIndex + 1} of {slides.length}
         </span>
-        <Button onClick={next} className="min-h-11 w-full sm:w-auto sm:shrink-0">
-          {isLast ? 'Complete Lesson' : 'Next Slide'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11 flex-1 sm:flex-none sm:min-w-[7rem]"
+            disabled={safeIndex === 0}
+            onClick={() => setIndex((i) => Math.max(0, i - 1))}
+          >
+            Previous
+          </Button>
+          <Button onClick={next} className="min-h-11 flex-1 sm:flex-none sm:min-w-[9rem]">
+            {isLast ? 'Complete lesson' : 'Next slide'}
+          </Button>
+        </div>
       </div>
     </div>
   )

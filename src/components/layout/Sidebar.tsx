@@ -22,14 +22,10 @@ const navByRole = {
     { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
   ],
   manager: [
-    { to: '/manager/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/manager/team', label: 'My Team', icon: Users },
     { to: '/manager/training', label: 'Required Training', icon: GraduationCap },
+    { to: '/manager/team', label: 'My Team', icon: Users },
   ],
-  employee: [
-    { to: '/employee/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/employee/training', label: 'Required Training', icon: GraduationCap },
-  ],
+  employee: [{ to: '/employee/training', label: 'Required Training', icon: GraduationCap }],
 }
 
 export function Sidebar() {

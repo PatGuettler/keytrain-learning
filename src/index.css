@@ -23,26 +23,28 @@
     --ring: 174 72% 36%;
     --radius: 0.5rem;
     --mobile-nav-height: 4.5rem;
+    --course-player-footer-height: 4.25rem;
   }
 
   .dark {
-    --background: 222 47% 8%;
-    --foreground: 210 20% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 20% 98%;
-    --primary: 174 65% 45%;
-    --primary-foreground: 222 47% 8%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 174 40% 20%;
-    --accent-foreground: 174 65% 75%;
-    --destructive: 0 62% 50%;
+    --background: 222 47% 7%;
+    --foreground: 210 25% 96%;
+    --card: 222 40% 12%;
+    --card-foreground: 210 25% 96%;
+    --primary: 174 58% 48%;
+    --primary-foreground: 222 47% 7%;
+    --secondary: 217 28% 18%;
+    --secondary-foreground: 210 25% 96%;
+    --muted: 217 28% 18%;
+    --muted-foreground: 215 18% 74%;
+    --accent: 174 35% 22%;
+    --accent-foreground: 174 55% 82%;
+    --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 174 65% 45%;
+    --border: 217 22% 26%;
+    --input: 217 22% 22%;
+    --ring: 174 58% 48%;
+    color-scheme: dark;
   }
 }
 
@@ -64,6 +66,13 @@
 
   #root {
     min-height: 100dvh;
+    @apply text-foreground;
+  }
+
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  textarea,
+  select {
+    @apply text-foreground;
   }
 }
 
@@ -87,6 +96,12 @@
 
   .bottom-mobile-nav {
     bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .pb-course-player-footer {
+    padding-bottom: calc(
+      var(--course-player-footer-height) + env(safe-area-inset-bottom, 0px) + 0.75rem
+    );
   }
 
   .touch-target {

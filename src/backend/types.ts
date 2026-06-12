@@ -56,6 +56,7 @@ export interface CoursesBackend {
   deleteModule(id: string): Promise<void>
   /** Remove modules not in keepIds so edits replace the live course (no version history). */
   syncCourseModules(courseId: string, keepModuleIds: string[]): Promise<void>
+  fetchPublicationsForOrg(orgId: string): Promise<CoursePublication[]>
   fetchPublicationsForCourse(courseId: string): Promise<CoursePublication[]>
   publishCourseToOrg(payload: {
     courseId: string

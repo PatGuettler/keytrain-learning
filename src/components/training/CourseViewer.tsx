@@ -91,7 +91,7 @@ export function CourseViewer({
   }
 
   return (
-    <div className="grid w-full min-w-0 max-w-full lg:grid-cols-[minmax(0,240px)_1fr] gap-4 lg:gap-6">
+    <div className="grid w-full min-w-0 max-w-full lg:grid-cols-[minmax(0,240px)_1fr] gap-3 lg:gap-6">
       <aside className="w-full min-w-0 lg:sticky lg:top-4 lg:self-start">
         <ModuleProgress
           modules={modules}
@@ -99,8 +99,10 @@ export function CourseViewer({
           completedIndices={completedIndices}
         />
       </aside>
-      <div className="min-w-0 w-full max-w-full overflow-hidden">
-        <h2 className="text-lg sm:text-xl font-bold mb-4 leading-snug break-anywhere">{module.title}</h2>
+      <div className="min-w-0 w-full max-w-full">
+        <h2 className="hidden lg:block text-lg sm:text-xl font-bold mb-4 leading-snug break-anywhere">
+          {module.title}
+        </h2>
         {renderModule()}
       </div>
     </div>

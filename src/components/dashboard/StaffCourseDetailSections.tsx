@@ -9,6 +9,7 @@ import {
 import { formatDate } from '@/lib/utils'
 import type { ModuleAttempt, TrainingSession } from '@/types/course.types'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { chartTheme } from '@/lib/chart-theme'
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
   pending: 'secondary',
@@ -51,13 +52,13 @@ export function StaffCourseDetailSections({
             </div>
             <div>
               <dt className="text-muted-foreground">Score</dt>
-              <dd className="mt-1 font-medium tabular-nums">
+              <dd className="mt-1 font-medium tabular-nums text-foreground">
                 {courseRow.score != null ? `${courseRow.score}%` : '—'}
               </dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Attempts</dt>
-              <dd className="mt-1 font-medium tabular-nums">
+              <dd className="mt-1 font-medium tabular-nums text-foreground">
                 {courseRow.attemptsUsed}/{courseRow.maxAttempts}
                 {courseRow.locked && (
                   <Badge variant="destructive" className="ml-2">
@@ -68,7 +69,7 @@ export function StaffCourseDetailSections({
             </div>
             <div>
               <dt className="text-muted-foreground">Due</dt>
-              <dd className="mt-1 font-medium">{formatDate(courseRow.dueDate)}</dd>
+              <dd className="mt-1 font-medium text-foreground">{formatDate(courseRow.dueDate)}</dd>
             </div>
           </dl>
         </CardContent>
@@ -84,10 +85,10 @@ export function StaffCourseDetailSections({
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={scoreHistory}>
-                <XAxis dataKey="date" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip />
-                <Line type="monotone" dataKey="score" stroke="#0d9488" strokeWidth={2} />
+                <XAxis dataKey="date" stroke={chartTheme.axisStroke} tick={chartTheme.tick} />
+                <YAxis domain={[0, 100]} stroke={chartTheme.axisStroke} tick={chartTheme.tick} />
+                <Tooltip contentStyle={chartTheme.tooltip} />
+                <Line type="monotone" dataKey="score" stroke={chartTheme.primary} strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           )}

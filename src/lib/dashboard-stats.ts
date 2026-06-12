@@ -1,6 +1,47 @@
 import type { Assignment, Course, Module, ModuleAttempt, TrainingSession } from '@/types/course.types'
 import type { Profile } from '@/types/user.types'
 
+/** Assignments that count toward staff progress (active courses + completed history). */
+export function filterAssignmentsForReporting(
+  assignments: Assignment[],
+  activeCourseIds: Set<string>
+): Assignment[] {
+  if (activeCourseIds.size === 0) {
+    return assignments.filter((a) => a.status === 'completed')
+  }
+  return assignments.filter(
+    (a) => a.status === 'completed' || activeCourseIds.has(a.course_id)
+  )
+}
+
+/** Best-effort attempt count (stored value, session history, or legacy completion). */
+export function resolveAttemptsUsed(assignment: Assignment): number {
+  const stored = assignment.attempts_used ?? 0
+  const sessions = assignment.training_sessions ?? []
+  const completedSessions = sessions.filter((s) => s.completed_at != null)
+  const completedCount = completedSessions.length
+  const maxCompletedAttempt = completedSessions.reduce(
+    (max, s) => Math.max(max, s.attempt_number ?? 0),
+    0
+  )
+
+  let inferred = Math.max(completedCount, maxCompletedAttempt)
+
+  if (assignment.status === 'completed' && inferred < 1) {
+    inferred = 1
+  }
+
+  if (stored === 0 && assignment.last_score != null && inferred === 0) {
+    const maxSessionAttempt = sessions.reduce(
+      (max, s) => Math.max(max, s.attempt_number ?? 0),
+      0
+    )
+    inferred = Math.max(maxSessionAttempt, 1)
+  }
+
+  return Math.max(stored, inferred)
+}
+
 /** Best display score for an assignment (stored value or latest completed session). */
 export function resolveAssignmentScore(assignment: Assignment): number | null {
   if (assignment.last_score != null) {
@@ -115,10 +156,17 @@ export interface StaffSummaryRow {
   completionRate: number
 }
 
-export function buildStaffSummaryRows(users: Profile[], assignments: Assignment[]): StaffSummaryRow[] {
+export function buildStaffSummaryRows(
+  users: Profile[],
+  assignments: Assignment[],
+  activeCourseIds?: Set<string>
+): StaffSummaryRow[] {
   return users
     .map((user) => {
-      const userAssignments = assignments.filter((a) => a.user_id === user.id)
+      let userAssignments = assignments.filter((a) => a.user_id === user.id)
+      if (activeCourseIds) {
+        userAssignments = filterAssignmentsForReporting(userAssignments, activeCourseIds)
+      }
       const completed = userAssignments.filter((a) => a.status === 'completed')
       const scores = completed
         .map(resolveAssignmentScore)
@@ -159,11 +207,15 @@ export function staffOverallStatus(
 
 export function buildStaffTrainingRows(
   assignments: Assignment[],
-  users?: { id: string; full_name: string; email?: string | null }[]
+  users?: { id: string; full_name: string; email?: string | null }[],
+  activeCourseIds?: Set<string>
 ): StaffTrainingRow[] {
   const userMap = new Map(users?.map((u) => [u.id, u]) ?? [])
+  const rows = activeCourseIds
+    ? filterAssignmentsForReporting(assignments, activeCourseIds)
+    : assignments
 
-  return assignments
+  return rows
     .map((a) => {
       const profile = a.user ?? userMap.get(a.user_id)
       return {
@@ -175,7 +227,7 @@ export function buildStaffTrainingRows(
         courseTitle: a.course?.title ?? 'Course',
         status: a.status,
         score: resolveAssignmentScore(a),
-        attemptsUsed: a.attempts_used ?? 0,
+        attemptsUsed: resolveAttemptsUsed(a),
         maxAttempts: a.course?.max_attempts ?? 3,
         locked: Boolean(a.locked_at),
         dueDate: a.due_date,

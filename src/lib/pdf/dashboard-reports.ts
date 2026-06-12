@@ -3,7 +3,6 @@ import { formatDate } from '@/lib/utils'
 import {
   computeCourseMetrics,
   extractModuleIssues,
-  resolveAssignmentScore,
   staffOverallStatus,
   type StaffSummaryRow,
   type StaffTrainingRow,
@@ -166,44 +165,6 @@ export function exportOrgDashboardPdf(
   saveDashboardPdf(doc, `${orgName}-dashboard-${new Date().toISOString().slice(0, 10)}`)
 }
 
-export function exportTeamDashboardPdf(
-  title: string,
-  subtitle: string,
-  metrics: { totalUsers: number; completionRate: number; inProgressCount: number; overdueCount: number },
-  staffRows: StaffSummaryRow[]
-) {
-  const doc = createDashboardPdf(title, subtitle)
-  let y = pdfStartY(subtitle)
-
-  y = addMetricsSection(
-    doc,
-    [
-      { label: 'Team members', value: String(metrics.totalUsers) },
-      { label: 'Completion rate', value: `${metrics.completionRate}%` },
-      { label: 'In progress', value: String(metrics.inProgressCount) },
-      { label: 'Overdue', value: String(metrics.overdueCount) },
-    ],
-    y
-  )
-
-  y = addSectionHeading(doc, 'Team training', y)
-  addDataTable(
-    doc,
-    ['Name', 'Email', 'Role', 'Progress', 'Avg score', 'Status'],
-    staffRows.map((row) => [
-      row.userName,
-      row.userEmail ?? '—',
-      row.role,
-      `${row.completedCourses}/${row.totalCourses} (${row.completionRate}%)`,
-      scoreText(row.avgScore),
-      staffStatusLabel(row),
-    ]),
-    y
-  )
-
-  saveDashboardPdf(doc, `${title}-${new Date().toISOString().slice(0, 10)}`)
-}
-
 export function exportStaffDashboardPdf(user: Profile, summary: StaffSummaryRow, courseRows: StaffTrainingRow[]) {
   const doc = createDashboardPdf(
     `${user.full_name} — Training Report`,
@@ -316,39 +277,4 @@ export function exportStaffCoursePdf(
     doc,
     `${user.full_name}-${courseRow.courseTitle}-${new Date().toISOString().slice(0, 10)}`
   )
-}
-
-export function exportEmployeeDashboardPdf(
-  userName: string,
-  stats: { assigned: number; completed: number; avgScore: number },
-  assignments: Assignment[]
-) {
-  const doc = createDashboardPdf(`${userName} — My Training`, 'Personal training dashboard')
-  let y = pdfStartY('Personal training dashboard')
-
-  y = addMetricsSection(
-    doc,
-    [
-      { label: 'Assigned', value: String(stats.assigned) },
-      { label: 'Completed', value: String(stats.completed) },
-      { label: 'Average score', value: `${stats.avgScore}%` },
-    ],
-    y
-  )
-
-  y = addSectionHeading(doc, 'Training progress', y)
-  addDataTable(
-    doc,
-    ['Course', 'Due', 'Score', 'Attempts', 'Status'],
-    assignments.map((a) => [
-      a.course?.title ?? 'Course',
-      formatDate(a.due_date),
-      scoreText(resolveAssignmentScore(a)),
-      `${a.attempts_used ?? 0}/${a.course?.max_attempts ?? 3}`,
-      STATUS_LABELS[a.status] ?? a.status,
-    ]),
-    y
-  )
-
-  saveDashboardPdf(doc, `my-training-${new Date().toISOString().slice(0, 10)}`)
 }

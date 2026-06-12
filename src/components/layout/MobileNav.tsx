@@ -1,22 +1,22 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { BookOpen, GraduationCap, LayoutDashboard, User, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRole } from '@/hooks/useRole'
+import { isTrainingPlayerPath } from '@/lib/training-paths'
 
 export function MobileNav() {
+  const location = useLocation()
   const { role, isAdmin, isManager } = useRole()
+
+  if (isTrainingPlayerPath(location.pathname)) return null
 
   const items =
     role === 'employee'
-      ? [
-          { to: '/employee/dashboard', icon: LayoutDashboard, label: 'Home' },
-          { to: '/employee/training', icon: GraduationCap, label: 'Training' },
-        ]
+      ? [{ to: '/employee/training', icon: GraduationCap, label: 'Training' }]
       : isManager
         ? [
-            { to: '/manager/dashboard', icon: LayoutDashboard, label: 'Home' },
-            { to: '/manager/team', icon: Users, label: 'Team' },
             { to: '/manager/training', icon: GraduationCap, label: 'Training' },
+            { to: '/manager/team', icon: Users, label: 'Team' },
           ]
         : isAdmin
           ? [

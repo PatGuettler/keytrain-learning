@@ -200,7 +200,7 @@ export function SortingWorkshop({
             disabled={Object.keys(placements).length < config.cards.length}
             className="min-h-12 w-full sm:w-auto"
           >
-            Submit for grading
+            Submit answers
           </Button>
         </>
       )}
@@ -305,24 +305,9 @@ export function SortingWorkshop({
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-2">
-            {!passed && (
-              <Button
-                variant="outline"
-                className="min-h-12 flex-1"
-                onClick={() => {
-                  setSubmitted(false)
-                  setPlacements({})
-                  setSelectedCard(null)
-                }}
-              >
-                Try again
-              </Button>
-            )}
-            <Button className="min-h-12 flex-1" onClick={finishAndSave}>
-              {passed ? 'Continue' : 'Continue anyway (save score)'}
-            </Button>
-          </div>
+          <Button className="min-h-12 w-full sm:w-auto" onClick={finishAndSave}>
+            Continue
+          </Button>
         </div>
       )}
     </div>

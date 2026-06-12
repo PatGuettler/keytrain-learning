@@ -1,7 +1,8 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { chartTheme } from '@/lib/chart-theme'
 
-const COLORS = ['#0d9488', '#94a3b8']
+const COLORS = [chartTheme.primary, chartTheme.secondary]
 
 interface CompletionChartProps {
   completed: number
@@ -28,8 +29,8 @@ export function CompletionChart({ completed, remaining, title = 'Completion Rate
                 <Cell key={i} fill={COLORS[i % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip />
-            <Legend />
+            <Tooltip contentStyle={chartTheme.tooltip} />
+            <Legend wrapperStyle={chartTheme.legend} />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>

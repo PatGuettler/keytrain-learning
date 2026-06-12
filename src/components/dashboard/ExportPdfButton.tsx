@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FileDown, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useRole } from '@/hooks/useRole'
 
 export function ExportPdfButton({
   onExport,
@@ -11,7 +12,10 @@ export function ExportPdfButton({
   disabled?: boolean
   label?: string
 }) {
+  const { isAdmin } = useRole()
   const [exporting, setExporting] = useState(false)
+
+  if (!isAdmin) return null
 
   const handleClick = async () => {
     if (exporting || disabled) return

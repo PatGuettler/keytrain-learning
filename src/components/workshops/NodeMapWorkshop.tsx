@@ -46,7 +46,7 @@ export function NodeMapWorkshop({
     const correct = selected === node.question.correct_id
     setCompleted((c) => ({ ...c, [node.id]: correct ? 'correct' : 'wrong' }))
     setSelected(null)
-    if (correct) setActiveNode(null)
+    setActiveNode(null)
   }
 
   const finishAndSave = () => {
@@ -258,7 +258,7 @@ export function NodeMapWorkshop({
                     <button
                       key={opt.id}
                       type="button"
-                      disabled={showFeedback && completed[node.id] === 'correct'}
+                      disabled={completed[node.id] !== undefined}
                       onClick={() => setSelected(opt.id)}
                       className={cn(
                         'w-full text-left rounded-lg border px-4 py-3 text-sm min-h-[48px] transition-colors text-foreground',
@@ -280,8 +280,8 @@ export function NodeMapWorkshop({
               </div>
               {completed[node.id] === 'wrong' && (
                 <p className="text-sm text-muted-foreground mb-3 border-l-2 border-amber-500 pl-3">
-                  Correct classification: <strong>{correctLabel(node.id)}</strong>. You can retry
-                  or return to the map.
+                  Correct classification: <strong>{correctLabel(node.id)}</strong>. This response is
+                  final for this attempt.
                 </p>
               )}
               {completed[node.id] === 'correct' && (
@@ -293,25 +293,15 @@ export function NodeMapWorkshop({
                     Submit classification
                   </Button>
                 )}
-                {completed[node.id] === 'wrong' && (
+                {(completed[node.id] === 'correct' || completed[node.id] === 'wrong') && (
                   <Button
-                    onClick={() => {
-                      setCompleted((c) => {
-                        const next = { ...c }
-                        delete next[node.id]
-                        return next
-                      })
-                      setSelected(null)
-                    }}
                     variant="outline"
+                    onClick={() => setActiveNode(null)}
                     className="min-h-12 flex-1"
                   >
-                    Try again
+                    Back to map
                   </Button>
                 )}
-                <Button variant="outline" onClick={() => setActiveNode(null)} className="min-h-12 flex-1">
-                  Back to map
-                </Button>
               </div>
             </motion.div>
           </>
