@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
 import {
   fetchPublicationsForCourse,
-  publishCourseToOrg,
-  setCourseAvailability,
+  publishCourseToOrgs,
+  setCourseAvailabilityForOrgs,
   unpublishCourseEverywhere,
   unpublishCourseFromOrg,
 } from '@/services/course-publications.service'
@@ -22,6 +22,16 @@ function isActive(pub: CoursePublication): boolean {
   return true
 }
 
+function orgStatusLabel(
+  orgId: string,
+  activePublications: CoursePublication[],
+  unpublishedOrgs: Set<string>
+): string | null {
+  if (activePublications.some((p) => p.org_id === orgId)) return 'published'
+  if (unpublishedOrgs.has(orgId)) return 'previously unpublished'
+  return null
+}
+
 export function CoursePublishPanel({
   courseId,
   publishedBy,
@@ -30,7 +40,7 @@ export function CoursePublishPanel({
   publishedBy: string
 }) {
   const queryClient = useQueryClient()
-  const [orgId, setOrgId] = useState('')
+  const [selectedOrgIds, setSelectedOrgIds] = useState<Set<string>>(new Set())
   const [deadlineMode, setDeadlineMode] = useState<'none' | 'days'>('none')
   const [availableDays, setAvailableDays] = useState('14')
   const [loading, setLoading] = useState(false)
@@ -47,11 +57,18 @@ export function CoursePublishPanel({
   })
 
   const activePublications = publications.filter(isActive)
-  const selectedPub = publications.find((p) => p.org_id === orgId)
-  const activePub = selectedPub && isActive(selectedPub)
+  const activeOrgIds = useMemo(
+    () => new Set(activePublications.map((p) => p.org_id)),
+    [activePublications]
+  )
   const unpublishedOrgs = new Set(
     publications.filter((p) => p.unpublished_at).map((p) => p.org_id)
   )
+
+  const allSelected = hospitals.length > 0 && selectedOrgIds.size === hospitals.length
+  const selectedIds = useMemo(() => Array.from(selectedOrgIds), [selectedOrgIds])
+  const selectedToPublish = selectedIds.filter((id) => !activeOrgIds.has(id))
+  const selectedToUpdate = selectedIds.filter((id) => activeOrgIds.has(id))
 
   const invalidate = async () => {
     await Promise.all([
@@ -78,20 +95,36 @@ export function CoursePublishPanel({
     }
   }
 
-  const handlePublish = () => {
-    if (!orgId) {
-      setError('Select a hospital organization.')
+  const toggleOrg = (orgId: string, checked: boolean) => {
+    setSelectedOrgIds((prev) => {
+      const next = new Set(prev)
+      if (checked) next.add(orgId)
+      else next.delete(orgId)
+      return next
+    })
+    setError('')
+  }
+
+  const toggleAll = (checked: boolean) => {
+    setSelectedOrgIds(checked ? new Set(hospitals.map((h) => h.id)) : new Set())
+    setError('')
+  }
+
+  const availableDaysValue =
+    deadlineMode === 'days' ? Math.max(1, parseInt(availableDays, 10) || 1) : null
+
+  const handleApply = () => {
+    if (selectedIds.length === 0) {
+      setError('Select at least one organization.')
       return
     }
-    const days =
-      deadlineMode === 'days' ? Math.max(1, parseInt(availableDays, 10) || 1) : null
     void run(async () => {
-      await publishCourseToOrg({
-        courseId,
-        orgId,
-        publishedBy,
-        availableDays: days,
-      })
+      if (selectedToPublish.length > 0) {
+        await publishCourseToOrgs(courseId, selectedToPublish, publishedBy, availableDaysValue)
+      }
+      if (selectedToUpdate.length > 0) {
+        await setCourseAvailabilityForOrgs(courseId, selectedToUpdate, availableDaysValue)
+      }
     })
   }
 
@@ -116,18 +149,18 @@ export function CoursePublishPanel({
     })
   }
 
-  const handleSetDeadline = () => {
-    if (!orgId) return
-    const days =
-      deadlineMode === 'days' ? Math.max(1, parseInt(availableDays, 10) || 1) : null
-    void run(async () => {
-      if (activePub) {
-        await setCourseAvailability(courseId, orgId, days)
-      } else {
-        await publishCourseToOrg({ courseId, orgId, publishedBy, availableDays: days })
-      }
-    })
-  }
+  const actionLabel = (() => {
+    if (selectedToPublish.length > 0 && selectedToUpdate.length > 0) {
+      return `Publish & update ${selectedIds.length} organization${selectedIds.length === 1 ? '' : 's'}`
+    }
+    if (selectedToPublish.length > 0) {
+      return `Publish to ${selectedToPublish.length} organization${selectedToPublish.length === 1 ? '' : 's'}`
+    }
+    if (selectedToUpdate.length > 0) {
+      return `Update deadline for ${selectedToUpdate.length} organization${selectedToUpdate.length === 1 ? '' : 's'}`
+    }
+    return 'Apply to selected'
+  })()
 
   return (
     <Card>
@@ -135,7 +168,7 @@ export function CoursePublishPanel({
         <CardTitle className="text-base">Publish &amp; unpublish</CardTitle>
         <CardDescription>
           Publishing makes this course required for every manager and employee in the selected
-          hospital. Unpublishing removes it from their training catalog immediately — they cannot
+          hospitals. Unpublishing removes it from their training catalog immediately — they cannot
           start or continue it (completed records are kept).
         </CardDescription>
       </CardHeader>
@@ -190,50 +223,57 @@ export function CoursePublishPanel({
           </div>
         )}
 
-        <div className="space-y-2">
-          <Label htmlFor="publish-org">Publish to hospital</Label>
-          <select
-            id="publish-org"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={orgId}
-            onChange={(e) => {
-              setOrgId(e.target.value)
-              setError('')
-            }}
-          >
-            <option value="">Select organization…</option>
-            {hospitals.map((h) => (
-              <option key={h.id} value={h.id}>
-                {h.name}
-                {activePublications.some((p) => p.org_id === h.id)
-                  ? ' (published)'
-                  : unpublishedOrgs.has(h.id)
-                    ? ' (previously unpublished)'
-                    : ''}
-              </option>
-            ))}
-          </select>
+        <div className="space-y-3">
+          <Label>Publish to hospitals</Label>
+          <label className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm font-medium cursor-pointer">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-input"
+              checked={allSelected}
+              onChange={(e) => toggleAll(e.target.checked)}
+            />
+            All organizations
+          </label>
+          <ul className="max-h-56 space-y-1 overflow-y-auto rounded-lg border p-2">
+            {hospitals.map((h) => {
+              const status = orgStatusLabel(h.id, activePublications, unpublishedOrgs)
+              const checked = selectedOrgIds.has(h.id)
+              return (
+                <li key={h.id}>
+                  <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-accent/50">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 shrink-0 rounded border-input"
+                      checked={checked}
+                      onChange={(e) => toggleOrg(h.id, e.target.checked)}
+                    />
+                    <span className="min-w-0 flex-1 truncate">{h.name}</span>
+                    {status === 'published' && (
+                      <Badge variant="success" className="shrink-0 text-xs">
+                        Published
+                      </Badge>
+                    )}
+                    {status === 'previously unpublished' && (
+                      <Badge variant="secondary" className="shrink-0 text-xs">
+                        Unpublished
+                      </Badge>
+                    )}
+                  </label>
+                </li>
+              )
+            })}
+          </ul>
+          {selectedIds.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {selectedIds.length} selected
+              {selectedToPublish.length > 0 && selectedToUpdate.length > 0
+                ? ` · ${selectedToPublish.length} to publish, ${selectedToUpdate.length} to update`
+                : selectedToPublish.length > 0
+                  ? ` · ${selectedToPublish.length} not yet published`
+                  : ` · all already published (deadline update only)`}
+            </p>
+          )}
         </div>
-
-        {selectedPub && (
-          <div className="rounded-lg border bg-muted/30 p-3 text-sm space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Selected hospital</span>
-              {activePub ? (
-                <Badge variant="success">Published</Badge>
-              ) : selectedPub.unpublished_at ? (
-                <Badge variant="secondary">Unpublished</Badge>
-              ) : (
-                <Badge variant="secondary">Expired</Badge>
-              )}
-            </div>
-            {selectedPub.unpublished_at && (
-              <p className="text-muted-foreground">
-                Unpublished {formatDate(selectedPub.unpublished_at)}
-              </p>
-            )}
-          </div>
-        )}
 
         <div className="space-y-2">
           <Label>Availability deadline</Label>
@@ -271,16 +311,13 @@ export function CoursePublishPanel({
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <div className="flex flex-wrap gap-2">
-          {!activePub && (
-            <Button type="button" disabled={loading || !orgId} onClick={handlePublish}>
-              {loading ? 'Publishing…' : 'Publish to organization'}
-            </Button>
-          )}
-          {activePub && (
-            <Button type="button" variant="outline" disabled={loading || !orgId} onClick={handleSetDeadline}>
-              {loading ? 'Saving…' : 'Update deadline'}
-            </Button>
-          )}
+          <Button
+            type="button"
+            disabled={loading || selectedIds.length === 0}
+            onClick={handleApply}
+          >
+            {loading ? 'Applying…' : actionLabel}
+          </Button>
         </div>
       </CardContent>
     </Card>

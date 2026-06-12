@@ -1,12 +1,19 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchHospitalCourses } from '@/services/courses.service'
-import { fetchPublicationsForCourse, unpublishCourseEverywhere } from '@/services/course-publications.service'
+import {
+  fetchPublicationsForCourse,
+  publishCourseToOrgs,
+  unpublishCourseEverywhere,
+} from '@/services/course-publications.service'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
+import { PublishToAllOrgsDialog } from '@/components/admin/PublishToAllOrgsDialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
 import type { CoursePublication } from '@/types/course.types'
 
 function isActive(pub: CoursePublication): boolean {
@@ -15,8 +22,17 @@ function isActive(pub: CoursePublication): boolean {
   return true
 }
 
-function CoursePublicationSummary({ courseId }: { courseId: string }) {
+function CourseRowActions({
+  courseId,
+  courseTitle,
+}: {
+  courseId: string
+  courseTitle: string
+}) {
+  const userId = useAuthStore((s) => s.userId)!
   const queryClient = useQueryClient()
+  const [publishOpen, setPublishOpen] = useState(false)
+
   const { data: hospitals = [] } = useQuery({
     queryKey: ['organizations'],
     queryFn: fetchHospitalOrganizations,
@@ -27,23 +43,28 @@ function CoursePublicationSummary({ courseId }: { courseId: string }) {
   })
 
   const active = publications.filter(isActive)
+  const activeOrgIds = new Set(active.map((p) => p.org_id))
+  const unpublishedOrgIds = hospitals.filter((h) => !activeOrgIds.has(h.id)).map((h) => h.id)
+  const showPublishAll = hospitals.length > 0 && unpublishedOrgIds.length > 0
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ['course-publications', courseId] })
+    void queryClient.invalidateQueries({ queryKey: ['hospital-courses'] })
+    void queryClient.invalidateQueries({ queryKey: ['assignments'] })
+  }
 
   const unpublishMutation = useMutation({
     mutationFn: () => unpublishCourseEverywhere(courseId),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['course-publications', courseId] })
-      void queryClient.invalidateQueries({ queryKey: ['hospital-courses'] })
-      void queryClient.invalidateQueries({ queryKey: ['assignments'] })
-    },
+    onSuccess: invalidate,
   })
 
-  if (active.length === 0) {
-    return (
-      <Badge variant="secondary" className="shrink-0">
-        Not published
-      </Badge>
-    )
-  }
+  const publishAllMutation = useMutation({
+    mutationFn: () => publishCourseToOrgs(courseId, unpublishedOrgIds, userId, null),
+    onSuccess: () => {
+      invalidate()
+      setPublishOpen(false)
+    },
+  })
 
   const handleUnpublish = () => {
     const names = active
@@ -57,21 +78,54 @@ function CoursePublicationSummary({ courseId }: { courseId: string }) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Badge variant="success" className="shrink-0">
-        Live in {active.length} hospital{active.length === 1 ? '' : 's'}
-      </Badge>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="text-destructive border-destructive/40 hover:bg-destructive/10"
-        disabled={unpublishMutation.isPending}
-        onClick={handleUnpublish}
-      >
-        {unpublishMutation.isPending ? 'Unpublishing…' : 'Unpublish'}
-      </Button>
-    </div>
+    <>
+      <div className="flex flex-wrap items-center gap-2">
+        {active.length === 0 ? (
+          <Badge variant="secondary" className="shrink-0">
+            Not published
+          </Badge>
+        ) : (
+          <>
+            <Badge variant="success" className="shrink-0">
+              Live in {active.length} hospital{active.length === 1 ? '' : 's'}
+            </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-destructive border-destructive/40 hover:bg-destructive/10"
+              disabled={unpublishMutation.isPending}
+              onClick={handleUnpublish}
+            >
+              {unpublishMutation.isPending ? 'Unpublishing…' : 'Unpublish'}
+            </Button>
+          </>
+        )}
+        {showPublishAll && (
+          <Button
+            type="button"
+            size="sm"
+            disabled={publishAllMutation.isPending}
+            onClick={() => setPublishOpen(true)}
+          >
+            Publish
+          </Button>
+        )}
+        <Button variant="outline" size="sm" asChild>
+          <Link to={`/admin/courses/${courseId}/edit`}>Edit &amp; publish</Link>
+        </Button>
+      </div>
+
+      <PublishToAllOrgsDialog
+        open={publishOpen}
+        onOpenChange={setPublishOpen}
+        courseTitle={courseTitle}
+        hospitalCount={unpublishedOrgIds.length}
+        alreadyPublishedCount={active.length}
+        publishing={publishAllMutation.isPending}
+        onConfirm={() => publishAllMutation.mutate()}
+      />
+    </>
   )
 }
 
@@ -87,8 +141,7 @@ export function CourseManagementPage() {
         <div>
           <h2 className="text-2xl font-bold">Course Management</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Unpublish removes a course from staff training immediately. Use Edit for full publish
-            settings per hospital.
+            Use Publish for a quick publish to all hospitals, or Edit for per-hospital settings.
           </p>
         </div>
         <Button asChild>
@@ -111,12 +164,7 @@ export function CourseManagementPage() {
                   <CardTitle className="text-lg">{c.title}</CardTitle>
                   <p className="text-sm text-muted-foreground">{c.estimated_minutes} min</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <CoursePublicationSummary courseId={c.id} />
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to={`/admin/courses/${c.id}/edit`}>Edit &amp; publish</Link>
-                  </Button>
-                </div>
+                <CourseRowActions courseId={c.id} courseTitle={c.title} />
               </CardHeader>
               <CardContent className="pt-0">
                 <p className="text-sm text-muted-foreground line-clamp-2">{c.description}</p>

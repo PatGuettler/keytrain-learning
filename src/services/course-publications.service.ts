@@ -17,6 +17,31 @@ export async function publishCourseToOrg(payload: {
   return backend.courses.publishCourseToOrg(payload)
 }
 
+export async function publishCourseToOrgs(
+  courseId: string,
+  orgIds: string[],
+  publishedBy: string,
+  availableDays?: number | null
+) {
+  const results = []
+  for (const orgId of orgIds) {
+    results.push(await publishCourseToOrg({ courseId, orgId, publishedBy, availableDays }))
+  }
+  return results
+}
+
+export async function setCourseAvailabilityForOrgs(
+  courseId: string,
+  orgIds: string[],
+  availableDays: number | null
+) {
+  const results = []
+  for (const orgId of orgIds) {
+    results.push(await setCourseAvailability(courseId, orgId, availableDays))
+  }
+  return results
+}
+
 export async function unpublishCourseFromOrg(courseId: string, orgId: string) {
   return backend.courses.unpublishCourseFromOrg(courseId, orgId)
 }
