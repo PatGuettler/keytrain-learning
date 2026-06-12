@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import type { LessonContent, LessonSlide } from '@/types/course.types'
 import { cn } from '@/lib/utils'
 import { LessonIllustration, resolveIllustrationKey } from './lesson-illustrations'
+import { YouTubePlayer } from './YouTubePlayer'
 
 export function LessonRenderer({
   moduleId,
@@ -19,17 +20,30 @@ export function LessonRenderer({
     [content.slides]
   )
   const [index, setIndex] = useState(0)
+  const [videoWatched, setVideoWatched] = useState(false)
 
   useEffect(() => {
     setIndex(0)
+    setVideoWatched(false)
   }, [moduleId])
+
+  useEffect(() => {
+    setVideoWatched(false)
+  }, [index])
 
   const safeIndex = slides.length > 0 ? Math.min(index, slides.length - 1) : 0
   const slide: LessonSlide | undefined = slides[safeIndex]
   const layout = slide?.layout ?? 'image-right'
   const isLast = slides.length === 0 || safeIndex >= slides.length - 1
+  const requiresVideo = Boolean(slide?.youtube?.videoId)
+  const canAdvance = !requiresVideo || videoWatched
+
+  const handleVideoWatched = useCallback(() => {
+    setVideoWatched(true)
+  }, [])
 
   const next = () => {
+    if (!canAdvance) return
     if (slides.length === 0) {
       onComplete()
       return
@@ -75,13 +89,14 @@ export function LessonRenderer({
               layout === 'full-bleed' && 'bg-primary/5'
             )}
           >
-            <SlideView slide={slide} />
+            <SlideView slide={slide} onVideoWatched={handleVideoWatched} />
           </motion.div>
         </AnimatePresence>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-sm text-muted-foreground pt-1">
         <span className="text-center sm:text-left">
           Slide {safeIndex + 1} of {slides.length}
+          {requiresVideo && !videoWatched && ' · Watch the full video to continue'}
         </span>
         <div className="flex gap-2">
           <Button
@@ -93,7 +108,11 @@ export function LessonRenderer({
           >
             Previous
           </Button>
-          <Button onClick={next} className="min-h-11 flex-1 sm:flex-none sm:min-w-[9rem]">
+          <Button
+            onClick={next}
+            disabled={!canAdvance}
+            className="min-h-11 flex-1 sm:flex-none sm:min-w-[9rem]"
+          >
             {isLast ? 'Complete lesson' : 'Next slide'}
           </Button>
         </div>
@@ -102,7 +121,13 @@ export function LessonRenderer({
   )
 }
 
-function SlideView({ slide }: { slide: LessonSlide }) {
+function SlideView({
+  slide,
+  onVideoWatched,
+}: {
+  slide: LessonSlide
+  onVideoWatched: () => void
+}) {
   const illustration = slide.illustration
   const imageUrl = illustration?.url?.trim()
   const illustrationKey = resolveIllustrationKey(illustration?.key, slide.heading)
@@ -136,6 +161,9 @@ function SlideView({ slide }: { slide: LessonSlide }) {
   if (layout === 'full-bleed') {
     return (
       <div className="space-y-4 sm:space-y-6 min-w-0">
+        {slide.youtube?.videoId && (
+          <YouTubePlayer videoId={slide.youtube.videoId} onWatched={onVideoWatched} />
+        )}
         {showVisual && visualBlock}
         <div className="min-w-0">
           <h2 className={heading}>{slide.heading}</h2>
@@ -148,6 +176,9 @@ function SlideView({ slide }: { slide: LessonSlide }) {
   if (layout === 'image-top') {
     return (
       <div className="space-y-4 sm:space-y-6 min-w-0">
+        {slide.youtube?.videoId && (
+          <YouTubePlayer videoId={slide.youtube.videoId} onWatched={onVideoWatched} />
+        )}
         {showVisual && visualBlock}
         <div className="min-w-0">
           <h2 className={heading}>{slide.heading}</h2>
@@ -165,9 +196,14 @@ function SlideView({ slide }: { slide: LessonSlide }) {
         showVisual && layout === 'image-left' && 'md:grid-cols-2 md:[direction:rtl] md:*:[direction:ltr]'
       )}
     >
-      <div className="min-w-0 order-2 md:order-none">
-        <h2 className={heading}>{slide.heading}</h2>
-        <p className={prose}>{slide.body}</p>
+      <div className="min-w-0 order-2 md:order-none space-y-4">
+        {slide.youtube?.videoId && (
+          <YouTubePlayer videoId={slide.youtube.videoId} onWatched={onVideoWatched} />
+        )}
+        <div>
+          <h2 className={heading}>{slide.heading}</h2>
+          <p className={prose}>{slide.body}</p>
+        </div>
       </div>
       {showVisual && <div className="min-w-0 order-1 md:order-none">{visualBlock}</div>}
     </div>

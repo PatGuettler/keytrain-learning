@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LESSON_ILLUSTRATION_KEYS } from '@/components/training/lesson-illustrations'
 import { LESSON_LAYOUTS, newSlideId } from '@/lib/module-defaults'
+import { parseYouTubeVideoId } from '@/lib/youtube'
 import type { LessonContent, LessonSlide } from '@/types/course.types'
 
 const selectClass =
@@ -31,6 +32,17 @@ export function LessonEditor({
     updateSlide(index, {
       illustration: { alt: slide?.heading ?? 'Illustration', ...slide?.illustration, ...patch },
     })
+  }
+
+  const updateYouTubeUrl = (index: number, rawUrl: string) => {
+    const videoId = parseYouTubeVideoId(rawUrl)
+    if (!rawUrl.trim()) {
+      updateSlide(index, { youtube: undefined })
+      return
+    }
+    if (videoId) {
+      updateSlide(index, { youtube: { videoId } })
+    }
   }
 
   const addSlide = () => {
@@ -177,6 +189,18 @@ export function LessonEditor({
                 onChange={(e) => updateIllustration(index, { caption: e.target.value })}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>YouTube video URL (optional)</Label>
+            <Input
+              value={slide.youtube?.videoId ?? ''}
+              onChange={(e) => updateYouTubeUrl(index, e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=…"
+            />
+            <p className="text-xs text-muted-foreground">
+              When set, learners must watch the full video before advancing past this slide.
+            </p>
           </div>
 
           <div className="space-y-2">

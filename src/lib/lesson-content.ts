@@ -25,6 +25,14 @@ function normalizeSlide(raw: unknown, index: number): LessonSlide | null {
   const body = typeof s.body === 'string' ? s.body : ''
   const layout = s.layout as LessonSlide['layout'] | undefined
   const validLayouts = new Set(['image-right', 'image-left', 'image-top', 'full-bleed'])
+  const rawYoutube = s.youtube
+  let youtube: LessonSlide['youtube'] | undefined
+  if (rawYoutube && typeof rawYoutube === 'object') {
+    const videoId = (rawYoutube as { videoId?: string }).videoId
+    if (typeof videoId === 'string' && videoId.length > 0) {
+      youtube = { videoId }
+    }
+  }
   return {
     id: typeof s.id === 'string' ? s.id : `slide_${index}`,
     heading,
@@ -34,6 +42,7 @@ function normalizeSlide(raw: unknown, index: number): LessonSlide | null {
       s.illustration && typeof s.illustration === 'object'
         ? (s.illustration as LessonSlide['illustration'])
         : undefined,
+    youtube,
   }
 }
 

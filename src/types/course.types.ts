@@ -122,6 +122,10 @@ export interface LessonSlide {
     alt: string
     caption?: string
   }
+  /** YouTube video to embed; learner must watch before advancing. */
+  youtube?: {
+    videoId: string
+  }
 }
 
 export interface LessonContent {
