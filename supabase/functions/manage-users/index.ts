@@ -283,6 +283,7 @@ async function invitePlatformAdmin(
     email: normalizedEmail,
     role: 'admin',
     is_active: true,
+    invitation_pending: sendInvites && !existingId,
   })
 
   if (insertError) {
@@ -389,6 +390,8 @@ async function inviteOneUser(
     }
   }
 
+  const invitedNewUser = sendInvites && !existingId
+
   const { error: insertError } = await adminClient.from('profiles').insert({
     id: userId,
     org_id: orgId,
@@ -397,6 +400,7 @@ async function inviteOneUser(
     email: row.email,
     role: row.role,
     is_active: true,
+    invitation_pending: invitedNewUser,
   })
 
   if (insertError) {
@@ -407,7 +411,7 @@ async function inviteOneUser(
   emailToId.set(row.email, userId)
   return {
     email: row.email,
-    status: sendInvites && !existingId ? 'invited' : 'created',
+    status: invitedNewUser ? 'invited' : 'created',
     message: existingId
       ? 'Linked existing auth account to organization.'
       : sendInvites

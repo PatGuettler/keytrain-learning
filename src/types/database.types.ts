@@ -23,6 +23,7 @@ export interface Database {
           role: UserRole
           avatar_url: string | null
           is_active: boolean
+          invitation_pending: boolean
           created_at: string
           updated_at: string
         }
@@ -35,6 +36,7 @@ export interface Database {
           role?: UserRole
           avatar_url?: string | null
           is_active?: boolean
+          invitation_pending?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -46,6 +48,7 @@ export interface Database {
           role: UserRole
           avatar_url: string | null
           is_active: boolean
+          invitation_pending: boolean
         }>
         Relationships: []
       }

@@ -1,5 +1,6 @@
 import { backend } from '@/backend'
 import { getResetPasswordRedirectUrl } from '@/lib/backend-config'
+import { updateProfile } from '@/services/users.service'
 import type { Profile } from '@/types/user.types'
 
 export async function signIn(email: string, password: string) {
@@ -20,6 +21,13 @@ export async function resetPassword(email: string) {
 
 export async function updatePassword(password: string) {
   return backend.auth.updatePassword(password)
+}
+
+export async function completeInvitationRegistration() {
+  const session = (await getSession()) as { user?: { id: string } } | null
+  const userId = session?.user?.id
+  if (!userId) throw new Error('Not signed in.')
+  await updateProfile(userId, { invitation_pending: false })
 }
 
 export async function getSession() {

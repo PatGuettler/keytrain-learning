@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { isBackendReady } from '@/backend'
 import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
-import { getSession, updatePassword } from '@/services/auth.service'
+import { completeInvitationRegistration, getSession, updatePassword } from '@/services/auth.service'
 
 function parseHashError(): string | null {
   const hash = window.location.hash.replace(/^#/, '')
@@ -78,6 +78,7 @@ export function AcceptInvitePage() {
     setSaving(true)
     try {
       await updatePassword(password)
+      await completeInvitationRegistration()
       navigate('/login', {
         replace: true,
         state: { message: 'Account ready. Sign in with your email and new password.' },

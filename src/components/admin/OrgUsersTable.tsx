@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DeleteOrgUserDialog } from '@/components/admin/DeleteOrgUserDialog'
 import { EditOrgUserDialog } from '@/components/admin/EditOrgUserDialog'
+import { getProfileStatusBadge } from '@/lib/user-status'
 import type { Profile } from '@/types/user.types'
 
 function managerName(managers: Profile[], managerId: string | null): string {
@@ -59,9 +60,10 @@ export function OrgUsersTable({
                   {u.role === 'employee' ? managerName(managers, u.manager_id) : '—'}
                 </td>
                 <td className="p-3 pr-4">
-                  <Badge variant={u.is_active ? 'success' : 'secondary'}>
-                    {u.is_active ? 'Active' : 'Inactive'}
-                  </Badge>
+                  {(() => {
+                    const status = getProfileStatusBadge(u)
+                    return <Badge variant={status.variant}>{status.label}</Badge>
+                  })()}
                 </td>
                 <td className="p-3">
                   <div className="flex flex-wrap gap-2">

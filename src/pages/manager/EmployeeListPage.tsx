@@ -3,6 +3,7 @@ import { fetchProfiles } from '@/services/users.service'
 import { useAuthStore } from '@/store/authStore'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { getProfileStatusBadge } from '@/lib/user-status'
 import { PageHeader } from '@/components/layout/PageHeader'
 
 export function EmployeeListPage() {
@@ -32,9 +33,14 @@ export function EmployeeListPage() {
                   <p className="font-semibold truncate">{emp.full_name}</p>
                   <p className="text-sm text-muted-foreground truncate">{emp.email ?? 'No email'}</p>
                 </div>
-                <Badge variant={emp.is_active ? 'success' : 'secondary'} className="shrink-0 ml-2">
-                  {emp.is_active ? 'Active' : 'Inactive'}
-                </Badge>
+                {(() => {
+                  const status = getProfileStatusBadge(emp)
+                  return (
+                    <Badge variant={status.variant} className="shrink-0 ml-2">
+                      {status.label}
+                    </Badge>
+                  )
+                })()}
               </CardContent>
             </Card>
           ))}

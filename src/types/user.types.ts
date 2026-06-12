@@ -9,12 +9,13 @@ export interface Profile {
   role: UserRole
   avatar_url: string | null
   is_active: boolean
+  invitation_pending: boolean
   created_at: string
   updated_at: string
 }
 
 export type AdminProfileUpdate = Partial<
-  Pick<Profile, 'full_name' | 'avatar_url' | 'role' | 'manager_id' | 'is_active'>
+  Pick<Profile, 'full_name' | 'avatar_url' | 'role' | 'manager_id' | 'is_active' | 'invitation_pending'>
 >
 
 export interface Organization {
