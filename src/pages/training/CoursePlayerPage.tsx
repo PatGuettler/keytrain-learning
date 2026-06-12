@@ -87,6 +87,15 @@ export function CoursePlayerPage({
   }, [])
 
   useEffect(() => {
+    if (!assignment?.id || !isLocked) return
+    const intervalId = window.setInterval(() => {
+      void queryClient.invalidateQueries({ queryKey: ['assignments', userId] })
+      void queryClient.invalidateQueries({ queryKey: ['unlock-request', assignment.id, userId] })
+    }, 5000)
+    return () => window.clearInterval(intervalId)
+  }, [assignment?.id, isLocked, userId, queryClient])
+
+  useEffect(() => {
     if (!course || assignment || !userId) return
     void syncRequiredAssignmentsForUser(userId).then(() => {
       void queryClient.invalidateQueries({ queryKey: ['assignments', userId] })

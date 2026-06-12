@@ -16,6 +16,10 @@ export function filterAssignmentsForReporting(
 
 /** Best-effort attempt count (stored value, session history, or legacy completion). */
 export function resolveAttemptsUsed(assignment: Assignment): number {
+  if (assignment.force_retake) {
+    return assignment.attempts_used ?? 0
+  }
+
   const stored = assignment.attempts_used ?? 0
   const sessions = assignment.training_sessions ?? []
   const completedSessions = sessions.filter((s) => s.completed_at != null)

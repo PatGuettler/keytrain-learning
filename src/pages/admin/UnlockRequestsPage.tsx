@@ -13,6 +13,7 @@ export function UnlockRequestsPage() {
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<'pending' | 'approved' | 'denied' | 'all'>('pending')
   const [actingId, setActingId] = useState<string | null>(null)
+  const [actionError, setActionError] = useState('')
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['unlock-requests', filter],
@@ -21,10 +22,13 @@ export function UnlockRequestsPage() {
 
   const handleResolve = async (requestId: string, approved: boolean) => {
     setActingId(requestId)
+    setActionError('')
     try {
       await resolveUnlockRequest(requestId, approved, adminId)
       await queryClient.invalidateQueries({ queryKey: ['unlock-requests'] })
       await queryClient.invalidateQueries({ queryKey: ['assignments'] })
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Could not resolve unlock request.')
     } finally {
       setActingId(null)
     }
@@ -49,6 +53,8 @@ export function UnlockRequestsPage() {
           </Button>
         ))}
       </div>
+
+      {actionError && <p className="text-sm text-destructive">{actionError}</p>}
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading requests…</p>

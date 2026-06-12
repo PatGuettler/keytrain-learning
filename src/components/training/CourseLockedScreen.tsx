@@ -67,10 +67,15 @@ export function CourseLockedScreen({
           </p>
         </div>
 
-        {sent ? (
-          <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
-            Unlock request sent. You will be notified when an admin reviews it.
-          </p>
+          {sent ? (
+          <div className="space-y-2">
+            <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+              Unlock request sent. You will be notified when an admin reviews it.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              This page refreshes automatically once your course is unlocked.
+            </p>
+          </div>
         ) : (
           <div className="w-full space-y-3 text-left">
             <div className="space-y-2">

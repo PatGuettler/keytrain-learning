@@ -529,6 +529,21 @@ export function createSupabaseBackend(): Backend {
         return data as CourseUnlockRequest | null
       },
       async resolveUnlockRequest(requestId, approved, adminId) {
+        const { error: rpcError } = await supabase.rpc('approve_course_unlock', {
+          p_request_id: requestId,
+          p_admin_id: adminId,
+          p_approved: approved,
+        })
+
+        if (!rpcError) return
+
+        const rpcMissing =
+          rpcError.code === 'PGRST202' ||
+          rpcError.code === '42883' ||
+          rpcError.message?.includes('approve_course_unlock')
+
+        if (!rpcMissing) throw rpcError
+
         const { data: request, error: fetchError } = await supabase
           .from('course_unlock_requests')
           .select('assignment_id, status')
