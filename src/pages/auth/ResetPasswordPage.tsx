@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { isBackendReady } from '@/backend'
 import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
-import { getSession, updatePassword } from '@/services/auth.service'
+import { useRecoveryAuthSession } from '@/hooks/useRecoveryAuthSession'
+import { signOut, updatePassword } from '@/services/auth.service'
 import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, passwordLengthError } from '@/lib/password'
 
 function parseHashError(): string | null {
@@ -26,42 +27,10 @@ export function ResetPasswordPage() {
   const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [ready, setReady] = useState(false)
-  const [checking, setChecking] = useState(true)
-  const [linkError, setLinkError] = useState<string | null>(null)
+  const [linkError, setLinkError] = useState<string | null>(() => parseHashError())
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    const hashError = parseHashError()
-    if (hashError) {
-      setLinkError(hashError)
-      setChecking(false)
-      return
-    }
-
-    if (!isBackendReady()) {
-      setChecking(false)
-      return
-    }
-
-    let cancelled = false
-
-    const checkSession = async () => {
-      try {
-        const session = await getSession()
-        if (!cancelled && session) setReady(true)
-      } finally {
-        if (!cancelled) setChecking(false)
-      }
-    }
-
-    void checkSession()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const { ready, checking } = useRecoveryAuthSession()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -79,6 +48,7 @@ export function ResetPasswordPage() {
     setSaving(true)
     try {
       await updatePassword(password)
+      await signOut()
       navigate('/login', {
         replace: true,
         state: { message: 'Password updated. Sign in with your new password.' },
