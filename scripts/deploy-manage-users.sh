@@ -49,7 +49,7 @@ else
   SUPABASE_CMD=(npx --yes supabase@latest)
 fi
 
-INVITE_URL="${INVITE_REDIRECT_URL:-https://patguettler.github.io/guardian-md/login}"
+INVITE_URL="${INVITE_REDIRECT_URL:-https://patguettler.github.io/guardian-md/accept-invite}"
 
 echo "Setting INVITE_REDIRECT_URL=$INVITE_URL"
 "${SUPABASE_CMD[@]}" secrets set "INVITE_REDIRECT_URL=$INVITE_URL" --project-ref "$PROJECT_REF"

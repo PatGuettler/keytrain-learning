@@ -1,4 +1,4 @@
-import { getPublicAppUrl } from '@/lib/backend-config'
+import { getInviteRedirectUrl } from '@/lib/backend-config'
 import { EDGE_FUNCTION_DEPLOY_HINT, isEdgeFunctionUnavailable } from '@/lib/edge-functions'
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
 import { updateProfile } from '@/services/users.service'
@@ -34,7 +34,10 @@ async function invokeManageUsers<T>(body: Record<string, unknown>): Promise<T> {
   const anonKey = getSupabaseAnonKey()
   if (!supabase || !baseUrl || !anonKey) throw new Error('Supabase is not configured.')
 
-  const payload = { ...body, redirect_to: `${getPublicAppUrl()}/login` }
+  const inviteActions = new Set(['invite_one', 'import_csv', 'invite_platform_admin'])
+  const payload = inviteActions.has(String(body.action))
+    ? { ...body, redirect_to: getInviteRedirectUrl() }
+    : { ...body }
 
   const {
     data: { session },

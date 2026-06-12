@@ -6,6 +6,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
+import { AcceptInvitePage } from '@/pages/auth/AcceptInvitePage'
 import { AdminDashboard } from '@/pages/dashboard/AdminDashboard'
 import { HospitalDashboardPage } from '@/pages/dashboard/HospitalDashboardPage'
 import { AdminOrgCourseDetailPage } from '@/pages/dashboard/AdminOrgCourseDetailPage'
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/accept-invite" element={<AcceptInvitePage />} />
           <Route path="/" element={<HomeRedirect />} />
 
           <Route element={<AuthGuard><AppShell /></AuthGuard>}>

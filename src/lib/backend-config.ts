@@ -21,3 +21,7 @@ export function getPublicAppUrl(): string {
 export function getResetPasswordRedirectUrl(): string {
   return `${getPublicAppUrl()}/reset-password`
 }
+
+export function getInviteRedirectUrl(): string {
+  return `${getPublicAppUrl()}/accept-invite`
+}
