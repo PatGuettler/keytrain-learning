@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { TrainingNeed } from '@/lib/dashboard-stats'
 
@@ -27,6 +27,9 @@ export function OrgTrainingNeedsPanel({
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           Training needs
         </CardTitle>
+        <CardDescription>
+          Click a module to view staff scores and mistakes — course editing is only in Course Management.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {needs.length === 0 ? (
@@ -56,7 +59,7 @@ export function OrgTrainingNeedsPanel({
                       </Badge>
                       <Badge variant="outline">{need.avgScore}% avg</Badge>
                       <Badge variant="secondary">{need.attemptCount} attempts</Badge>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
                   <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
@@ -64,7 +67,7 @@ export function OrgTrainingNeedsPanel({
                       <li key={issue}>{issue}</li>
                     ))}
                   </ul>
-                  <p className="text-xs text-primary sm:hidden">View course details →</p>
+                  <p className="text-xs text-primary">View training data →</p>
                 </button>
               </li>
             ))}
