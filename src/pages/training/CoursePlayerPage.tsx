@@ -64,7 +64,6 @@ export function CoursePlayerPage({
   const [outcome, setOutcome] = useState<FinishOutcome | null>(null)
   const [attemptInfo, setAttemptInfo] = useState<CourseAttemptResult | null>(null)
   const [courseScore, setCourseScore] = useState<number | null>(null)
-  const [sessionKey, setSessionKey] = useState(0)
   const [elapsed, setElapsed] = useState(0)
   const [finishError, setFinishError] = useState('')
   const [finishing, setFinishing] = useState(false)
@@ -78,8 +77,7 @@ export function CoursePlayerPage({
     assignment?.id ?? '',
     userId,
     courseId!,
-    canStartSession && !finished,
-    sessionKey
+    canStartSession && !finished
   )
 
   useEffect(() => {
