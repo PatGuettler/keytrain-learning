@@ -8,7 +8,7 @@ import { isBackendReady } from '@/backend'
 import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
 import { useRecoveryAuthSession } from '@/hooks/useRecoveryAuthSession'
 import { signOut, updatePassword } from '@/services/auth.service'
-import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, passwordLengthError } from '@/lib/password'
+import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, PASSWORD_CRITERIA_HINT, passwordLengthError } from '@/lib/password'
 
 function parseHashError(): string | null {
   const hash = window.location.hash.replace(/^#/, '')
@@ -31,6 +31,8 @@ export function ResetPasswordPage() {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const { ready, checking } = useRecoveryAuthSession()
+
+  const passwordTooShort = password.length > 0 && !isPasswordLongEnough(password)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -109,6 +111,9 @@ export function ResetPasswordPage() {
                   required
                   autoComplete="new-password"
                 />
+                {passwordTooShort && (
+                  <p className="text-sm text-amber-600 dark:text-amber-500">{PASSWORD_CRITERIA_HINT}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm password</Label>

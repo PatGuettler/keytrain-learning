@@ -1,6 +1,6 @@
 import { backend } from '@/backend'
 import { getResetPasswordRedirectUrl } from '@/lib/backend-config'
-import { ACCOUNT_LOCKED_MESSAGE, INVALID_LOGIN_MESSAGE } from '@/lib/password'
+import { ACCOUNT_LOCKED_MESSAGE, INVALID_LOGIN_MESSAGE, isPasswordLongEnough } from '@/lib/password'
 import { updateProfile } from '@/services/users.service'
 import type { Profile } from '@/types/user.types'
 
@@ -27,7 +27,12 @@ export async function resetPassword(email: string) {
 }
 
 export async function updatePassword(password: string) {
-  return backend.auth.updatePassword(password)
+  await backend.auth.updatePassword(password)
+  const session = (await getSession()) as { user?: { id: string } } | null
+  const userId = session?.user?.id
+  if (userId && isPasswordLongEnough(password)) {
+    await updateProfile(userId, { password_upgrade_required: false })
+  }
 }
 
 export async function completeInvitationRegistration() {

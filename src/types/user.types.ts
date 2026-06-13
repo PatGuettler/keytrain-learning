@@ -10,6 +10,7 @@ export interface Profile {
   avatar_url: string | null
   is_active: boolean
   invitation_pending: boolean
+  password_upgrade_required: boolean
   failed_login_attempts: number
   login_locked_at: string | null
   last_login_at: string | null
@@ -26,6 +27,7 @@ export type AdminProfileUpdate = Partial<
     | 'manager_id'
     | 'is_active'
     | 'invitation_pending'
+    | 'password_upgrade_required'
     | 'failed_login_attempts'
     | 'login_locked_at'
   >

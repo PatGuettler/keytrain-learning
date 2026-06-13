@@ -17,3 +17,9 @@ export const ROLE_DASHBOARD: Record<string, string> = {
   manager: '/manager/training',
   employee: '/employee/training',
 }
+
+export const ROLE_PROFILE: Record<string, string> = {
+  admin: '/admin/profile',
+  manager: '/manager/profile',
+  employee: '/employee/profile',
+}

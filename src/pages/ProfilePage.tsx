@@ -53,7 +53,7 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-5 sm:space-y-6 max-w-2xl">
-      <PageHeader title="My profile" description="Your account details and help contact." />
+      <PageHeader title="My profile" description="Your account details and contact form." />
 
       <Card>
         <CardHeader>
@@ -82,7 +82,7 @@ export function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Help & contact</CardTitle>
+          <CardTitle className="text-base">Contact</CardTitle>
           <CardDescription>
             Report bugs, request features, or ask questions. Your profile details are included automatically.
           </CardDescription>

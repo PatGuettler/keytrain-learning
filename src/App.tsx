@@ -1,12 +1,14 @@
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthGuard } from '@/guards/AuthGuard'
+import { PasswordPolicyGuard } from '@/guards/PasswordPolicyGuard'
 import { RoleGuard } from '@/guards/RoleGuard'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { AcceptInvitePage } from '@/pages/auth/AcceptInvitePage'
+import { UpdatePasswordRequiredPage } from '@/pages/auth/UpdatePasswordRequiredPage'
 import { AdminDashboard } from '@/pages/dashboard/AdminDashboard'
 import { HospitalDashboardPage } from '@/pages/dashboard/HospitalDashboardPage'
 import { AdminOrgCourseDetailPage } from '@/pages/dashboard/AdminOrgCourseDetailPage'
@@ -53,7 +55,9 @@ export default function App() {
           <Route path="/accept-invite" element={<AcceptInvitePage />} />
           <Route path="/" element={<HomeRedirect />} />
 
-          <Route element={<AuthGuard><AppShell /></AuthGuard>}>
+          <Route element={<AuthGuard><Outlet /></AuthGuard>}>
+            <Route path="/update-password-required" element={<UpdatePasswordRequiredPage />} />
+            <Route element={<PasswordPolicyGuard><AppShell /></PasswordPolicyGuard>}>
             <Route
               path="/admin/dashboard"
               element={<RoleGuard roles={['admin']}><AdminDashboard /></RoleGuard>}
@@ -155,6 +159,7 @@ export default function App() {
             <Route path="/employee/profile" element={<RoleGuard roles={['employee', 'manager', 'admin']}><ProfilePage /></RoleGuard>} />
             <Route path="/manager/profile" element={<RoleGuard roles={['manager']}><ProfilePage /></RoleGuard>} />
             <Route path="/admin/profile" element={<RoleGuard roles={['admin']}><ProfilePage /></RoleGuard>} />
+            </Route>
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -13,7 +13,8 @@ import { APP_NAME, ROLE_DASHBOARD } from '@/lib/constants'
 import { Link } from 'react-router-dom'
 import { isBackendReady } from '@/backend'
 import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
-import { ACCOUNT_LOCKED_MESSAGE, INVALID_LOGIN_MESSAGE } from '@/lib/password'
+import { useAuthStore } from '@/store/authStore'
+import { ACCOUNT_LOCKED_MESSAGE, INVALID_LOGIN_MESSAGE, isPasswordLongEnough, LOGIN_SHORT_PASSWORD_HINT, PASSWORD_CRITERIA_HINT } from '@/lib/password'
 
 const schema = z.object({
   email: z.string().trim().min(1),
@@ -31,13 +32,22 @@ export function LoginPage() {
   const from = locationState?.from?.pathname
   const successMessage = locationState?.message
 
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, watch, formState: { isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { email: '', password: '' },
   })
 
+  const passwordValue = watch('password')
+  const passwordTooShort = passwordValue.length > 0 && !isPasswordLongEnough(passwordValue)
+
   useEffect(() => {
-    if (isAuthenticated) navigate(from ?? ROLE_DASHBOARD.employee, { replace: true })
+    if (!isAuthenticated) return
+    const currentProfile = useAuthStore.getState().profile
+    if (currentProfile?.password_upgrade_required) {
+      navigate('/update-password-required', { replace: true })
+      return
+    }
+    navigate(from ?? ROLE_DASHBOARD.employee, { replace: true })
   }, [isAuthenticated, from, navigate])
 
   const onSubmit = async (data: FormData) => {
@@ -47,8 +57,12 @@ export function LoginPage() {
       return
     }
     try {
-      const dest = await login(data.email, data.password)
-      navigate(from ?? dest, { replace: true })
+      const { dest, passwordUpgradeRequired } = await login(data.email, data.password)
+      if (passwordUpgradeRequired) {
+        navigate('/update-password-required', { replace: true, state: { from: from ?? dest } })
+      } else {
+        navigate(from ?? dest, { replace: true })
+      }
     } catch (e) {
       const message = e instanceof Error ? e.message : INVALID_LOGIN_MESSAGE
       setError(message === ACCOUNT_LOCKED_MESSAGE ? message : INVALID_LOGIN_MESSAGE)
@@ -84,8 +98,14 @@ export function LoginPage() {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" {...register('password')} />
+              {passwordTooShort && (
+                <p className="text-sm text-amber-600 dark:text-amber-500">{PASSWORD_CRITERIA_HINT}</p>
+              )}
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && passwordTooShort && error === INVALID_LOGIN_MESSAGE && (
+              <p className="text-sm text-amber-600 dark:text-amber-500">{LOGIN_SHORT_PASSWORD_HINT}</p>
+            )}
             <Button type="submit" className="w-full min-h-12" disabled={isSubmitting || !isBackendReady()}>
               Sign in
             </Button>
