@@ -48,6 +48,7 @@ export function createUnconfiguredBackend(): Backend {
       recordCourseAttemptResult: fail,
       requestCourseUnlock: fail,
       fetchUnlockRequests: fail,
+      fetchUnlockRequestsForAssignment: fail,
       fetchPendingUnlockForAssignment: fail,
       resolveUnlockRequest: fail,
       createAssignment: fail,

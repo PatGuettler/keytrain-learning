@@ -142,6 +142,8 @@ export interface StaffTrainingRow {
   maxAttempts: number
   locked: boolean
   dueDate: string | null
+  unlockRequestCount: number
+  pendingUnlockRequest: boolean
 }
 
 export interface StaffSummaryRow {
@@ -212,7 +214,8 @@ export function staffOverallStatus(
 export function buildStaffTrainingRows(
   assignments: Assignment[],
   users?: { id: string; full_name: string; email?: string | null }[],
-  activeCourseIds?: Set<string>
+  activeCourseIds?: Set<string>,
+  unlockMeta?: Map<string, { count: number; pending: boolean }>
 ): StaffTrainingRow[] {
   const userMap = new Map(users?.map((u) => [u.id, u]) ?? [])
   const rows = activeCourseIds
@@ -222,6 +225,7 @@ export function buildStaffTrainingRows(
   return rows
     .map((a) => {
       const profile = a.user ?? userMap.get(a.user_id)
+      const unlock = unlockMeta?.get(a.id)
       return {
         assignmentId: a.id,
         userId: a.user_id,
@@ -231,10 +235,12 @@ export function buildStaffTrainingRows(
         courseTitle: a.course?.title ?? 'Course',
         status: a.status,
         score: resolveAssignmentScore(a),
-        attemptsUsed: resolveAttemptsUsed(a),
+        attemptsUsed: a.attempts_used ?? 0,
         maxAttempts: a.course?.max_attempts ?? 3,
         locked: Boolean(a.locked_at),
         dueDate: a.due_date,
+        unlockRequestCount: unlock?.count ?? 0,
+        pendingUnlockRequest: unlock?.pending ?? false,
       }
     })
     .sort((a, b) => a.userName.localeCompare(b.userName) || a.courseTitle.localeCompare(b.courseTitle))

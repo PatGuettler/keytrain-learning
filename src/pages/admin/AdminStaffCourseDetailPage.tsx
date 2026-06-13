@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import { fetchAssignments } from '@/services/assignments.service'
 import { fetchUserModuleAttempts, fetchSessions } from '@/services/sessions.service'
 import { fetchOrgMembers } from '@/services/users.service'
+import { fetchUnlockRequestsForAssignment } from '@/services/unlock-requests.service'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
@@ -45,11 +46,30 @@ export function AdminStaffCourseDetailPage() {
     enabled: Boolean(userId),
   })
 
+  const assignmentForCourse = assignments.find((a) => a.course_id === courseId)
+
+  const { data: unlockRequests = [] } = useQuery({
+    queryKey: ['unlock-requests-assignment', assignmentForCourse?.id],
+    queryFn: () => fetchUnlockRequestsForAssignment(assignmentForCourse!.id),
+    enabled: Boolean(assignmentForCourse?.id),
+  })
+
   const user = users.find((u) => u.id === userId)
   const courseRow = useMemo(() => {
-    const rows = buildStaffTrainingRows(assignments, user ? [user] : [])
+    const unlockMeta = assignmentForCourse
+      ? new Map([
+          [
+            assignmentForCourse.id,
+            {
+              count: unlockRequests.length,
+              pending: unlockRequests.some((r) => r.status === 'pending'),
+            },
+          ],
+        ])
+      : undefined
+    const rows = buildStaffTrainingRows(assignments, user ? [user] : [], undefined, unlockMeta)
     return rows.find((r) => r.courseId === courseId) ?? null
-  }, [assignments, user, courseId])
+  }, [assignments, user, courseId, assignmentForCourse, unlockRequests])
 
   if (!user) {
     return <p className="text-sm text-muted-foreground">Staff member not found.</p>
@@ -89,6 +109,7 @@ export function AdminStaffCourseDetailPage() {
         courseRow={courseRow}
         sessions={sessions}
         moduleAttempts={moduleAttempts}
+        unlockRequests={unlockRequests}
       />
     </div>
   )

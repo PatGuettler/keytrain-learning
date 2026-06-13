@@ -518,6 +518,15 @@ export function createSupabaseBackend(): Backend {
         if (error) throw error
         return (data ?? []) as CourseUnlockRequest[]
       },
+      async fetchUnlockRequestsForAssignment(assignmentId) {
+        const { data, error } = await supabase
+          .from('course_unlock_requests')
+          .select('*')
+          .eq('assignment_id', assignmentId)
+          .order('requested_at', { ascending: false })
+        if (error) throw error
+        return (data ?? []) as CourseUnlockRequest[]
+      },
       async fetchPendingUnlockForAssignment(assignmentId, userId) {
         const { data, error } = await supabase
           .from('course_unlock_requests')

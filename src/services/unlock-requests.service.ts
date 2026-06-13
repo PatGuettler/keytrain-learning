@@ -15,6 +15,10 @@ export async function fetchUnlockRequests(status?: UnlockRequestStatus) {
   return backend.assignments.fetchUnlockRequests(status)
 }
 
+export async function fetchUnlockRequestsForAssignment(assignmentId: string) {
+  return backend.assignments.fetchUnlockRequestsForAssignment(assignmentId)
+}
+
 export async function fetchPendingUnlockForAssignment(assignmentId: string, userId: string) {
   return backend.assignments.fetchPendingUnlockForAssignment(assignmentId, userId)
 }

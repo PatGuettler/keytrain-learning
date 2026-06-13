@@ -98,6 +98,7 @@ export interface AssignmentsBackend {
     message?: string
   }): Promise<CourseUnlockRequest>
   fetchUnlockRequests(status?: UnlockRequestStatus): Promise<CourseUnlockRequest[]>
+  fetchUnlockRequestsForAssignment(assignmentId: string): Promise<CourseUnlockRequest[]>
   fetchPendingUnlockForAssignment(assignmentId: string, userId: string): Promise<CourseUnlockRequest | null>
   resolveUnlockRequest(requestId: string, approved: boolean, adminId: string): Promise<void>
   createAssignment(payload: { course_id: string; user_id: string; assigned_by: string; due_date?: string }): Promise<Assignment>
