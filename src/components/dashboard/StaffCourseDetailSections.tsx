@@ -1,13 +1,14 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { STATUS_LABELS } from '@/lib/constants'
+import { formatAttemptsLabel, formatMaxAttempts } from '@/lib/course-attempts'
 import {
   buildScoreHistory,
   extractModuleIssues,
   type StaffTrainingRow,
 } from '@/lib/dashboard-stats'
 import { formatDate } from '@/lib/utils'
-import type { ModuleAttempt, TrainingSession } from '@/types/course.types'
+import type { CourseUnlockRequest, ModuleAttempt, TrainingSession } from '@/types/course.types'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { chartTheme } from '@/lib/chart-theme'
 
@@ -18,14 +19,40 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warni
   overdue: 'destructive',
 }
 
+function groupModuleAttemptsBySession(
+  attempts: ModuleAttempt[],
+  sessions: TrainingSession[]
+): Array<{ attemptNumber: number; sessionId: string | null; attempts: ModuleAttempt[] }> {
+  const sessionById = new Map(sessions.map((s) => [s.id, s]))
+  const groups = new Map<number, ModuleAttempt[]>()
+
+  for (const attempt of attempts) {
+    const session = sessionById.get(attempt.session_id)
+    const attemptNumber = session?.attempt_number ?? 0
+    const list = groups.get(attemptNumber) ?? []
+    list.push(attempt)
+    groups.set(attemptNumber, list)
+  }
+
+  return [...groups.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([attemptNumber, moduleAttempts]) => ({
+      attemptNumber,
+      sessionId: moduleAttempts[0]?.session_id ?? null,
+      attempts: moduleAttempts,
+    }))
+}
+
 export function StaffCourseDetailSections({
   courseRow,
   sessions,
   moduleAttempts,
+  unlockRequests = [],
 }: {
   courseRow: StaffTrainingRow
   sessions: TrainingSession[]
   moduleAttempts: ModuleAttempt[]
+  unlockRequests?: CourseUnlockRequest[]
 }) {
   const courseSessions = sessions.filter((s) => s.course_id === courseRow.courseId)
   const courseModuleAttempts = moduleAttempts.filter(
@@ -35,6 +62,7 @@ export function StaffCourseDetailSections({
   const completedSessions = courseSessions
     .filter((s) => s.completed_at)
     .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime())
+  const attemptsBySession = groupModuleAttemptsBySession(courseModuleAttempts, courseSessions)
 
   return (
     <>
@@ -59,10 +87,27 @@ export function StaffCourseDetailSections({
             <div>
               <dt className="text-muted-foreground">Attempts</dt>
               <dd className="mt-1 font-medium tabular-nums text-foreground">
-                {courseRow.attemptsUsed}/{courseRow.maxAttempts}
+                {formatAttemptsLabel(courseRow.attemptsUsed, courseRow.maxAttempts)}
                 {courseRow.locked && (
                   <Badge variant="destructive" className="ml-2">
                     Locked
+                  </Badge>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Max attempts</dt>
+              <dd className="mt-1 font-medium text-foreground">
+                {formatMaxAttempts(courseRow.maxAttempts)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Unlock requests</dt>
+              <dd className="mt-1 font-medium text-foreground">
+                {courseRow.unlockRequestCount}
+                {courseRow.pendingUnlockRequest && (
+                  <Badge variant="warning" className="ml-2">
+                    Pending
                   </Badge>
                 )}
               </dd>
@@ -74,6 +119,30 @@ export function StaffCourseDetailSections({
           </dl>
         </CardContent>
       </Card>
+
+      {unlockRequests.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Unlock request history</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm">
+              {unlockRequests.map((req) => (
+                <li key={req.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2">
+                  <span className="text-muted-foreground">{formatDate(req.requested_at)}</span>
+                  <Badge
+                    variant={
+                      req.status === 'approved' ? 'success' : req.status === 'denied' ? 'secondary' : 'warning'
+                    }
+                  >
+                    {req.status}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -135,45 +204,52 @@ export function StaffCourseDetailSections({
           <CardTitle className="text-base">Module attempts & mistakes</CardTitle>
         </CardHeader>
         <CardContent>
-          {courseModuleAttempts.length === 0 ? (
+          {attemptsBySession.length === 0 ? (
             <p className="text-sm text-muted-foreground">No module attempts recorded yet.</p>
           ) : (
-            <ul className="space-y-3">
-              {courseModuleAttempts.map((attempt) => {
-                const issues = extractModuleIssues(attempt)
-                const passed =
-                  attempt.interactions?.passed === true ||
-                  (attempt.score != null && attempt.score >= 80)
-                return (
-                  <li key={attempt.id} className="rounded-lg border p-4 space-y-2">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className="font-medium text-sm">{attempt.module?.title ?? 'Module'}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {attempt.module?.type ?? 'module'} ·{' '}
-                          {attempt.completed_at ? formatDate(attempt.completed_at) : '—'}
-                        </p>
-                      </div>
-                      <div className="flex gap-2 items-center">
-                        {attempt.score != null && (
-                          <span className="text-sm font-medium tabular-nums">{attempt.score}%</span>
-                        )}
-                        <Badge variant={passed ? 'success' : 'warning'}>
-                          {passed ? 'Passed' : 'Needs review'}
-                        </Badge>
-                      </div>
-                    </div>
-                    {issues.length > 0 && (
-                      <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-0.5">
-                        {issues.map((issue) => (
-                          <li key={issue}>{issue}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
+            <div className="space-y-6">
+              {attemptsBySession.map(({ attemptNumber, attempts }) => (
+                <div key={attemptNumber} className="space-y-3">
+                  <h3 className="text-sm font-semibold">Course attempt {attemptNumber || '—'}</h3>
+                  <ul className="space-y-3">
+                    {attempts.map((attempt) => {
+                      const issues = extractModuleIssues(attempt)
+                      const passed =
+                        attempt.interactions?.passed === true ||
+                        (attempt.score != null && attempt.score >= 80)
+                      return (
+                        <li key={attempt.id} className="rounded-lg border p-4 space-y-2">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div>
+                              <p className="font-medium text-sm">{attempt.module?.title ?? 'Module'}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {attempt.module?.type ?? 'module'} ·{' '}
+                                {attempt.completed_at ? formatDate(attempt.completed_at) : '—'}
+                              </p>
+                            </div>
+                            <div className="flex gap-2 items-center">
+                              {attempt.score != null && (
+                                <span className="text-sm font-medium tabular-nums">{attempt.score}%</span>
+                              )}
+                              <Badge variant={passed ? 'success' : 'warning'}>
+                                {passed ? 'Passed' : 'Needs review'}
+                              </Badge>
+                            </div>
+                          </div>
+                          {issues.length > 0 && (
+                            <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-0.5">
+                              {issues.map((issue) => (
+                                <li key={issue}>{issue}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
