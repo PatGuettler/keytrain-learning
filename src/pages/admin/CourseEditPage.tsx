@@ -8,6 +8,7 @@ import { DeleteCourseCard } from '@/components/admin/DeleteCourseCard'
 import { useCourse, useModules } from '@/hooks/useCourses'
 import { getIncidentAwarenessTemplate } from '@/lib/course-templates'
 import { createEmptyModule } from '@/lib/module-defaults'
+import { parseCourseImport, downloadCourseExport } from '@/lib/course-export'
 import { syncCourseModules, upsertCourse, upsertModule } from '@/services/courses.service'
 import { useAuthStore } from '@/store/authStore'
 import type { Module } from '@/types/course.types'
@@ -165,6 +166,57 @@ export function CourseEditPage() {
               request. Changing a course to unlimited automatically unlocks locked assignments.
             </p>
           </>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-3 items-center">
+        <Label className="sr-only">Import course JSON</Label>
+        <Input
+          type="file"
+          accept="application/json,.json"
+          className="max-w-sm"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+            void file.text().then((text) => {
+              try {
+                const draft = parseCourseImport(JSON.parse(text))
+                setTitle(draft.title)
+                setDescription(draft.description)
+                setEstimatedMinutes(draft.estimated_minutes)
+                if (draft.max_attempts === 0) {
+                  setUnlimitedAttempts(true)
+                } else {
+                  setUnlimitedAttempts(false)
+                  setMaxAttempts(draft.max_attempts)
+                }
+                setModules(
+                  draft.modules.map((m, i) => ({
+                    ...createEmptyModule(m.type, i, courseId ?? 'new'),
+                    title: m.title,
+                    order_index: m.order_index,
+                    content: m.content,
+                  }))
+                )
+                if (draft.warnings.length) {
+                  setSaveError(draft.warnings.join(' '))
+                }
+              } catch {
+                setSaveError('Could not parse course file — check the JSON format.')
+              }
+            })
+            e.target.value = ''
+          }}
+        />
+        {course && !isNew && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => downloadCourseExport(course, modules)}
+          >
+            Export course JSON
+          </Button>
         )}
       </div>
 
