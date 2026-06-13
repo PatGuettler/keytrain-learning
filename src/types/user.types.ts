@@ -12,6 +12,7 @@ export interface Profile {
   invitation_pending: boolean
   failed_login_attempts: number
   login_locked_at: string | null
+  last_login_at: string | null
   created_at: string
   updated_at: string
 }

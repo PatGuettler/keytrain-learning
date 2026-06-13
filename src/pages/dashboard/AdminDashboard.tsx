@@ -1,4 +1,4 @@
-import { Building2, BookOpen, Users, AlertTriangle } from 'lucide-react'
+import { Building2, BookOpen, Users, UserX, AlertTriangle } from 'lucide-react'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { CompletionChart } from '@/components/dashboard/CompletionChart'
 import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
@@ -23,9 +23,20 @@ export function AdminDashboard() {
         }
       />
 
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-5">
         <StatCard title="Hospitals" value={platformTotals.hospitalCount} icon={Building2} />
-        <StatCard title="Total Staff" value={platformTotals.totalUsers} icon={Users} />
+        <StatCard
+          title="Total active users"
+          value={platformTotals.activeUsers}
+          icon={Users}
+          to="/admin/dashboard/users?filter=active"
+        />
+        <StatCard
+          title="Total inactive users"
+          value={platformTotals.inactiveUsers}
+          icon={UserX}
+          to="/admin/dashboard/users?filter=inactive"
+        />
         <StatCard
           title="Courses"
           value={`${platformTotals.publishedCourses}/${platformTotals.totalCourses}`}

@@ -15,6 +15,7 @@ import { CourseEditPage } from '@/pages/admin/CourseEditPage'
 import { OrganizationsPage } from '@/pages/admin/OrganizationsPage'
 import { OrganizationDetailPage } from '@/pages/admin/OrganizationDetailPage'
 import { PlatformAdminsPage } from '@/pages/admin/PlatformAdminsPage'
+import { PlatformUsersPage } from '@/pages/admin/PlatformUsersPage'
 import { UnlockRequestsPage } from '@/pages/admin/UnlockRequestsPage'
 import { AdminStaffTrainingPage } from '@/pages/admin/AdminStaffTrainingPage'
 import { AdminStaffCourseDetailPage } from '@/pages/admin/AdminStaffCourseDetailPage'
@@ -52,6 +53,10 @@ export default function App() {
             <Route
               path="/admin/dashboard"
               element={<RoleGuard roles={['admin']}><AdminDashboard /></RoleGuard>}
+            />
+            <Route
+              path="/admin/dashboard/users"
+              element={<RoleGuard roles={['admin']}><PlatformUsersPage /></RoleGuard>}
             />
             <Route
               path="/admin/dashboard/:orgSlug"

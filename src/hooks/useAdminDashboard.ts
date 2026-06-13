@@ -49,6 +49,8 @@ export function useAdminDashboard() {
 
     return {
       hospitalCount: hospitals.length,
+      activeUsers: users.filter((u) => u.is_active).length,
+      inactiveUsers: users.filter((u) => !u.is_active).length,
       totalUsers: users.length,
       totalCourses: courses.length,
       publishedCourses: courses.filter((c) => c.is_published).length,
