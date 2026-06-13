@@ -13,7 +13,7 @@
     "preview:pages": "npm run build:pages && vite preview --base /guardian-md/",
     "deploy:manage-users": "bash scripts/deploy-manage-users.sh",
     "test:resend-support": "bash scripts/test-resend-support.sh",
-    "set-test-passwords": "node scripts/set-test-passwords.mjs"
+    "set-test-passwords": "bash scripts/set-test-passwords.sh"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

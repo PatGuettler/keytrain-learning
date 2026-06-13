@@ -50,10 +50,26 @@ const emails = (process.env.TEST_EMAILS ?? 'employee@test.com,management@test.co
   .filter(Boolean)
 
 if (!supabaseUrl || !serviceRoleKey) {
-  console.error(
-    'Missing SUPABASE_URL (or VITE_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY.\n' +
-      'Get the service role key from Supabase Dashboard → Settings → API (keep it secret).'
-  )
+  const missing = []
+  if (!supabaseUrl) missing.push('SUPABASE_URL or VITE_SUPABASE_URL')
+  if (!serviceRoleKey) missing.push('SUPABASE_SERVICE_ROLE_KEY')
+  const hasEnv = existsSync(join(root, '.env'))
+  console.error(`Missing: ${missing.join(', ')}\n`)
+  if (!supabaseUrl) {
+    console.error('URL: add VITE_SUPABASE_URL to .env (from Supabase → Settings → API → Project URL)')
+  }
+  if (!serviceRoleKey) {
+    console.error(
+      'Service role (required, secret — never commit):\n' +
+        "  export SUPABASE_SERVICE_ROLE_KEY='eyJ...'\n" +
+        '  (Supabase Dashboard → Settings → API → service_role → Reveal)'
+    )
+  }
+  if (hasEnv) {
+    console.error('\nTip: .env was loaded; only the service role key must be exported for this script.')
+  } else {
+    console.error('\nTip: copy .env.example → .env and fill in VITE_SUPABASE_URL, then export the service role key.')
+  }
   process.exit(1)
 }
 
