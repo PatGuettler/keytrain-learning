@@ -3,10 +3,9 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { useUiStore } from './store/uiStore'
+import { applyTheme } from './lib/theme'
 
-// Restore theme on load
-const theme = useUiStore.getState().theme
-document.documentElement.classList.toggle('dark', theme === 'dark')
+applyTheme(useUiStore.getState().theme)
 
 /** Restore deep link after GitHub Pages 404.html → app root redirect */
 function restoreGhPagesSpaRedirect() {

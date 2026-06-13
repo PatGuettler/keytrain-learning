@@ -1,7 +1,13 @@
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
 import { useAuthStore } from '@/store/authStore'
 
-const SUPPORT_EMAIL = 'patguettlerpages@gmail.com'
+type SupportResponse = {
+  error?: string
+  message?: string
+  saved?: boolean
+  email_sent?: boolean
+  resend_status?: number
+}
 
 export async function submitSupportRequest(payload: {
   category: 'bug' | 'feature' | 'question' | 'other'
@@ -43,14 +49,17 @@ export async function submitSupportRequest(payload: {
       subject: payload.subject.trim(),
       message: payload.message.trim(),
       user_snapshot,
-      to_email: SUPPORT_EMAIL,
     }),
   })
 
-  const data = (await response.json().catch(() => null)) as { error?: string; message?: string } | null
+  const data = (await response.json().catch(() => null)) as SupportResponse | null
   if (!response.ok) {
     throw new Error(data?.error ?? data?.message ?? 'Could not send support request.')
   }
 
-  return { message: data?.message ?? 'Your message was sent. Thank you!' }
+  return {
+    message: data?.message ?? 'Your message was sent. Thank you!',
+    emailSent: data?.email_sent ?? false,
+    saved: data?.saved ?? true,
+  }
 }

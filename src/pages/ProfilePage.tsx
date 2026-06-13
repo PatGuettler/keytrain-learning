@@ -29,19 +29,28 @@ export function ProfilePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [deliveryWarning, setDeliveryWarning] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     setSuccess('')
+    setDeliveryWarning('')
     try {
       const result = await submitSupportRequest({ category, subject, message })
       setSuccess(result.message)
+      if (result.saved && !result.emailSent) {
+        setDeliveryWarning(
+          'Your message was saved, but email was not delivered. Ask your admin to set RESEND_API_KEY and redeploy send-support-request.'
+        )
+      }
       setSubject('')
       setMessage('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not send request')
+      const message = err instanceof Error ? err.message : 'Could not send request'
+      setError(message)
+      setSuccess('')
     } finally {
       setLoading(false)
     }
@@ -123,6 +132,9 @@ export function ProfilePage() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
+            {deliveryWarning && (
+              <p className="text-sm text-amber-600 dark:text-amber-500">{deliveryWarning}</p>
+            )}
             {success && <p className="text-sm text-emerald-600 dark:text-emerald-400">{success}</p>}
             <Button type="submit" disabled={loading}>
               {loading ? 'Sending…' : 'Submit'}

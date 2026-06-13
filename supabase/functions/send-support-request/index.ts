@@ -1,13 +1,23 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
-const DEFAULT_TO = 'patguettlerpages@gmail.com'
+const DEFAULT_TO = 'patguettler@gmail.com'
+const DEFAULT_FROM = 'GuardianMD Support <onboarding@resend.dev>'
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
+}
+
+function parseResendError(body: string): string {
+  try {
+    const parsed = JSON.parse(body) as { message?: string }
+    return parsed.message ?? body
+  } catch {
+    return body
+  }
 }
 
 Deno.serve(async (req) => {
@@ -24,6 +34,8 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const resendKey = Deno.env.get('RESEND_API_KEY')
+    const toEmail = Deno.env.get('SUPPORT_TO_EMAIL') ?? DEFAULT_TO
+    const fromEmail = Deno.env.get('RESEND_FROM') ?? DEFAULT_FROM
 
     if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
       return jsonResponse({ error: 'Server misconfigured.' }, 500)
@@ -47,7 +59,6 @@ Deno.serve(async (req) => {
     const subject = typeof body.subject === 'string' ? body.subject.trim() : ''
     const message = typeof body.message === 'string' ? body.message.trim() : ''
     const userSnapshot = body.user_snapshot ?? {}
-    const toEmail = typeof body.to_email === 'string' ? body.to_email : DEFAULT_TO
 
     if (!subject || !message) {
       return jsonResponse({ error: 'Subject and message are required.' }, 400)
@@ -57,13 +68,17 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     })
 
-    await adminClient.from('support_requests').insert({
+    const { error: insertError } = await adminClient.from('support_requests').insert({
       user_id: user.id,
       category,
       subject,
       message,
       user_snapshot: userSnapshot,
     })
+    if (insertError) {
+      console.error('support_requests insert error:', insertError)
+      return jsonResponse({ error: insertError.message }, 500)
+    }
 
     const emailBody = [
       `Category: ${category}`,
@@ -75,32 +90,50 @@ Deno.serve(async (req) => {
       JSON.stringify(userSnapshot, null, 2),
     ].join('\n')
 
-    if (resendKey) {
-      const emailRes = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${resendKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: 'GuardianMD Support <onboarding@resend.dev>',
-          to: [toEmail],
-          subject: `[GuardianMD ${category}] ${subject}`,
-          text: emailBody,
-        }),
+    if (!resendKey) {
+      console.log('Support request saved (RESEND_API_KEY not set):', { toEmail, subject })
+      return jsonResponse({
+        saved: true,
+        email_sent: false,
+        message:
+          'Your message was saved, but email is not configured on the server yet (RESEND_API_KEY missing).',
       })
-      if (!emailRes.ok) {
-        const errText = await emailRes.text()
-        console.error('Resend error:', errText)
-      }
-    } else {
-      console.log('Support request (email not configured):', emailBody)
     }
 
+    const emailRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [toEmail],
+        subject: `[GuardianMD ${category}] ${subject}`,
+        text: emailBody,
+      }),
+    })
+
+    const resendBody = await emailRes.text()
+    if (!emailRes.ok) {
+      const detail = parseResendError(resendBody)
+      console.error('Resend error:', emailRes.status, detail)
+      return jsonResponse(
+        {
+          saved: true,
+          email_sent: false,
+          error: `Your message was saved, but email delivery failed: ${detail}`,
+          resend_status: emailRes.status,
+        },
+        502
+      )
+    }
+
+    console.log('Support email sent:', { toEmail, subject, resendBody })
     return jsonResponse({
-      message: resendKey
-        ? 'Your message was sent. Thank you!'
-        : 'Your message was recorded. Email delivery is not configured on the server yet.',
+      saved: true,
+      email_sent: true,
+      message: 'Your message was sent. Thank you!',
     })
   } catch (err) {
     console.error(err)

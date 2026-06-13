@@ -16,3 +16,6 @@ additional_redirect_urls = [
 # so browser CORS preflight (OPTIONS) succeeds from GitHub Pages / localhost.
 [functions.manage-users]
 verify_jwt = false
+
+[functions.send-support-request]
+verify_jwt = false

@@ -1,22 +1,25 @@
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Moon, Shield, Sun, Menu, UserCircle } from 'lucide-react'
+import { LogOut, Monitor, Moon, Shield, Sun, Menu, UserCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/hooks/useAuth'
 import { useUiStore } from '@/store/uiStore'
 import { APP_NAME, ROLE_PROFILE } from '@/lib/constants'
+import type { ThemePreference } from '@/lib/theme'
 
 export function Topbar() {
   const navigate = useNavigate()
   const { profile, logout, role } = useAuth()
-  const { theme, toggleTheme, setSidebarOpen } = useUiStore()
+  const { theme, setTheme, setSidebarOpen } = useUiStore()
 
   const handleSignOut = async () => {
     await logout()
@@ -46,9 +49,6 @@ export function Topbar() {
         </h1>
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={toggleTheme} aria-label="Toggle theme">
-          {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Account menu">
@@ -73,6 +73,28 @@ export function Topbar() {
                 Profile
               </DropdownMenuItem>
             )}
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+              Theme
+            </DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={theme}
+              onValueChange={(value) => setTheme(value as ThemePreference)}
+            >
+              <DropdownMenuRadioItem value="light" className="gap-2">
+                <Sun className="h-4 w-4" />
+                Light
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="dark" className="gap-2">
+                <Moon className="h-4 w-4" />
+                Dark
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="system" className="gap-2">
+                <Monitor className="h-4 w-4" />
+                System
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign out
