@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { requestCourseUnlock } from '@/services/unlock-requests.service'
+import { formatMaxAttempts } from '@/lib/course-attempts'
 import type { Assignment, Course } from '@/types/course.types'
 
 export function CourseLockedScreen({
@@ -28,12 +29,12 @@ export function CourseLockedScreen({
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [sent, setSent] = useState(pendingRequest)
   const maxAttempts = course.max_attempts ?? 3
+  const awaitingReview = Boolean(pendingRequest)
 
   useEffect(() => {
-    if (pendingRequest) setSent(true)
-  }, [pendingRequest])
+    setError('')
+  }, [pendingRequest, assignment.id])
 
   const handleRequest = async () => {
     setLoading(true)
@@ -46,7 +47,6 @@ export function CourseLockedScreen({
         orgId,
         message,
       })
-      setSent(true)
       onRequestSent?.()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Request failed')
@@ -62,12 +62,18 @@ export function CourseLockedScreen({
         <div className="space-y-2">
           <h2 className="text-xl font-semibold">Course locked</h2>
           <p className="text-sm text-muted-foreground">
-            You have used all {maxAttempts} attempts for <strong>{course.title}</strong>.
-            An administrator must unlock the course before you can try again.
+            {maxAttempts === 0 ? (
+              <>This course should allow unlimited attempts — contact your administrator if you are blocked.</>
+            ) : (
+              <>
+                You have used all {formatMaxAttempts(maxAttempts)} attempts for <strong>{course.title}</strong>.
+                An administrator must unlock the course before you can try again.
+              </>
+            )}
           </p>
         </div>
 
-          {sent ? (
+        {awaitingReview ? (
           <div className="space-y-2">
             <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
               Unlock request sent. You will be notified when an admin reviews it.

@@ -65,11 +65,21 @@ export function CoursePlayerPage({
   const unlimitedAttempts = maxAttempts === 0
   const isLocked = !unlimitedAttempts && Boolean(assignment?.locked_at)
 
+  const showUnlockQuery = Boolean(assignment?.id && (isLocked || (finished && outcome === 'locked')))
+
   const { data: pendingUnlock } = useQuery({
     queryKey: ['unlock-request', assignment?.id, userId],
     queryFn: () => fetchPendingUnlockForAssignment(assignment!.id, userId),
-    enabled: Boolean(assignment?.id && isLocked),
+    enabled: showUnlockQuery,
   })
+
+  useEffect(() => {
+    if (!assignment?.locked_at && finished && outcome === 'locked') {
+      setFinished(false)
+      setOutcome(null)
+      setAttemptInfo(null)
+    }
+  }, [assignment?.locked_at, finished, outcome])
 
   const canStartSession = Boolean(
     userId && courseId && assignment?.id && !isLocked && assignment.status !== 'completed'
@@ -253,11 +263,13 @@ export function CoursePlayerPage({
     if (outcome === 'locked') {
       return (
         <CourseLockedScreen
+          key={`locked-${assignment!.id}-${pendingUnlock?.id ?? 'none'}`}
           course={course}
           assignment={assignment!}
           orgId={orgId}
           userId={userId}
           trainingPath={trainingPath}
+          pendingRequest={Boolean(pendingUnlock)}
           onRequestSent={() => {
             void queryClient.invalidateQueries({ queryKey: ['unlock-request', assignment!.id, userId] })
           }}
