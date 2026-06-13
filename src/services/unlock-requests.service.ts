@@ -26,3 +26,15 @@ export async function fetchPendingUnlockForAssignment(assignmentId: string, user
 export async function resolveUnlockRequest(requestId: string, approved: boolean, adminId: string) {
   return backend.assignments.resolveUnlockRequest(requestId, approved, adminId)
 }
+
+export async function deleteUnlockRequest(requestId: string) {
+  const count = await backend.assignments.deleteUnlockRequests({ ids: [requestId] })
+  if (count === 0) throw new Error('Unlock request not found or already deleted.')
+}
+
+export async function deleteUnlockRequests(params: {
+  ids?: string[]
+  status?: UnlockRequestStatus
+}) {
+  return backend.assignments.deleteUnlockRequests(params)
+}

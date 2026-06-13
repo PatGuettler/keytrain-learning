@@ -589,6 +589,19 @@ export function createSupabaseBackend(): Backend {
           if (unlockError) throw unlockError
         }
       },
+      async deleteUnlockRequests({ ids, status }) {
+        let q = supabase.from('course_unlock_requests').delete({ count: 'exact' })
+        if (ids?.length) {
+          q = q.in('id', ids)
+        } else if (status) {
+          q = q.eq('status', status)
+        } else {
+          q = q.not('id', 'is', null)
+        }
+        const { error, count } = await q
+        if (error) throw error
+        return count ?? 0
+      },
       async fetchAssignments(filters) {
         const opts = typeof filters === 'string' ? { userId: filters } : filters
 
