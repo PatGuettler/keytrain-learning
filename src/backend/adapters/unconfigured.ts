@@ -51,6 +51,7 @@ export function createUnconfiguredBackend(): Backend {
       fetchUnlockRequestsForAssignment: fail,
       fetchPendingUnlockForAssignment: fail,
       resolveUnlockRequest: fail,
+      deleteUnlockRequests: fail,
       createAssignment: fail,
       updateAssignment: fail,
       deleteAssignment: fail,
