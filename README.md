@@ -28,7 +28,7 @@ Healthcare training platform for clinical incident reporting, compliance courses
 | [jsPDF](https://github.com/parallax/jsPDF) | PDF report export |
 | [Supabase](https://supabase.com) | PostgreSQL, Auth, Storage, Edge Functions, RLS |
 | [Deno](https://deno.com) | Edge Function runtime (Supabase) |
-| [Resend](https://resend.com) | Optional transactional email (support form) |
+| [Resend](https://resend.com) | Contact form email ([setup](#resend-support-email)) |
 | [GitHub Pages](https://pages.github.com) | Static frontend hosting |
 | [GitHub Actions](https://github.com/features/actions) | CI/CD deploy workflow |
 | [Node.js](https://nodejs.org) | Local development (v20+) |
@@ -46,6 +46,7 @@ Healthcare training platform for clinical incident reporting, compliance courses
 - [Getting started](#getting-started)
 - [Supabase setup](#supabase-setup)
 - [Edge Functions](#edge-functions)
+- [Resend (support email)](#resend-support-email)
 - [Environment variables](#environment-variables)
 - [Development](#development)
 - [Deployment](#deployment)
@@ -66,6 +67,7 @@ GuardianMD is a single-page React app that talks directly to Supabase from the b
 | **Auth** | Supabase Auth (email + password, invite & reset links) |
 | **Database** | PostgreSQL with RLS policies per role and org |
 | **Edge Functions** | `manage-users`, `send-support-request` (Deno) |
+| **Email (support)** | [Resend](https://resend.com) via `send-support-request` (optional) |
 | **Storage** | Optional `training-images` bucket for lesson assets |
 
 Login flow: sign in → load `profiles` row for the Auth user UUID → redirect to role dashboard.
@@ -267,42 +269,7 @@ You need at least one user in Supabase Auth with a matching `profiles` row (see 
 1. [Create a project](https://supabase.com/dashboard) (save the database password).
 2. Wait until status is **Active**.
 
-### 2. Run migrations
-
-In **SQL Editor**, run each file in `supabase/migrations/` **in numeric order**:
-
-| # | File | Purpose |
-|---|------|---------|
-| 001 | `001_initial_schema.sql` | Core tables, RLS, auth helpers |
-| 002 | `002_platform_admin_and_profile_email.sql` | Platform admin policies, profile email |
-| 003 | `003_org_admin_delete.sql` | Admin can delete hospitals |
-| 004 | `004_admin_assignments_select.sql` | Cross-org dashboard stats |
-| 005 | `005_course_publications.sql` | Publish courses to orgs + deadlines |
-| 006 | `006_course_access_via_publication.sql` | Block access to unpublished courses |
-| 007 | `007_required_course_assignments.sql` | Auto-assign required training |
-| 008 | `008_course_attempt_limits.sql` | Max attempts, lockout, unlock requests |
-| 009 | `009_assignment_attempt_result_rpc.sql` | Record course completion via RPC |
-| 010 | `010_assignment_scores.sql` | Persist scores on assignments |
-| 011 | `011_assignments_update_own.sql` | **Required** — employees finish courses |
-| 012 | `012_admin_training_analytics_rls.sql` | Admin cross-hospital analytics |
-| 013 | `013_fix_attempt_counts.sql` | Correct attempt counting logic |
-| 014 | `014_backfill_attempt_counts.sql` | Backfill existing assignments |
-| 015 | `015_invitation_pending.sql` | Invitation-sent status tracking |
-| 016 | `016_account_lockout.sql` | Failed login lockout RPCs |
-| 017 | `017_course_unlock_admin.sql` | Admin approve unlock + assignment update RLS |
-| 018 | `018_profile_last_login.sql` | Sync `last_login_at` from Auth |
-| 019 | `019_unlimited_course_attempts.sql` | `max_attempts = 0` = unlimited |
-| 020 | `020_support_requests.sql` | Support form submissions table |
-
-### 3. Seed data (optional)
-
-```bash
-# Run supabase/seed.sql in SQL Editor
-```
-
-Creates default organizations and sample course stubs. Full module content is built in the admin **Course Builder** or imported via JSON.
-
-### 4. Bootstrap your first admin
+### 2. Bootstrap your first admin
 
 1. **Authentication → Users → Add user** — create an admin email/password.
 2. Copy the user's **UUID**.
@@ -401,18 +368,89 @@ For local dev: `INVITE_REDIRECT_URL=http://localhost:5173/accept-invite`
 
 ### `send-support-request`
 
-Powers the **Profile → Help** form. Stores submissions in `support_requests`; sends email via Resend when configured.
+Powers the **Profile → Contact** form. Always saves to `support_requests`; sends email through [Resend](https://resend.com) when configured.
 
 ```bash
-# Optional — without this, requests are saved but email is only logged
-supabase secrets set RESEND_API_KEY='re_...'
-
-supabase functions deploy send-support-request --no-verify-jwt
+supabase functions deploy send-support-request --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
 ```
+
+See **[Resend (support email)](#resend-support-email)** for API keys, secrets, testing, and troubleshooting.
 
 ### Auth email volume
 
 Supabase built-in auth emails are rate-limited (~4/hour on free tier). For production invite volume, configure [custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp) (SendGrid, Resend, etc.).
+
+---
+
+## Resend (support email)
+
+GuardianMD uses [Resend](https://resend.com) for the **Profile → Contact** form. Submissions are **always stored** in `support_requests`; email is optional but recommended.
+
+| Without Resend | With Resend |
+|----------------|-------------|
+| Form saves to database | Form saves **and** emails the support inbox |
+| User sees a “saved but not emailed” warning | User sees “Your message was sent” |
+
+### 1. Create a Resend account
+
+1. Sign up at [resend.com](https://resend.com)
+2. **API Keys** → Create API Key → copy `re_...`
+
+### 2. Set Supabase secrets
+
+```bash
+export SUPABASE_ACCESS_TOKEN='sbp_...'
+export SUPABASE_PROJECT_REF='your-project-ref'
+
+# Required for email delivery
+supabase secrets set RESEND_API_KEY='re_...' --project-ref "$SUPABASE_PROJECT_REF"
+
+# Where support mail is delivered (default: patguettler@gmail.com)
+supabase secrets set SUPPORT_TO_EMAIL='you@example.com' --project-ref "$SUPABASE_PROJECT_REF"
+
+# Deploy (or redeploy after changing secrets)
+supabase functions deploy send-support-request --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+```
+
+| Secret | Required | Description |
+|--------|----------|-------------|
+| `RESEND_API_KEY` | For email | From [Resend → API Keys](https://resend.com/api-keys) |
+| `SUPPORT_TO_EMAIL` | No | Inbox for contact form (server default: `patguettler@gmail.com`) |
+| `RESEND_FROM` | No | Sender address (default: `GuardianMD Support <onboarding@resend.dev>`) |
+
+Run migration **`020_support_requests.sql`** if the `support_requests` table does not exist yet.
+
+### 3. Test locally (without the app)
+
+```bash
+export RESEND_API_KEY='re_...'
+export SUPPORT_TO_EMAIL='patguettler@gmail.com'
+npm run test:resend-support
+```
+
+Expect **HTTP 200**. A **403** usually means the sandbox sender restriction (see below).
+
+### 4. Sandbox vs production sender
+
+The default `from` address is **`onboarding@resend.dev`** (Resend’s test domain). In that mode, Resend **only delivers to the email address on your Resend account** — not arbitrary inboxes.
+
+| Goal | What to do |
+|------|------------|
+| Quick test | Set `SUPPORT_TO_EMAIL` to the **same email you used to sign up for Resend** |
+| Production | [Verify your domain](https://resend.com/domains) in Resend, then set e.g. `RESEND_FROM='GuardianMD <support@yourdomain.com>'` |
+
+See Resend docs: [403 error using resend.dev domain](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain).
+
+### 5. Troubleshooting
+
+| Symptom | Likely cause |
+|---------|----------------|
+| “Email is not configured” / saved but not sent | `RESEND_API_KEY` not set, or function not redeployed after setting secrets |
+| Success in UI but no email | Resend 403 (wrong `SUPPORT_TO_EMAIL` for sandbox); check **Supabase → Edge Functions → send-support-request → Logs** |
+| Function 404 | Deploy `send-support-request` with `--no-verify-jwt` |
+| CORS error from GitHub Pages | Redeploy with `--no-verify-jwt`; ensure `[functions.send-support-request] verify_jwt = false` in `supabase/config.toml` |
+
+The edge function returns **502** with the Resend error message when delivery fails (no silent success).
 
 ---
 
@@ -434,7 +472,9 @@ Supabase built-in auth emails are rate-limited (~4/hour on free tier). For produ
 | Secret | Used by | Description |
 |--------|---------|-------------|
 | `INVITE_REDIRECT_URL` | `manage-users` | Where invite emails redirect |
-| `RESEND_API_KEY` | `send-support-request` | Optional email delivery |
+| `RESEND_API_KEY` | `send-support-request` | Resend API key — see [Resend setup](#resend-support-email) |
+| `SUPPORT_TO_EMAIL` | `send-support-request` | Support inbox (optional) |
+| `RESEND_FROM` | `send-support-request` | Verified sender address (optional) |
 
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically by Supabase at runtime.
 
@@ -459,6 +499,8 @@ npm run preview        # Preview production build
 npm run preview:pages  # Build + preview at /guardian-md/
 npm run lint           # ESLint
 npm run deploy:manage-users  # Deploy manage-users Edge Function
+npm run test:resend-support  # Test Resend API (export RESEND_API_KEY first)
+npm run set-test-passwords   # Reset test user passwords (export SUPABASE_SERVICE_ROLE_KEY)
 ```
 
 ### Deep links on GitHub Pages
@@ -494,7 +536,7 @@ After schema migrations and Edge Function deploys:
 
 1. Confirm **Site URL** and redirect URLs match production.
 2. Set `INVITE_REDIRECT_URL` secret to production accept-invite URL.
-3. Optionally set `RESEND_API_KEY` for support emails.
+3. Configure [Resend](#resend-support-email) (`RESEND_API_KEY`, deploy `send-support-request`).
 
 Edge Functions and database are **not** deployed by the GitHub Actions workflow — run migrations and function deploys manually (see above).
 
