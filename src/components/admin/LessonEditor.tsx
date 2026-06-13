@@ -55,7 +55,7 @@ export function LessonEditor({
           heading: 'New slide',
           body: '',
           layout: 'image-right',
-          illustration: { key: 'clinical_incident', alt: 'Illustration', caption: '' },
+          illustration: { alt: 'Illustration', caption: '' },
         },
       ],
     })
@@ -162,9 +162,17 @@ export function LessonEditor({
               <Label>Built-in illustration</Label>
               <select
                 className={selectClass}
-                value={slide.illustration?.key ?? 'clinical_incident'}
-                onChange={(e) => updateIllustration(index, { key: e.target.value })}
+                value={slide.illustration?.key ?? ''}
+                onChange={(e) => {
+                  const key = e.target.value
+                  if (!key) {
+                    updateSlide(index, { illustration: undefined })
+                  } else {
+                    updateIllustration(index, { key })
+                  }
+                }}
               >
+                <option value="">None</option>
                 {LESSON_ILLUSTRATION_KEYS.map((item) => (
                   <option key={item.value} value={item.value}>
                     {item.label}
