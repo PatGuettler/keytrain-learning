@@ -1,23 +1,28 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ShieldCheck, UserPlus } from 'lucide-react'
+import { ShieldCheck, Trash2, UserPlus } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { DeletePlatformAdminDialog } from '@/components/admin/DeletePlatformAdminDialog'
 import { getProfileStatusBadge } from '@/lib/user-status'
 import { fetchProfiles } from '@/services/users.service'
 import { invitePlatformAdmin } from '@/services/user-management.service'
+import { useAuthStore } from '@/store/authStore'
+import type { Profile } from '@/types/user.types'
 
 export function PlatformAdminsPage() {
   const queryClient = useQueryClient()
+  const currentUserId = useAuthStore((s) => s.userId)!
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
   const [sendInvite, setSendInvite] = useState(true)
   const [formError, setFormError] = useState('')
   const [formSuccess, setFormSuccess] = useState('')
+  const [deleteAdmin, setDeleteAdmin] = useState<Profile | null>(null)
 
   const { data: admins = [], isLoading } = useQuery({
     queryKey: ['platform-admins'],
@@ -127,7 +132,8 @@ export function PlatformAdminsPage() {
                 <tr className="border-b bg-muted/50 text-left text-muted-foreground">
                   <th className="p-3 pr-4">Name</th>
                   <th className="p-3 pr-4">Email</th>
-                  <th className="p-3">Status</th>
+                  <th className="p-3 pr-4">Status</th>
+                  <th className="p-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,11 +141,24 @@ export function PlatformAdminsPage() {
                   <tr key={admin.id} className="border-b last:border-0">
                     <td className="p-3 pr-4 font-medium">{admin.full_name}</td>
                     <td className="p-3 pr-4 text-muted-foreground">{admin.email ?? '—'}</td>
-                    <td className="p-3">
+                    <td className="p-3 pr-4">
                       {(() => {
                         const status = getProfileStatusBadge(admin)
                         return <Badge variant={status.variant}>{status.label}</Badge>
                       })()}
+                    </td>
+                    <td className="p-3">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive border-destructive/40"
+                        disabled={admin.id === currentUserId}
+                        onClick={() => setDeleteAdmin(admin)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1" />
+                        Delete
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -148,6 +167,18 @@ export function PlatformAdminsPage() {
           </div>
         )}
       </section>
+
+      <DeletePlatformAdminDialog
+        open={Boolean(deleteAdmin)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteAdmin(null)
+        }}
+        admin={deleteAdmin}
+        currentUserId={currentUserId}
+        onDeleted={() => {
+          void queryClient.invalidateQueries({ queryKey: ['platform-admins'] })
+        }}
+      />
     </div>
   )
 }

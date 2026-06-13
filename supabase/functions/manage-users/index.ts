@@ -527,6 +527,37 @@ Deno.serve(async (req) => {
       return jsonResponse({ row: result })
     }
 
+    if (action === 'delete_platform_admin') {
+      const userId = typeof body.user_id === 'string' ? body.user_id : ''
+      if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)
+      if (userId === user.id) {
+        return jsonResponse({ error: 'You cannot delete your own admin account.' }, 400)
+      }
+
+      const { count, error: countError } = await adminClient
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'admin')
+      if (countError) throw countError
+      if ((count ?? 0) <= 1) {
+        return jsonResponse({ error: 'Cannot delete the last platform admin.' }, 400)
+      }
+
+      const { data: profile, error: profileError } = await adminClient
+        .from('profiles')
+        .select('id, role')
+        .eq('id', userId)
+        .eq('role', 'admin')
+        .maybeSingle()
+      if (profileError) throw profileError
+      if (!profile) return jsonResponse({ error: 'Platform admin not found.' }, 404)
+
+      const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(userId)
+      if (authDeleteError) throw authDeleteError
+
+      return jsonResponse({ deleted_id: userId })
+    }
+
     const orgId = typeof body.org_id === 'string' ? body.org_id : ''
     if (!orgId) return jsonResponse({ error: 'org_id is required.' }, 400)
     await assertOrg(adminClient, orgId)

@@ -195,6 +195,13 @@ export async function deleteOrganizationById(orgId: string): Promise<void> {
   await invokeManageUsers({ action: 'delete_organization', org_id: orgId })
 }
 
+export async function deletePlatformAdmin(userId: string): Promise<void> {
+  await invokeManageUsers({
+    action: 'delete_platform_admin',
+    user_id: userId,
+  })
+}
+
 export async function deleteOrgUser(orgId: string, userId: string): Promise<void> {
   await invokeManageUsers({ action: 'delete_org_user', org_id: orgId, user_id: userId })
 }
