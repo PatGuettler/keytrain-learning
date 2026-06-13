@@ -60,6 +60,8 @@ export function createSupabaseBackend(): Backend {
 
         await supabase.rpc('clear_failed_login', { p_user_id: data.user.id })
 
+        await supabase.auth.signOut({ scope: 'others' })
+
         const profile = await this.fetchProfile(data.user.id)
         return { user: data.user, profile }
       },

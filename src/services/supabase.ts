@@ -23,7 +23,13 @@ export function getSupabaseAnonKey(): string | null {
 export function getSupabase(): SupabaseClient<Database> | null {
   if (!isSupabaseConfigured) return null
   if (!client) {
-    client = createClient<Database>(url!, anonKey!)
+    client = createClient<Database>(url!, anonKey!, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
   }
   return client
 }

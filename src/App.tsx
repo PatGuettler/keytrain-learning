@@ -29,7 +29,9 @@ import { ROLE_DASHBOARD } from '@/lib/constants'
 import { getRouterBasename } from '@/lib/paths'
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 60_000, retry: 1 } },
+  defaultOptions: {
+    queries: { staleTime: 60_000, retry: 1, refetchOnWindowFocus: false },
+  },
 })
 
 function HomeRedirect() {
