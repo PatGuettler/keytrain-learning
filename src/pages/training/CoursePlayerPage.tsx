@@ -49,15 +49,6 @@ export function CoursePlayerPage({
   const { data: assignments = [] } = useAssignments(userId)
   const assignment = assignments.find((a) => a.course_id === courseId)
 
-  const maxAttempts = course?.max_attempts ?? 3
-  const isLocked = Boolean(assignment?.locked_at)
-
-  const { data: pendingUnlock } = useQuery({
-    queryKey: ['unlock-request', assignment?.id, userId],
-    queryFn: () => fetchPendingUnlockForAssignment(assignment!.id, userId),
-    enabled: Boolean(assignment?.id && isLocked),
-  })
-
   const [currentIndex, setCurrentIndex] = useState(0)
   const [completedIndices, setCompletedIndices] = useState<Set<number>>(new Set())
   const [moduleReady, setModuleReady] = useState(false)
@@ -69,6 +60,16 @@ export function CoursePlayerPage({
   const [finishError, setFinishError] = useState('')
   const [finishing, setFinishing] = useState(false)
   const moduleScoresRef = useRef<ModuleScoreRecord[]>([])
+
+  const maxAttempts = course?.max_attempts ?? 3
+  const unlimitedAttempts = maxAttempts === 0
+  const isLocked = !unlimitedAttempts && Boolean(assignment?.locked_at)
+
+  const { data: pendingUnlock } = useQuery({
+    queryKey: ['unlock-request', assignment?.id, userId],
+    queryFn: () => fetchPendingUnlockForAssignment(assignment!.id, userId),
+    enabled: Boolean(assignment?.id && isLocked),
+  })
 
   const canStartSession = Boolean(
     userId && courseId && assignment?.id && !isLocked && assignment.status !== 'completed'
@@ -286,9 +287,12 @@ export function CoursePlayerPage({
     )
   }
 
-  const attemptLabel = assignment
-    ? `Attempt ${session?.attempt_number ?? resolveAttemptsUsed(assignment) + 1} of ${maxAttempts}`
-    : null
+  const attemptLabel =
+    assignment && !unlimitedAttempts
+      ? `Attempt ${session?.attempt_number ?? resolveAttemptsUsed(assignment) + 1} of ${maxAttempts}`
+      : assignment
+        ? `Attempt ${session?.attempt_number ?? resolveAttemptsUsed(assignment) + 1}`
+        : null
 
   return (
     <div className="space-y-3 sm:space-y-4 w-full min-w-0 max-w-5xl mx-auto pb-course-player-footer lg:pb-4">

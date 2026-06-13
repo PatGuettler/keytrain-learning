@@ -31,6 +31,7 @@ export function CourseEditPage() {
   const [estimatedMinutes, setEstimatedMinutes] = useState(30)
   const [modules, setModules] = useState<Module[]>([])
   const [maxAttempts, setMaxAttempts] = useState(3)
+  const [unlimitedAttempts, setUnlimitedAttempts] = useState(false)
   const [savedCourseId, setSavedCourseId] = useState(isNew ? '' : courseId!)
   const [saveError, setSaveError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -40,7 +41,13 @@ export function CourseEditPage() {
       setTitle(course.title)
       setDescription(course.description)
       setEstimatedMinutes(course.estimated_minutes)
-      if (course.max_attempts) setMaxAttempts(course.max_attempts)
+      if (course.max_attempts === 0) {
+        setUnlimitedAttempts(true)
+        setMaxAttempts(3)
+      } else if (course.max_attempts) {
+        setMaxAttempts(course.max_attempts)
+        setUnlimitedAttempts(false)
+      }
     }
   }, [course])
 
@@ -89,7 +96,7 @@ export function CourseEditPage() {
         title: title.trim() || 'Untitled course',
         description,
         is_published: course?.is_published ?? false,
-        max_attempts: Math.max(1, maxAttempts),
+        max_attempts: unlimitedAttempts ? 0 : Math.max(1, maxAttempts),
         estimated_minutes: Math.max(1, estimatedMinutes),
         created_by: userId,
       })
@@ -133,19 +140,32 @@ export function CourseEditPage() {
         )}
       </div>
 
-      <div className="max-w-xs space-y-2">
-        <Label htmlFor="max-attempts">Max attempts per user</Label>
-        <Input
-          id="max-attempts"
-          type="number"
-          min={1}
-          value={maxAttempts}
-          onChange={(e) => setMaxAttempts(parseInt(e.target.value, 10) || 1)}
-        />
-        <p className="text-xs text-muted-foreground">
-          After this many failed completions, the user is locked until an admin approves an unlock
-          request.
-        </p>
+      <div className="max-w-xs space-y-3">
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={unlimitedAttempts}
+            onChange={(e) => setUnlimitedAttempts(e.target.checked)}
+            className="rounded border-input"
+          />
+          Unlimited attempts (no lockout)
+        </label>
+        {!unlimitedAttempts && (
+          <>
+            <Label htmlFor="max-attempts">Max attempts per user</Label>
+            <Input
+              id="max-attempts"
+              type="number"
+              min={1}
+              value={maxAttempts}
+              onChange={(e) => setMaxAttempts(parseInt(e.target.value, 10) || 1)}
+            />
+            <p className="text-xs text-muted-foreground">
+              After this many failed completions, the user is locked until an admin approves an unlock
+              request. Changing a course to unlimited automatically unlocks locked assignments.
+            </p>
+          </>
+        )}
       </div>
 
       <CourseBuilder

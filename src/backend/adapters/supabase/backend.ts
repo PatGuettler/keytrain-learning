@@ -444,6 +444,7 @@ export function createSupabaseBackend(): Backend {
           .single()
         if (fetchError) throw fetchError
 
+        const unlimitedAttempts = maxAttempts === 0
         const attemptsUsed = assignment.attempts_used + 1
 
         if (passed) {
@@ -463,12 +464,12 @@ export function createSupabaseBackend(): Backend {
             attemptsUsed,
             maxAttempts,
             locked: false,
-            attemptsRemaining: Math.max(0, maxAttempts - attemptsUsed),
+            attemptsRemaining: unlimitedAttempts ? -1 : Math.max(0, maxAttempts - attemptsUsed),
             score: score ?? null,
           }
         }
 
-        const locked = attemptsUsed >= maxAttempts
+        const locked = !unlimitedAttempts && attemptsUsed >= maxAttempts
         const { error: updateError } = await supabase
           .from('assignments')
           .update({
@@ -673,7 +674,15 @@ export function createSupabaseBackend(): Backend {
           .eq('id', assignmentId)
           .single()
         if (assignmentError) throw assignmentError
-        if (assignment.locked_at) {
+
+        const { data: courseRow } = await supabase
+          .from('courses')
+          .select('max_attempts')
+          .eq('id', courseId)
+          .maybeSingle()
+        const unlimitedAttempts = courseRow?.max_attempts === 0
+
+        if (assignment.locked_at && !unlimitedAttempts) {
           throw new Error('This course is locked. Request an unlock from your administrator.')
         }
         if (assignment.status === 'completed') {
