@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ThemeSelectorButtons } from '@/components/layout/ThemeSelector'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -86,6 +87,16 @@ export function ProfilePage() {
             </p>
           )}
           <p className="font-mono text-xs text-muted-foreground break-all">User ID: {userId}</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Theme</CardTitle>
+          <CardDescription>Choose light, dark, or match your system setting.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ThemeSelectorButtons />
         </CardContent>
       </Card>
 

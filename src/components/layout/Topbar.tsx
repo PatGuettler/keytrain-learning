@@ -1,32 +1,30 @@
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Monitor, Moon, Shield, Sun, Menu, UserCircle } from 'lucide-react'
+import { LogOut, Shield, Menu, UserCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { ThemeDropdownItems } from '@/components/layout/ThemeSelector'
 import { useAuth } from '@/hooks/useAuth'
 import { useUiStore } from '@/store/uiStore'
 import { APP_NAME, ROLE_PROFILE } from '@/lib/constants'
-import type { ThemePreference } from '@/lib/theme'
 
 export function Topbar() {
   const navigate = useNavigate()
   const { profile, logout, role } = useAuth()
-  const { theme, setTheme, setSidebarOpen } = useUiStore()
+  const { setSidebarOpen } = useUiStore()
 
   const handleSignOut = async () => {
     await logout()
     navigate('/login', { replace: true })
   }
 
-  const profilePath = role ? ROLE_PROFILE[role] : null
+  const profilePath = role ? ROLE_PROFILE[role] : '/employee/profile'
 
   return (
     <header className="sticky top-0 z-40 flex h-14 sm:h-16 items-center justify-between gap-2 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 px-3 sm:px-4 lg:px-6 safe-area-pt safe-area-px">
@@ -55,7 +53,11 @@ export function Topbar() {
               <UserCircle className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent
+            align="end"
+            className="w-56 max-h-[min(80vh,24rem)] overflow-y-auto"
+            collisionPadding={8}
+          >
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{profile?.full_name ?? 'User'}</p>
@@ -68,32 +70,14 @@ export function Topbar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {profilePath && (
-              <DropdownMenuItem onSelect={() => navigate(profilePath)}>
-                Profile
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem onSelect={() => navigate(profilePath)}>
+              Profile
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
               Theme
             </DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={theme}
-              onValueChange={(value) => setTheme(value as ThemePreference)}
-            >
-              <DropdownMenuRadioItem value="light" className="gap-2">
-                <Sun className="h-4 w-4" />
-                Light
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="dark" className="gap-2">
-                <Moon className="h-4 w-4" />
-                Dark
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="system" className="gap-2">
-                <Monitor className="h-4 w-4" />
-                System
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
+            <ThemeDropdownItems />
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />
