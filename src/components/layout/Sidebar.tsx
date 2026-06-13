@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Users,
   LockKeyhole,
+  UserCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_NAME } from '@/lib/constants'
@@ -20,12 +21,17 @@ const navByRole = {
     { to: '/admin/organizations', label: 'Organizations', icon: Building2 },
     { to: '/admin/courses', label: 'Courses', icon: BookOpen },
     { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
+    { to: '/admin/profile', label: 'Profile', icon: UserCircle },
   ],
   manager: [
     { to: '/manager/training', label: 'Required Training', icon: GraduationCap },
     { to: '/manager/team', label: 'My Team', icon: Users },
+    { to: '/manager/profile', label: 'Profile', icon: UserCircle },
   ],
-  employee: [{ to: '/employee/training', label: 'Required Training', icon: GraduationCap }],
+  employee: [
+    { to: '/employee/training', label: 'Required Training', icon: GraduationCap },
+    { to: '/employee/profile', label: 'Profile', icon: UserCircle },
+  ],
 }
 
 export function Sidebar() {

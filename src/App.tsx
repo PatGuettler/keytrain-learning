@@ -22,6 +22,7 @@ import { AdminStaffCourseDetailPage } from '@/pages/admin/AdminStaffCourseDetail
 import { EmployeeListPage } from '@/pages/manager/EmployeeListPage'
 import { ManagerEmployeeDetailPage } from '@/pages/manager/ManagerEmployeeDetailPage'
 import { MyTrainingPage } from '@/pages/employee/MyTrainingPage'
+import { ProfilePage } from '@/pages/ProfilePage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { useAuthStore } from '@/store/authStore'
 import { ROLE_DASHBOARD } from '@/lib/constants'
@@ -149,7 +150,9 @@ export default function App() {
                 </RoleGuard>
               }
             />
-            <Route path="/employee/profile" element={<Navigate to="/employee/training" replace />} />
+            <Route path="/employee/profile" element={<RoleGuard roles={['employee', 'manager', 'admin']}><ProfilePage /></RoleGuard>} />
+            <Route path="/manager/profile" element={<RoleGuard roles={['manager']}><ProfilePage /></RoleGuard>} />
+            <Route path="/admin/profile" element={<RoleGuard roles={['admin']}><ProfilePage /></RoleGuard>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
