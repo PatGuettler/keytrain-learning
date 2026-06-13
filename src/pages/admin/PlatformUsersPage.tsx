@@ -52,14 +52,18 @@ interface EnrichedUser extends Profile {
 }
 
 export function PlatformUsersPage() {
-  const [searchParams] = useSearchParams()
-  const initialFilter = searchParams.get('filter')
+  const [searchParams, setSearchParams] = useSearchParams()
   const [sortKey, setSortKey] = useState<SortKey>('lastLogin')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>(() => {
-    if (initialFilter === 'active' || initialFilter === 'inactive') return initialFilter
-    return 'all'
-  })
+
+  const paramFilter = searchParams.get('filter')
+  const filter: 'all' | 'active' | 'inactive' =
+    paramFilter === 'active' || paramFilter === 'inactive' ? paramFilter : 'all'
+
+  const setFilter = (next: 'all' | 'active' | 'inactive') => {
+    if (next === 'all') setSearchParams({})
+    else setSearchParams({ filter: next })
+  }
 
   const { data: hospitals = [] } = useQuery({
     queryKey: ['organizations'],
@@ -90,6 +94,15 @@ export function PlatformUsersPage() {
     if (filter === 'inactive') return enriched.filter((u) => !u.is_active)
     return enriched
   }, [enriched, filter])
+
+  const counts = useMemo(
+    () => ({
+      all: enriched.length,
+      active: enriched.filter((u) => u.is_active).length,
+      inactive: enriched.filter((u) => !u.is_active).length,
+    }),
+    [enriched]
+  )
 
   const sorted = useMemo(() => {
     const dir = sortDir === 'asc' ? 1 : -1
@@ -139,8 +152,8 @@ export function PlatformUsersPage() {
       </div>
 
       <PageHeader
-        title="All users"
-        description="Hospital staff across all organizations — sort, review, and export."
+        title="Users"
+        description="Hospital staff across all organizations — filter, sort, review, and export."
         action={
           <Button
             variant="outline"
@@ -155,14 +168,20 @@ export function PlatformUsersPage() {
       />
 
       <div className="flex flex-wrap gap-2">
-        {(['all', 'active', 'inactive'] as const).map((f) => (
+        {(
+          [
+            { key: 'all' as const, label: 'All users' },
+            { key: 'active' as const, label: 'Active' },
+            { key: 'inactive' as const, label: 'Inactive' },
+          ] as const
+        ).map(({ key, label }) => (
           <Button
-            key={f}
+            key={key}
             size="sm"
-            variant={filter === f ? 'default' : 'outline'}
-            onClick={() => setFilter(f)}
+            variant={filter === key ? 'default' : 'outline'}
+            onClick={() => setFilter(key)}
           >
-            {f === 'all' ? 'All users' : f === 'active' ? 'Active only' : 'Inactive only'}
+            {label} ({counts[key]})
           </Button>
         ))}
       </div>
