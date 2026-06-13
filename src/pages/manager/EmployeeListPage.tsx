@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchProfiles } from '@/services/users.service'
 import { useAuthStore } from '@/store/authStore'
@@ -27,8 +28,9 @@ export function EmployeeListPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {employees.map((emp) => (
-            <Card key={emp.id}>
-              <CardContent className="flex items-center justify-between p-4">
+            <Link key={emp.id} to={`/manager/team/${emp.id}`} className="block">
+              <Card className="hover:bg-accent/30 transition-colors">
+                <CardContent className="flex items-center justify-between p-4">
                 <div className="min-w-0">
                   <p className="font-semibold truncate">{emp.full_name}</p>
                   <p className="text-sm text-muted-foreground truncate">{emp.email ?? 'No email'}</p>
@@ -41,8 +43,9 @@ export function EmployeeListPage() {
                     </Badge>
                   )
                 })()}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

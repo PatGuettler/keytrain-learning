@@ -20,6 +20,7 @@ import { UnlockRequestsPage } from '@/pages/admin/UnlockRequestsPage'
 import { AdminStaffTrainingPage } from '@/pages/admin/AdminStaffTrainingPage'
 import { AdminStaffCourseDetailPage } from '@/pages/admin/AdminStaffCourseDetailPage'
 import { EmployeeListPage } from '@/pages/manager/EmployeeListPage'
+import { ManagerEmployeeDetailPage } from '@/pages/manager/ManagerEmployeeDetailPage'
 import { MyTrainingPage } from '@/pages/employee/MyTrainingPage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { useAuthStore } from '@/store/authStore'
@@ -118,8 +119,8 @@ export default function App() {
               element={<RoleGuard roles={['manager']}><EmployeeListPage /></RoleGuard>}
             />
             <Route
-              path="/manager/team/:employeeId/*"
-              element={<Navigate to="/manager/team" replace />}
+              path="/manager/team/:employeeId"
+              element={<RoleGuard roles={['manager']}><ManagerEmployeeDetailPage /></RoleGuard>}
             />
             <Route path="/manager/assignments" element={<Navigate to="/manager/training" replace />} />
             <Route
