@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { HEARTBEAT_INTERVAL_MS } from '@/lib/constants'
+import { HEARTBEAT_INTERVAL_MS, SESSION_ACTIVITY_PULSE_EVENT } from '@/lib/constants'
 import { completeSession, startSession, updateSessionTime } from '@/services/sessions.service'
 import type { TrainingSession } from '@/types/course.types'
 
@@ -33,6 +33,7 @@ export function useTrainingSession(
     const interval = setInterval(() => {
       elapsedRef.current += HEARTBEAT_INTERVAL_MS / 1000
       updateSessionTime(sessionIdRef.current!, Math.floor(elapsedRef.current))
+      window.dispatchEvent(new Event(SESSION_ACTIVITY_PULSE_EVENT))
     }, HEARTBEAT_INTERVAL_MS)
     return () => clearInterval(interval)
   }, [session?.id])
