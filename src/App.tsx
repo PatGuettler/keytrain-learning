@@ -25,6 +25,11 @@ import { EmployeeListPage } from '@/pages/manager/EmployeeListPage'
 import { ManagerEmployeeDetailPage } from '@/pages/manager/ManagerEmployeeDetailPage'
 import { MyTrainingPage } from '@/pages/employee/MyTrainingPage'
 import { ProfilePage } from '@/pages/ProfilePage'
+import { PhishingTrainingPage } from '@/pages/phishing/PhishingTrainingPage'
+import { PhishingCampaignsPage } from '@/pages/admin/PhishingCampaignsPage'
+import { PhishingCampaignEditPage } from '@/pages/admin/PhishingCampaignEditPage'
+import { PhishingCampaignDetailPage } from '@/pages/admin/PhishingCampaignDetailPage'
+import { PhishingDashboardPage } from '@/pages/admin/PhishingDashboardPage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { useAuthStore } from '@/store/authStore'
 import { ROLE_DASHBOARD } from '@/lib/constants'
@@ -53,6 +58,7 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/accept-invite" element={<AcceptInvitePage />} />
+          <Route path="/phishing-training" element={<PhishingTrainingPage />} />
           <Route path="/" element={<HomeRedirect />} />
 
           <Route element={<AuthGuard><Outlet /></AuthGuard>}>
@@ -105,6 +111,26 @@ export default function App() {
             <Route
               path="/admin/unlock-requests"
               element={<RoleGuard roles={['admin']}><UnlockRequestsPage /></RoleGuard>}
+            />
+            <Route
+              path="/admin/phishing/campaigns"
+              element={<RoleGuard roles={['admin']}><PhishingCampaignsPage /></RoleGuard>}
+            />
+            <Route
+              path="/admin/phishing/campaigns/new"
+              element={<RoleGuard roles={['admin']}><PhishingCampaignEditPage /></RoleGuard>}
+            />
+            <Route
+              path="/admin/phishing/campaigns/:campaignId/edit"
+              element={<RoleGuard roles={['admin']}><PhishingCampaignEditPage /></RoleGuard>}
+            />
+            <Route
+              path="/admin/phishing/campaigns/:campaignId"
+              element={<RoleGuard roles={['admin']}><PhishingCampaignDetailPage /></RoleGuard>}
+            />
+            <Route
+              path="/admin/phishing/dashboard"
+              element={<RoleGuard roles={['admin']}><PhishingDashboardPage /></RoleGuard>}
             />
             <Route
               path="/admin/admins"

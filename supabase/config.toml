@@ -8,6 +8,7 @@ additional_redirect_urls = [
   "https://patguettler.github.io/guardian-md/accept-invite",
   "https://patguettler.github.io/guardian-md/reset-password",
   "https://patguettler.github.io/guardian-md/login",
+  "https://patguettler.github.io/guardian-md/phishing-training",
   "http://localhost:5173/**",
   "http://localhost:3000/**",
 ]
@@ -18,4 +19,10 @@ additional_redirect_urls = [
 verify_jwt = false
 
 [functions.send-support-request]
+verify_jwt = false
+
+[functions.send-phishing-campaign]
+verify_jwt = false
+
+[functions.track-phishing-event]
 verify_jwt = false

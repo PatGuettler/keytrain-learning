@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Users,
   LockKeyhole,
+  Fish,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_NAME } from '@/lib/constants'
@@ -19,6 +20,7 @@ const navByRole = {
     { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
     { to: '/admin/organizations', label: 'Organizations', icon: Building2 },
     { to: '/admin/courses', label: 'Courses', icon: BookOpen },
+    { to: '/admin/phishing/campaigns', label: 'Phishing sims', icon: Fish },
     { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
   ],
   manager: [

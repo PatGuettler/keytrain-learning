@@ -46,6 +46,7 @@ Healthcare training platform for clinical incident reporting, compliance courses
 - [Getting started](#getting-started)
 - [Supabase setup](#supabase-setup)
 - [Edge Functions](#edge-functions)
+- [Phishing simulation](#phishing-simulation)
 - [Resend (support email)](#resend-support-email)
 - [Environment variables](#environment-variables)
 - [Development](#development)
@@ -66,7 +67,7 @@ GuardianMD is a single-page React app that talks directly to Supabase from the b
 | **Frontend** | React SPA on GitHub Pages (`/guardian-md/` base path) |
 | **Auth** | Supabase Auth (email + password, invite & reset links) |
 | **Database** | PostgreSQL with RLS policies per role and org |
-| **Edge Functions** | `manage-users`, `send-support-request` (Deno) |
+| **Edge Functions** | `manage-users`, `send-support-request`, `send-phishing-campaign`, `track-phishing-event` (Deno) |
 | **Email (support)** | [Resend](https://resend.com) via `send-support-request` (optional) |
 | **Storage** | Optional `training-images` bucket for lesson assets |
 
@@ -88,6 +89,7 @@ Login flow: sign in → load `profiles` row for the Auth user UUID → redirect 
 | **Unlock requests** | Review employee lockout requests; approve retakes |
 | **Platform admins** | Invite/delete platform admins (cannot delete self or last admin) |
 | **Org users** | Invite single user or bulk CSV, edit roles, deactivate, unlock login, send password reset |
+| **Phishing simulation** | Campaign builder, template library, dry-run sends, click/credential tracking, susceptibility dashboard |
 | **Profile** | Account details + support contact form |
 
 ### Manager (`manager`)
@@ -319,7 +321,7 @@ Restart `npm run dev`.
 
 ## Edge Functions
 
-Two Edge Functions extend Supabase Auth and support workflows. Both use `--no-verify-jwt` at the gateway (JWT is checked inside the function) so CORS preflights work from GitHub Pages.
+Edge Functions extend Supabase Auth and support workflows. Phishing functions use `--no-verify-jwt` at the gateway (JWT is checked inside admin-only functions) so CORS preflights work from GitHub Pages.
 
 ### Prerequisites
 
@@ -376,9 +378,99 @@ supabase functions deploy send-support-request --project-ref "$SUPABASE_PROJECT_
 
 See **[Resend (support email)](#resend-support-email)** for API keys, secrets, testing, and troubleshooting.
 
+### `send-phishing-campaign` / `track-phishing-event`
+
+Powers the **Phishing sims** admin module (platform admin only). See **[Phishing simulation](#phishing-simulation)**.
+
+```bash
+bash scripts/deploy-phishing.sh
+```
+
 ### Auth email volume
 
 Supabase built-in auth emails are rate-limited (~4/hour on free tier). For production invite volume, configure [custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp) (SendGrid, Resend, etc.).
+
+---
+
+## Phishing simulation
+
+Authorized security awareness testing for platform admins. Built into GuardianMD so remediation training can live on the same platform (roadmap: **HouseWatchmen**).
+
+**Non-breaking:** Existing training, auth, and support flows are unchanged. The module is admin-only and optional.
+
+### What works today (without a custom domain)
+
+| Capability | Status |
+|------------|--------|
+| SQL schema + 6 email templates | Run migrations `022` and `023` |
+| Campaign builder UI (`/admin/phishing/campaigns`) | Ready |
+| Per-recipient tokens + event tracking | Ready |
+| **Dry-run send** (no real email) | Default when `RESEND_API_KEY` is missing or `PHISHING_SIMULATION_DRY_RUN=true` |
+| Fake login page (bundled) | `public/phishing-sim/login.html` on GitHub Pages |
+| Training interstitial | `/phishing-training` route in the main app |
+| Susceptibility dashboard | `/admin/phishing/dashboard` |
+
+### 1. Run database migrations
+
+In Supabase **SQL Editor** (in order):
+
+1. [`022_phishing_simulation.sql`](supabase/migrations/022_phishing_simulation.sql) — tables + RLS
+2. [`023_phishing_templates_seed.sql`](supabase/migrations/023_phishing_templates_seed.sql) — 6 starter templates
+
+### 2. Deploy Edge Functions
+
+```bash
+export SUPABASE_ACCESS_TOKEN='sbp_...'
+export SUPABASE_PROJECT_REF='your-project-ref'
+bash scripts/deploy-phishing.sh
+```
+
+Optional secrets:
+
+```bash
+# Force dry-run even when Resend is configured (recommended until domain is ready)
+supabase secrets set PHISHING_SIMULATION_DRY_RUN=true --project-ref "$SUPABASE_PROJECT_REF"
+
+# Where users land after clicking a phish link (defaults to GitHub Pages)
+supabase secrets set PHISHING_TRAINING_URL='https://patguettler.github.io/guardian-md/phishing-training' --project-ref "$SUPABASE_PROJECT_REF"
+```
+
+### 3. Test without sending email
+
+1. Sign in as platform admin → **Phishing sims**
+2. **New campaign** → pick a template → select organization → **Save & build recipients**
+3. Open campaign → **Send campaign** → confirm dry-run message
+4. Copy a recipient token from the database (`phishing_recipients.token`) and open:
+   - Click test: `https://<project>.supabase.co/functions/v1/track-phishing-event?token=TOKEN&event=click`
+   - Training page: `https://patguettler.github.io/guardian-md/phishing-training?token=TOKEN`
+5. Refresh campaign results — events should appear
+
+### 4. What remains before production email
+
+| Step | Action |
+|------|--------|
+| **Domain** | Buy a simulation domain (e.g. `ithelpdeskportal.com`) — see [`simulation-sites/README.md`](simulation-sites/README.md) |
+| **Resend** | Verify domain; set `RESEND_API_KEY` and campaign sender addresses |
+| **Fake login hosting** | Deploy `login.html` to Cloudflare Pages on that domain (private repo recommended) |
+| **Disable dry-run** | `supabase secrets unset PHISHING_SIMULATION_DRY_RUN` (or set to `false`) |
+| **Auth SMTP** | Optional: route Supabase auth mail through Resend ([docs](https://resend.com/docs/send-with-supabase-smtp)) |
+| **Auto-remediation** | Phase 2 — auto-assign courses after click/submit (`auto_remediate` column exists) |
+| **PDF/CSV export** | Phase 2 — campaign report export |
+
+### Tracking events
+
+| Event | How |
+|-------|-----|
+| `open` | 1×1 pixel (unreliable in many clients) |
+| `click` | Tracked redirect URL in email |
+| `credential_submission` | Fake login form POST (password **never** stored) |
+| `training_viewed` | Training interstitial page load |
+
+### Legal / scope
+
+- Simulations are for **authorized internal training only**
+- Credentials entered on fake login pages are **never stored**
+- Platform admins must have organizational authority to run campaigns
 
 ---
 
@@ -499,6 +591,7 @@ npm run preview        # Preview production build
 npm run preview:pages  # Build + preview at /guardian-md/
 npm run lint           # ESLint
 npm run deploy:manage-users  # Deploy manage-users Edge Function
+npm run deploy:phishing      # Deploy phishing simulation Edge Functions
 npm run test:resend-support  # Test Resend API (export RESEND_API_KEY first)
 npm run set-test-passwords   # Reset test user passwords (export SUPABASE_SERVICE_ROLE_KEY)
 ```
@@ -537,6 +630,7 @@ After schema migrations and Edge Function deploys:
 1. Confirm **Site URL** and redirect URLs match production.
 2. Set `INVITE_REDIRECT_URL` secret to production accept-invite URL.
 3. Configure [Resend](#resend-support-email) (`RESEND_API_KEY`, deploy `send-support-request`).
+4. Optional: run phishing migrations and `bash scripts/deploy-phishing.sh` (see [Phishing simulation](#phishing-simulation)).
 
 Edge Functions and database are **not** deployed by the GitHub Actions workflow — run migrations and function deploys manually (see above).
 
@@ -558,6 +652,10 @@ Core tables (see [`001_initial_schema.sql`](supabase/migrations/001_initial_sche
 | `course_publications` | Publish courses to orgs with optional deadline |
 | `course_unlock_requests` | Employee unlock requests (pending/approved/denied) |
 | `support_requests` | Profile help form submissions |
+| `phishing_templates` | Phishing email template library |
+| `phishing_campaigns` | Simulation campaigns (draft → sent) |
+| `phishing_recipients` | Per-user tracking tokens |
+| `phishing_events` | Opens, clicks, credential submits, training views |
 
 Module `content` is JSONB — lesson slides, quiz questions, workshop config, YouTube URLs, etc.
 
