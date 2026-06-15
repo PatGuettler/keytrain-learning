@@ -1,0 +1,307 @@
+{
+  "version": 1,
+  "exported_at": "2026-06-15T03:07:34.450Z",
+  "course": {
+    "title": "Incident Awareness & Reporting",
+    "description": "Healthcare Course 6: Recognize incident types, report promptly, and protect patients, privacy, and operations.",
+    "estimated_minutes": 60,
+    "max_attempts": 3
+  },
+  "modules": [
+    {
+      "title": "What is a Clinical Incident?",
+      "type": "lesson",
+      "order_index": 0,
+      "content": {
+        "slides": [
+          {
+            "id": "slide_1",
+            "body": "A clinical incident is any event that could have or did harm a patient during care delivery. This includes medication errors, falls, wrong-site procedures, and near-misses.",
+            "layout": "image-right",
+            "heading": "What is a Clinical Incident?",
+            "illustration": {
+              "alt": "Clinical incident alert at point of care",
+              "key": "clinical_incident",
+              "caption": "When in doubt, stop and report — patient safety comes first."
+            }
+          },
+          {
+            "id": "slide_2",
+            "body": "Timely reporting enables root cause analysis, prevents recurrence, and fulfills regulatory obligations. Non-reporting puts patients and the organization at risk.",
+            "layout": "image-top",
+            "heading": "Why Reporting Matters",
+            "illustration": {
+              "alt": "Completed incident report with checkmark",
+              "key": "reporting",
+              "caption": "Reports feed quality improvement and compliance workflows."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "title": "Incident Classification Quiz",
+      "type": "quiz",
+      "order_index": 1,
+      "content": {
+        "questions": [
+          {
+            "id": "q1",
+            "text": "What type of incident is giving a patient the wrong dosage?",
+            "type": "single_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "Cybersecurity incident",
+                "correct": false
+              },
+              {
+                "id": "b",
+                "text": "Clinical incident",
+                "correct": true
+              },
+              {
+                "id": "c",
+                "text": "Physical infrastructure incident",
+                "correct": false
+              }
+            ],
+            "explanation": "Medication dosage errors directly affect patient safety and are classified as clinical incidents."
+          },
+          {
+            "id": "q2",
+            "text": "A water leak in the parking garage is best classified as:",
+            "type": "single_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "Clinical incident",
+                "correct": false
+              },
+              {
+                "id": "b",
+                "text": "Physical / facilities incident",
+                "correct": true
+              },
+              {
+                "id": "c",
+                "text": "Privacy breach",
+                "correct": false
+              }
+            ],
+            "explanation": "Facilities issues without direct patient harm are physical incidents, still reportable through facilities channels."
+          }
+        ],
+        "passing_score": 80,
+        "randomize_questions": true
+      }
+    },
+    {
+      "title": "Hospital Floor Incident Map",
+      "type": "workshop",
+      "order_index": 2,
+      "content": {
+        "title": "Identify the Incident Type",
+        "config": {
+          "nodes": [
+            {
+              "id": "node_1",
+              "icon": "alert",
+              "label": "Nurses Station",
+              "question": {
+                "text": "What type of incident is this?",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "Clinical"
+                  },
+                  {
+                    "id": "b",
+                    "text": "Cybersecurity / Privacy"
+                  },
+                  {
+                    "id": "c",
+                    "text": "Physical / Facilities"
+                  }
+                ],
+                "correct_id": "b"
+              },
+              "scenario": "The EHR shows a patient chart accessed 12 times in one hour by a user not on the care team.",
+              "x_percent": 50,
+              "y_percent": 38
+            },
+            {
+              "id": "node_2",
+              "icon": "alert",
+              "label": "Room 204",
+              "question": {
+                "text": "What type of incident is this?",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "Clinical"
+                  },
+                  {
+                    "id": "b",
+                    "text": "Cybersecurity"
+                  },
+                  {
+                    "id": "c",
+                    "text": "Administrative"
+                  }
+                ],
+                "correct_id": "a"
+              },
+              "scenario": "A patient received double the prescribed dose of insulin.",
+              "x_percent": 81,
+              "y_percent": 22
+            },
+            {
+              "id": "node_3",
+              "icon": "alert",
+              "label": "Pharmacy",
+              "question": {
+                "text": "What type of incident is this?",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "Clinical (medication safety)"
+                  },
+                  {
+                    "id": "b",
+                    "text": "Cybersecurity"
+                  },
+                  {
+                    "id": "c",
+                    "text": "Physical only"
+                  }
+                ],
+                "correct_id": "a"
+              },
+              "scenario": "Look-alike medication vials stored together; wrong drug nearly dispensed.",
+              "x_percent": 12,
+              "y_percent": 72
+            },
+            {
+              "id": "node_4",
+              "icon": "alert",
+              "label": "Waiting Area",
+              "question": {
+                "text": "What type of incident is this?",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "Clinical"
+                  },
+                  {
+                    "id": "b",
+                    "text": "Physical / Facilities"
+                  },
+                  {
+                    "id": "c",
+                    "text": "Administrative"
+                  }
+                ],
+                "correct_id": "b"
+              },
+              "scenario": "Visitor slipped on wet floor; no warning signage after mopping.",
+              "x_percent": 20,
+              "y_percent": 88
+            },
+            {
+              "id": "node_5",
+              "icon": "alert",
+              "label": "IT / EHR",
+              "question": {
+                "text": "What type of incident is this?",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "Clinical"
+                  },
+                  {
+                    "id": "b",
+                    "text": "Cybersecurity / Privacy"
+                  },
+                  {
+                    "id": "c",
+                    "text": "Physical"
+                  }
+                ],
+                "correct_id": "b"
+              },
+              "scenario": "Unlocked workstation with patient schedules visible during evacuation.",
+              "x_percent": 73,
+              "y_percent": 88
+            }
+          ],
+          "background_image": ""
+        },
+        "instructions": "Explore the ward floor plan and tap each alert pin. Read the scenario and classify the incident.",
+        "workshop_type": "node_map"
+      }
+    },
+    {
+      "title": "Sort Incidents by Category",
+      "type": "workshop",
+      "order_index": 3,
+      "content": {
+        "title": "Incident Sorting Challenge",
+        "config": {
+          "cards": [
+            {
+              "id": "c1",
+              "text": "Wrong medication administered",
+              "category_id": "clinical"
+            },
+            {
+              "id": "c2",
+              "text": "Phishing email clicked by staff",
+              "category_id": "cyber"
+            },
+            {
+              "id": "c3",
+              "text": "Broken elevator strand patients",
+              "category_id": "physical"
+            },
+            {
+              "id": "c4",
+              "text": "Missing consent form",
+              "category_id": "admin"
+            },
+            {
+              "id": "c5",
+              "text": "Patient fall with injury",
+              "category_id": "clinical"
+            },
+            {
+              "id": "c6",
+              "text": "Ransomware on workstation",
+              "category_id": "cyber"
+            }
+          ],
+          "categories": [
+            {
+              "id": "clinical",
+              "label": "Clinical"
+            },
+            {
+              "id": "cyber",
+              "label": "Cybersecurity"
+            },
+            {
+              "id": "physical",
+              "label": "Physical"
+            },
+            {
+              "id": "admin",
+              "label": "Administrative"
+            }
+          ]
+        },
+        "instructions": "Drag each incident card into the correct category.",
+        "workshop_type": "sorting"
+      }
+    }
+  ]
+}

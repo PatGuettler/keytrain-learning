@@ -31,7 +31,7 @@ export function CourseEditPage() {
   const [description, setDescription] = useState('')
   const [estimatedMinutes, setEstimatedMinutes] = useState(30)
   const [modules, setModules] = useState<Module[]>([])
-  const [maxAttempts, setMaxAttempts] = useState(3)
+  const [maxAttemptsInput, setMaxAttemptsInput] = useState('3')
   const [unlimitedAttempts, setUnlimitedAttempts] = useState(false)
   const [savedCourseId, setSavedCourseId] = useState(isNew ? '' : courseId!)
   const [saveError, setSaveError] = useState('')
@@ -44,9 +44,9 @@ export function CourseEditPage() {
       setEstimatedMinutes(course.estimated_minutes)
       if (course.max_attempts === 0) {
         setUnlimitedAttempts(true)
-        setMaxAttempts(3)
+        setMaxAttemptsInput('3')
       } else if (course.max_attempts) {
-        setMaxAttempts(course.max_attempts)
+        setMaxAttemptsInput(String(course.max_attempts))
         setUnlimitedAttempts(false)
       }
     }
@@ -90,6 +90,28 @@ export function CourseEditPage() {
   const save = async () => {
     setSaving(true)
     setSaveError('')
+
+    let resolvedMaxAttempts = 0
+    if (!unlimitedAttempts) {
+      const trimmed = maxAttemptsInput.trim()
+      if (trimmed === '') {
+        setSaveError(
+          'Max attempts per user is required. Enter 1 or more, or check "Unlimited attempts".'
+        )
+        setSaving(false)
+        return
+      }
+      const parsed = Number.parseInt(trimmed, 10)
+      if (!Number.isFinite(parsed) || parsed < 1) {
+        setSaveError(
+          'Max attempts per user must be 1 or more. Enter a valid number, or check "Unlimited attempts".'
+        )
+        setSaving(false)
+        return
+      }
+      resolvedMaxAttempts = parsed
+    }
+
     try {
       const saved = await upsertCourse({
         id: isNew ? undefined : courseId,
@@ -97,7 +119,7 @@ export function CourseEditPage() {
         title: title.trim() || 'Untitled course',
         description,
         is_published: course?.is_published ?? false,
-        max_attempts: unlimitedAttempts ? 0 : Math.max(1, maxAttempts),
+        max_attempts: resolvedMaxAttempts,
         estimated_minutes: Math.max(1, estimatedMinutes),
         created_by: userId,
       })
@@ -153,17 +175,22 @@ export function CourseEditPage() {
         </label>
         {!unlimitedAttempts && (
           <>
-            <Label htmlFor="max-attempts">Max attempts per user</Label>
+            <Label htmlFor="max-attempts">
+              Max attempts per user <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="max-attempts"
               type="number"
-              min={1}
-              value={maxAttempts}
-              onChange={(e) => setMaxAttempts(parseInt(e.target.value, 10) || 1)}
+              min={0}
+              inputMode="numeric"
+              value={maxAttemptsInput}
+              onChange={(e) => setMaxAttemptsInput(e.target.value)}
+              aria-required
             />
             <p className="text-xs text-muted-foreground">
-              After this many failed completions, the user is locked until an admin approves an unlock
-              request. Changing a course to unlimited automatically unlocks locked assignments.
+              Required unless unlimited is enabled. Enter 1 or more. After this many failed
+              completions, the user is locked until an admin approves an unlock request. Changing a
+              course to unlimited automatically unlocks locked assignments.
             </p>
           </>
         )}
@@ -188,7 +215,7 @@ export function CourseEditPage() {
                   setUnlimitedAttempts(true)
                 } else {
                   setUnlimitedAttempts(false)
-                  setMaxAttempts(draft.max_attempts)
+                  setMaxAttemptsInput(String(draft.max_attempts))
                 }
                 setModules(
                   draft.modules.map((m, i) => ({
