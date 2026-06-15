@@ -98,7 +98,7 @@ export function buildRecipientOutcomes(
 }
 
 export function susceptibleRecipientCount(
-  recipients: PhishingRecipient[],
+  _recipients: PhishingRecipient[],
   events: PhishingEvent[]
 ): number {
   const susceptible = new Set<string>()

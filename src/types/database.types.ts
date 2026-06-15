@@ -421,6 +421,187 @@ export interface Database {
           },
         ]
       }
+      phishing_templates: {
+        Row: {
+          id: string
+          name: string
+          pretext: string
+          sender_name: string
+          sender_email_local: string
+          subject: string
+          body_html: string
+          body_text: string
+          difficulty: string
+          red_flags: Json
+          thumbnail_url: string | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          pretext: string
+          sender_name: string
+          sender_email_local: string
+          subject: string
+          body_html: string
+          body_text: string
+          difficulty?: string
+          red_flags?: Json
+          thumbnail_url?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: Partial<{
+          name: string
+          pretext: string
+          sender_name: string
+          sender_email_local: string
+          subject: string
+          body_html: string
+          body_text: string
+          difficulty: string
+          red_flags: Json
+          thumbnail_url: string | null
+          is_active: boolean
+        }>
+        Relationships: []
+      }
+      phishing_campaigns: {
+        Row: {
+          id: string
+          org_id: string | null
+          template_id: string | null
+          created_by: string | null
+          name: string
+          subject: string
+          sender_name: string
+          sender_email: string
+          body_html: string
+          body_text: string
+          pretext: string | null
+          fake_login_url: string | null
+          track_opens: boolean
+          target_scope: string
+          target_user_ids: string[]
+          exclude_admins: boolean
+          deadline_date: string | null
+          status: string
+          scheduled_at: string | null
+          sent_at: string | null
+          auto_remediate: boolean
+          remediation_course_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          org_id?: string | null
+          template_id?: string | null
+          created_by?: string | null
+          name: string
+          subject: string
+          sender_name: string
+          sender_email: string
+          body_html: string
+          body_text?: string
+          pretext?: string | null
+          fake_login_url?: string | null
+          track_opens?: boolean
+          target_scope?: string
+          target_user_ids?: string[]
+          exclude_admins?: boolean
+          deadline_date?: string | null
+          status?: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          auto_remediate?: boolean
+          remediation_course_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<{
+          org_id: string | null
+          template_id: string | null
+          created_by: string | null
+          name: string
+          subject: string
+          sender_name: string
+          sender_email: string
+          body_html: string
+          body_text: string
+          pretext: string | null
+          fake_login_url: string | null
+          track_opens: boolean
+          target_scope: string
+          target_user_ids: string[]
+          exclude_admins: boolean
+          deadline_date: string | null
+          status: string
+          scheduled_at: string | null
+          sent_at: string | null
+          auto_remediate: boolean
+          remediation_course_id: string | null
+          updated_at: string
+        }>
+        Relationships: []
+      }
+      phishing_recipients: {
+        Row: {
+          id: string
+          campaign_id: string
+          user_id: string
+          token: string
+          sent_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          campaign_id: string
+          user_id: string
+          token?: string
+          sent_at?: string | null
+          created_at?: string
+        }
+        Update: Partial<{
+          campaign_id: string
+          user_id: string
+          token: string
+          sent_at: string | null
+        }>
+        Relationships: []
+      }
+      phishing_events: {
+        Row: {
+          id: string
+          campaign_id: string
+          recipient_id: string
+          user_id: string
+          event_type: string
+          ip_address: string | null
+          user_agent: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          campaign_id: string
+          recipient_id: string
+          user_id: string
+          event_type: string
+          ip_address?: string | null
+          user_agent?: string | null
+          created_at?: string
+        }
+        Update: Partial<{
+          campaign_id: string
+          recipient_id: string
+          user_id: string
+          event_type: string
+          ip_address: string | null
+          user_agent: string | null
+        }>
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: {

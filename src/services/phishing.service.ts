@@ -28,7 +28,7 @@ export async function fetchPhishingTemplates(): Promise<PhishingTemplate[]> {
   if (error) throw error
   return (data ?? []).map((row) => ({
     ...row,
-    red_flags: Array.isArray(row.red_flags) ? row.red_flags : [],
+    red_flags: Array.isArray(row.red_flags) ? (row.red_flags as string[]) : [],
   })) as PhishingTemplate[]
 }
 
