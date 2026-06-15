@@ -80,7 +80,12 @@ export function PhishingCampaignsPage() {
                   <td className="p-3 font-medium">{campaign.name}</td>
                   <td className="p-3 capitalize text-muted-foreground">{campaign.pretext ?? '—'}</td>
                   <td className="p-3">
-                    <Badge variant={statusVariant[campaign.status]}>{campaign.status}</Badge>
+                    <div className="flex flex-wrap gap-1">
+                      <Badge variant={statusVariant[campaign.status]}>{campaign.status}</Badge>
+                      {campaign.test_mode && campaign.status === 'draft' && (
+                        <Badge variant="warning">Test mode</Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="p-3 text-muted-foreground whitespace-nowrap">
                     {campaign.sent_at ? formatDate(campaign.sent_at) : '—'}

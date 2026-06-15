@@ -58,6 +58,7 @@ export function PhishingCampaignEditPage() {
   const [deadlineDate, setDeadlineDate] = useState('Friday')
   const [trackOpens, setTrackOpens] = useState(true)
   const [excludeAdmins, setExcludeAdmins] = useState(true)
+  const [testMode, setTestMode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -84,6 +85,7 @@ export function PhishingCampaignEditPage() {
     setDeadlineDate(existing.deadline_date ?? 'Friday')
     setTrackOpens(existing.track_opens)
     setExcludeAdmins(existing.exclude_admins)
+    setTestMode(existing.test_mode)
   }, [existing])
 
   const selectedTemplate = useMemo(
@@ -138,6 +140,7 @@ export function PhishingCampaignEditPage() {
         target_user_ids: targetScope === 'custom' ? selectedUserIds : [],
         exclude_admins: excludeAdmins,
         deadline_date: deadlineDate.trim() || null,
+        test_mode: testMode,
       }
 
       const campaign = isNew
@@ -234,6 +237,23 @@ export function PhishingCampaignEditPage() {
           />
           Exclude platform admins from audience
         </label>
+
+        <Card className="bg-muted/30 border-dashed">
+          <CardContent className="p-4 space-y-2">
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={testMode}
+                onChange={(e) => setTestMode(e.target.checked)}
+              />
+              Test mode campaign
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Build the full audience, then send to a few selected emails first on the campaign
+              results page. The campaign stays a draft until you run a full send.
+            </p>
+          </CardContent>
+        </Card>
 
         {targetScope === 'custom' && orgId && (
           <Card>

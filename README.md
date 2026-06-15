@@ -416,6 +416,7 @@ In Supabase **SQL Editor** (in order):
 
 1. [`022_phishing_simulation.sql`](supabase/migrations/022_phishing_simulation.sql) — tables + RLS
 2. [`023_phishing_templates_seed.sql`](supabase/migrations/023_phishing_templates_seed.sql) — 6 starter templates
+3. [`024_phishing_test_send.sql`](supabase/migrations/024_phishing_test_send.sql) — test send columns
 
 ### 2. Deploy Edge Functions
 
@@ -435,7 +436,19 @@ supabase secrets set PHISHING_SIMULATION_DRY_RUN=true --project-ref "$SUPABASE_P
 supabase secrets set PHISHING_TRAINING_URL='https://patguettler.github.io/guardian-md/phishing-training' --project-ref "$SUPABASE_PROJECT_REF"
 ```
 
-### 3. Test without sending email
+### 3. Test mode (subset send)
+
+While a campaign is still a **draft**:
+
+1. Open the campaign results page
+2. Check the recipients you want (e.g. your own work email)
+3. Click **Send test (N)** — only those addresses receive the simulation
+4. Campaign stays a draft; tracking events still log normally
+5. When satisfied, click **Send to everyone** for the full audience
+
+Enable **Test mode campaign** on the edit form to flag the campaign in the list. Redeploy `send-phishing-campaign` after pulling this change.
+
+### 4. Test without sending email
 
 1. Sign in as platform admin → **Phishing sims**
 2. **New campaign** → pick a template → select organization → **Save & build recipients**
@@ -445,7 +458,7 @@ supabase secrets set PHISHING_TRAINING_URL='https://patguettler.github.io/guardi
    - Training page: `https://patguettler.github.io/guardian-md/phishing-training?token=TOKEN`
 5. Refresh campaign results — events should appear
 
-### 4. What remains before production email
+### 5. What remains before production email
 
 | Step | Action |
 |------|--------|

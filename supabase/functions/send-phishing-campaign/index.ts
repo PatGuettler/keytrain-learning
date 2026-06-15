@@ -70,6 +70,11 @@ Deno.serve(async (req) => {
     const campaignId = typeof body.campaign_id === 'string' ? body.campaign_id : ''
     if (!campaignId) return jsonResponse({ error: 'campaign_id is required.' }, 400)
 
+    const testMode = body.test_mode === true
+    const recipientIds = Array.isArray(body.recipient_ids)
+      ? body.recipient_ids.filter((id: unknown) => typeof id === 'string')
+      : []
+
     const { data: campaign, error: campaignError } = await adminClient
       .from('phishing_campaigns')
       .select('*')
@@ -80,14 +85,28 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Campaign not found.' }, 404)
     }
 
-    if (campaign.status === 'sent') {
+    if (!testMode && campaign.status === 'sent') {
       return jsonResponse({ error: 'Campaign was already sent.' }, 400)
     }
 
-    const { data: recipients, error: recipientsError } = await adminClient
+    if (testMode && campaign.status === 'sent') {
+      return jsonResponse({ error: 'Cannot test-send after the campaign has been sent to everyone.' }, 400)
+    }
+
+    if (testMode && recipientIds.length === 0) {
+      return jsonResponse({ error: 'Select at least one recipient for a test send.' }, 400)
+    }
+
+    let recipientQuery = adminClient
       .from('phishing_recipients')
       .select('id, token, user_id')
       .eq('campaign_id', campaignId)
+
+    if (testMode) {
+      recipientQuery = recipientQuery.in('id', recipientIds)
+    }
+
+    const { data: recipients, error: recipientsError } = await recipientQuery
 
     if (recipientsError) throw recipientsError
     if (!recipients?.length) {
@@ -178,27 +197,39 @@ Deno.serve(async (req) => {
 
       await adminClient
         .from('phishing_recipients')
-        .update({ sent_at: now })
+        .update(testMode ? { test_sent_at: now } : { sent_at: now })
         .eq('id', recipient.id)
 
       sentCount++
     }
 
-    await adminClient
-      .from('phishing_campaigns')
-      .update({ status: 'sent', sent_at: now, updated_at: now })
-      .eq('id', campaignId)
+    if (!testMode) {
+      await adminClient
+        .from('phishing_campaigns')
+        .update({ status: 'sent', sent_at: now, updated_at: now })
+        .eq('id', campaignId)
+    } else {
+      await adminClient
+        .from('phishing_campaigns')
+        .update({ test_mode: true, updated_at: now })
+        .eq('id', campaignId)
+    }
 
     return jsonResponse({
       success: true,
       dry_run: dryRun,
       email_sent: !dryRun,
+      test_mode: testMode,
       sent_count: sentCount,
       failed_count: failures.length,
       failures,
-      message: dryRun
-        ? `Dry run: ${sentCount} recipient(s) marked as sent. No emails were delivered (RESEND_API_KEY missing or PHISHING_SIMULATION_DRY_RUN=true).`
-        : `Sent ${sentCount} email(s).`,
+      message: testMode
+        ? dryRun
+          ? `Test dry run: ${sentCount} recipient(s) marked as test-sent. No emails were delivered.`
+          : `Test sent to ${sentCount} recipient(s). Campaign remains a draft — send to everyone when ready.`
+        : dryRun
+          ? `Dry run: ${sentCount} recipient(s) marked as sent. No emails were delivered (RESEND_API_KEY missing or PHISHING_SIMULATION_DRY_RUN=true).`
+          : `Sent ${sentCount} email(s).`,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Request failed.'

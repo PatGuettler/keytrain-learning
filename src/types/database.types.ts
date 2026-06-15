@@ -489,6 +489,7 @@ export interface Database {
           status: string
           scheduled_at: string | null
           sent_at: string | null
+          test_mode: boolean
           auto_remediate: boolean
           remediation_course_id: string | null
           created_at: string
@@ -515,6 +516,7 @@ export interface Database {
           status?: string
           scheduled_at?: string | null
           sent_at?: string | null
+          test_mode?: boolean
           auto_remediate?: boolean
           remediation_course_id?: string | null
           created_at?: string
@@ -540,6 +542,7 @@ export interface Database {
           status: string
           scheduled_at: string | null
           sent_at: string | null
+          test_mode: boolean
           auto_remediate: boolean
           remediation_course_id: string | null
           updated_at: string
@@ -553,6 +556,7 @@ export interface Database {
           user_id: string
           token: string
           sent_at: string | null
+          test_sent_at: string | null
           created_at: string
         }
         Insert: {
@@ -561,6 +565,7 @@ export interface Database {
           user_id: string
           token?: string
           sent_at?: string | null
+          test_sent_at?: string | null
           created_at?: string
         }
         Update: Partial<{
@@ -568,6 +573,7 @@ export interface Database {
           user_id: string
           token: string
           sent_at: string | null
+          test_sent_at: string | null
         }>
         Relationships: []
       }

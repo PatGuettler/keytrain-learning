@@ -51,6 +51,7 @@ export interface PhishingCampaign {
   status: PhishingCampaignStatus
   scheduled_at: string | null
   sent_at: string | null
+  test_mode: boolean
   auto_remediate: boolean
   remediation_course_id: string | null
   created_at: string
@@ -63,6 +64,7 @@ export interface PhishingRecipient {
   user_id: string
   token: string
   sent_at: string | null
+  test_sent_at: string | null
   created_at: string
 }
 
@@ -102,16 +104,24 @@ export interface PhishingCampaignInput {
   exclude_admins?: boolean
   deadline_date?: string | null
   scheduled_at?: string | null
+  test_mode?: boolean
 }
 
 export interface SendPhishingCampaignResult {
   success: boolean
   dry_run: boolean
   email_sent: boolean
+  test_mode: boolean
   sent_count: number
   failed_count: number
   failures: { email: string; error: string }[]
   message: string
+}
+
+export interface SendPhishingCampaignOptions {
+  testMode?: boolean
+  /** phishing_recipients.id values to include in a test send */
+  recipientIds?: string[]
 }
 
 export const PHISHING_PRETEXT_LABELS: Record<string, string> = {

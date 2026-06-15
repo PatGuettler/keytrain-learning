@@ -9,6 +9,7 @@ import type {
   PhishingRecipient,
   PhishingRecipientRow,
   PhishingTemplate,
+  SendPhishingCampaignOptions,
   SendPhishingCampaignResult,
 } from '@/types/phishing.types'
 
@@ -221,7 +222,10 @@ export async function recordPhishingTrainingViewed(token: string): Promise<void>
   }
 }
 
-export async function sendPhishingCampaign(campaignId: string): Promise<SendPhishingCampaignResult> {
+export async function sendPhishingCampaign(
+  campaignId: string,
+  options: SendPhishingCampaignOptions = {}
+): Promise<SendPhishingCampaignResult> {
   const supabase = getSupabase()
   const baseUrl = getSupabaseUrl()
   const anonKey = getSupabaseAnonKey()
@@ -235,6 +239,14 @@ export async function sendPhishingCampaign(campaignId: string): Promise<SendPhis
     throw new Error('You must be signed in as a platform admin.')
   }
 
+  const body: Record<string, unknown> = { campaign_id: campaignId }
+  if (options.testMode) {
+    body.test_mode = true
+    if (options.recipientIds?.length) {
+      body.recipient_ids = options.recipientIds
+    }
+  }
+
   let response: Response
   try {
     response = await fetch(`${baseUrl}/functions/v1/send-phishing-campaign`, {
@@ -244,7 +256,7 @@ export async function sendPhishingCampaign(campaignId: string): Promise<SendPhis
         Authorization: `Bearer ${session.access_token}`,
         apikey: anonKey,
       },
-      body: JSON.stringify({ campaign_id: campaignId }),
+      body: JSON.stringify(body),
     })
   } catch {
     throw new Error(EDGE_FUNCTION_DEPLOY_HINT)
