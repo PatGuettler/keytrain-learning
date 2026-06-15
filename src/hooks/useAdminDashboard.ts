@@ -6,6 +6,7 @@ import { fetchHospitalOrganizations } from '@/services/organizations.service'
 import { fetchProfiles } from '@/services/users.service'
 import { fetchOrgModuleAttempts } from '@/services/sessions.service'
 import { computeOrgMetrics, type OrgDashboardMetrics } from '@/lib/dashboard-stats'
+import { countProfileStatuses } from '@/lib/user-status'
 import type { Organization } from '@/types/user.types'
 
 export interface HospitalDashboardSummary extends OrgDashboardMetrics {
@@ -47,10 +48,15 @@ export function useAdminDashboard() {
     const completed = allAssignments.filter((a) => a.status === 'completed').length
     const total = allAssignments.length
 
+    const userStatusCounts = countProfileStatuses(users)
+
     return {
       hospitalCount: hospitals.length,
-      activeUsers: users.filter((u) => u.is_active).length,
-      inactiveUsers: users.filter((u) => !u.is_active).length,
+      userStatusCounts,
+      activeUsers: userStatusCounts.active,
+      invitedUsers: userStatusCounts.invitation_pending,
+      inactiveUsers: userStatusCounts.inactive,
+      lockedUsers: userStatusCounts.login_locked,
       totalUsers: users.length,
       totalCourses: courses.length,
       publishedCourses: courses.filter((c) => c.is_published).length,

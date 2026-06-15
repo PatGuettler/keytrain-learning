@@ -6,6 +6,7 @@ import { HospitalOverviewList } from '@/components/dashboard/HospitalOverviewLis
 import { useAdminDashboard } from '@/hooks/useAdminDashboard'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { exportPlatformDashboardPdf } from '@/lib/pdf/dashboard-reports'
+import { formatProfileStatusSubtitle } from '@/lib/user-status'
 
 export function AdminDashboard() {
   const { hospitals, platformTotals, isLoading } = useAdminDashboard()
@@ -28,7 +29,7 @@ export function AdminDashboard() {
         <StatCard
           title="Users"
           value={platformTotals.totalUsers}
-          subtitle={`${platformTotals.activeUsers} active · ${platformTotals.inactiveUsers} inactive`}
+          subtitle={formatProfileStatusSubtitle(platformTotals.userStatusCounts)}
           icon={Users}
           to="/admin/dashboard/users"
         />

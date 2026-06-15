@@ -7,12 +7,21 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { fetchProfiles } from '@/services/users.service'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
-import { getProfileStatusBadge } from '@/lib/user-status'
+import { countProfileStatuses, getProfileStatusBadge, getProfileStatusCategory } from '@/lib/user-status'
 import { formatDate } from '@/lib/utils'
 import type { Profile } from '@/types/user.types'
 
+type UserFilter = 'all' | 'active' | 'invited' | 'inactive' | 'locked'
 type SortKey = 'name' | 'email' | 'organization' | 'role' | 'status' | 'lastLogin'
 type SortDir = 'asc' | 'desc'
+
+const USER_FILTERS: { key: UserFilter; label: string }[] = [
+  { key: 'all', label: 'All users' },
+  { key: 'active', label: 'Active' },
+  { key: 'invited', label: 'Invited' },
+  { key: 'inactive', label: 'Inactive' },
+  { key: 'locked', label: 'Login locked' },
+]
 
 function exportUsersCsv(users: EnrichedUser[]) {
   const headers = [
@@ -57,10 +66,15 @@ export function PlatformUsersPage() {
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const paramFilter = searchParams.get('filter')
-  const filter: 'all' | 'active' | 'inactive' =
-    paramFilter === 'active' || paramFilter === 'inactive' ? paramFilter : 'all'
+  const filter: UserFilter =
+    paramFilter === 'active' ||
+    paramFilter === 'invited' ||
+    paramFilter === 'inactive' ||
+    paramFilter === 'locked'
+      ? paramFilter
+      : 'all'
 
-  const setFilter = (next: 'all' | 'active' | 'inactive') => {
+  const setFilter = (next: UserFilter) => {
     if (next === 'all') setSearchParams({})
     else setSearchParams({ filter: next })
   }
@@ -90,19 +104,24 @@ export function PlatformUsersPage() {
   )
 
   const filtered = useMemo(() => {
-    if (filter === 'active') return enriched.filter((u) => u.is_active)
-    if (filter === 'inactive') return enriched.filter((u) => !u.is_active)
-    return enriched
+    if (filter === 'all') return enriched
+    return enriched.filter((u) => {
+      const category = getProfileStatusCategory(u)
+      if (filter === 'invited') return category === 'invitation_pending'
+      return category === filter
+    })
   }, [enriched, filter])
 
-  const counts = useMemo(
-    () => ({
+  const counts = useMemo(() => {
+    const statusCounts = countProfileStatuses(enriched)
+    return {
       all: enriched.length,
-      active: enriched.filter((u) => u.is_active).length,
-      inactive: enriched.filter((u) => !u.is_active).length,
-    }),
-    [enriched]
-  )
+      active: statusCounts.active,
+      invited: statusCounts.invitation_pending,
+      inactive: statusCounts.inactive,
+      locked: statusCounts.login_locked,
+    }
+  }, [enriched])
 
   const sorted = useMemo(() => {
     const dir = sortDir === 'asc' ? 1 : -1
@@ -168,13 +187,7 @@ export function PlatformUsersPage() {
       />
 
       <div className="flex flex-wrap gap-2">
-        {(
-          [
-            { key: 'all' as const, label: 'All users' },
-            { key: 'active' as const, label: 'Active' },
-            { key: 'inactive' as const, label: 'Inactive' },
-          ] as const
-        ).map(({ key, label }) => (
+        {USER_FILTERS.map(({ key, label }) => (
           <Button
             key={key}
             size="sm"
