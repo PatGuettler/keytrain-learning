@@ -12,10 +12,7 @@ import {
   fetchPhishingRecipients,
   sendPhishingCampaign,
 } from '@/services/phishing.service'
-import {
-  buildRecipientOutcomes,
-  computeCampaignMetrics,
-} from '@/lib/phishing-stats'
+import { buildRecipientOutcomes, computeCampaignMetrics } from '@/lib/phishing-stats'
 import { formatDate } from '@/lib/utils'
 
 export function PhishingCampaignDetailPage() {
