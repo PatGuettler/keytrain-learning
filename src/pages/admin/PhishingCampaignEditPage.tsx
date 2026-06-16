@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,6 +19,8 @@ import {
 } from '@/services/phishing.service'
 import { useAuthStore } from '@/store/authStore'
 import { PHISHING_PRETEXT_LABELS, type PhishingTargetScope } from '@/types/phishing.types'
+
+const RECIPIENTS_PER_PAGE = 8
 
 export function PhishingCampaignEditPage() {
   const { campaignId } = useParams<{ campaignId: string }>()
@@ -59,6 +61,7 @@ export function PhishingCampaignEditPage() {
   const [trackOpens, setTrackOpens] = useState(true)
   const [excludeAdmins, setExcludeAdmins] = useState(true)
   const [userSearch, setUserSearch] = useState('')
+  const [userPage, setUserPage] = useState(1)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -70,21 +73,33 @@ export function PhishingCampaignEditPage() {
 
   const filteredUsers = useMemo(() => {
     const q = userSearch.trim().toLowerCase()
-    const withEmail = allUsers.filter((u) => u.email)
+    const withEmail = allUsers
+      .filter((u) => u.email)
+      .sort((a, b) =>
+        a.full_name.localeCompare(b.full_name, undefined, { sensitivity: 'base' })
+      )
 
-    if (!q) {
-      return withEmail.filter((u) => selectedUserIds.includes(u.id))
+    if (!q) return withEmail
+
+    return withEmail.filter(
+      (u) =>
+        u.full_name.toLowerCase().includes(q) ||
+        (u.email ?? '').toLowerCase().includes(q)
+    )
+  }, [allUsers, userSearch])
+
+  const totalUserPages = Math.max(1, Math.ceil(filteredUsers.length / RECIPIENTS_PER_PAGE))
+
+  const paginatedUsers = useMemo(() => {
+    const start = (userPage - 1) * RECIPIENTS_PER_PAGE
+    return filteredUsers.slice(start, start + RECIPIENTS_PER_PAGE)
+  }, [filteredUsers, userPage])
+
+  useEffect(() => {
+    if (userPage > totalUserPages) {
+      setUserPage(totalUserPages)
     }
-
-    return withEmail
-      .filter((u) => {
-        return (
-          u.full_name.toLowerCase().includes(q) ||
-          (u.email ?? '').toLowerCase().includes(q)
-        )
-      })
-      .slice(0, 50)
-  }, [allUsers, userSearch, selectedUserIds])
+  }, [userPage, totalUserPages])
 
   useEffect(() => {
     if (!existing) return
@@ -222,6 +237,7 @@ export function PhishingCampaignEditPage() {
                 const scope = e.target.value as PhishingTargetScope
                 setTargetScope(scope)
                 setUserSearch('')
+                setUserPage(1)
                 if (scope === 'all') {
                   setOrgId('')
                   setSelectedUserIds([])
@@ -270,20 +286,18 @@ export function PhishingCampaignEditPage() {
                 id="recipient-search"
                 placeholder="Search by name or email…"
                 value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                autoFocus
+                onChange={(e) => {
+                  setUserSearch(e.target.value)
+                  setUserPage(1)
+                }}
               />
-              <div className="rounded-md border max-h-56 overflow-y-auto divide-y">
-                {filteredUsers.length === 0 ? (
+              <div className="rounded-md border divide-y min-h-[12rem]">
+                {paginatedUsers.length === 0 ? (
                   <p className="p-3 text-sm text-muted-foreground">
-                    {userSearch.trim()
-                      ? 'No matching users.'
-                      : selectedUserIds.length === 0
-                        ? 'Search above to find and select users.'
-                        : 'Selected users appear here — search to add more.'}
+                    {userSearch.trim() ? 'No matching users.' : 'No users with email addresses found.'}
                   </p>
                 ) : (
-                  filteredUsers.map((user) => (
+                  paginatedUsers.map((user) => (
                     <label
                       key={user.id}
                       className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent/50 cursor-pointer"
@@ -299,10 +313,38 @@ export function PhishingCampaignEditPage() {
                   ))
                 )}
               </div>
-              {userSearch.trim() && filteredUsers.length === 50 && (
-                <p className="text-xs text-muted-foreground">
-                  Showing first 50 matches — refine your search to narrow the list.
-                </p>
+              {filteredUsers.length > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span className="text-muted-foreground">
+                    Page {userPage} of {totalUserPages}
+                    <span className="hidden sm:inline">
+                      {' '}
+                      · {filteredUsers.length} user{filteredUsers.length === 1 ? '' : 's'}
+                    </span>
+                  </span>
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={userPage <= 1}
+                      onClick={() => setUserPage((p) => p - 1)}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={userPage >= totalUserPages}
+                      onClick={() => setUserPage((p) => p + 1)}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
