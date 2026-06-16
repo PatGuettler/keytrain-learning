@@ -71,6 +71,16 @@ Deno.serve(async (req) => {
     if (!campaignId) return jsonResponse({ error: 'campaign_id is required.' }, 400)
 
     const testMode = body.test_mode === true
+    const testEmails = Array.isArray(body.test_emails)
+      ? [
+          ...new Set(
+            body.test_emails
+              .filter((e: unknown) => typeof e === 'string')
+              .map((e: string) => e.trim().toLowerCase())
+              .filter(Boolean)
+          ),
+        ]
+      : []
     const recipientIds = Array.isArray(body.recipient_ids)
       ? body.recipient_ids.filter((id: unknown) => typeof id === 'string')
       : []
@@ -93,24 +103,82 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Cannot test-send after the campaign has been sent to everyone.' }, 400)
     }
 
-    if (testMode && recipientIds.length === 0) {
-      return jsonResponse({ error: 'Select at least one recipient for a test send.' }, 400)
+    if (testMode && testEmails.length === 0 && recipientIds.length === 0) {
+      return jsonResponse({ error: 'Add at least one email for a test send.' }, 400)
     }
 
-    let recipientQuery = adminClient
-      .from('phishing_recipients')
-      .select('id, token, user_id')
-      .eq('campaign_id', campaignId)
+    type RecipientRow = { id: string; token: string; user_id: string }
+    let recipients: RecipientRow[] = []
+    const unresolvedEmails: string[] = []
 
-    if (testMode) {
-      recipientQuery = recipientQuery.in('id', recipientIds)
+    if (testMode && testEmails.length > 0) {
+      for (const email of testEmails) {
+        const { data: profile, error: profileError } = await adminClient
+          .from('profiles')
+          .select('id')
+          .ilike('email', email)
+          .maybeSingle()
+
+        if (profileError) throw profileError
+        if (!profile) {
+          unresolvedEmails.push(email)
+          continue
+        }
+
+        const { data: existing } = await adminClient
+          .from('phishing_recipients')
+          .select('id, token, user_id')
+          .eq('campaign_id', campaignId)
+          .eq('user_id', profile.id)
+          .maybeSingle()
+
+        if (existing) {
+          recipients.push(existing)
+          continue
+        }
+
+        const { data: inserted, error: insertError } = await adminClient
+          .from('phishing_recipients')
+          .insert({ campaign_id: campaignId, user_id: profile.id })
+          .select('id, token, user_id')
+          .single()
+
+        if (insertError) throw insertError
+        recipients.push(inserted)
+      }
+
+      if (unresolvedEmails.length > 0 && recipients.length === 0) {
+        return jsonResponse(
+          {
+            error: `No app user found for: ${unresolvedEmails.join(', ')}. Test emails must match a user in GuardianMD.`,
+          },
+          400
+        )
+      }
+    } else {
+      let recipientQuery = adminClient
+        .from('phishing_recipients')
+        .select('id, token, user_id')
+        .eq('campaign_id', campaignId)
+
+      if (testMode) {
+        recipientQuery = recipientQuery.in('id', recipientIds)
+      }
+
+      const { data: loaded, error: recipientsError } = await recipientQuery
+      if (recipientsError) throw recipientsError
+      recipients = loaded ?? []
     }
 
-    const { data: recipients, error: recipientsError } = await recipientQuery
-
-    if (recipientsError) throw recipientsError
-    if (!recipients?.length) {
-      return jsonResponse({ error: 'No recipients on this campaign. Save recipients first.' }, 400)
+    if (!recipients.length) {
+      return jsonResponse(
+        {
+          error: testMode
+            ? 'No test recipients could be resolved.'
+            : 'No recipients on this campaign. Save recipients first.',
+        },
+        400
+      )
     }
 
     const userIds = recipients.map((r) => r.user_id)
@@ -223,10 +291,15 @@ Deno.serve(async (req) => {
       sent_count: sentCount,
       failed_count: failures.length,
       failures,
+      unresolved_emails: unresolvedEmails,
       message: testMode
         ? dryRun
-          ? `Test dry run: ${sentCount} recipient(s) marked as test-sent. No emails were delivered.`
-          : `Test sent to ${sentCount} recipient(s). Campaign remains a draft — send to everyone when ready.`
+          ? `Test dry run: ${sentCount} recipient(s) marked as test-sent. No emails were delivered.${
+              unresolvedEmails.length ? ` Skipped (no user): ${unresolvedEmails.join(', ')}.` : ''
+            }`
+          : `Test sent to ${sentCount} recipient(s). Campaign remains a draft — send to everyone when ready.${
+              unresolvedEmails.length ? ` Skipped (no user): ${unresolvedEmails.join(', ')}.` : ''
+            }`
         : dryRun
           ? `Dry run: ${sentCount} recipient(s) marked as sent. No emails were delivered (RESEND_API_KEY missing or PHISHING_SIMULATION_DRY_RUN=true).`
           : `Sent ${sentCount} email(s).`,

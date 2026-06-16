@@ -120,7 +120,9 @@ export interface SendPhishingCampaignResult {
 
 export interface SendPhishingCampaignOptions {
   testMode?: boolean
-  /** phishing_recipients.id values to include in a test send */
+  /** Resolved on the server from app user profiles */
+  testEmails?: string[]
+  /** @deprecated use testEmails */
   recipientIds?: string[]
 }
 

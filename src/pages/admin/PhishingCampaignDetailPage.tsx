@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, FlaskConical, Send } from 'lucide-react'
+import { ArrowLeft, Send } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { PhishingTestSendPanel } from '@/components/admin/PhishingTestSendPanel'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,10 +20,8 @@ export function PhishingCampaignDetailPage() {
   const { campaignId } = useParams<{ campaignId: string }>()
   const queryClient = useQueryClient()
   const [sending, setSending] = useState(false)
-  const [testSending, setTestSending] = useState(false)
   const [sendMessage, setSendMessage] = useState('')
   const [sendError, setSendError] = useState('')
-  const [selectedTestIds, setSelectedTestIds] = useState<Set<string>>(new Set())
 
   const { data: campaign, isLoading } = useQuery({
     queryKey: ['phishing-campaign', campaignId],
@@ -47,26 +46,6 @@ export function PhishingCampaignDetailPage() {
   const isDraft = campaign?.status === 'draft'
   const testSentCount = recipients.filter((r) => r.test_sent_at).length
 
-  const allSelected =
-    recipients.length > 0 && recipients.every((r) => selectedTestIds.has(r.id))
-
-  const toggleTestRecipient = (id: string) => {
-    setSelectedTestIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  const selectAllForTest = () => {
-    if (allSelected) {
-      setSelectedTestIds(new Set())
-    } else {
-      setSelectedTestIds(new Set(recipients.map((r) => r.id)))
-    }
-  }
-
   const statusDescription = useMemo(() => {
     if (!campaign) return ''
     const parts = [`Status: ${campaign.status}`]
@@ -75,35 +54,6 @@ export function PhishingCampaignDetailPage() {
     if (testSentCount > 0 && isDraft) parts.push(`${testSentCount} test sent`)
     return parts.join(' · ')
   }, [campaign, isDraft, testSentCount])
-
-  const handleTestSend = async () => {
-    if (!campaignId || selectedTestIds.size === 0) return
-    const count = selectedTestIds.size
-    if (
-      !window.confirm(
-        `Send a test to ${count} selected recipient${count === 1 ? '' : 's'}? The campaign will stay a draft.`
-      )
-    ) {
-      return
-    }
-    setTestSending(true)
-    setSendError('')
-    setSendMessage('')
-    try {
-      const result = await sendPhishingCampaign(campaignId, {
-        testMode: true,
-        recipientIds: [...selectedTestIds],
-      })
-      setSendMessage(result.message)
-      await queryClient.invalidateQueries({ queryKey: ['phishing-campaign', campaignId] })
-      await queryClient.invalidateQueries({ queryKey: ['phishing-campaigns'] })
-      await queryClient.invalidateQueries({ queryKey: ['phishing-recipients', campaignId] })
-    } catch (e) {
-      setSendError(e instanceof Error ? e.message : 'Test send failed.')
-    } finally {
-      setTestSending(false)
-    }
-  }
 
   const handleSend = async () => {
     if (!campaignId) return
@@ -164,42 +114,21 @@ export function PhishingCampaignDetailPage() {
       {sendMessage && <p className="text-sm text-emerald-600 dark:text-emerald-400">{sendMessage}</p>}
       {sendError && <p className="text-sm text-destructive">{sendError}</p>}
 
-      {isDraft && recipients.length > 0 && (
-        <Card className="border-amber-500/40 bg-amber-500/5">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <FlaskConical className="h-4 w-4 text-amber-600" />
-              Test send
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Select one or more recipients to verify the email, links, and tracking before sending
-              to the full audience. Test sends do not change campaign status.
-            </p>
-            <div className="flex flex-wrap gap-2 items-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={selectAllForTest}
-                type="button"
-              >
-                {allSelected ? 'Clear selection' : 'Select all'}
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={handleTestSend}
-                disabled={testSending || selectedTestIds.size === 0}
-              >
-                <FlaskConical className="h-4 w-4 mr-1" />
-                {testSending
-                  ? 'Sending test…'
-                  : `Send test (${selectedTestIds.size})`}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      {isDraft && campaignId && (
+        <PhishingTestSendPanel
+          campaignId={campaignId}
+          onSent={async (message) => {
+            setSendMessage(message)
+            setSendError('')
+            await queryClient.invalidateQueries({ queryKey: ['phishing-campaign', campaignId] })
+            await queryClient.invalidateQueries({ queryKey: ['phishing-campaigns'] })
+            await queryClient.invalidateQueries({ queryKey: ['phishing-recipients', campaignId] })
+          }}
+          onError={(message) => {
+            setSendError(message)
+            setSendMessage('')
+          }}
+        />
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -238,7 +167,6 @@ export function PhishingCampaignDetailPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/50 text-left text-muted-foreground">
-              {isDraft && <th className="p-3 w-10">Test</th>}
               <th className="p-3">Name</th>
               <th className="p-3">Email</th>
               <th className="p-3">Test sent</th>
@@ -252,16 +180,6 @@ export function PhishingCampaignDetailPage() {
           <tbody>
             {outcomes.map(({ recipient, opened, clicked, submittedCredentials, viewedTraining }) => (
               <tr key={recipient.id} className="border-b last:border-0">
-                {isDraft && (
-                  <td className="p-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedTestIds.has(recipient.id)}
-                      onChange={() => toggleTestRecipient(recipient.id)}
-                      aria-label={`Select ${recipient.profile?.full_name ?? 'recipient'} for test send`}
-                    />
-                  </td>
-                )}
                 <td className="p-3 font-medium">{recipient.profile?.full_name ?? '—'}</td>
                 <td className="p-3 text-muted-foreground">{recipient.profile?.email ?? '—'}</td>
                 <td className="p-3 whitespace-nowrap">

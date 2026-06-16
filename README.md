@@ -441,8 +441,8 @@ supabase secrets set PHISHING_TRAINING_URL='https://patguettler.github.io/guardi
 While a campaign is still a **draft**:
 
 1. Open the campaign results page
-2. Check the recipients you want (e.g. your own work email)
-3. Click **Send test (N)** — only those addresses receive the simulation
+2. In **Test send**, type an email or search and pick users from the app user list
+3. Click **Send test (N)** — only those addresses receive the simulation (must match a GuardianMD user)
 4. Campaign stays a draft; tracking events still log normally
 5. When satisfied, click **Send to everyone** for the full audience
 

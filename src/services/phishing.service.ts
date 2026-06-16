@@ -242,7 +242,9 @@ export async function sendPhishingCampaign(
   const body: Record<string, unknown> = { campaign_id: campaignId }
   if (options.testMode) {
     body.test_mode = true
-    if (options.recipientIds?.length) {
+    if (options.testEmails?.length) {
+      body.test_emails = options.testEmails.map((e) => e.trim().toLowerCase())
+    } else if (options.recipientIds?.length) {
       body.recipient_ids = options.recipientIds
     }
   }
