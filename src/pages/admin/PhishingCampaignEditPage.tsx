@@ -65,23 +65,25 @@ export function PhishingCampaignEditPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['phishing-campaign-user-picker'],
-    queryFn: () => fetchProfiles({ includeInactive: true, excludeAdmins: false }),
-    enabled: targetScope === 'custom',
+  const {
+    data: allUsers = [],
+    isLoading: usersLoading,
+    isError: usersError,
+    refetch: refetchUsers,
+  } = useQuery({
+    queryKey: ['all-org-users'],
+    queryFn: () => fetchProfiles({ includeInactive: true, excludeAdmins: true }),
   })
 
   const filteredUsers = useMemo(() => {
     const q = userSearch.trim().toLowerCase()
-    const withEmail = allUsers
-      .filter((u) => u.email)
-      .sort((a, b) =>
-        a.full_name.localeCompare(b.full_name, undefined, { sensitivity: 'base' })
-      )
+    const sorted = [...allUsers].sort((a, b) =>
+      a.full_name.localeCompare(b.full_name, undefined, { sensitivity: 'base' })
+    )
 
-    if (!q) return withEmail
+    if (!q) return sorted
 
-    return withEmail.filter(
+    return sorted.filter(
       (u) =>
         u.full_name.toLowerCase().includes(q) ||
         (u.email ?? '').toLowerCase().includes(q)
@@ -138,6 +140,8 @@ export function PhishingCampaignEditPage() {
   }
 
   const toggleUser = (id: string) => {
+    const user = allUsers.find((u) => u.id === id)
+    if (!user?.email?.trim()) return
     setSelectedUserIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     )
@@ -292,25 +296,48 @@ export function PhishingCampaignEditPage() {
                 }}
               />
               <div className="rounded-md border divide-y min-h-[12rem]">
-                {paginatedUsers.length === 0 ? (
+                {usersLoading ? (
+                  <p className="p-3 text-sm text-muted-foreground">Loading users…</p>
+                ) : usersError ? (
+                  <div className="p-3 space-y-2">
+                    <p className="text-sm text-destructive">Could not load users.</p>
+                    <Button type="button" variant="outline" size="sm" onClick={() => refetchUsers()}>
+                      Retry
+                    </Button>
+                  </div>
+                ) : paginatedUsers.length === 0 ? (
                   <p className="p-3 text-sm text-muted-foreground">
-                    {userSearch.trim() ? 'No matching users.' : 'No users with email addresses found.'}
+                    {userSearch.trim()
+                      ? 'No matching users.'
+                      : allUsers.length === 0
+                        ? 'No users found in the app.'
+                        : 'No users on this page.'}
                   </p>
                 ) : (
-                  paginatedUsers.map((user) => (
-                    <label
-                      key={user.id}
-                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent/50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedUserIds.includes(user.id)}
-                        onChange={() => toggleUser(user.id)}
-                      />
-                      <span className="font-medium">{user.full_name}</span>
-                      <span className="text-muted-foreground">({user.email})</span>
-                    </label>
-                  ))
+                  paginatedUsers.map((user) => {
+                    const hasEmail = Boolean(user.email?.trim())
+                    return (
+                      <label
+                        key={user.id}
+                        className={`flex items-center gap-2 px-3 py-2 text-sm ${
+                          hasEmail
+                            ? 'hover:bg-accent/50 cursor-pointer'
+                            : 'opacity-60 cursor-not-allowed'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUserIds.includes(user.id)}
+                          disabled={!hasEmail}
+                          onChange={() => toggleUser(user.id)}
+                        />
+                        <span className="font-medium">{user.full_name}</span>
+                        <span className="text-muted-foreground">
+                          ({user.email ?? 'no email on file'})
+                        </span>
+                      </label>
+                    )
+                  })
                 )}
               </div>
               {filteredUsers.length > 0 && (
