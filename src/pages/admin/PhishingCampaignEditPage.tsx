@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
-import { fetchOrgMembers } from '@/services/users.service'
+import { fetchProfiles } from '@/services/users.service'
 import {
   createPhishingCampaign,
   fetchPhishingCampaign,
@@ -59,14 +59,33 @@ export function PhishingCampaignEditPage() {
   const [trackOpens, setTrackOpens] = useState(true)
   const [excludeAdmins, setExcludeAdmins] = useState(true)
   const [testMode, setTestMode] = useState(false)
+  const [userSearch, setUserSearch] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const { data: orgMembers = [] } = useQuery({
-    queryKey: ['org-members-phishing', orgId],
-    queryFn: () => fetchOrgMembers(orgId),
-    enabled: Boolean(orgId),
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['phishing-campaign-user-picker'],
+    queryFn: () => fetchProfiles({ includeInactive: true, excludeAdmins: false }),
+    enabled: targetScope === 'custom',
   })
+
+  const filteredUsers = useMemo(() => {
+    const q = userSearch.trim().toLowerCase()
+    const withEmail = allUsers.filter((u) => u.email)
+
+    if (!q) {
+      return withEmail.filter((u) => selectedUserIds.includes(u.id))
+    }
+
+    return withEmail
+      .filter((u) => {
+        return (
+          u.full_name.toLowerCase().includes(q) ||
+          (u.email ?? '').toLowerCase().includes(q)
+        )
+      })
+      .slice(0, 50)
+  }, [allUsers, userSearch, selectedUserIds])
 
   useEffect(() => {
     if (!existing) return
@@ -134,7 +153,7 @@ export function PhishingCampaignEditPage() {
         pretext: pretext || selectedTemplate?.pretext || null,
         fake_login_url: fakeLoginUrl.trim() || getDefaultFakeLoginUrl(),
         track_opens: trackOpens,
-        org_id: targetScope === 'all' ? null : orgId || null,
+        org_id: targetScope === 'org' ? orgId || null : null,
         template_id: templateId || null,
         target_scope: targetScope,
         target_user_ids: targetScope === 'custom' ? selectedUserIds : [],
@@ -202,14 +221,25 @@ export function PhishingCampaignEditPage() {
               id="target-scope"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={targetScope}
-              onChange={(e) => setTargetScope(e.target.value as PhishingTargetScope)}
+              onChange={(e) => {
+                const scope = e.target.value as PhishingTargetScope
+                setTargetScope(scope)
+                if (scope === 'all') {
+                  setOrgId('')
+                  setSelectedUserIds([])
+                } else if (scope === 'org') {
+                  setSelectedUserIds([])
+                } else {
+                  setOrgId('')
+                }
+              }}
             >
               <option value="all">All hospital staff</option>
               <option value="org">One organization</option>
               <option value="custom">Hand-picked users</option>
             </select>
           </div>
-          {targetScope !== 'all' && (
+          {targetScope === 'org' && (
             <div className="space-y-2">
               <Label htmlFor="org">Organization</Label>
               <select
@@ -229,14 +259,68 @@ export function PhishingCampaignEditPage() {
           )}
         </div>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={excludeAdmins}
-            onChange={(e) => setExcludeAdmins(e.target.checked)}
-          />
-          Exclude platform admins from audience
-        </label>
+        {targetScope === 'custom' && (
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-medium">Recipients</p>
+                <span className="text-xs text-muted-foreground">
+                  {selectedUserIds.length} selected
+                </span>
+              </div>
+              <Input
+                placeholder="Search by name or email…"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Search to find users, then check the ones to include in this campaign.
+              </p>
+              <div className="rounded-md border max-h-56 overflow-y-auto divide-y">
+                {filteredUsers.length === 0 ? (
+                  <p className="p-3 text-sm text-muted-foreground">
+                    {userSearch.trim()
+                      ? 'No matching users.'
+                      : selectedUserIds.length === 0
+                        ? 'No recipients selected yet — search above to add users.'
+                        : 'No recipients selected.'}
+                  </p>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <label
+                      key={user.id}
+                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent/50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedUserIds.includes(user.id)}
+                        onChange={() => toggleUser(user.id)}
+                      />
+                      <span className="font-medium">{user.full_name}</span>
+                      <span className="text-muted-foreground">{user.email}</span>
+                    </label>
+                  ))
+                )}
+              </div>
+              {userSearch.trim() && filteredUsers.length === 50 && (
+                <p className="text-xs text-muted-foreground">
+                  Showing first 50 matches — refine your search to narrow the list.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {targetScope !== 'custom' && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={excludeAdmins}
+              onChange={(e) => setExcludeAdmins(e.target.checked)}
+            />
+            Exclude platform admins from audience
+          </label>
+        )}
 
         <Card className="bg-muted/30 border-dashed">
           <CardContent className="p-4 space-y-2">
@@ -254,24 +338,6 @@ export function PhishingCampaignEditPage() {
             </p>
           </CardContent>
         </Card>
-
-        {targetScope === 'custom' && orgId && (
-          <Card>
-            <CardContent className="p-4 space-y-2 max-h-48 overflow-y-auto">
-              <p className="text-sm font-medium">Recipients</p>
-              {orgMembers.map((member) => (
-                <label key={member.id} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={selectedUserIds.includes(member.id)}
-                    onChange={() => toggleUser(member.id)}
-                  />
-                  {member.full_name} ({member.email})
-                </label>
-              ))}
-            </CardContent>
-          </Card>
-        )}
 
         <div className="space-y-2">
           <Label htmlFor="subject">Subject</Label>
