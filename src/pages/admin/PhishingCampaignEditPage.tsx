@@ -58,7 +58,6 @@ export function PhishingCampaignEditPage() {
   const [deadlineDate, setDeadlineDate] = useState('Friday')
   const [trackOpens, setTrackOpens] = useState(true)
   const [excludeAdmins, setExcludeAdmins] = useState(true)
-  const [testMode, setTestMode] = useState(false)
   const [userSearch, setUserSearch] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -104,7 +103,6 @@ export function PhishingCampaignEditPage() {
     setDeadlineDate(existing.deadline_date ?? 'Friday')
     setTrackOpens(existing.track_opens)
     setExcludeAdmins(existing.exclude_admins)
-    setTestMode(existing.test_mode)
   }, [existing])
 
   const selectedTemplate = useMemo(
@@ -159,7 +157,6 @@ export function PhishingCampaignEditPage() {
         target_user_ids: targetScope === 'custom' ? selectedUserIds : [],
         exclude_admins: excludeAdmins,
         deadline_date: deadlineDate.trim() || null,
-        test_mode: testMode,
       }
 
       const campaign = isNew
@@ -214,7 +211,7 @@ export function PhishingCampaignEditPage() {
           </select>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className={targetScope === 'org' ? 'grid gap-4 sm:grid-cols-2' : 'space-y-4'}>
           <div className="space-y-2">
             <Label htmlFor="target-scope">Audience</Label>
             <select
@@ -224,6 +221,7 @@ export function PhishingCampaignEditPage() {
               onChange={(e) => {
                 const scope = e.target.value as PhishingTargetScope
                 setTargetScope(scope)
+                setUserSearch('')
                 if (scope === 'all') {
                   setOrgId('')
                   setSelectedUserIds([])
@@ -263,27 +261,26 @@ export function PhishingCampaignEditPage() {
           <Card>
             <CardContent className="p-4 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-medium">Recipients</p>
+                <Label htmlFor="recipient-search">Recipients</Label>
                 <span className="text-xs text-muted-foreground">
                   {selectedUserIds.length} selected
                 </span>
               </div>
               <Input
+                id="recipient-search"
                 placeholder="Search by name or email…"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
+                autoFocus
               />
-              <p className="text-xs text-muted-foreground">
-                Search to find users, then check the ones to include in this campaign.
-              </p>
               <div className="rounded-md border max-h-56 overflow-y-auto divide-y">
                 {filteredUsers.length === 0 ? (
                   <p className="p-3 text-sm text-muted-foreground">
                     {userSearch.trim()
                       ? 'No matching users.'
                       : selectedUserIds.length === 0
-                        ? 'No recipients selected yet — search above to add users.'
-                        : 'No recipients selected.'}
+                        ? 'Search above to find and select users.'
+                        : 'Selected users appear here — search to add more.'}
                   </p>
                 ) : (
                   filteredUsers.map((user) => (
@@ -297,7 +294,7 @@ export function PhishingCampaignEditPage() {
                         onChange={() => toggleUser(user.id)}
                       />
                       <span className="font-medium">{user.full_name}</span>
-                      <span className="text-muted-foreground">{user.email}</span>
+                      <span className="text-muted-foreground">({user.email})</span>
                     </label>
                   ))
                 )}
@@ -321,23 +318,6 @@ export function PhishingCampaignEditPage() {
             Exclude platform admins from audience
           </label>
         )}
-
-        <Card className="bg-muted/30 border-dashed">
-          <CardContent className="p-4 space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium">
-              <input
-                type="checkbox"
-                checked={testMode}
-                onChange={(e) => setTestMode(e.target.checked)}
-              />
-              Test mode campaign
-            </label>
-            <p className="text-xs text-muted-foreground">
-              Build the full audience, then send to a few selected emails first on the campaign
-              results page. The campaign stays a draft until you run a full send.
-            </p>
-          </CardContent>
-        </Card>
 
         <div className="space-y-2">
           <Label htmlFor="subject">Subject</Label>

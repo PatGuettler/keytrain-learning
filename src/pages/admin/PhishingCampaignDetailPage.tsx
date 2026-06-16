@@ -49,7 +49,6 @@ export function PhishingCampaignDetailPage() {
   const statusDescription = useMemo(() => {
     if (!campaign) return ''
     const parts = [`Status: ${campaign.status}`]
-    if (campaign.test_mode) parts.push('Test mode')
     if (campaign.sent_at) parts.push(`Sent ${formatDate(campaign.sent_at)}`)
     if (testSentCount > 0 && isDraft) parts.push(`${testSentCount} test sent`)
     return parts.join(' · ')
