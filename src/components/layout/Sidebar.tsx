@@ -1,8 +1,8 @@
 import { NavLink } from 'react-router-dom'
-import { Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_NAME } from '@/lib/constants'
 import { useRole } from '@/hooks/useRole'
+import { AppLogo } from '@/components/brand/AppLogo'
 import { navByRole } from './nav-config'
 
 export function Sidebar() {
@@ -12,7 +12,7 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:flex w-64 flex-col border-r bg-card">
       <div className="flex h-16 items-center gap-2 border-b px-6">
-        <Shield className="h-7 w-7 text-primary" />
+        <AppLogo className="h-8 w-auto" />
         <span className="font-bold text-lg">{APP_NAME}</span>
       </div>
       <nav className="flex-1 space-y-1 p-4">

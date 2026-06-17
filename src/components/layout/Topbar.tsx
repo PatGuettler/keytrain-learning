@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Shield, Menu, UserCircle } from 'lucide-react'
+import { LogOut, Menu, UserCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ThemeDropdownItems } from '@/components/layout/ThemeSelector'
+import { AppLogo } from '@/components/brand/AppLogo'
 import { useAuth } from '@/hooks/useAuth'
 import { useUiStore } from '@/store/uiStore'
 import { APP_NAME, ROLE_PROFILE } from '@/lib/constants'
@@ -39,7 +40,7 @@ export function Topbar() {
           <Menu className="h-5 w-5" />
         </Button>
         <div className="flex min-w-0 items-center gap-2 lg:hidden">
-          <Shield className="h-5 w-5 text-primary shrink-0" />
+          <AppLogo className="h-6 w-auto shrink-0" />
           <span className="font-semibold truncate">{APP_NAME}</span>
         </div>
         <h1 className="hidden lg:block text-lg font-semibold truncate">
