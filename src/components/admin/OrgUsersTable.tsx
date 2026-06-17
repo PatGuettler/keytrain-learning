@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DeleteOrgUserDialog } from '@/components/admin/DeleteOrgUserDialog'
 import { EditOrgUserDialog } from '@/components/admin/EditOrgUserDialog'
+import { SendPasswordResetButton } from '@/components/admin/SendPasswordResetButton'
 import { getProfileStatusBadge } from '@/lib/user-status'
 import type { Profile } from '@/types/user.types'
 
@@ -25,6 +26,8 @@ export function OrgUsersTable({
   const queryClient = useQueryClient()
   const [editUser, setEditUser] = useState<Profile | null>(null)
   const [deleteUser, setDeleteUser] = useState<Profile | null>(null)
+  const [actionMessage, setActionMessage] = useState('')
+  const [actionError, setActionError] = useState('')
 
   const refreshUsers = () => {
     void queryClient.invalidateQueries({ queryKey: ['org-users', orgId] })
@@ -38,6 +41,10 @@ export function OrgUsersTable({
 
   return (
     <>
+      {actionMessage && (
+        <p className="text-sm text-emerald-600 dark:text-emerald-400">{actionMessage}</p>
+      )}
+      {actionError && <p className="text-sm text-destructive">{actionError}</p>}
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead>
@@ -76,6 +83,19 @@ export function OrgUsersTable({
                       <Pencil className="h-3.5 w-3.5 mr-1" />
                       Edit
                     </Button>
+                    <SendPasswordResetButton
+                      orgId={orgId}
+                      userId={u.id}
+                      disabled={!u.email}
+                      onSuccess={(message) => {
+                        setActionError('')
+                        setActionMessage(`${u.full_name}: ${message}`)
+                      }}
+                      onError={(message) => {
+                        setActionMessage('')
+                        setActionError(message)
+                      }}
+                    />
                     <Button
                       type="button"
                       size="sm"

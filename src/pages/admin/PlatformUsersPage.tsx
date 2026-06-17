@@ -5,9 +5,11 @@ import { ArrowLeft, Download } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { SendPasswordResetButton } from '@/components/admin/SendPasswordResetButton'
 import { fetchProfiles } from '@/services/users.service'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
 import { APP_SLUG } from '@/lib/constants'
+import { adminOrganizationPath, buildOrgSlugLookup } from '@/lib/org-slugs'
 import { countProfileStatuses, getProfileStatusBadge, getProfileStatusCategory } from '@/lib/user-status'
 import { formatDate } from '@/lib/utils'
 import type { Profile } from '@/types/user.types'
@@ -65,6 +67,8 @@ export function PlatformUsersPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [sortKey, setSortKey] = useState<SortKey>('lastLogin')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [actionMessage, setActionMessage] = useState('')
+  const [actionError, setActionError] = useState('')
 
   const paramFilter = searchParams.get('filter')
   const filter: UserFilter =
@@ -94,6 +98,8 @@ export function PlatformUsersPage() {
     () => new Map(hospitals.map((h) => [h.id, h.name])),
     [hospitals]
   )
+
+  const orgSlugById = useMemo(() => buildOrgSlugLookup(hospitals).slugById, [hospitals])
 
   const enriched = useMemo<EnrichedUser[]>(
     () =>
@@ -200,6 +206,11 @@ export function PlatformUsersPage() {
         ))}
       </div>
 
+      {actionMessage && (
+        <p className="text-sm text-emerald-600 dark:text-emerald-400">{actionMessage}</p>
+      )}
+      {actionError && <p className="text-sm text-destructive">{actionError}</p>}
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading users…</p>
       ) : sorted.length === 0 ? (
@@ -247,7 +258,7 @@ export function PlatformUsersPage() {
                     Last login{sortIndicator('lastLogin')}
                   </button>
                 </th>
-                <th className="p-3">User ID</th>
+                <th className="p-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -265,7 +276,32 @@ export function PlatformUsersPage() {
                     <td className="p-3 pr-4 text-muted-foreground whitespace-nowrap">
                       {u.last_login_at ? formatDate(u.last_login_at) : 'Never'}
                     </td>
-                    <td className="p-3 font-mono text-xs text-muted-foreground">{u.id}</td>
+                    <td className="p-3">
+                      <div className="flex flex-wrap gap-2">
+                        <SendPasswordResetButton
+                          orgId={u.org_id}
+                          userId={u.id}
+                          disabled={!u.email}
+                          onSuccess={(message) => {
+                            setActionError('')
+                            setActionMessage(`${u.full_name}: ${message}`)
+                          }}
+                          onError={(message) => {
+                            setActionMessage('')
+                            setActionError(message)
+                          }}
+                        />
+                        <Button type="button" size="sm" variant="outline" asChild>
+                          <Link
+                            to={adminOrganizationPath(
+                              orgSlugById.get(u.org_id) ?? u.org_id
+                            )}
+                          >
+                            Manage
+                          </Link>
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 )
               })}

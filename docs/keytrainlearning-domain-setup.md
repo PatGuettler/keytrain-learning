@@ -22,20 +22,112 @@ All three use the **same Resend account** and **verified domain**.
 
 ## Phase 1 — Resend: verify domain
 
-- [ ] Sign in at [resend.com](https://resend.com)
-- [ ] **Domains** → Add domain → `keytrainlearning.com`
-- [ ] Add DNS records at your domain registrar (SPF, DKIM; add DMARC when ready)
-- [ ] Wait until Resend shows domain status **Verified**
-- [ ] **API Keys** → Create API Key → copy `re_...` and store securely
+- [x] Sign in at [resend.com](https://resend.com)
+- [x] **Domains** → Add domain → `keytrainlearning.com`
+- [x] Add DNS records at Cloudflare (SPF, DKIM on `send` subdomain; DMARC optional for now)
+- [x] Wait until Resend shows domain status **Verified**
+- [x] **API Keys** → existing key with **Sending access** (e.g. `Onboarding`) — **reuse this key; no new key required**
 
-**Suggested sender addresses (all on verified domain):**
+### API key: one key for everything
 
-| Address | Purpose |
-|---------|---------|
-| `noreply@keytrainlearning.com` | Supabase auth (invites, resets) |
-| `support@keytrainlearning.com` | Contact form outbound |
-| `it-support@keytrainlearning.com` | Phishing IT templates |
-| `noreply@keytrainlearning.com` | Phishing DocuSign-style templates |
+**You do not need a new API key** for each sender address.
+
+Once `keytrainlearning.com` is verified in Resend, a single API key with **Sending access** can send from **any** `@keytrainlearning.com` address. Resend does not require you to register each `From` address separately.
+
+Use the same `re_...` key in:
+
+| Where | What it powers |
+|-------|----------------|
+| Supabase **Custom SMTP** password field | Auth emails (`noreply@…`) |
+| Supabase secret `RESEND_API_KEY` | Contact form + phishing edge functions |
+
+Optional later: create a second key (e.g. `Production`) and rotate the old one — only for key hygiene, not because different senders need different keys.
+
+---
+
+### Sender addresses — step by step
+
+Resend only cares that the **domain** is verified. The addresses below are configured **in your app**, not as separate entries in Resend.
+
+| Address | Purpose | Where you set it |
+|---------|---------|------------------|
+| `noreply@keytrainlearning.com` | Supabase auth (invites, password resets) | Supabase Dashboard → Auth → SMTP |
+| `support@keytrainlearning.com` | Contact form **outbound** (what recipients see as sender) | Supabase secret `RESEND_FROM` |
+| `it-support@keytrainlearning.com` | Phishing IT Helpdesk templates | Per campaign (defaults from template) |
+| `noreply@keytrainlearning.com` | Phishing DocuSign-style templates | Per campaign (defaults from template) |
+
+#### 1. `noreply@keytrainlearning.com` — auth mail (Supabase SMTP)
+
+Do this in **Phase 4** after the app is on the custom domain.
+
+1. Supabase Dashboard → **Authentication** → **Email** → **SMTP Settings**
+2. Enable **Custom SMTP**
+3. Set:
+   - Host: `smtp.resend.com`
+   - Port: `465`
+   - Username: `resend`
+   - Password: your existing `re_...` API key (same as Resend dashboard)
+   - Sender email: `noreply@keytrainlearning.com`
+   - Sender name: `KeyTrain Learning`
+4. Save
+5. Test: **Authentication** → send yourself a password reset → confirm **From** is `noreply@keytrainlearning.com` and links use `https://keytrainlearning.com`
+
+No Resend dashboard change needed beyond domain verification.
+
+#### 2. `support@keytrainlearning.com` — contact form outbound
+
+Do this in **Phase 5** (Supabase secrets).
+
+1. Set the secret (same API key as above):
+
+```bash
+supabase secrets set RESEND_FROM='KeyTrain Learning <support@keytrainlearning.com>' --project-ref rzrsudrdpnabpseatclm
+```
+
+2. Set where contact messages are **delivered to** (your inbox — can be Gmail, not necessarily `@keytrainlearning.com`):
+
+```bash
+supabase secrets set SUPPORT_TO_EMAIL='your-inbox@example.com' --project-ref rzrsudrdpnabpseatclm
+```
+
+3. Redeploy the edge function:
+
+```bash
+supabase functions deploy send-support-request --project-ref rzrsudrdpnabpseatclm --no-verify-jwt
+```
+
+4. Test: sign in → Profile → Contact → submit → you receive the message; **From** in the received mail shows `support@keytrainlearning.com`
+
+**Optional:** If you want a real mailbox at `support@keytrainlearning.com` (for replies), add a forwarder or mailbox at Cloudflare Email Routing or your registrar. The app only needs it as the outbound `From` address.
+
+#### 3. `it-support@keytrainlearning.com` — phishing IT templates
+
+No Resend or secret change. Configured per campaign in the admin UI.
+
+1. Complete **Phase 5** (`RESEND_API_KEY` set, `PHISHING_SIMULATION_DRY_RUN` unset)
+2. Admin → **Phishing sims** → **New campaign**
+3. Choose template **IT Password Reset** (or similar)
+4. **Sender email** should auto-fill to `it-support@keytrainlearning.com` (template local part `it-support` + your domain)
+5. If needed, edit manually — must stay `@keytrainlearning.com`
+6. **Test send** to your own email → confirm **From** is `IT Support Team <it-support@keytrainlearning.com>` (or your campaign sender name)
+
+#### 4. `noreply@keytrainlearning.com` — phishing DocuSign-style templates
+
+Same as above — per campaign, no extra Resend setup.
+
+1. New campaign → choose template **DocuSign Document**
+2. **Sender email** auto-fills to `noreply@keytrainlearning.com` (template local part `noreply`)
+3. **Test send** → confirm **From** uses `noreply@keytrainlearning.com`
+
+> **Note:** Auth and phishing both use `noreply@keytrainlearning.com` but for different purposes. That is fine — same verified domain, same API key, different subject/body and sending path (SMTP vs edge function).
+
+#### Quick verification in Resend
+
+After each test send:
+
+1. Resend → **Logs** → confirm status **Delivered**
+2. If **403** or “domain not verified”: re-check Cloudflare DNS matches Resend’s required records
+3. If auth mail still from `supabase.co`: Custom SMTP not saved or wrong sender domain
 
 ---
 
@@ -217,6 +309,8 @@ In Supabase **SQL Editor**, run in order:
 | Symptom | Likely fix |
 |---------|------------|
 | Resend 403 on support form | Domain not verified, or `RESEND_FROM` not on verified domain |
+| Resend 403 on phishing send | Campaign **Sender email** must be `@keytrainlearning.com` |
+| “Do I need another API key for noreply vs support?” | **No** — one `re_...` key with Sending access covers all verified-domain senders |
 | Auth emails still from supabase.co | Custom SMTP not saved, or sender not on verified domain |
 | Invite link goes to github.io | Redeploy `manage-users` after setting `INVITE_REDIRECT_URL`; rebuild frontend with `VITE_APP_URL` |
 | Phishing says “dry run” | Unset `PHISHING_SIMULATION_DRY_RUN`; ensure `RESEND_API_KEY` is set |
@@ -230,7 +324,7 @@ In Supabase **SQL Editor**, run in order:
 
 | Name | Where | Example value |
 |------|--------|----------------|
-| `RESEND_API_KEY` | Supabase secrets | `re_...` |
+| `RESEND_API_KEY` | Supabase secrets | Same `re_...` key as Supabase SMTP password |
 | `RESEND_FROM` | Supabase secrets | `KeyTrain Learning <support@keytrainlearning.com>` |
 | `SUPPORT_TO_EMAIL` | Supabase secrets | your inbox |
 | `INVITE_REDIRECT_URL` | Supabase secrets | `https://keytrainlearning.com/accept-invite` |
@@ -240,4 +334,4 @@ In Supabase **SQL Editor**, run in order:
 
 ---
 
-*Last updated for domain cutover from `patguettler.github.io/guardian-md` to `keytrainlearning.com`.*
+*Last updated: domain verified in Resend (Cloudflare DNS); sender-address steps added.*

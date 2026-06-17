@@ -9,9 +9,11 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { DeletePlatformAdminDialog } from '@/components/admin/DeletePlatformAdminDialog'
 import { getProfileStatusBadge } from '@/lib/user-status'
+import { SendPasswordResetButton } from '@/components/admin/SendPasswordResetButton'
 import { APP_NAME } from '@/lib/constants'
 import { fetchProfiles } from '@/services/users.service'
 import { invitePlatformAdmin } from '@/services/user-management.service'
+import { PLATFORM_ORG_ID } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
 import type { Profile } from '@/types/user.types'
 
@@ -149,17 +151,24 @@ export function PlatformAdminsPage() {
                       })()}
                     </td>
                     <td className="p-3">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive border-destructive/40"
-                        disabled={admin.id === currentUserId}
-                        onClick={() => setDeleteAdmin(admin)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 mr-1" />
-                        Delete
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <SendPasswordResetButton
+                          orgId={PLATFORM_ORG_ID}
+                          userId={admin.id}
+                          disabled={!admin.email}
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive border-destructive/40"
+                          disabled={admin.id === currentUserId}
+                          onClick={() => setDeleteAdmin(admin)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

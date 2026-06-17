@@ -18,7 +18,7 @@ function updateFavicon(resolved: 'light' | 'dark') {
   const link = document.querySelector<HTMLLinkElement>("link[rel='icon']")
   if (!link) return
   const base = import.meta.env.BASE_URL
-  link.href = `${base}favicon-${resolved}.svg`
+  link.href = `${base}favicon-${resolved}.png`
 }
 
 function updateThemeColor(resolved: 'light' | 'dark') {

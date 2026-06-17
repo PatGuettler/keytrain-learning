@@ -646,10 +646,10 @@ Deno.serve(async (req) => {
       const userId = typeof body.user_id === 'string' ? body.user_id : ''
       if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)
 
-      const profileQuery = adminClient.from('profiles').select('id, email, org_id').eq('id', userId)
+      const profileQuery = adminClient.from('profiles').select('id, email, org_id, role').eq('id', userId)
       const { data: profile, error: profileError } =
         orgId === PLATFORM_ORG_ID
-          ? await profileQuery.maybeSingle()
+          ? await profileQuery.eq('role', 'admin').eq('org_id', PLATFORM_ORG_ID).maybeSingle()
           : await profileQuery.eq('org_id', orgId).maybeSingle()
 
       if (profileError) throw profileError

@@ -1,4 +1,5 @@
-import { getInviteRedirectUrl } from '@/lib/backend-config'
+import { getInviteRedirectUrl, getResetPasswordRedirectUrl } from '@/lib/backend-config'
+import { PLATFORM_ORG_ID } from '@/lib/constants'
 import { EDGE_FUNCTION_DEPLOY_HINT, isEdgeFunctionUnavailable } from '@/lib/edge-functions'
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
 import { updateProfile } from '@/services/users.service'
@@ -35,9 +36,12 @@ async function invokeManageUsers<T>(body: Record<string, unknown>): Promise<T> {
   if (!supabase || !baseUrl || !anonKey) throw new Error('Supabase is not configured.')
 
   const inviteActions = new Set(['invite_one', 'import_csv', 'invite_platform_admin'])
+  const securityActions = new Set(['send_password_reset'])
   const payload = inviteActions.has(String(body.action))
     ? { ...body, redirect_to: getInviteRedirectUrl() }
-    : { ...body }
+    : securityActions.has(String(body.action))
+      ? { ...body, redirect_to: getResetPasswordRedirectUrl() }
+      : { ...body }
 
   const {
     data: { session },
@@ -206,6 +210,7 @@ export async function deleteOrgUser(orgId: string, userId: string): Promise<void
   await invokeManageUsers({ action: 'delete_org_user', org_id: orgId, user_id: userId })
 }
 
+
 export async function sendUserPasswordReset(
   orgId: string,
   userId: string
@@ -215,6 +220,10 @@ export async function sendUserPasswordReset(
     org_id: orgId,
     user_id: userId,
   })
+}
+
+export async function sendPlatformAdminPasswordReset(userId: string): Promise<{ message: string }> {
+  return sendUserPasswordReset(PLATFORM_ORG_ID, userId)
 }
 
 export async function unlockUserLogin(orgId: string, userId: string): Promise<{ message: string }> {
