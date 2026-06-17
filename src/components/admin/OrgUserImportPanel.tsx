@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { APP_SLUG } from '@/lib/constants'
+import { parseUserImportCsv } from '@/lib/csv-user-import'
 import type { CsvUserImportRow } from '@/lib/csv-user-import'
 import { importUsersFromCsv, type ImportUserRowResult } from '@/services/user-management.service'
 
