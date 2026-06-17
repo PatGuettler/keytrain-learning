@@ -1,0 +1,47 @@
+import type { LucideIcon } from 'lucide-react'
+import {
+  BookOpen,
+  LayoutDashboard,
+  Building2,
+  GraduationCap,
+  ShieldCheck,
+  Users,
+  LockKeyhole,
+  Fish,
+} from 'lucide-react'
+import type { UserRole } from '@/types/user.types'
+
+export type NavItem = {
+  to: string
+  label: string
+  icon: LucideIcon
+}
+
+export const navByRole: Record<UserRole, NavItem[]> = {
+  admin: [
+    { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
+    { to: '/admin/organizations', label: 'Organizations', icon: Building2 },
+    { to: '/admin/courses', label: 'Courses', icon: BookOpen },
+    { to: '/admin/phishing/campaigns', label: 'Phishing sims', icon: Fish },
+    { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
+  ],
+  manager: [
+    { to: '/manager/training', label: 'Required Training', icon: GraduationCap },
+    { to: '/manager/team', label: 'My Team', icon: Users },
+  ],
+  employee: [{ to: '/employee/training', label: 'Required Training', icon: GraduationCap }],
+}
+
+export const mobileTabNavByRole: Record<UserRole, NavItem[]> = {
+  admin: [
+    { to: '/admin/dashboard', label: 'Home', icon: LayoutDashboard },
+    { to: '/admin/courses', label: 'Courses', icon: BookOpen },
+    { to: '/admin/phishing/campaigns', label: 'Phishing', icon: Fish },
+  ],
+  manager: [
+    { to: '/manager/training', label: 'Training', icon: GraduationCap },
+    { to: '/manager/team', label: 'Team', icon: Users },
+  ],
+  employee: [{ to: '/employee/training', label: 'Training', icon: GraduationCap }],
+}

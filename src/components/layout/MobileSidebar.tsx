@@ -1,36 +1,12 @@
 import { useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import {
-  BookOpen,
-  GraduationCap,
-  LayoutDashboard,
-  Shield,
-  Building2,
-  ShieldCheck,
-  Users,
-  LockKeyhole,
-  X,
-} from 'lucide-react'
+import { Shield, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_NAME } from '@/lib/constants'
 import { useRole } from '@/hooks/useRole'
 import { useUiStore } from '@/store/uiStore'
 import { Button } from '@/components/ui/button'
-
-const navByRole = {
-  admin: [
-    { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
-    { to: '/admin/organizations', label: 'Organizations', icon: Building2 },
-    { to: '/admin/courses', label: 'Courses', icon: BookOpen },
-    { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
-  ],
-  manager: [
-    { to: '/manager/training', label: 'Required Training', icon: GraduationCap },
-    { to: '/manager/team', label: 'My Team', icon: Users },
-  ],
-  employee: [{ to: '/employee/training', label: 'Required Training', icon: GraduationCap }],
-}
+import { navByRole } from './nav-config'
 
 export function MobileSidebar() {
   const { role } = useRole()

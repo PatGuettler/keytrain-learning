@@ -1,36 +1,9 @@
 import { NavLink } from 'react-router-dom'
-import {
-  BookOpen,
-  LayoutDashboard,
-  Shield,
-  Building2,
-  GraduationCap,
-  ShieldCheck,
-  Users,
-  LockKeyhole,
-  Fish,
-} from 'lucide-react'
+import { Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { APP_NAME } from '@/lib/constants'
 import { useRole } from '@/hooks/useRole'
-
-const navByRole = {
-  admin: [
-    { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
-    { to: '/admin/organizations', label: 'Organizations', icon: Building2 },
-    { to: '/admin/courses', label: 'Courses', icon: BookOpen },
-    { to: '/admin/phishing/campaigns', label: 'Phishing sims', icon: Fish },
-    { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
-  ],
-  manager: [
-    { to: '/manager/training', label: 'Required Training', icon: GraduationCap },
-    { to: '/manager/team', label: 'My Team', icon: Users },
-  ],
-  employee: [
-    { to: '/employee/training', label: 'Required Training', icon: GraduationCap },
-  ],
-}
+import { navByRole } from './nav-config'
 
 export function Sidebar() {
   const { role } = useRole()

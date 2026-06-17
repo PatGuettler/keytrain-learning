@@ -1,30 +1,16 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { BookOpen, GraduationCap, LayoutDashboard, User, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRole } from '@/hooks/useRole'
 import { isTrainingPlayerPath } from '@/lib/training-paths'
+import { mobileTabNavByRole } from './nav-config'
 
 export function MobileNav() {
   const location = useLocation()
-  const { role, isAdmin, isManager } = useRole()
+  const { role } = useRole()
 
   if (isTrainingPlayerPath(location.pathname)) return null
 
-  const items =
-    role === 'employee'
-      ? [{ to: '/employee/training', icon: GraduationCap, label: 'Training' }]
-      : isManager
-        ? [
-            { to: '/manager/training', icon: GraduationCap, label: 'Training' },
-            { to: '/manager/team', icon: Users, label: 'Team' },
-          ]
-        : isAdmin
-          ? [
-              { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Home' },
-              { to: '/admin/courses', icon: BookOpen, label: 'Courses' },
-              { to: '/admin/users', icon: User, label: 'Users' },
-            ]
-          : []
+  const items = role ? mobileTabNavByRole[role] : []
 
   return (
     <nav
