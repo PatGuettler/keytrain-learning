@@ -510,7 +510,7 @@ Deno.serve(async (req) => {
     const action = typeof body.action === 'string' ? body.action : 'import_csv'
     const sendInvites = body.send_invites !== false
     // Always use production invite URL — never trust the browser (localhost breaks invite emails).
-    const PRODUCTION_INVITE_REDIRECT = 'https://patguettler.github.io/guardian-md/accept-invite'
+    const PRODUCTION_INVITE_REDIRECT = 'https://keytrainlearning.com/accept-invite'
     const redirectTo = Deno.env.get('INVITE_REDIRECT_URL') ?? PRODUCTION_INVITE_REDIRECT
 
     if (action === 'invite_platform_admin') {
@@ -661,7 +661,7 @@ Deno.serve(async (req) => {
         typeof body.redirect_to === 'string' && body.redirect_to.length > 0
           ? body.redirect_to
           : (redirectTo?.replace('/accept-invite', '/reset-password') ??
-            'https://patguettler.github.io/guardian-md/reset-password')
+            'https://keytrainlearning.com/reset-password')
 
       const { error: resetError } = await adminClient.auth.resetPasswordForEmail(profile.email, {
         redirectTo: resetRedirect,

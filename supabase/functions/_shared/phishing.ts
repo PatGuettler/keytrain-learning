@@ -49,5 +49,5 @@ export function trackingBaseUrl(supabaseUrl: string): string {
 export function trainingPageUrl(): string {
   const custom = Deno.env.get('PHISHING_TRAINING_URL')
   if (custom) return custom
-  return 'https://patguettler.github.io/guardian-md/phishing-training'
+  return 'https://keytrainlearning.com/phishing-training'
 }

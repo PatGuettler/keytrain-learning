@@ -35,7 +35,7 @@ function ghPagesSpaFallback(): Plugin {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>GuardianMD</title>
+  <title>KeyTrain Learning</title>
   <script>
     sessionStorage.setItem('redirect', location.href);
     location.replace(location.origin + ${JSON.stringify(baseUrl)});

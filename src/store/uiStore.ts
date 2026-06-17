@@ -28,7 +28,7 @@ export const useUiStore = create<UiState>()(
       },
     }),
     {
-      name: 'guardianmd-ui',
+      name: 'keytrainlearning-ui',
       merge: (persisted, current) => {
         const stored = persisted as Partial<UiState> | undefined
         const theme = normalizeThemePreference(stored?.theme)

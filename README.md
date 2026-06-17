@@ -1,10 +1,12 @@
-# GuardianMD
+# KeyTrain Learning
 
 Healthcare training platform for clinical incident reporting, compliance courses, and interactive workshops. Built for hospital organizations with **platform admin**, **manager**, and **employee** roles — multi-tenant by organization, backed by Supabase, hosted on GitHub Pages.
 
-**Live site:** [https://patguettler.github.io/guardian-md/](https://patguettler.github.io/guardian-md/)
+**Live site:** [https://keytrainlearning.com/](https://keytrainlearning.com/)
 
-**Repository:** [github.com/PatGuettler/guardian-md](https://github.com/PatGuettler/guardian-md)
+**Repository:** [github.com/PatGuettler/guardian-md](https://github.com/PatGuettler/guardian-md) *(GitHub repo name may still be `guardian-md`)*
+
+**Domain cutover checklist (keytrainlearning.com):** [docs/keytrainlearning-domain-setup.md](docs/keytrainlearning-domain-setup.md)
 
 ---
 
@@ -47,6 +49,7 @@ Healthcare training platform for clinical incident reporting, compliance courses
 - [Supabase setup](#supabase-setup)
 - [Edge Functions](#edge-functions)
 - [Phishing simulation](#phishing-simulation)
+- [Domain cutover (keytrainlearning.com)](docs/keytrainlearning-domain-setup.md)
 - [Resend (support email)](#resend-support-email)
 - [Environment variables](#environment-variables)
 - [Development](#development)
@@ -60,11 +63,11 @@ Healthcare training platform for clinical incident reporting, compliance courses
 
 ## Overview
 
-GuardianMD is a single-page React app that talks directly to Supabase from the browser. Row Level Security (RLS) enforces org boundaries; privileged operations (user invites, password resets, support email) run in Supabase Edge Functions with the service role key.
+KeyTrain Learning is a single-page React app that talks directly to Supabase from the browser. Row Level Security (RLS) enforces org boundaries; privileged operations (user invites, password resets, support email) run in Supabase Edge Functions with the service role key.
 
 | Layer | What runs where |
 |-------|-----------------|
-| **Frontend** | React SPA on GitHub Pages (`/guardian-md/` base path) |
+| **Frontend** | React SPA on GitHub Pages at `https://keytrainlearning.com` |
 | **Auth** | Supabase Auth (email + password, invite & reset links) |
 | **Database** | PostgreSQL with RLS policies per role and org |
 | **Edge Functions** | `manage-users`, `send-support-request`, `send-phishing-campaign`, `track-phishing-event` (Deno) |
@@ -204,7 +207,7 @@ flowchart TB
 ## Project structure
 
 ```
-guardian-md/
+keytrainlearning/   # local clone (GitHub repo may still be named guardian-md)
 ├── .github/workflows/deploy.yml   # GitHub Pages CI/CD
 ├── public/                        # Static assets, favicon
 ├── scripts/
@@ -252,7 +255,7 @@ guardian-md/
 
 ```bash
 git clone https://github.com/PatGuettler/guardian-md.git
-cd guardian-md
+cd guardian-md   # or your local folder name
 npm install
 cp .env.example .env   # add your Supabase URL and anon key
 npm run dev
@@ -297,8 +300,8 @@ Set in **Authentication → URL configuration** (or push via `supabase config pu
 
 | Setting | Production value |
 |---------|------------------|
-| **Site URL** | `https://patguettler.github.io/guardian-md` |
-| **Redirect URLs** | `https://patguettler.github.io/guardian-md/**`, `http://localhost:5173/**` |
+| **Site URL** | `https://keytrainlearning.com` |
+| **Redirect URLs** | `https://keytrainlearning.com/**`, `http://localhost:5173/**` |
 
 Local dev redirect paths: `/accept-invite`, `/reset-password`, `/login`.
 
@@ -362,7 +365,7 @@ The script links the project, pushes auth config from `supabase/config.toml`, se
 **Manual deploy:**
 
 ```bash
-supabase secrets set INVITE_REDIRECT_URL=https://patguettler.github.io/guardian-md/accept-invite
+supabase secrets set INVITE_REDIRECT_URL=https://keytrainlearning.com/accept-invite
 supabase functions deploy manage-users --no-verify-jwt
 ```
 
@@ -394,7 +397,7 @@ Supabase built-in auth emails are rate-limited (~4/hour on free tier). For produ
 
 ## Phishing simulation
 
-Authorized security awareness testing for platform admins. Built into GuardianMD so remediation training can live on the same platform (roadmap: **HouseWatchmen**).
+Authorized security awareness testing for platform admins. Built into KeyTrain Learning so remediation training can live on the same platform (roadmap: **HouseWatchmen**).
 
 **Non-breaking:** Existing training, auth, and support flows are unchanged. The module is admin-only and optional.
 
@@ -433,7 +436,7 @@ Optional secrets:
 supabase secrets set PHISHING_SIMULATION_DRY_RUN=true --project-ref "$SUPABASE_PROJECT_REF"
 
 # Where users land after clicking a phish link (defaults to GitHub Pages)
-supabase secrets set PHISHING_TRAINING_URL='https://patguettler.github.io/guardian-md/phishing-training' --project-ref "$SUPABASE_PROJECT_REF"
+supabase secrets set PHISHING_TRAINING_URL='https://keytrainlearning.com/phishing-training' --project-ref "$SUPABASE_PROJECT_REF"
 ```
 
 ### 3. Test mode (subset send)
@@ -442,7 +445,7 @@ While a campaign is still a **draft**:
 
 1. Open the campaign results page
 2. In **Test send**, type an email or search and pick users from the app user list
-3. Click **Send test (N)** — only those addresses receive the simulation (must match a GuardianMD user)
+3. Click **Send test (N)** — only those addresses receive the simulation (must match a KeyTrain Learning user)
 4. Campaign stays a draft; tracking events still log normally
 5. When satisfied, click **Send to everyone** for the full audience
 
@@ -455,7 +458,7 @@ Enable **Test mode campaign** on the edit form to flag the campaign in the list.
 3. Open campaign → **Send campaign** → confirm dry-run message
 4. Copy a recipient token from the database (`phishing_recipients.token`) and open:
    - Click test: `https://<project>.supabase.co/functions/v1/track-phishing-event?token=TOKEN&event=click`
-   - Training page: `https://patguettler.github.io/guardian-md/phishing-training?token=TOKEN`
+   - Training page: `https://keytrainlearning.com/phishing-training?token=TOKEN`
 5. Refresh campaign results — events should appear
 
 ### 5. What remains before production email
@@ -489,7 +492,7 @@ Enable **Test mode campaign** on the edit form to flag the campaign in the list.
 
 ## Resend (support email)
 
-GuardianMD uses [Resend](https://resend.com) for the **Profile → Contact** form. Submissions are **always stored** in `support_requests`; email is optional but recommended.
+KeyTrain Learning uses [Resend](https://resend.com) for the **Profile → Contact** form. Submissions are **always stored** in `support_requests`; email is optional but recommended.
 
 | Without Resend | With Resend |
 |----------------|-------------|
@@ -521,7 +524,7 @@ supabase functions deploy send-support-request --project-ref "$SUPABASE_PROJECT_
 |--------|----------|-------------|
 | `RESEND_API_KEY` | For email | From [Resend → API Keys](https://resend.com/api-keys) |
 | `SUPPORT_TO_EMAIL` | No | Inbox for contact form (server default: `patguettler@gmail.com`) |
-| `RESEND_FROM` | No | Sender address (default: `GuardianMD Support <onboarding@resend.dev>`) |
+| `RESEND_FROM` | No | Sender address (default: `KeyTrain Learning Support <onboarding@resend.dev>`) |
 
 Run migration **`020_support_requests.sql`** if the `support_requests` table does not exist yet.
 
@@ -542,7 +545,7 @@ The default `from` address is **`onboarding@resend.dev`** (Resend’s test domai
 | Goal | What to do |
 |------|------------|
 | Quick test | Set `SUPPORT_TO_EMAIL` to the **same email you used to sign up for Resend** |
-| Production | [Verify your domain](https://resend.com/domains) in Resend, then set e.g. `RESEND_FROM='GuardianMD <support@yourdomain.com>'` |
+| Production | [Verify your domain](https://resend.com/domains) in Resend, then set e.g. `RESEND_FROM='KeyTrain Learning <support@yourdomain.com>'` |
 
 See Resend docs: [403 error using resend.dev domain](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain).
 
@@ -569,8 +572,8 @@ The edge function returns **502** with the Resend error message when delivery fa
 | `VITE_SUPABASE_ANON_KEY` | Yes | Anon (public) key — safe in frontend; RLS enforces access |
 | `VITE_APP_URL` | No | Public app URL for email links (production) |
 | `VITE_BACKEND` | No | Force backend adapter (`supabase`; default when configured) |
-| `GITHUB_PAGES` | CI only | Set to `true` for `/guardian-md/` base path |
-| `GH_PAGES_BASE` | CI only | Override base path (default `/guardian-md/`) |
+| `GITHUB_PAGES` | CI only | Set to `true` for GitHub Pages deploy builds |
+| `GH_PAGES_BASE` | CI only | Override base path (default `/` on custom domain) |
 
 ### Supabase secrets (Edge Functions)
 
@@ -599,9 +602,9 @@ Add under **Settings → Secrets → Actions**:
 ```bash
 npm run dev            # Vite dev server + HMR (http://localhost:5173)
 npm run build          # Production build (base /)
-npm run build:pages    # Build matching GitHub Pages (/guardian-md/)
+npm run build:pages    # Build matching GitHub Pages (keytrainlearning.com)
 npm run preview        # Preview production build
-npm run preview:pages  # Build + preview at /guardian-md/
+npm run preview:pages  # Build + preview at site root
 npm run lint           # ESLint
 npm run deploy:manage-users  # Deploy manage-users Edge Function
 npm run deploy:phishing      # Deploy phishing simulation Edge Functions
@@ -611,7 +614,7 @@ npm run set-test-passwords   # Reset test user passwords (export SUPABASE_SERVIC
 
 ### Deep links on GitHub Pages
 
-GitHub Pages only serves `index.html` at the site root. The Vite build writes a `404.html` SPA fallback when `GITHUB_PAGES=true` so routes like `/guardian-md/employee/training/play/<courseId>` work after refresh or bookmark.
+GitHub Pages only serves `index.html` at the site root. The Vite build writes a `404.html` SPA fallback when `GITHUB_PAGES=true` so routes like `/employee/training/play/<courseId>` work after refresh or bookmark.
 
 ---
 
@@ -627,7 +630,7 @@ On every push to **`main`**, or manually via **Actions → Deploy to GitHub Page
 
 **Enable Pages:** Repository **Settings → Pages → Build and deployment → Source:** **GitHub Actions**.
 
-**Verify:** [https://patguettler.github.io/guardian-md/](https://patguettler.github.io/guardian-md/)
+**Verify:** [https://keytrainlearning.com/](https://keytrainlearning.com/)
 
 #### Workflow did not run?
 

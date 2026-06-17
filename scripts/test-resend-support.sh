@@ -8,7 +8,7 @@
 set -euo pipefail
 
 TO="${SUPPORT_TO_EMAIL:-patguettler@gmail.com}"
-FROM="${RESEND_FROM:-GuardianMD Support <onboarding@resend.dev>}"
+FROM="${RESEND_FROM:-KeyTrain Learning Support <onboarding@resend.dev>}"
 
 if [ -z "${RESEND_API_KEY:-}" ]; then
   echo "Error: set RESEND_API_KEY (from https://resend.com/api-keys)" >&2
@@ -24,7 +24,7 @@ import json, os
 print(json.dumps({
     "from": os.environ["FROM"],
     "to": [os.environ["TO"]],
-    "subject": "[GuardianMD test] Support email debug",
+    "subject": "[KeyTrain Learning test] Support email debug",
     "text": "If you received this, Resend is configured correctly.",
 }))
 PY

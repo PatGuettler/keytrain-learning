@@ -5,7 +5,7 @@ import { CsvImportPreviewDialog } from '@/components/admin/CsvImportPreviewDialo
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { parseUserImportCsv } from '@/lib/csv-user-import'
+import { APP_SLUG } from '@/lib/constants'
 import type { CsvUserImportRow } from '@/lib/csv-user-import'
 import { importUsersFromCsv, type ImportUserRowResult } from '@/services/user-management.service'
 
@@ -19,7 +19,7 @@ function downloadSampleCsv() {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'guardianmd-users-sample.csv'
+  a.download = `${APP_SLUG}-users-sample.csv`
   a.click()
   URL.revokeObjectURL(url)
 }

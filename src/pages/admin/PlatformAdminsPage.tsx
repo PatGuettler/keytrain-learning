@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { DeletePlatformAdminDialog } from '@/components/admin/DeletePlatformAdminDialog'
 import { getProfileStatusBadge } from '@/lib/user-status'
+import { APP_NAME } from '@/lib/constants'
 import { fetchProfiles } from '@/services/users.service'
 import { invitePlatformAdmin } from '@/services/user-management.service'
 import { useAuthStore } from '@/store/authStore'
@@ -53,7 +54,7 @@ export function PlatformAdminsPage() {
     <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title="Platform Admins"
-        description="Create and manage GuardianMD administrators. Hospital staff are managed under Organizations."
+        description={`Create and manage ${APP_NAME} administrators. Hospital staff are managed under Organizations.`}
       />
 
       <Card>

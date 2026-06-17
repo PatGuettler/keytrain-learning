@@ -49,15 +49,15 @@ else
   SUPABASE_CMD=(npx --yes supabase@latest)
 fi
 
-INVITE_URL="${INVITE_REDIRECT_URL:-https://patguettler.github.io/guardian-md/accept-invite}"
+INVITE_URL="${INVITE_REDIRECT_URL:-https://keytrainlearning.com/accept-invite}"
 
 echo "Linking project and pushing auth config (Site URL + redirect URLs)…"
 "${SUPABASE_CMD[@]}" link --project-ref "$PROJECT_REF" --yes || true
 if ! "${SUPABASE_CMD[@]}" config push --yes; then
   echo ""
   echo "WARNING: config push failed. Manually set in Supabase Dashboard → Authentication → URL configuration:"
-  echo "  Site URL: https://patguettler.github.io/guardian-md"
-  echo "  Redirect URLs: https://patguettler.github.io/guardian-md/**"
+  echo "  Site URL: https://keytrainlearning.com"
+  echo "  Redirect URLs: https://keytrainlearning.com/**"
   echo ""
 fi
 
@@ -81,4 +81,4 @@ if [ "$HTTP_CODE" = "404" ]; then
 fi
 
 echo "OPTIONS returned $HTTP_CODE — deploy looks good."
-echo "Try Add user on https://patguettler.github.io/guardian-md/"
+echo "Try Add user on https://keytrainlearning.com/"

@@ -28,5 +28,5 @@ export const EDGE_FUNCTION_DEPLOY_HINT = [
   '"Deploy Edge Functions" workflow.',
   '',
   'Also add this redirect URL in Supabase → Authentication → URL configuration:',
-  '  https://patguettler.github.io/guardian-md/**',
+  '  https://keytrainlearning.com/**',
 ].join('\n')

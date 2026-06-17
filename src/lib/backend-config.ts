@@ -15,7 +15,7 @@ export function getPublicAppUrl(): string {
       : origin
     return repoBase
   }
-  return 'https://patguettler.github.io/guardian-md'
+  return 'https://keytrainlearning.com'
 }
 
 export function getResetPasswordRedirectUrl(): string {

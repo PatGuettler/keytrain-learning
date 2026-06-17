@@ -21,4 +21,4 @@ supabase functions deploy track-phishing-event --project-ref "$PROJECT_REF" --no
 
 echo "Done. Optional secrets:"
 echo "  supabase secrets set PHISHING_SIMULATION_DRY_RUN=true --project-ref $PROJECT_REF"
-echo "  supabase secrets set PHISHING_TRAINING_URL='https://patguettler.github.io/guardian-md/phishing-training' --project-ref $PROJECT_REF"
+echo "  supabase secrets set PHISHING_TRAINING_URL='https://keytrainlearning.com/phishing-training' --project-ref $PROJECT_REF"

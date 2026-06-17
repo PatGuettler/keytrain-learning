@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
 const DEFAULT_TO = 'patguettler@gmail.com'
-const DEFAULT_FROM = 'GuardianMD Support <onboarding@resend.dev>'
+const DEFAULT_FROM = 'KeyTrain Learning Support <onboarding@resend.dev>'
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: fromEmail,
         to: [toEmail],
-        subject: `[GuardianMD ${category}] ${subject}`,
+        subject: `[KeyTrain Learning ${category}] ${subject}`,
         text: emailBody,
       }),
     })

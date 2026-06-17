@@ -2,13 +2,14 @@
 # See scripts/deploy-manage-users.sh
 
 [auth]
-site_url = "https://patguettler.github.io/guardian-md"
+site_url = "https://keytrainlearning.com"
 additional_redirect_urls = [
+  "https://keytrainlearning.com/**",
+  "https://keytrainlearning.com/accept-invite",
+  "https://keytrainlearning.com/reset-password",
+  "https://keytrainlearning.com/login",
+  "https://keytrainlearning.com/phishing-training",
   "https://patguettler.github.io/guardian-md/**",
-  "https://patguettler.github.io/guardian-md/accept-invite",
-  "https://patguettler.github.io/guardian-md/reset-password",
-  "https://patguettler.github.io/guardian-md/login",
-  "https://patguettler.github.io/guardian-md/phishing-training",
   "http://localhost:5173/**",
   "http://localhost:3000/**",
 ]

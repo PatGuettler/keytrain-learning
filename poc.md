@@ -1,4 +1,4 @@
-Here is a production setup guide for GuardianMD with Supabase (not demo mode). The app does not create users in the UI yet—users are created in Supabase Auth, then linked with a profiles row in SQL.
+Here is a production setup guide for KeyTrain Learning with Supabase (not demo mode). The app does not create users in the UI yet—users are created in Supabase Auth, then linked with a profiles row in SQL.
 
 How the real system works (short)
 Piece	What it does
@@ -17,7 +17,7 @@ Login flow: sign in → load profiles row where id = Auth user UUID → redirect
 Phase 0 — Prerequisites
 Supabase account: https://supabase.com
 GitHub repo: https://github.com/PatGuettler/guardian-md
-Live app (optional): https://patguettler.github.io/guardian-md/
+Live app (optional): https://keytrainlearning.com/
 Phase 1 — Supabase project and database
 1.1 Create project
 Supabase → New project
@@ -34,9 +34,9 @@ Confirm no errors (tables: organizations, profiles, courses, modules, assignment
 Authentication → Providers → Email → enable
 For testing, you can turn Confirm email off (easier first logins)
 Authentication → URL configuration:
-Site URL: https://patguettler.github.io/guardian-md/
+Site URL: https://keytrainlearning.com/
 Redirect URLs (add both):
-https://patguettler.github.io/guardian-md/**
+https://keytrainlearning.com/**
 http://localhost:5173/**
 1.4 Storage (optional, for lesson images)
 Storage → New bucket → name: training-images
@@ -100,7 +100,7 @@ Add:
 VITE_SUPABASE_URL
 VITE_SUPABASE_ANON_KEY
 Push to main (or re-run Deploy to GitHub Pages)
-Sign in at https://patguettler.github.io/guardian-md/
+Sign in at https://keytrainlearning.com/
 If secrets are missing, the live site stays in demo mode (demo login buttons).
 
 Phase 4 — Manager
@@ -313,7 +313,7 @@ API / bandwidth — capped
 Storage — limited GB for files (lesson images)
 Project pauses — inactive free projects can auto-pause after a period; you wake them in the dashboard
 No dedicated support / SLA — fine for demos and pilots, not for mission-critical production without a paid plan
-For GuardianMD specifically:
+For KeyTrain Learning specifically:
 
 Text/JSON course content in Postgres is light
 Auth logins for staff are low volume compared to consumer apps
@@ -337,7 +337,7 @@ Many concurrent users or large media libraries
 GitHub might cost money if you need private repo + advanced org features — not required for the public Pages setup you have now.
 
 Bottom line
-Yes — you can run GuardianMD for real users on Supabase free + GitHub Pages free for a small-to-medium internal training program.
+Yes — you can run KeyTrain Learning for real users on Supabase free + GitHub Pages free for a small-to-medium internal training program.
 No — it’s not “unlimited forever”; watch Supabase quotas, project pause, and storage for images.
 Demo mode on the live site without Supabase secrets is free forever but uses fake data only.
 If you tell me roughly how many users and whether you’ll host lots of images, I can ballpark whether you’d likely stay on free tier for a year or hit limits quickly.

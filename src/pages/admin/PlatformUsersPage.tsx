@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { fetchProfiles } from '@/services/users.service'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
+import { APP_SLUG } from '@/lib/constants'
 import { countProfileStatuses, getProfileStatusBadge, getProfileStatusCategory } from '@/lib/user-status'
 import { formatDate } from '@/lib/utils'
 import type { Profile } from '@/types/user.types'
@@ -51,7 +52,7 @@ function exportUsersCsv(users: EnrichedUser[]) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `guardianmd-users-${new Date().toISOString().slice(0, 10)}.csv`
+  a.download = `${APP_SLUG}-users-${new Date().toISOString().slice(0, 10)}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }

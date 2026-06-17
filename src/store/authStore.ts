@@ -19,6 +19,6 @@ export const useAuthStore = create<AuthState>()(
       setAuth: ({ userId, email, profile }) => set({ userId, email, profile }),
       clearAuth: () => set({ userId: null, email: null, profile: null }),
     }),
-    { name: 'guardianmd-auth' }
+    { name: 'keytrainlearning-auth' }
   )
 )
