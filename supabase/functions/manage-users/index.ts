@@ -680,7 +680,19 @@ Deno.serve(async (req) => {
       const { error: resetError } = await adminClient.auth.resetPasswordForEmail(targetEmail, {
         redirectTo: resetRedirect,
       })
-      if (resetError) throw resetError
+      if (resetError) {
+        console.error('resetPasswordForEmail failed', {
+          status: resetError.status,
+          message: resetError.message,
+          redirectTo: resetRedirect,
+        })
+        const status = resetError.status === 429 ? 429 : 400
+        const hint =
+          resetError.status === 429
+            ? 'Too many reset requests for this account. Wait a minute and try again.'
+            : `Could not send the reset email. Confirm custom SMTP is set in Supabase → Auth, and that "${resetRedirect}" is listed under Auth → URL Configuration → Redirect URLs.`
+        return jsonResponse({ error: `${hint} (${resetError.message})` }, status)
+      }
 
       await adminClient
         .from('profiles')
@@ -751,6 +763,7 @@ Deno.serve(async (req) => {
 
     return jsonResponse({ error: `Unknown action: ${action}` }, 400)
   } catch (err) {
+    console.error('manage-users error', err)
     const message = err instanceof Error ? err.message : 'Request failed'
     return jsonResponse({ error: message }, 500)
   }
