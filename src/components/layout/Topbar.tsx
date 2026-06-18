@@ -40,7 +40,7 @@ export function Topbar() {
           <Menu className="h-5 w-5" />
         </Button>
         <div className="flex min-w-0 items-center gap-2 lg:hidden">
-          <AppLogo className="h-6 w-auto shrink-0" />
+          <AppLogo className="h-8 w-auto shrink-0" />
           <span className="font-semibold truncate">{APP_NAME}</span>
         </div>
         <h1 className="hidden lg:block text-lg font-semibold truncate">

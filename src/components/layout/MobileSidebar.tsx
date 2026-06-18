@@ -39,7 +39,7 @@ export function MobileSidebar() {
       <aside className="absolute left-0 top-0 bottom-0 w-[min(100vw-3rem,20rem)] flex flex-col bg-card border-r shadow-xl safe-area-pt safe-area-pb">
         <div className="flex h-14 items-center justify-between border-b px-4">
           <div className="flex items-center gap-2">
-            <AppLogo className="h-7 w-auto" />
+            <AppLogo className="h-9 w-auto" />
             <span className="font-bold">{APP_NAME}</span>
           </div>
           <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => setSidebarOpen(false)}>

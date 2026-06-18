@@ -12,7 +12,7 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:flex w-64 flex-col border-r bg-card">
       <div className="flex h-16 items-center gap-2 border-b px-6">
-        <AppLogo className="h-8 w-auto" />
+        <AppLogo className="h-10 w-auto" />
         <span className="font-bold text-lg">{APP_NAME}</span>
       </div>
       <nav className="flex-1 space-y-1 p-4">

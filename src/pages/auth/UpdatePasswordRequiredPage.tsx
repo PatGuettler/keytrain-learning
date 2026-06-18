@@ -59,7 +59,7 @@ export function UpdatePasswordRequiredPage() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2">
-            <AppLogo className="h-16 w-auto" />
+            <AppLogo className="h-20 w-auto" />
           </div>
           <CardTitle className="text-2xl">{APP_NAME}</CardTitle>
           <CardDescription>{PASSWORD_UPGRADE_MESSAGE}</CardDescription>
