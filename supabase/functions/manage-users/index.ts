@@ -647,14 +647,28 @@ Deno.serve(async (req) => {
       if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)
 
       const profileQuery = adminClient.from('profiles').select('id, email, org_id, role').eq('id', userId)
+      // Platform path resets any admin (their org_id may not be the platform org,
+      // e.g. the original bootstrap admin); org path stays scoped to that org.
       const { data: profile, error: profileError } =
         orgId === PLATFORM_ORG_ID
-          ? await profileQuery.eq('role', 'admin').eq('org_id', PLATFORM_ORG_ID).maybeSingle()
+          ? await profileQuery.eq('role', 'admin').maybeSingle()
           : await profileQuery.eq('org_id', orgId).maybeSingle()
 
       if (profileError) throw profileError
-      if (!profile?.email) {
-        return jsonResponse({ error: 'User not found or has no email.' }, 404)
+      if (!profile) {
+        return jsonResponse({ error: 'User not found in this scope.' }, 404)
+      }
+
+      // profiles.email can be stale/null; auth.users is the source of truth.
+      let targetEmail = profile.email ?? null
+      if (!targetEmail) {
+        const { data: authUser, error: authUserError } =
+          await adminClient.auth.admin.getUserById(userId)
+        if (authUserError) throw authUserError
+        targetEmail = authUser.user?.email ?? null
+      }
+      if (!targetEmail) {
+        return jsonResponse({ error: 'User has no email address on file.' }, 422)
       }
 
       const resetRedirect =
@@ -663,7 +677,7 @@ Deno.serve(async (req) => {
           : (redirectTo?.replace('/accept-invite', '/reset-password') ??
             'https://keytrainlearning.com/reset-password')
 
-      const { error: resetError } = await adminClient.auth.resetPasswordForEmail(profile.email, {
+      const { error: resetError } = await adminClient.auth.resetPasswordForEmail(targetEmail, {
         redirectTo: resetRedirect,
       })
       if (resetError) throw resetError

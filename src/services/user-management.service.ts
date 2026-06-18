@@ -71,14 +71,23 @@ async function invokeManageUsers<T>(body: Record<string, unknown>): Promise<T> {
     | { error?: string; code?: string; message?: string }
     | null
 
-  const notFound =
-    response.status === 404 ||
-    (data &&
-      typeof data === 'object' &&
-      'code' in data &&
-      (data as { code?: string }).code === 'NOT_FOUND')
+  // A JSON `error` body means the function executed and returned a real error.
+  // Only treat 404/401 as "not deployed" when there's no such body (true gateway miss).
+  const bodyError =
+    data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+      ? data.error
+      : null
 
-  if (notFound || response.status === 401) {
+  const gatewayNotDeployed =
+    (response.status === 404 || response.status === 401) && !bodyError
+
+  const codeNotFound =
+    data &&
+    typeof data === 'object' &&
+    'code' in data &&
+    (data as { code?: string }).code === 'NOT_FOUND'
+
+  if (gatewayNotDeployed || codeNotFound) {
     throw manageUsersDeployError()
   }
 

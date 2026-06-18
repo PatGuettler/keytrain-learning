@@ -77,7 +77,7 @@ export function LoginPage() {
             <AppLogo className="h-16 w-auto" />
           </div>
           <CardTitle className="text-2xl">{APP_NAME}</CardTitle>
-          <CardDescription>Healthcare training & incident reporting</CardDescription>
+          <CardDescription>Security awareness training, incident reporting &amp; compliance</CardDescription>
         </CardHeader>
         <CardContent>
           {!isBackendReady() && (
