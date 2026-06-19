@@ -1,9 +1,10 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import {
-  firstNameFromFullName,
+  buildRecipientContext,
   isPhishingDryRun,
   replacePhishingPlaceholders,
+  resolveCampaignSenderEmail,
   trackingBaseUrl,
 } from '../_shared/phishing.ts'
 
@@ -126,6 +127,16 @@ Deno.serve(async (req) => {
 
     if (campaignError || !campaign) {
       return jsonResponse({ error: 'Campaign not found.' }, 404)
+    }
+
+    let campaignOrgName: string | null = null
+    if (campaign.org_id) {
+      const { data: campaignOrg } = await adminClient
+        .from('organizations')
+        .select('name')
+        .eq('id', campaign.org_id)
+        .maybeSingle()
+      campaignOrgName = campaignOrg?.name ?? null
     }
 
     if (!testMode && campaign.status === 'sent') {
@@ -259,22 +270,23 @@ Deno.serve(async (req) => {
         ? `${trackBase}?token=${recipient.token}&event=click&next=${encodeURIComponent(fakeLoginPageUrl)}`
         : trackingLink
 
-      const ctx = {
-        firstName: firstNameFromFullName(profile.full_name),
-        fullName: profile.full_name,
-        companyName: orgNameById.get(profile.org_id) ?? 'Your organization',
-        managerName: profile.manager_id
-          ? managerNameById.get(profile.manager_id) ?? 'Your manager'
-          : 'Your manager',
-        senderName: campaign.sender_name,
+      const ctx = buildRecipientContext({
+        profile,
+        orgNameById,
+        managerNameById,
+        campaignOrgName,
+        campaignSenderName: campaign.sender_name,
+        campaignSenderEmail: campaign.sender_email,
         deadlineDate: campaign.deadline_date ?? 'Friday',
         trackingLink,
         loginUrl,
         pixelUrl,
-      }
+      })
 
       const html = replacePhishingPlaceholders(campaign.body_html, ctx)
       const text = replacePhishingPlaceholders(campaign.body_text || '', ctx)
+      const fromName = ctx.senderName
+      const fromEmail = resolveCampaignSenderEmail(campaign.sender_email, ctx)
 
       if (!dryRun) {
         const emailRes = await fetch('https://api.resend.com/emails', {
@@ -284,7 +296,7 @@ Deno.serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: `${campaign.sender_name} <${campaign.sender_email}>`,
+            from: `${fromName} <${fromEmail}>`,
             to: [deliveryEmail],
             subject: replacePhishingPlaceholders(campaign.subject, ctx),
             html,

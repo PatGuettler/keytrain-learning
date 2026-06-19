@@ -1,4 +1,5 @@
 import { backend } from '@/backend'
+import { lookupDailyVerse } from '@/lib/daily-verse'
 
 export function getLocalDateString(date = new Date()): string {
   const year = date.getFullYear()
@@ -23,33 +24,17 @@ export type DailyVerseResponse = {
 }
 
 export async function fetchDailyVerse(localDate: string): Promise<DailyVerseResponse> {
-  const { getSupabase, getSupabaseAnonKey, getSupabaseUrl } = await import('@/services/supabase')
+  const { getSupabase } = await import('@/services/supabase')
   const supabase = getSupabase()
-  const baseUrl = getSupabaseUrl()
-  const anonKey = getSupabaseAnonKey()
-  if (!supabase || !baseUrl || !anonKey) throw new Error('Backend is not configured.')
+  if (!supabase) throw new Error('Backend is not configured.')
 
   const {
     data: { session },
   } = await supabase.auth.getSession()
   if (!session?.access_token) throw new Error('You must be signed in.')
 
-  const response = await fetch(`${baseUrl}/functions/v1/get-daily-verse`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-      apikey: anonKey,
-    },
-    body: JSON.stringify({ local_date: localDate }),
-  })
-
-  const data = (await response.json().catch(() => null)) as DailyVerseResponse | null
-  if (!response.ok) {
-    throw new Error(data?.error ?? 'Could not load daily verse.')
-  }
-  if (!data?.text) throw new Error('Could not load daily verse.')
-  return data
+  const { reference, text } = lookupDailyVerse(localDate)
+  return { reference, text, localDate }
 }
 
 export async function updateDailyVerseEnabled(userId: string, enabled: boolean) {

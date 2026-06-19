@@ -294,6 +294,11 @@ export function getDefaultFakeLoginUrl(): string {
   return `${getPublicAppUrl()}/phishing-sim/login.html`
 }
 
+/** Per-recipient sender address pattern (resolved when the campaign is sent). */
+export function defaultPhishingSenderEmail(senderEmailLocal: string): string {
+  return `{{COMPANY_SLUG}}-${senderEmailLocal}@{{EMAIL_DOMAIN}}`
+}
+
 export async function fetchAllPhishingEvents(): Promise<PhishingEvent[]> {
   const supabase = requireSupabase()
   const { data, error } = await supabase

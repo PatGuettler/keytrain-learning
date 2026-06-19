@@ -14,6 +14,7 @@ import {
   fetchPhishingCampaign,
   fetchPhishingTemplates,
   getDefaultFakeLoginUrl,
+  defaultPhishingSenderEmail,
   syncPhishingRecipients,
   updatePhishingCampaign,
 } from '@/services/phishing.service'
@@ -187,7 +188,7 @@ export function PhishingCampaignEditPage() {
     setTemplateId(id)
     setSubject(template.subject)
     setSenderName(template.sender_name)
-    setSenderEmail(`${template.sender_email_local}@keytrainlearning.com`)
+    setSenderEmail(defaultPhishingSenderEmail(template.sender_email_local))
     setBodyHtml(template.body_html)
     setBodyText(template.body_text)
     setPretext(template.pretext)
@@ -267,7 +268,7 @@ export function PhishingCampaignEditPage() {
 
       <PageHeader
         title={isNew ? 'New phishing campaign' : 'Edit campaign'}
-        description="Choose a template, audience, and fake login URL. Saving creates per-recipient tracking tokens."
+        description="Choose a template and audience. Placeholders like {{COMPANY_NAME}}, {{FIRST_NAME}}, and {{SENDER_EMAIL}} are filled in per recipient when emails are sent."
       />
 
       <div className="space-y-4">
@@ -544,8 +545,12 @@ export function PhishingCampaignEditPage() {
               id="sender-email"
               value={senderEmail}
               onChange={(e) => setSenderEmail(e.target.value)}
-              placeholder="noreply@your-domain.com"
+              placeholder="{{COMPANY_SLUG}}-hr-benefits@{{EMAIL_DOMAIN}}"
             />
+            <p className="text-xs text-muted-foreground">
+              Resolved per recipient, e.g. memorial-hospital-hr-benefits@keytrainlearning.com. Use{' '}
+              {'{{COMPANY_NAME}}'}, {'{{COMPANY_SLUG}}'}, {'{{SENDER_EMAIL}}'}, {'{{EMAIL_DOMAIN}}'}.
+            </p>
           </div>
         </div>
 
