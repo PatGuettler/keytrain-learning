@@ -31,9 +31,13 @@ export async function updatePassword(password: string) {
   await backend.auth.updatePassword(password)
   const session = (await getSession()) as { user?: { id: string } } | null
   const userId = session?.user?.id
-  if (userId && isPasswordLongEnough(password)) {
+  if (!userId) return
+
+  // Belt-and-suspenders with DB trigger 026_clear_lockout_on_password_change.sql
+  await backend.auth.clearLoginLockout(userId)
+
+  if (isPasswordLongEnough(password)) {
     await updateProfile(userId, { password_upgrade_required: false })
-    await backend.auth.clearLoginLockout(userId)
   }
 }
 
