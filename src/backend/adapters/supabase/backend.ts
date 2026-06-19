@@ -86,6 +86,19 @@ export function createSupabaseBackend(): Backend {
         const { data } = await supabase.auth.getSession()
         return data.session
       },
+      async recoverSessionFromUrl() {
+        const searchParams = new URLSearchParams(window.location.search)
+        const code = searchParams.get('code')
+        if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+          if (error) throw error
+          return data.session
+        }
+
+        const { data, error } = await supabase.auth.getSession()
+        if (error) throw error
+        return data.session
+      },
     },
     users: {
       async fetchProfiles(filters) {

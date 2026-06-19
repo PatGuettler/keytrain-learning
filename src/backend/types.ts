@@ -34,6 +34,7 @@ export interface AuthBackend {
   resetPassword(email: string, redirectTo: string): Promise<void>
   updatePassword(password: string): Promise<void>
   getSession(): Promise<unknown | null>
+  recoverSessionFromUrl(): Promise<unknown | null>
 }
 
 export interface UsersBackend {

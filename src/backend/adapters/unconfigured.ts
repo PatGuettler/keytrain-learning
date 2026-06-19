@@ -14,6 +14,7 @@ export function createUnconfiguredBackend(): Backend {
       resetPassword: fail,
       updatePassword: fail,
       getSession: async () => null,
+      recoverSessionFromUrl: async () => null,
     },
     users: { fetchProfiles: fail, updateProfile: fail },
     organizations: {

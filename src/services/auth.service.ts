@@ -45,3 +45,7 @@ export async function completeInvitationRegistration() {
 export async function getSession() {
   return backend.auth.getSession()
 }
+
+export async function recoverSessionFromUrl() {
+  return backend.auth.recoverSessionFromUrl()
+}

@@ -1,0 +1,1466 @@
+[
+  {
+    "day": 1,
+    "reference": "Genesis 1:1"
+  },
+  {
+    "day": 2,
+    "reference": "Genesis 1:27"
+  },
+  {
+    "day": 3,
+    "reference": "Genesis 2:7"
+  },
+  {
+    "day": 4,
+    "reference": "Genesis 3:15"
+  },
+  {
+    "day": 5,
+    "reference": "Genesis 12:1-3"
+  },
+  {
+    "day": 6,
+    "reference": "Genesis 15:6"
+  },
+  {
+    "day": 7,
+    "reference": "Genesis 22:8"
+  },
+  {
+    "day": 8,
+    "reference": "Genesis 28:15"
+  },
+  {
+    "day": 9,
+    "reference": "Genesis 50:20"
+  },
+  {
+    "day": 10,
+    "reference": "Exodus 3:14"
+  },
+  {
+    "day": 11,
+    "reference": "Exodus 14:14"
+  },
+  {
+    "day": 12,
+    "reference": "Exodus 20:3-4"
+  },
+  {
+    "day": 13,
+    "reference": "Exodus 33:14"
+  },
+  {
+    "day": 14,
+    "reference": "Exodus 34:6-7"
+  },
+  {
+    "day": 15,
+    "reference": "Leviticus 19:18"
+  },
+  {
+    "day": 16,
+    "reference": "Leviticus 20:26"
+  },
+  {
+    "day": 17,
+    "reference": "Numbers 6:24-26"
+  },
+  {
+    "day": 18,
+    "reference": "Numbers 23:19"
+  },
+  {
+    "day": 19,
+    "reference": "Deuteronomy 6:4-5"
+  },
+  {
+    "day": 20,
+    "reference": "Deuteronomy 31:6"
+  },
+  {
+    "day": 21,
+    "reference": "Deuteronomy 32:4"
+  },
+  {
+    "day": 22,
+    "reference": "Joshua 1:9"
+  },
+  {
+    "day": 23,
+    "reference": "Joshua 24:15"
+  },
+  {
+    "day": 24,
+    "reference": "Judges 6:12"
+  },
+  {
+    "day": 25,
+    "reference": "Judges 21:25"
+  },
+  {
+    "day": 26,
+    "reference": "Ruth 1:16"
+  },
+  {
+    "day": 27,
+    "reference": "Ruth 2:12"
+  },
+  {
+    "day": 28,
+    "reference": "1 Samuel 16:7"
+  },
+  {
+    "day": 29,
+    "reference": "1 Samuel 17:47"
+  },
+  {
+    "day": 30,
+    "reference": "2 Samuel 7:22"
+  },
+  {
+    "day": 31,
+    "reference": "2 Samuel 22:31"
+  },
+  {
+    "day": 32,
+    "reference": "1 Kings 8:23"
+  },
+  {
+    "day": 33,
+    "reference": "1 Kings 18:39"
+  },
+  {
+    "day": 34,
+    "reference": "2 Kings 6:16"
+  },
+  {
+    "day": 35,
+    "reference": "2 Kings 19:19"
+  },
+  {
+    "day": 36,
+    "reference": "1 Chronicles 16:34"
+  },
+  {
+    "day": 37,
+    "reference": "1 Chronicles 29:11"
+  },
+  {
+    "day": 38,
+    "reference": "2 Chronicles 7:14"
+  },
+  {
+    "day": 39,
+    "reference": "2 Chronicles 20:15"
+  },
+  {
+    "day": 40,
+    "reference": "Ezra 7:10"
+  },
+  {
+    "day": 41,
+    "reference": "Ezra 8:22"
+  },
+  {
+    "day": 42,
+    "reference": "Nehemiah 8:10"
+  },
+  {
+    "day": 43,
+    "reference": "Nehemiah 9:6"
+  },
+  {
+    "day": 44,
+    "reference": "Esther 4:14"
+  },
+  {
+    "day": 45,
+    "reference": "Job 1:21"
+  },
+  {
+    "day": 46,
+    "reference": "Job 19:25"
+  },
+  {
+    "day": 47,
+    "reference": "Job 42:2"
+  },
+  {
+    "day": 48,
+    "reference": "Psalm 1:1-2"
+  },
+  {
+    "day": 49,
+    "reference": "Psalm 8:1"
+  },
+  {
+    "day": 50,
+    "reference": "Psalm 16:11"
+  },
+  {
+    "day": 51,
+    "reference": "Psalm 19:1"
+  },
+  {
+    "day": 52,
+    "reference": "Psalm 23:1"
+  },
+  {
+    "day": 53,
+    "reference": "Psalm 27:1"
+  },
+  {
+    "day": 54,
+    "reference": "Psalm 32:8"
+  },
+  {
+    "day": 55,
+    "reference": "Psalm 37:4"
+  },
+  {
+    "day": 56,
+    "reference": "Psalm 46:1"
+  },
+  {
+    "day": 57,
+    "reference": "Psalm 46:10"
+  },
+  {
+    "day": 58,
+    "reference": "Psalm 51:10"
+  },
+  {
+    "day": 59,
+    "reference": "Psalm 55:22"
+  },
+  {
+    "day": 60,
+    "reference": "Psalm 62:1"
+  },
+  {
+    "day": 61,
+    "reference": "Psalm 73:26"
+  },
+  {
+    "day": 62,
+    "reference": "Psalm 84:11"
+  },
+  {
+    "day": 63,
+    "reference": "Psalm 90:2"
+  },
+  {
+    "day": 64,
+    "reference": "Psalm 91:1"
+  },
+  {
+    "day": 65,
+    "reference": "Psalm 100:4"
+  },
+  {
+    "day": 66,
+    "reference": "Psalm 103:12"
+  },
+  {
+    "day": 67,
+    "reference": "Psalm 119:11"
+  },
+  {
+    "day": 68,
+    "reference": "Psalm 119:105"
+  },
+  {
+    "day": 69,
+    "reference": "Psalm 121:1-2"
+  },
+  {
+    "day": 70,
+    "reference": "Psalm 139:14"
+  },
+  {
+    "day": 71,
+    "reference": "Psalm 145:18"
+  },
+  {
+    "day": 72,
+    "reference": "Psalm 147:3"
+  },
+  {
+    "day": 73,
+    "reference": "Proverbs 1:7"
+  },
+  {
+    "day": 74,
+    "reference": "Proverbs 3:5-6"
+  },
+  {
+    "day": 75,
+    "reference": "Proverbs 3:9-10"
+  },
+  {
+    "day": 76,
+    "reference": "Proverbs 4:23"
+  },
+  {
+    "day": 77,
+    "reference": "Proverbs 9:10"
+  },
+  {
+    "day": 78,
+    "reference": "Proverbs 11:25"
+  },
+  {
+    "day": 79,
+    "reference": "Proverbs 16:3"
+  },
+  {
+    "day": 80,
+    "reference": "Proverbs 16:9"
+  },
+  {
+    "day": 81,
+    "reference": "Proverbs 18:10"
+  },
+  {
+    "day": 82,
+    "reference": "Proverbs 22:6"
+  },
+  {
+    "day": 83,
+    "reference": "Proverbs 27:17"
+  },
+  {
+    "day": 84,
+    "reference": "Proverbs 28:13"
+  },
+  {
+    "day": 85,
+    "reference": "Proverbs 29:18"
+  },
+  {
+    "day": 86,
+    "reference": "Proverbs 31:30"
+  },
+  {
+    "day": 87,
+    "reference": "Ecclesiastes 3:1"
+  },
+  {
+    "day": 88,
+    "reference": "Ecclesiastes 12:13"
+  },
+  {
+    "day": 89,
+    "reference": "Song of Solomon 2:4"
+  },
+  {
+    "day": 90,
+    "reference": "Isaiah 6:8"
+  },
+  {
+    "day": 91,
+    "reference": "Isaiah 9:6"
+  },
+  {
+    "day": 92,
+    "reference": "Isaiah 26:3"
+  },
+  {
+    "day": 93,
+    "reference": "Isaiah 40:8"
+  },
+  {
+    "day": 94,
+    "reference": "Isaiah 40:31"
+  },
+  {
+    "day": 95,
+    "reference": "Isaiah 41:10"
+  },
+  {
+    "day": 96,
+    "reference": "Isaiah 43:1"
+  },
+  {
+    "day": 97,
+    "reference": "Isaiah 53:5"
+  },
+  {
+    "day": 98,
+    "reference": "Isaiah 55:8-9"
+  },
+  {
+    "day": 99,
+    "reference": "Isaiah 61:1"
+  },
+  {
+    "day": 100,
+    "reference": "Jeremiah 1:5"
+  },
+  {
+    "day": 101,
+    "reference": "Jeremiah 17:7-8"
+  },
+  {
+    "day": 102,
+    "reference": "Jeremiah 29:11"
+  },
+  {
+    "day": 103,
+    "reference": "Jeremiah 31:3"
+  },
+  {
+    "day": 104,
+    "reference": "Jeremiah 33:3"
+  },
+  {
+    "day": 105,
+    "reference": "Lamentations 3:22-23"
+  },
+  {
+    "day": 106,
+    "reference": "Lamentations 3:24"
+  },
+  {
+    "day": 107,
+    "reference": "Ezekiel 36:26"
+  },
+  {
+    "day": 108,
+    "reference": "Ezekiel 37:5"
+  },
+  {
+    "day": 109,
+    "reference": "Daniel 2:21"
+  },
+  {
+    "day": 110,
+    "reference": "Daniel 3:17-18"
+  },
+  {
+    "day": 111,
+    "reference": "Daniel 6:23"
+  },
+  {
+    "day": 112,
+    "reference": "Hosea 6:6"
+  },
+  {
+    "day": 113,
+    "reference": "Hosea 14:4"
+  },
+  {
+    "day": 114,
+    "reference": "Joel 2:13"
+  },
+  {
+    "day": 115,
+    "reference": "Joel 2:28"
+  },
+  {
+    "day": 116,
+    "reference": "Amos 5:24"
+  },
+  {
+    "day": 117,
+    "reference": "Obadiah 1:15"
+  },
+  {
+    "day": 118,
+    "reference": "Jonah 2:2"
+  },
+  {
+    "day": 119,
+    "reference": "Micah 6:8"
+  },
+  {
+    "day": 120,
+    "reference": "Micah 7:18"
+  },
+  {
+    "day": 121,
+    "reference": "Nahum 1:7"
+  },
+  {
+    "day": 122,
+    "reference": "Habakkuk 2:4"
+  },
+  {
+    "day": 123,
+    "reference": "Habakkuk 3:19"
+  },
+  {
+    "day": 124,
+    "reference": "Zephaniah 3:17"
+  },
+  {
+    "day": 125,
+    "reference": "Haggai 2:9"
+  },
+  {
+    "day": 126,
+    "reference": "Zechariah 4:6"
+  },
+  {
+    "day": 127,
+    "reference": "Zechariah 9:9"
+  },
+  {
+    "day": 128,
+    "reference": "Malachi 3:6"
+  },
+  {
+    "day": 129,
+    "reference": "Malachi 4:2"
+  },
+  {
+    "day": 130,
+    "reference": "Matthew 1:21"
+  },
+  {
+    "day": 131,
+    "reference": "Matthew 4:19"
+  },
+  {
+    "day": 132,
+    "reference": "Matthew 5:3-4"
+  },
+  {
+    "day": 133,
+    "reference": "Matthew 5:14"
+  },
+  {
+    "day": 134,
+    "reference": "Matthew 5:16"
+  },
+  {
+    "day": 135,
+    "reference": "Matthew 6:9-10"
+  },
+  {
+    "day": 136,
+    "reference": "Matthew 6:33"
+  },
+  {
+    "day": 137,
+    "reference": "Matthew 7:7"
+  },
+  {
+    "day": 138,
+    "reference": "Matthew 11:28-29"
+  },
+  {
+    "day": 139,
+    "reference": "Matthew 16:24"
+  },
+  {
+    "day": 140,
+    "reference": "Matthew 18:20"
+  },
+  {
+    "day": 141,
+    "reference": "Matthew 19:26"
+  },
+  {
+    "day": 142,
+    "reference": "Matthew 22:37-39"
+  },
+  {
+    "day": 143,
+    "reference": "Matthew 28:18-20"
+  },
+  {
+    "day": 144,
+    "reference": "Mark 1:15"
+  },
+  {
+    "day": 145,
+    "reference": "Mark 10:45"
+  },
+  {
+    "day": 146,
+    "reference": "Mark 12:30-31"
+  },
+  {
+    "day": 147,
+    "reference": "Mark 16:15"
+  },
+  {
+    "day": 148,
+    "reference": "Luke 1:37"
+  },
+  {
+    "day": 149,
+    "reference": "Luke 2:10-11"
+  },
+  {
+    "day": 150,
+    "reference": "Luke 6:31"
+  },
+  {
+    "day": 151,
+    "reference": "Luke 9:23"
+  },
+  {
+    "day": 152,
+    "reference": "Luke 11:9"
+  },
+  {
+    "day": 153,
+    "reference": "Luke 12:32"
+  },
+  {
+    "day": 154,
+    "reference": "Luke 15:7"
+  },
+  {
+    "day": 155,
+    "reference": "Luke 18:27"
+  },
+  {
+    "day": 156,
+    "reference": "Luke 24:32"
+  },
+  {
+    "day": 157,
+    "reference": "John 1:1"
+  },
+  {
+    "day": 158,
+    "reference": "John 1:12"
+  },
+  {
+    "day": 159,
+    "reference": "John 1:14"
+  },
+  {
+    "day": 160,
+    "reference": "John 3:16"
+  },
+  {
+    "day": 161,
+    "reference": "John 3:17"
+  },
+  {
+    "day": 162,
+    "reference": "John 4:24"
+  },
+  {
+    "day": 163,
+    "reference": "John 6:35"
+  },
+  {
+    "day": 164,
+    "reference": "John 8:12"
+  },
+  {
+    "day": 165,
+    "reference": "John 8:32"
+  },
+  {
+    "day": 166,
+    "reference": "John 10:10"
+  },
+  {
+    "day": 167,
+    "reference": "John 10:11"
+  },
+  {
+    "day": 168,
+    "reference": "John 11:25"
+  },
+  {
+    "day": 169,
+    "reference": "John 14:6"
+  },
+  {
+    "day": 170,
+    "reference": "John 14:27"
+  },
+  {
+    "day": 171,
+    "reference": "John 15:5"
+  },
+  {
+    "day": 172,
+    "reference": "John 15:13"
+  },
+  {
+    "day": 173,
+    "reference": "John 16:33"
+  },
+  {
+    "day": 174,
+    "reference": "John 17:3"
+  },
+  {
+    "day": 175,
+    "reference": "John 20:31"
+  },
+  {
+    "day": 176,
+    "reference": "Acts 1:8"
+  },
+  {
+    "day": 177,
+    "reference": "Acts 2:38"
+  },
+  {
+    "day": 178,
+    "reference": "Acts 4:12"
+  },
+  {
+    "day": 179,
+    "reference": "Acts 16:31"
+  },
+  {
+    "day": 180,
+    "reference": "Acts 17:28"
+  },
+  {
+    "day": 181,
+    "reference": "Acts 20:24"
+  },
+  {
+    "day": 182,
+    "reference": "Romans 1:16"
+  },
+  {
+    "day": 183,
+    "reference": "Romans 3:23"
+  },
+  {
+    "day": 184,
+    "reference": "Romans 5:8"
+  },
+  {
+    "day": 185,
+    "reference": "Romans 6:23"
+  },
+  {
+    "day": 186,
+    "reference": "Romans 8:1"
+  },
+  {
+    "day": 187,
+    "reference": "Romans 8:28"
+  },
+  {
+    "day": 188,
+    "reference": "Romans 8:38-39"
+  },
+  {
+    "day": 189,
+    "reference": "Romans 10:9"
+  },
+  {
+    "day": 190,
+    "reference": "Romans 12:1-2"
+  },
+  {
+    "day": 191,
+    "reference": "Romans 12:12"
+  },
+  {
+    "day": 192,
+    "reference": "Romans 15:13"
+  },
+  {
+    "day": 193,
+    "reference": "1 Corinthians 1:18"
+  },
+  {
+    "day": 194,
+    "reference": "1 Corinthians 6:19-20"
+  },
+  {
+    "day": 195,
+    "reference": "1 Corinthians 10:13"
+  },
+  {
+    "day": 196,
+    "reference": "1 Corinthians 12:27"
+  },
+  {
+    "day": 197,
+    "reference": "1 Corinthians 13:4-7"
+  },
+  {
+    "day": 198,
+    "reference": "1 Corinthians 15:3-4"
+  },
+  {
+    "day": 199,
+    "reference": "1 Corinthians 15:57"
+  },
+  {
+    "day": 200,
+    "reference": "2 Corinthians 1:3-4"
+  },
+  {
+    "day": 201,
+    "reference": "2 Corinthians 3:17"
+  },
+  {
+    "day": 202,
+    "reference": "2 Corinthians 4:16-18"
+  },
+  {
+    "day": 203,
+    "reference": "2 Corinthians 5:17"
+  },
+  {
+    "day": 204,
+    "reference": "2 Corinthians 5:21"
+  },
+  {
+    "day": 205,
+    "reference": "2 Corinthians 9:8"
+  },
+  {
+    "day": 206,
+    "reference": "2 Corinthians 12:9"
+  },
+  {
+    "day": 207,
+    "reference": "Galatians 2:20"
+  },
+  {
+    "day": 208,
+    "reference": "Galatians 5:22-23"
+  },
+  {
+    "day": 209,
+    "reference": "Galatians 6:2"
+  },
+  {
+    "day": 210,
+    "reference": "Galatians 6:9"
+  },
+  {
+    "day": 211,
+    "reference": "Ephesians 1:7"
+  },
+  {
+    "day": 212,
+    "reference": "Ephesians 2:8-9"
+  },
+  {
+    "day": 213,
+    "reference": "Ephesians 4:32"
+  },
+  {
+    "day": 214,
+    "reference": "Ephesians 6:10-11"
+  },
+  {
+    "day": 215,
+    "reference": "Philippians 1:6"
+  },
+  {
+    "day": 216,
+    "reference": "Philippians 2:3-4"
+  },
+  {
+    "day": 217,
+    "reference": "Philippians 4:4"
+  },
+  {
+    "day": 218,
+    "reference": "Philippians 4:6-7"
+  },
+  {
+    "day": 219,
+    "reference": "Philippians 4:13"
+  },
+  {
+    "day": 220,
+    "reference": "Philippians 4:19"
+  },
+  {
+    "day": 221,
+    "reference": "Colossians 1:15-17"
+  },
+  {
+    "day": 222,
+    "reference": "Colossians 3:12-14"
+  },
+  {
+    "day": 223,
+    "reference": "Colossians 3:23"
+  },
+  {
+    "day": 224,
+    "reference": "1 Thessalonians 5:16-18"
+  },
+  {
+    "day": 225,
+    "reference": "1 Thessalonians 5:24"
+  },
+  {
+    "day": 226,
+    "reference": "2 Thessalonians 3:3"
+  },
+  {
+    "day": 227,
+    "reference": "1 Timothy 1:15"
+  },
+  {
+    "day": 228,
+    "reference": "1 Timothy 2:5"
+  },
+  {
+    "day": 229,
+    "reference": "1 Timothy 4:12"
+  },
+  {
+    "day": 230,
+    "reference": "1 Timothy 6:12"
+  },
+  {
+    "day": 231,
+    "reference": "2 Timothy 1:7"
+  },
+  {
+    "day": 232,
+    "reference": "2 Timothy 2:15"
+  },
+  {
+    "day": 233,
+    "reference": "2 Timothy 3:16-17"
+  },
+  {
+    "day": 234,
+    "reference": "2 Timothy 4:7"
+  },
+  {
+    "day": 235,
+    "reference": "Titus 3:5"
+  },
+  {
+    "day": 236,
+    "reference": "Philemon 1:6"
+  },
+  {
+    "day": 237,
+    "reference": "Hebrews 4:12"
+  },
+  {
+    "day": 238,
+    "reference": "Hebrews 4:16"
+  },
+  {
+    "day": 239,
+    "reference": "Hebrews 10:23"
+  },
+  {
+    "day": 240,
+    "reference": "Hebrews 11:1"
+  },
+  {
+    "day": 241,
+    "reference": "Hebrews 11:6"
+  },
+  {
+    "day": 242,
+    "reference": "Hebrews 12:1-2"
+  },
+  {
+    "day": 243,
+    "reference": "Hebrews 13:5-6"
+  },
+  {
+    "day": 244,
+    "reference": "Hebrews 13:8"
+  },
+  {
+    "day": 245,
+    "reference": "James 1:2-3"
+  },
+  {
+    "day": 246,
+    "reference": "James 1:5"
+  },
+  {
+    "day": 247,
+    "reference": "James 1:17"
+  },
+  {
+    "day": 248,
+    "reference": "James 4:7-8"
+  },
+  {
+    "day": 249,
+    "reference": "James 5:16"
+  },
+  {
+    "day": 250,
+    "reference": "1 Peter 1:3"
+  },
+  {
+    "day": 251,
+    "reference": "1 Peter 2:9"
+  },
+  {
+    "day": 252,
+    "reference": "1 Peter 3:15"
+  },
+  {
+    "day": 253,
+    "reference": "1 Peter 5:7"
+  },
+  {
+    "day": 254,
+    "reference": "2 Peter 1:3"
+  },
+  {
+    "day": 255,
+    "reference": "2 Peter 3:9"
+  },
+  {
+    "day": 256,
+    "reference": "1 John 1:9"
+  },
+  {
+    "day": 257,
+    "reference": "1 John 3:1"
+  },
+  {
+    "day": 258,
+    "reference": "1 John 4:7-8"
+  },
+  {
+    "day": 259,
+    "reference": "1 John 4:19"
+  },
+  {
+    "day": 260,
+    "reference": "1 John 5:14"
+  },
+  {
+    "day": 261,
+    "reference": "2 John 1:6"
+  },
+  {
+    "day": 262,
+    "reference": "3 John 1:4"
+  },
+  {
+    "day": 263,
+    "reference": "Jude 1:24-25"
+  },
+  {
+    "day": 264,
+    "reference": "Revelation 1:8"
+  },
+  {
+    "day": 265,
+    "reference": "Revelation 3:20"
+  },
+  {
+    "day": 266,
+    "reference": "Revelation 4:11"
+  },
+  {
+    "day": 267,
+    "reference": "Revelation 21:4"
+  },
+  {
+    "day": 268,
+    "reference": "Revelation 22:13"
+  },
+  {
+    "day": 269,
+    "reference": "Genesis 1:1"
+  },
+  {
+    "day": 270,
+    "reference": "Genesis 1:27"
+  },
+  {
+    "day": 271,
+    "reference": "Genesis 2:7"
+  },
+  {
+    "day": 272,
+    "reference": "Genesis 3:15"
+  },
+  {
+    "day": 273,
+    "reference": "Genesis 12:1-3"
+  },
+  {
+    "day": 274,
+    "reference": "Genesis 15:6"
+  },
+  {
+    "day": 275,
+    "reference": "Genesis 22:8"
+  },
+  {
+    "day": 276,
+    "reference": "Genesis 28:15"
+  },
+  {
+    "day": 277,
+    "reference": "Genesis 50:20"
+  },
+  {
+    "day": 278,
+    "reference": "Exodus 3:14"
+  },
+  {
+    "day": 279,
+    "reference": "Exodus 14:14"
+  },
+  {
+    "day": 280,
+    "reference": "Exodus 20:3-4"
+  },
+  {
+    "day": 281,
+    "reference": "Exodus 33:14"
+  },
+  {
+    "day": 282,
+    "reference": "Exodus 34:6-7"
+  },
+  {
+    "day": 283,
+    "reference": "Leviticus 19:18"
+  },
+  {
+    "day": 284,
+    "reference": "Leviticus 20:26"
+  },
+  {
+    "day": 285,
+    "reference": "Numbers 6:24-26"
+  },
+  {
+    "day": 286,
+    "reference": "Numbers 23:19"
+  },
+  {
+    "day": 287,
+    "reference": "Deuteronomy 6:4-5"
+  },
+  {
+    "day": 288,
+    "reference": "Deuteronomy 31:6"
+  },
+  {
+    "day": 289,
+    "reference": "Deuteronomy 32:4"
+  },
+  {
+    "day": 290,
+    "reference": "Joshua 1:9"
+  },
+  {
+    "day": 291,
+    "reference": "Joshua 24:15"
+  },
+  {
+    "day": 292,
+    "reference": "Judges 6:12"
+  },
+  {
+    "day": 293,
+    "reference": "Judges 21:25"
+  },
+  {
+    "day": 294,
+    "reference": "Ruth 1:16"
+  },
+  {
+    "day": 295,
+    "reference": "Ruth 2:12"
+  },
+  {
+    "day": 296,
+    "reference": "1 Samuel 16:7"
+  },
+  {
+    "day": 297,
+    "reference": "1 Samuel 17:47"
+  },
+  {
+    "day": 298,
+    "reference": "2 Samuel 7:22"
+  },
+  {
+    "day": 299,
+    "reference": "2 Samuel 22:31"
+  },
+  {
+    "day": 300,
+    "reference": "1 Kings 8:23"
+  },
+  {
+    "day": 301,
+    "reference": "1 Kings 18:39"
+  },
+  {
+    "day": 302,
+    "reference": "2 Kings 6:16"
+  },
+  {
+    "day": 303,
+    "reference": "2 Kings 19:19"
+  },
+  {
+    "day": 304,
+    "reference": "1 Chronicles 16:34"
+  },
+  {
+    "day": 305,
+    "reference": "1 Chronicles 29:11"
+  },
+  {
+    "day": 306,
+    "reference": "2 Chronicles 7:14"
+  },
+  {
+    "day": 307,
+    "reference": "2 Chronicles 20:15"
+  },
+  {
+    "day": 308,
+    "reference": "Ezra 7:10"
+  },
+  {
+    "day": 309,
+    "reference": "Ezra 8:22"
+  },
+  {
+    "day": 310,
+    "reference": "Nehemiah 8:10"
+  },
+  {
+    "day": 311,
+    "reference": "Nehemiah 9:6"
+  },
+  {
+    "day": 312,
+    "reference": "Esther 4:14"
+  },
+  {
+    "day": 313,
+    "reference": "Job 1:21"
+  },
+  {
+    "day": 314,
+    "reference": "Job 19:25"
+  },
+  {
+    "day": 315,
+    "reference": "Job 42:2"
+  },
+  {
+    "day": 316,
+    "reference": "Psalm 1:1-2"
+  },
+  {
+    "day": 317,
+    "reference": "Psalm 8:1"
+  },
+  {
+    "day": 318,
+    "reference": "Psalm 16:11"
+  },
+  {
+    "day": 319,
+    "reference": "Psalm 19:1"
+  },
+  {
+    "day": 320,
+    "reference": "Psalm 23:1"
+  },
+  {
+    "day": 321,
+    "reference": "Psalm 27:1"
+  },
+  {
+    "day": 322,
+    "reference": "Psalm 32:8"
+  },
+  {
+    "day": 323,
+    "reference": "Psalm 37:4"
+  },
+  {
+    "day": 324,
+    "reference": "Psalm 46:1"
+  },
+  {
+    "day": 325,
+    "reference": "Psalm 46:10"
+  },
+  {
+    "day": 326,
+    "reference": "Psalm 51:10"
+  },
+  {
+    "day": 327,
+    "reference": "Psalm 55:22"
+  },
+  {
+    "day": 328,
+    "reference": "Psalm 62:1"
+  },
+  {
+    "day": 329,
+    "reference": "Psalm 73:26"
+  },
+  {
+    "day": 330,
+    "reference": "Psalm 84:11"
+  },
+  {
+    "day": 331,
+    "reference": "Psalm 90:2"
+  },
+  {
+    "day": 332,
+    "reference": "Psalm 91:1"
+  },
+  {
+    "day": 333,
+    "reference": "Psalm 100:4"
+  },
+  {
+    "day": 334,
+    "reference": "Psalm 103:12"
+  },
+  {
+    "day": 335,
+    "reference": "Psalm 119:11"
+  },
+  {
+    "day": 336,
+    "reference": "Psalm 119:105"
+  },
+  {
+    "day": 337,
+    "reference": "Psalm 121:1-2"
+  },
+  {
+    "day": 338,
+    "reference": "Psalm 139:14"
+  },
+  {
+    "day": 339,
+    "reference": "Psalm 145:18"
+  },
+  {
+    "day": 340,
+    "reference": "Psalm 147:3"
+  },
+  {
+    "day": 341,
+    "reference": "Proverbs 1:7"
+  },
+  {
+    "day": 342,
+    "reference": "Proverbs 3:5-6"
+  },
+  {
+    "day": 343,
+    "reference": "Proverbs 3:9-10"
+  },
+  {
+    "day": 344,
+    "reference": "Proverbs 4:23"
+  },
+  {
+    "day": 345,
+    "reference": "Proverbs 9:10"
+  },
+  {
+    "day": 346,
+    "reference": "Proverbs 11:25"
+  },
+  {
+    "day": 347,
+    "reference": "Proverbs 16:3"
+  },
+  {
+    "day": 348,
+    "reference": "Proverbs 16:9"
+  },
+  {
+    "day": 349,
+    "reference": "Proverbs 18:10"
+  },
+  {
+    "day": 350,
+    "reference": "Proverbs 22:6"
+  },
+  {
+    "day": 351,
+    "reference": "Proverbs 27:17"
+  },
+  {
+    "day": 352,
+    "reference": "Proverbs 28:13"
+  },
+  {
+    "day": 353,
+    "reference": "Proverbs 29:18"
+  },
+  {
+    "day": 354,
+    "reference": "Proverbs 31:30"
+  },
+  {
+    "day": 355,
+    "reference": "Ecclesiastes 3:1"
+  },
+  {
+    "day": 356,
+    "reference": "Ecclesiastes 12:13"
+  },
+  {
+    "day": 357,
+    "reference": "Song of Solomon 2:4"
+  },
+  {
+    "day": 358,
+    "reference": "Isaiah 6:8"
+  },
+  {
+    "day": 359,
+    "reference": "Isaiah 9:6"
+  },
+  {
+    "day": 360,
+    "reference": "Isaiah 26:3"
+  },
+  {
+    "day": 361,
+    "reference": "Isaiah 40:8"
+  },
+  {
+    "day": 362,
+    "reference": "Isaiah 40:31"
+  },
+  {
+    "day": 363,
+    "reference": "Isaiah 41:10"
+  },
+  {
+    "day": 364,
+    "reference": "Isaiah 43:1"
+  },
+  {
+    "day": 365,
+    "reference": "Isaiah 53:5"
+  },
+  {
+    "day": 366,
+    "reference": "Isaiah 55:8-9"
+  }
+]

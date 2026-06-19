@@ -89,8 +89,8 @@ export function ResetPasswordPage() {
           {!linkError && !checking && !ready && (
             <div className="space-y-3">
               <p className="text-sm text-destructive">
-                This reset link is invalid or has expired. Request a new one from the app (not from
-                localhost).
+                This reset link is invalid or has expired. Open the link directly from your email,
+                or request a new one below.
               </p>
               <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                 Request a new reset link
