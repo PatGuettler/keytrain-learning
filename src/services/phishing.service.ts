@@ -2,6 +2,7 @@ import { getPublicAppUrl } from '@/lib/backend-config'
 import { EDGE_FUNCTION_DEPLOY_HINT } from '@/lib/edge-functions'
 import { fetchProfiles } from '@/services/users.service'
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
+import type { Profile } from '@/types/user.types'
 import type {
   PhishingCampaign,
   PhishingCampaignInput,
@@ -41,6 +42,19 @@ export async function fetchPhishingCampaigns(): Promise<PhishingCampaign[]> {
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as PhishingCampaign[]
+}
+
+/** Staff + platform admins for hand-picked phishing campaigns (admins fetched explicitly). */
+export async function fetchHandPickRecipients(): Promise<Profile[]> {
+  const [staff, admins] = await Promise.all([
+    fetchProfiles({ includeInactive: true, excludeAdmins: true }),
+    fetchProfiles({ role: 'admin', includeInactive: true }),
+  ])
+  const byId = new Map<string, Profile>()
+  for (const user of [...admins, ...staff]) {
+    byId.set(user.id, user)
+  }
+  return Array.from(byId.values())
 }
 
 export async function fetchPhishingCampaign(id: string): Promise<PhishingCampaign | null> {

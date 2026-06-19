@@ -8,15 +8,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
-import { fetchProfiles } from '@/services/users.service'
 import {
   createPhishingCampaign,
+  fetchHandPickRecipients,
   fetchPhishingCampaign,
   fetchPhishingTemplates,
   getDefaultFakeLoginUrl,
   syncPhishingRecipients,
   updatePhishingCampaign,
 } from '@/services/phishing.service'
+import { fetchProfile } from '@/services/auth.service'
 import { useAuthStore } from '@/store/authStore'
 import { PHISHING_PRETEXT_LABELS, type PhishingTargetScope } from '@/types/phishing.types'
 import type { Profile } from '@/types/user.types'
@@ -75,15 +76,22 @@ export function PhishingCampaignEditPage() {
     refetch: refetchUsers,
   } = useQuery({
     queryKey: ['phishing-hand-pick-users'],
-    queryFn: () => fetchProfiles({ includeInactive: true, excludeAdmins: false }),
+    queryFn: fetchHandPickRecipients,
     enabled: targetScope === 'custom',
   })
 
+  const { data: loadedSelfProfile } = useQuery({
+    queryKey: ['phishing-hand-pick-self', userId],
+    queryFn: () => fetchProfile(userId),
+    enabled: targetScope === 'custom' && Boolean(userId) && !authProfile,
+  })
+
   const selfProfile = useMemo((): Profile | null => {
-    if (!userId || !authProfile) return null
-    const email = authProfile.email?.trim() || authEmail?.trim() || null
-    return { ...authProfile, email }
-  }, [authProfile, authEmail, userId])
+    const base = authProfile ?? loadedSelfProfile
+    if (!userId || !base) return null
+    const email = base.email?.trim() || authEmail?.trim() || null
+    return { ...base, email }
+  }, [authProfile, authEmail, loadedSelfProfile, userId])
 
   const selectableUsers = useMemo(() => {
     if (!selfProfile) return allUsers
@@ -101,9 +109,27 @@ export function PhishingCampaignEditPage() {
   const resolveRecipientEmail = (user: Profile) =>
     user.email?.trim() || (user.id === userId ? authEmail?.trim() : '') || ''
 
+  const canSelectRecipient = (user: Profile) =>
+    Boolean(resolveRecipientEmail(user)) || user.role === 'admin'
+
+  const recipientEmailLabel = (user: Profile) => {
+    const email = resolveRecipientEmail(user)
+    if (email) return email
+    if (user.role === 'admin') return 'login email on file'
+    return 'no email on file'
+  }
+
+  const otherAdmins = useMemo(
+    () => selectableUsers.filter((user) => user.role === 'admin' && user.id !== userId),
+    [selectableUsers, userId]
+  )
+
   const filteredUsers = useMemo(() => {
     const q = userSearch.trim().toLowerCase()
-    const others = selectableUsers.filter((user) => user.id !== userId)
+    let others = selectableUsers.filter((user) => user.id !== userId)
+    if (!q) {
+      others = others.filter((user) => user.role !== 'admin')
+    }
     const sorted = [...others].sort((a, b) =>
       a.full_name.localeCompare(b.full_name, undefined, { sensitivity: 'base' })
     )
@@ -113,7 +139,8 @@ export function PhishingCampaignEditPage() {
     return sorted.filter(
       (user) =>
         user.full_name.toLowerCase().includes(q) ||
-        resolveRecipientEmail(user).toLowerCase().includes(q)
+        resolveRecipientEmail(user).toLowerCase().includes(q) ||
+        (user.role === 'admin' && 'admin'.includes(q))
     )
   }, [authEmail, selectableUsers, userId, userSearch])
 
@@ -168,7 +195,7 @@ export function PhishingCampaignEditPage() {
 
   const toggleUser = (id: string) => {
     const user = selectableUsers.find((entry) => entry.id === id)
-    if (!user || !resolveRecipientEmail(user)) return
+    if (!user || !canSelectRecipient(user)) return
     setSelectedUserIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     )
@@ -331,10 +358,10 @@ export function PhishingCampaignEditPage() {
                   </span>
                 </div>
               </div>
-              {selfProfile && (
+              {selfProfile ? (
                 <label
                   className={`flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm ${
-                    resolveRecipientEmail(selfProfile)
+                    canSelectRecipient(selfProfile)
                       ? 'hover:bg-accent/50 cursor-pointer'
                       : 'opacity-60 cursor-not-allowed'
                   }`}
@@ -342,7 +369,7 @@ export function PhishingCampaignEditPage() {
                   <input
                     type="checkbox"
                     checked={selectedUserIds.includes(userId)}
-                    disabled={!resolveRecipientEmail(selfProfile)}
+                    disabled={!canSelectRecipient(selfProfile)}
                     onChange={() => toggleUser(userId)}
                   />
                   <span className="font-medium">
@@ -350,9 +377,43 @@ export function PhishingCampaignEditPage() {
                     <span className="text-muted-foreground font-normal"> (you)</span>
                   </span>
                   <span className="text-muted-foreground">
-                    ({resolveRecipientEmail(selfProfile) || 'no email on file'})
+                    ({recipientEmailLabel(selfProfile)})
                   </span>
                 </label>
+              ) : (
+                <p className="text-sm text-muted-foreground rounded-md border px-3 py-2">
+                  Loading your account…
+                </p>
+              )}
+              {!userSearch.trim() && otherAdmins.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Platform admins
+                  </p>
+                  <div className="rounded-md border divide-y">
+                    {otherAdmins.map((user) => (
+                      <label
+                        key={user.id}
+                        className={`flex items-center gap-2 px-3 py-2 text-sm ${
+                          canSelectRecipient(user)
+                            ? 'hover:bg-accent/50 cursor-pointer'
+                            : 'opacity-60 cursor-not-allowed'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedUserIds.includes(user.id)}
+                          disabled={!canSelectRecipient(user)}
+                          onChange={() => toggleUser(user.id)}
+                        />
+                        <span className="font-medium">{user.full_name}</span>
+                        <span className="text-muted-foreground">
+                          ({recipientEmailLabel(user)})
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               )}
               <Input
                 id="recipient-search"
@@ -376,20 +437,21 @@ export function PhishingCampaignEditPage() {
                 ) : paginatedUsers.length === 0 ? (
                   <p className="p-3 text-sm text-muted-foreground">
                     {userSearch.trim()
-                      ? 'No other matching users.'
-                      : selectableUsers.length <= 1
-                        ? 'No other users found in the app.'
-                        : 'No users on this page.'}
+                      ? 'No matching users.'
+                      : otherAdmins.length > 0
+                        ? 'No hospital users yet — use platform admins above for testing.'
+                        : selectableUsers.length <= 1
+                          ? 'No other users found in the app.'
+                          : 'No users on this page.'}
                   </p>
                 ) : (
                   paginatedUsers.map((user) => {
-                    const email = resolveRecipientEmail(user)
-                    const hasEmail = Boolean(email)
+                    const selectable = canSelectRecipient(user)
                     return (
                       <label
                         key={user.id}
                         className={`flex items-center gap-2 px-3 py-2 text-sm ${
-                          hasEmail
+                          selectable
                             ? 'hover:bg-accent/50 cursor-pointer'
                             : 'opacity-60 cursor-not-allowed'
                         }`}
@@ -397,12 +459,17 @@ export function PhishingCampaignEditPage() {
                         <input
                           type="checkbox"
                           checked={selectedUserIds.includes(user.id)}
-                          disabled={!hasEmail}
+                          disabled={!selectable}
                           onChange={() => toggleUser(user.id)}
                         />
-                        <span className="font-medium">{user.full_name}</span>
+                        <span className="font-medium">
+                          {user.full_name}
+                          {user.role === 'admin' && (
+                            <span className="text-muted-foreground font-normal"> · admin</span>
+                          )}
+                        </span>
                         <span className="text-muted-foreground">
-                          ({email || 'no email on file'})
+                          ({recipientEmailLabel(user)})
                         </span>
                       </label>
                     )
