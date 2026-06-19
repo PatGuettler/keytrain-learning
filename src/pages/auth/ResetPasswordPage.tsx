@@ -96,11 +96,10 @@ export function ResetPasswordPage() {
               </p>
               {!hasTokens && (
                 <p className="text-sm text-muted-foreground">
-                  No reset token was found in this page URL. That usually means Supabase Auth URL
-                  settings need updating: set Site URL to{' '}
-                  <span className="font-mono text-xs">https://keytrainlearning.com</span> and add{' '}
-                  <span className="font-mono text-xs">https://keytrainlearning.com/**</span> under
-                  Redirect URLs (Supabase Dashboard → Authentication → URL Configuration).
+                  No reset token was found in this page URL. Confirm Supabase → Authentication →
+                  URL Configuration has Site URL{' '}
+                  <span className="font-mono text-xs">https://keytrainlearning.com</span>, request a
+                  new reset email, and open the link directly (do not refresh this page).
                 </p>
               )}
               <Link to="/forgot-password" className="text-sm text-primary hover:underline">

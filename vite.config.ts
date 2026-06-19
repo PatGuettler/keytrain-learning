@@ -46,6 +46,28 @@ function ghPagesSpaFallback(): Plugin {
 `
       fs.writeFileSync(path.join(dist, '404.html'), fallbackHtml, 'utf-8')
       fs.writeFileSync(path.join(dist, '.nojekyll'), '')
+
+      const authRouteRedirect = (route: string) => `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /><title>KeyTrain Learning</title></head>
+<body>
+<script>
+  location.replace('/${route}' + location.search + location.hash);
+</script>
+</body>
+</html>
+`
+
+      // GitHub Pages resolves /reset-password → reset-password.html before 404.html.
+      // Preserve Supabase hash tokens with a one-hop redirect to the SPA route.
+      for (const route of ['reset-password', 'accept-invite', 'forgot-password']) {
+        fs.writeFileSync(path.join(dist, `${route}.html`), authRouteRedirect(route), 'utf-8')
+        const dir = path.join(dist, route)
+        fs.mkdirSync(dir, { recursive: true })
+        if (fs.existsSync(path.join(dist, 'index.html'))) {
+          fs.copyFileSync(path.join(dist, 'index.html'), path.join(dir, 'index.html'))
+        }
+      }
     },
   }
 }
