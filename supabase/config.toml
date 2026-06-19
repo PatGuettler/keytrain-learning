@@ -22,6 +22,12 @@ verify_jwt = false
 [functions.send-support-request]
 verify_jwt = false
 
+[functions.get-daily-verse]
+verify_jwt = false
+
+[functions.submit-prayer-request]
+verify_jwt = false
+
 [functions.send-phishing-campaign]
 verify_jwt = false
 

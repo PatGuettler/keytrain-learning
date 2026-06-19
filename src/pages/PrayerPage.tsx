@@ -10,9 +10,7 @@ import { ROLE_PROFILE } from '@/lib/constants'
 
 const INTRO = `We are the body of Christ, His hands and feet in this world. As we move together in faith, never forget that you are intimately connected to a Holy God who loves you deeply.
 
-Because we are members of this one body, please know that we are here for you. We are ready, willing, and truly grateful to pray for you in any way you need.
-
-Note: This is a completely anonymous message. No personal data or user information is collected.`
+Because we are members of this one body, please know that we are here for you. We are ready, willing, and truly grateful to pray for you in any way you need.`
 
 const CORINTHIANS_ESV = `1 Corinthians 12:25–27 (ESV)
 
@@ -71,8 +69,14 @@ export function PrayerPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Submit a prayer request</CardTitle>
-          <CardDescription>
-            Type your request below. Nothing you submit is linked to your account.
+          <CardDescription className="space-y-2">
+            <span className="block">
+              Type your request below. Nothing you submit is linked to your account.
+            </span>
+            <span className="block">
+              Note: This is a completely anonymous message. No personal data or user information is
+              collected.
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent>

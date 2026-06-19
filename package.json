@@ -13,6 +13,7 @@
     "preview:pages": "npm run build:pages && vite preview --base /",
     "deploy:manage-users": "bash scripts/deploy-manage-users.sh",
     "deploy:phishing": "bash scripts/deploy-phishing.sh",
+    "deploy:spiritual": "bash scripts/deploy-spiritual.sh",
     "test:resend-support": "bash scripts/test-resend-support.sh",
     "set-test-passwords": "bash scripts/set-test-passwords.sh"
   },
