@@ -16,37 +16,36 @@ if [ -z "$PROJECT_REF" ]; then
   exit 1
 fi
 
-if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
-  if [ -f "${HOME}/.supabase/access-token" ]; then
-    export SUPABASE_ACCESS_TOKEN="$(tr -d '[:space:]' < "${HOME}/.supabase/access-token")"
-  fi
-fi
-
-if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
-  cat >&2 <<'EOF'
-Error: no Supabase access token.
-
-Your `supabase login` was cancelled, so deploy cannot run.
-
-Easiest fix (no browser prompt in the terminal):
-  1. Open https://supabase.com/dashboard/account/tokens
-  2. Generate new token → copy it
-  3. export SUPABASE_ACCESS_TOKEN='paste-token-here'
-  4. export SUPABASE_PROJECT_REF=rzrsudrdpnabpseatclm
-  5. bash scripts/deploy-manage-users.sh
-
-Or finish interactive login:
-  npx supabase@latest login
-  (complete browser auth AND paste the verification code when prompted)
-EOF
-  exit 1
-fi
-
 if command -v supabase >/dev/null 2>&1; then
   SUPABASE_CMD=(supabase)
 else
   echo "Using npx supabase@latest"
   SUPABASE_CMD=(npx --yes supabase@latest)
+fi
+
+if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ] && [ -f "${HOME}/.supabase/access-token" ]; then
+  export SUPABASE_ACCESS_TOKEN="$(tr -d '[:space:]' < "${HOME}/.supabase/access-token")"
+fi
+
+if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
+  echo "SUPABASE_ACCESS_TOKEN not set — checking Supabase CLI login session…"
+  if ! "${SUPABASE_CMD[@]}" projects list >/dev/null 2>&1; then
+    cat >&2 <<'EOF'
+Error: not authenticated with Supabase.
+
+Option A — dashboard token (recommended for scripts):
+  1. https://supabase.com/dashboard/account/tokens → Generate new token
+  2. export SUPABASE_ACCESS_TOKEN='sbp_...'
+  3. export SUPABASE_PROJECT_REF=rzrsudrdpnabpseatclm
+  4. npm run deploy:manage-users
+
+Option B — CLI login (interactive):
+  npx supabase@latest login
+  npm run deploy:manage-users
+EOF
+    exit 1
+  fi
+  echo "Using Supabase CLI login session."
 fi
 
 INVITE_URL="${INVITE_REDIRECT_URL:-https://keytrainlearning.com/accept-invite}"
