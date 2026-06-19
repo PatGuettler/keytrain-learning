@@ -13,6 +13,7 @@ export function createUnconfiguredBackend(): Backend {
       fetchProfile: fail,
       resetPassword: fail,
       updatePassword: fail,
+      clearLoginLockout: fail,
       getSession: async () => null,
       recoverSessionFromUrl: async () => null,
     },

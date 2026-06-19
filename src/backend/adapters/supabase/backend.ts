@@ -82,6 +82,10 @@ export function createSupabaseBackend(): Backend {
         const { error } = await supabase.auth.updateUser({ password })
         if (error) throw error
       },
+      async clearLoginLockout(userId) {
+        const { error } = await supabase.rpc('clear_failed_login', { p_user_id: userId })
+        if (error) throw error
+      },
       async getSession() {
         const { data } = await supabase.auth.getSession()
         return data.session

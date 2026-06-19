@@ -33,6 +33,7 @@ export async function updatePassword(password: string) {
   const userId = session?.user?.id
   if (userId && isPasswordLongEnough(password)) {
     await updateProfile(userId, { password_upgrade_required: false })
+    await backend.auth.clearLoginLockout(userId)
   }
 }
 
