@@ -13,7 +13,7 @@ import { ThemeDropdownItems } from '@/components/layout/ThemeSelector'
 import { AppLogo } from '@/components/brand/AppLogo'
 import { useAuth } from '@/hooks/useAuth'
 import { useUiStore } from '@/store/uiStore'
-import { APP_NAME, ROLE_PROFILE } from '@/lib/constants'
+import { APP_NAME, ROLE_PROFILE, ROLE_PRAYER } from '@/lib/constants'
 
 export function Topbar() {
   const navigate = useNavigate()
@@ -26,6 +26,7 @@ export function Topbar() {
   }
 
   const profilePath = role ? ROLE_PROFILE[role] : '/employee/profile'
+  const prayerPath = role ? ROLE_PRAYER[role] : '/employee/prayer'
 
   return (
     <header className="sticky top-0 z-40 flex h-14 sm:h-16 items-center justify-between gap-2 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 px-3 sm:px-4 lg:px-6 safe-area-pt safe-area-px">
@@ -73,6 +74,9 @@ export function Topbar() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => navigate(profilePath)}>
               Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => navigate(prayerPath)}>
+              Prayer
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">

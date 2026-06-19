@@ -8,6 +8,7 @@ import {
   Users,
   LockKeyhole,
   Fish,
+  HeartHandshake,
 } from 'lucide-react'
 import type { UserRole } from '@/types/user.types'
 
@@ -25,6 +26,7 @@ export const navByRole: Record<UserRole, NavItem[]> = {
     { to: '/admin/courses', label: 'Courses', icon: BookOpen },
     { to: '/admin/phishing/campaigns', label: 'Phishing sims', icon: Fish },
     { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
+    { to: '/admin/prayer-requests', label: 'Prayer requests', icon: HeartHandshake },
   ],
   manager: [
     { to: '/manager/training', label: 'Required Training', icon: GraduationCap },

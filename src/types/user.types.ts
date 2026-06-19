@@ -14,9 +14,12 @@ export interface Profile {
   failed_login_attempts: number
   login_locked_at: string | null
   last_login_at: string | null
+  daily_verse_enabled: boolean
   created_at: string
   updated_at: string
 }
+
+export type UserPreferencesUpdate = Partial<Pick<Profile, 'daily_verse_enabled'>>
 
 export type AdminProfileUpdate = Partial<
   Pick<

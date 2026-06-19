@@ -1,5 +1,5 @@
 import { backend } from '@/backend'
-import type { AdminProfileUpdate, Profile, UserRole } from '@/types/user.types'
+import type { AdminProfileUpdate, Profile, UserPreferencesUpdate, UserRole } from '@/types/user.types'
 
 export async function fetchProfiles(filters?: {
   orgId?: string
@@ -16,6 +16,6 @@ export async function fetchOrgMembers(orgId: string, includeInactive = false) {
   return fetchProfiles({ orgId, includeInactive, excludeAdmins: true })
 }
 
-export async function updateProfile(id: string, patch: AdminProfileUpdate) {
+export async function updateProfile(id: string, patch: AdminProfileUpdate | UserPreferencesUpdate) {
   return backend.users.updateProfile(id, patch)
 }

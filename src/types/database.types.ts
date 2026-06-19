@@ -28,6 +28,7 @@ export interface Database {
           failed_login_attempts: number
           login_locked_at: string | null
           last_login_at: string | null
+          daily_verse_enabled: boolean
           created_at: string
           updated_at: string
         }
@@ -44,6 +45,8 @@ export interface Database {
           password_upgrade_required?: boolean
           failed_login_attempts?: number
           login_locked_at?: string | null
+          last_login_at?: string | null
+          daily_verse_enabled?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -59,6 +62,7 @@ export interface Database {
           password_upgrade_required: boolean
           failed_login_attempts: number
           login_locked_at: string | null
+          daily_verse_enabled: boolean
         }>
         Relationships: []
       }
@@ -605,6 +609,55 @@ export interface Database {
           event_type: string
           ip_address: string | null
           user_agent: string | null
+        }>
+        Relationships: []
+      }
+      daily_verse_dismissals: {
+        Row: {
+          user_id: string
+          local_date: string
+          dismissed_at: string
+        }
+        Insert: {
+          user_id: string
+          local_date: string
+          dismissed_at?: string
+        }
+        Update: Partial<{
+          local_date: string
+          dismissed_at: string
+        }>
+        Relationships: []
+      }
+      prayer_requests: {
+        Row: {
+          id: string
+          message: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          message: string
+          created_at?: string
+        }
+        Update: Partial<{
+          message: string
+        }>
+        Relationships: []
+      }
+      prayer_request_prayers: {
+        Row: {
+          request_id: string
+          admin_id: string
+          prayed_at: string
+        }
+        Insert: {
+          request_id: string
+          admin_id: string
+          prayed_at?: string
+        }
+        Update: Partial<{
+          prayed_at: string
         }>
         Relationships: []
       }

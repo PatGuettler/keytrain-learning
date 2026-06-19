@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ThemeSelectorButtons } from '@/components/layout/ThemeSelector'
@@ -6,9 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { useAuthStore } from '@/store/authStore'
 import { fetchProfiles } from '@/services/users.service'
 import { submitSupportRequest } from '@/services/support.service'
+import { updateDailyVerseEnabled } from '@/services/daily-verse.service'
+import { useAuth } from '@/hooks/useAuth'
+import { ROLE_PRAYER } from '@/lib/constants'
 
 const selectClass =
   'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm'
@@ -16,6 +21,10 @@ const selectClass =
 export function ProfilePage() {
   const profile = useAuthStore((s) => s.profile)
   const userId = useAuthStore((s) => s.userId)!
+  const email = useAuthStore((s) => s.email)
+  const setAuth = useAuthStore((s) => s.setAuth)
+  const { role } = useAuth()
+  const prayerPath = role ? ROLE_PRAYER[role] : '/employee/prayer'
 
   const { data: manager } = useQuery({
     queryKey: ['profile-manager', profile?.manager_id],
@@ -31,6 +40,8 @@ export function ProfilePage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [deliveryWarning, setDeliveryWarning] = useState('')
+  const [verseToggleLoading, setVerseToggleLoading] = useState(false)
+  const [verseToggleError, setVerseToggleError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,6 +65,20 @@ export function ProfilePage() {
       setSuccess('')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDailyVerseToggle = async (enabled: boolean) => {
+    if (!profile || !email) return
+    setVerseToggleLoading(true)
+    setVerseToggleError('')
+    try {
+      const updated = await updateDailyVerseEnabled(userId, enabled)
+      setAuth({ userId, email, profile: updated })
+    } catch (err) {
+      setVerseToggleError(err instanceof Error ? err.message : 'Could not update preference.')
+    } finally {
+      setVerseToggleLoading(false)
     }
   }
 
@@ -97,6 +122,43 @@ export function ProfilePage() {
         </CardHeader>
         <CardContent>
           <ThemeSelectorButtons />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Daily Bible Verse</CardTitle>
+          <CardDescription>
+            Show an ESV Bible verse once per day when you sign in. You can dismiss it each day.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <Label htmlFor="daily-verse-toggle" className="text-sm font-normal">
+              {profile.daily_verse_enabled !== false ? 'Enabled' : 'Disabled'}
+            </Label>
+            <Switch
+              id="daily-verse-toggle"
+              checked={profile.daily_verse_enabled !== false}
+              disabled={verseToggleLoading}
+              onCheckedChange={handleDailyVerseToggle}
+            />
+          </div>
+          {verseToggleError && <p className="text-sm text-destructive">{verseToggleError}</p>}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Prayer</CardTitle>
+          <CardDescription>
+            Submit an anonymous prayer request for our team to lift up in prayer.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link to={prayerPath}>Go to Prayer</Link>
+          </Button>
         </CardContent>
       </Card>
 

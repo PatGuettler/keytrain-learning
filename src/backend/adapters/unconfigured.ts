@@ -65,5 +65,12 @@ export function createUnconfiguredBackend(): Backend {
       fetchOrgModuleAttempts: fail,
       fetchUserModuleAttempts: fail,
     },
+    spiritual: {
+      isDailyVerseDismissed: fail,
+      dismissDailyVerse: fail,
+      fetchPrayerRequests: fail,
+      markPrayerRequestPrayed: fail,
+      deletePrayerRequest: fail,
+    },
   }
 }

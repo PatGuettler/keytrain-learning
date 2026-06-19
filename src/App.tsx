@@ -19,12 +19,14 @@ import { OrganizationDetailPage } from '@/pages/admin/OrganizationDetailPage'
 import { PlatformAdminsPage } from '@/pages/admin/PlatformAdminsPage'
 import { PlatformUsersPage } from '@/pages/admin/PlatformUsersPage'
 import { UnlockRequestsPage } from '@/pages/admin/UnlockRequestsPage'
+import { PrayerRequestsPage } from '@/pages/admin/PrayerRequestsPage'
 import { AdminStaffTrainingPage } from '@/pages/admin/AdminStaffTrainingPage'
 import { AdminStaffCourseDetailPage } from '@/pages/admin/AdminStaffCourseDetailPage'
 import { EmployeeListPage } from '@/pages/manager/EmployeeListPage'
 import { ManagerEmployeeDetailPage } from '@/pages/manager/ManagerEmployeeDetailPage'
 import { MyTrainingPage } from '@/pages/employee/MyTrainingPage'
 import { ProfilePage } from '@/pages/ProfilePage'
+import { PrayerPage } from '@/pages/PrayerPage'
 import { PhishingTrainingPage } from '@/pages/phishing/PhishingTrainingPage'
 import { PhishingCampaignsPage } from '@/pages/admin/PhishingCampaignsPage'
 import { PhishingCampaignEditPage } from '@/pages/admin/PhishingCampaignEditPage'
@@ -113,6 +115,10 @@ export default function App() {
               element={<RoleGuard roles={['admin']}><UnlockRequestsPage /></RoleGuard>}
             />
             <Route
+              path="/admin/prayer-requests"
+              element={<RoleGuard roles={['admin']}><PrayerRequestsPage /></RoleGuard>}
+            />
+            <Route
               path="/admin/phishing/campaigns"
               element={<RoleGuard roles={['admin']}><PhishingCampaignsPage /></RoleGuard>}
             />
@@ -185,6 +191,9 @@ export default function App() {
             <Route path="/employee/profile" element={<RoleGuard roles={['employee', 'manager', 'admin']}><ProfilePage /></RoleGuard>} />
             <Route path="/manager/profile" element={<RoleGuard roles={['manager']}><ProfilePage /></RoleGuard>} />
             <Route path="/admin/profile" element={<RoleGuard roles={['admin']}><ProfilePage /></RoleGuard>} />
+            <Route path="/employee/prayer" element={<RoleGuard roles={['employee', 'manager', 'admin']}><PrayerPage /></RoleGuard>} />
+            <Route path="/manager/prayer" element={<RoleGuard roles={['manager']}><PrayerPage /></RoleGuard>} />
+            <Route path="/admin/prayer" element={<RoleGuard roles={['admin']}><PrayerPage /></RoleGuard>} />
             </Route>
           </Route>
 

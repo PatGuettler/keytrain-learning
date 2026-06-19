@@ -10,7 +10,14 @@ import type {
   TrainingSession,
   UnlockRequestStatus,
 } from '@/types/course.types'
-import type { AdminProfileUpdate, Organization, Profile, UserRole } from '@/types/user.types'
+import type {
+  AdminProfileUpdate,
+  Organization,
+  Profile,
+  UserPreferencesUpdate,
+  UserRole,
+} from '@/types/user.types'
+import type { PrayerRequestWithPrayers } from '@/types/prayer.types'
 import type { CourseAttemptResult } from '@/types/training.types'
 
 export type { CourseAttemptResult }
@@ -38,7 +45,7 @@ export interface UsersBackend {
     /** Omit platform admins from org staff lists */
     excludeAdmins?: boolean
   }): Promise<Profile[]>
-  updateProfile(id: string, patch: AdminProfileUpdate): Promise<Profile>
+  updateProfile(id: string, patch: AdminProfileUpdate | UserPreferencesUpdate): Promise<Profile>
 }
 
 export interface OrganizationsBackend {
@@ -126,6 +133,14 @@ export interface TrainingBackend {
   fetchUserModuleAttempts(userId: string): Promise<ModuleAttempt[]>
 }
 
+export interface SpiritualBackend {
+  isDailyVerseDismissed(userId: string, localDate: string): Promise<boolean>
+  dismissDailyVerse(userId: string, localDate: string): Promise<void>
+  fetchPrayerRequests(): Promise<PrayerRequestWithPrayers[]>
+  markPrayerRequestPrayed(requestId: string, adminId: string): Promise<void>
+  deletePrayerRequest(requestId: string): Promise<void>
+}
+
 export interface Backend {
   auth: AuthBackend
   users: UsersBackend
@@ -133,6 +148,7 @@ export interface Backend {
   courses: CoursesBackend
   assignments: AssignmentsBackend
   training: TrainingBackend
+  spiritual: SpiritualBackend
   /** Indicates which backend is active (supabase/aws...). */
   kind: string
 }

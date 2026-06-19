@@ -2,7 +2,9 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { isTrainingPlayerPath } from '@/lib/training-paths'
 import { NewCourseNoticeModal } from '@/components/training/NewCourseNoticeModal'
+import { DailyVerseBanner } from '@/components/spiritual/DailyVerseBanner'
 import { useNewCourseNotices } from '@/hooks/useNewCourseNotices'
+import { useDailyVerse } from '@/hooks/useDailyVerse'
 import { useRequiredAssignmentSync } from '@/hooks/useRequiredAssignmentSync'
 import { useAuthStore } from '@/store/authStore'
 import { Sidebar } from './Sidebar'
@@ -14,6 +16,7 @@ export function AppShell() {
   const location = useLocation()
   const role = useAuthStore((s) => s.profile?.role)
   const { notices, dismissNotice, enabled } = useNewCourseNotices()
+  const { showBanner, verse, dismiss } = useDailyVerse()
   useRequiredAssignmentSync()
   const inTrainingPlayer = isTrainingPlayerPath(location.pathname)
 
@@ -26,6 +29,9 @@ export function AppShell() {
       <MobileSidebar />
       <div className={cn('flex min-w-0 flex-1 flex-col lg:pb-0', !inTrainingPlayer && 'pb-mobile-nav')}>
         <Topbar />
+        {showBanner && verse && (
+          <DailyVerseBanner reference={verse.reference} text={verse.text} onDismiss={dismiss} />
+        )}
         <main
           className={cn(
             'flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4 lg:p-6 safe-area-px',

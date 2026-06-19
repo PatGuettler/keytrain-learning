@@ -33,3 +33,9 @@ export const ROLE_PROFILE: Record<string, string> = {
   manager: '/manager/profile',
   employee: '/employee/profile',
 }
+
+export const ROLE_PRAYER: Record<string, string> = {
+  admin: '/admin/prayer',
+  manager: '/manager/prayer',
+  employee: '/employee/prayer',
+}

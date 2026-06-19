@@ -16,6 +16,7 @@ import type {
   TrainingSession,
 } from '@/types/course.types'
 import type { Organization, Profile } from '@/types/user.types'
+import type { PrayerRequestWithPrayers } from '@/types/prayer.types'
 import { createUnconfiguredBackend } from '../unconfigured'
 import {
   addDaysIso,
@@ -793,6 +794,47 @@ export function createSupabaseBackend(): Backend {
           .order('completed_at', { ascending: false })
         if (error) throw error
         return (data ?? []) as ModuleAttempt[]
+      },
+    },
+    spiritual: {
+      async isDailyVerseDismissed(userId, localDate) {
+        const { data, error } = await supabase
+          .from('daily_verse_dismissals')
+          .select('user_id')
+          .eq('user_id', userId)
+          .eq('local_date', localDate)
+          .maybeSingle()
+        if (error) throw error
+        return Boolean(data)
+      },
+      async dismissDailyVerse(userId, localDate) {
+        const { error } = await supabase.from('daily_verse_dismissals').upsert(
+          {
+            user_id: userId,
+            local_date: localDate,
+          },
+          { onConflict: 'user_id,local_date' }
+        )
+        if (error) throw error
+      },
+      async fetchPrayerRequests() {
+        const { data, error } = await supabase
+          .from('prayer_requests')
+          .select('*, prayers:prayer_request_prayers(*, admin:profiles!prayer_request_prayers_admin_id_fkey(full_name))')
+          .order('created_at', { ascending: false })
+        if (error) throw error
+        return (data ?? []) as PrayerRequestWithPrayers[]
+      },
+      async markPrayerRequestPrayed(requestId, adminId) {
+        const { error } = await supabase.from('prayer_request_prayers').insert({
+          request_id: requestId,
+          admin_id: adminId,
+        })
+        if (error) throw error
+      },
+      async deletePrayerRequest(requestId) {
+        const { error } = await supabase.from('prayer_requests').delete().eq('id', requestId)
+        if (error) throw error
       },
     },
   }
