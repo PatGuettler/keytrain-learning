@@ -26,7 +26,7 @@ const RECIPIENTS_PER_PAGE = 8
 
 export function PhishingCampaignEditPage() {
   const { campaignId } = useParams<{ campaignId: string }>()
-  const isNew = campaignId === 'new'
+  const isNew = !campaignId || campaignId === 'new'
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const userId = useAuthStore((s) => s.userId)!
@@ -217,6 +217,10 @@ export function PhishingCampaignEditPage() {
       if (targetScope === 'org' && !orgId) throw new Error('Select an organization.')
       if (targetScope === 'custom' && selectedUserIds.length === 0) {
         throw new Error('Select at least one recipient.')
+      }
+
+      if (!isNew && !campaignId) {
+        throw new Error('Campaign ID is missing. Open this page from the campaigns list.')
       }
 
       const payload = {
