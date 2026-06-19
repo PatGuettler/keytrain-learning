@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getAuthCallbackSignals } from '@/lib/auth-callback'
+import { getAuthCallbackSignals, isAuthCallbackRoute } from '@/lib/auth-callback'
 import { getSession, recoverSessionFromUrl, signOut } from '@/services/auth.service'
 import { useAuthStore } from '@/store/authStore'
 
@@ -15,6 +15,7 @@ export function useRecoveryAuthSession() {
   useEffect(() => {
     let cancelled = false
     const { hasTokens, hasError } = getAuthCallbackSignals()
+    const onAuthCallback = isAuthCallbackRoute()
 
     const prepare = async () => {
       clearAuth()
@@ -24,16 +25,20 @@ export function useRecoveryAuthSession() {
         return
       }
 
-      // Never sign out while recovery/invite tokens are in the URL — that destroys the email session.
+      // Never sign out when URL still has tokens, or when bootstrap already established a session.
       if (!hasTokens) {
-        await signOut()
+        const existing = await getSession()
+        if (!existing) {
+          await signOut()
+        }
       }
 
       for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         if (cancelled) return
 
         try {
-          const session = hasTokens ? await recoverSessionFromUrl() : await getSession()
+          const session =
+            hasTokens || onAuthCallback ? await recoverSessionFromUrl() : await getSession()
           if (session) {
             setReady(true)
             setChecking(false)
@@ -51,7 +56,7 @@ export function useRecoveryAuthSession() {
           return
         }
 
-        if (hasTokens) {
+        if (hasTokens || onAuthCallback) {
           await new Promise((resolve) => setTimeout(resolve, RETRY_MS))
         } else {
           break

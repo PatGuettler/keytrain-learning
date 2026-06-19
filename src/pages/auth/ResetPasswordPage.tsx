@@ -8,7 +8,7 @@ import { isBackendReady } from '@/backend'
 import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
 import { useRecoveryAuthSession } from '@/hooks/useRecoveryAuthSession'
 import { getAuthCallbackSignals } from '@/lib/auth-callback'
-import { signOut, updatePassword } from '@/services/auth.service'
+import { getSession, signOut, updatePassword } from '@/services/auth.service'
 import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, PASSWORD_CRITERIA_HINT, passwordLengthError } from '@/lib/password'
 
 function parseHashError(): string | null {
@@ -51,6 +51,12 @@ export function ResetPasswordPage() {
 
     setSaving(true)
     try {
+      const session = await getSession()
+      if (!session) {
+        setError('Your reset session expired. Request a new reset link and try again.')
+        setSaving(false)
+        return
+      }
       await updatePassword(password)
       await signOut()
       navigate('/login', {

@@ -87,10 +87,6 @@ export function createSupabaseBackend(): Backend {
         return data.session
       },
       async recoverSessionFromUrl() {
-        const { data: existing, error: sessionError } = await supabase.auth.getSession()
-        if (sessionError) throw sessionError
-        if (existing.session) return existing.session
-
         const searchParams = new URLSearchParams(window.location.search)
         const code = searchParams.get('code')
         if (code) {
@@ -112,6 +108,9 @@ export function createSupabaseBackend(): Backend {
           return data.session
         }
 
+        // Tokens already consumed (e.g. bootstrap cleared the URL) — use persisted session.
+        const { data: existing, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) throw sessionError
         return existing.session
       },
     },
