@@ -19,6 +19,7 @@ import {
 } from '@/services/phishing.service'
 import { useAuthStore } from '@/store/authStore'
 import { PHISHING_PRETEXT_LABELS, type PhishingTargetScope } from '@/types/phishing.types'
+import type { Profile } from '@/types/user.types'
 
 const RECIPIENTS_PER_PAGE = 8
 
@@ -28,7 +29,8 @@ export function PhishingCampaignEditPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const userId = useAuthStore((s) => s.userId)!
-  const adminEmail = useAuthStore((s) => s.email)
+  const authEmail = useAuthStore((s) => s.email)
+  const authProfile = useAuthStore((s) => s.profile)
 
   const { data: existing } = useQuery({
     queryKey: ['phishing-campaign', campaignId],
@@ -72,28 +74,48 @@ export function PhishingCampaignEditPage() {
     isError: usersError,
     refetch: refetchUsers,
   } = useQuery({
-    queryKey: ['all-org-users', targetScope],
-    queryFn: () =>
-      fetchProfiles({
-        includeInactive: true,
-        excludeAdmins: targetScope !== 'custom',
-      }),
+    queryKey: ['phishing-hand-pick-users'],
+    queryFn: () => fetchProfiles({ includeInactive: true, excludeAdmins: false }),
+    enabled: targetScope === 'custom',
   })
+
+  const selfProfile = useMemo((): Profile | null => {
+    if (!userId || !authProfile) return null
+    const email = authProfile.email?.trim() || authEmail?.trim() || null
+    return { ...authProfile, email }
+  }, [authProfile, authEmail, userId])
+
+  const selectableUsers = useMemo(() => {
+    if (!selfProfile) return allUsers
+    const existing = allUsers.find((user) => user.id === selfProfile.id)
+    if (existing) {
+      return allUsers.map((user) =>
+        user.id === selfProfile.id
+          ? { ...user, email: user.email?.trim() || selfProfile.email }
+          : user
+      )
+    }
+    return [selfProfile, ...allUsers]
+  }, [allUsers, selfProfile])
+
+  const resolveRecipientEmail = (user: Profile) =>
+    user.email?.trim() || (user.id === userId ? authEmail?.trim() : '') || ''
 
   const filteredUsers = useMemo(() => {
     const q = userSearch.trim().toLowerCase()
-    const sorted = [...allUsers].sort((a, b) =>
+    const others = selectableUsers.filter((user) => user.id !== userId)
+    const sorted = [...others].sort((a, b) =>
       a.full_name.localeCompare(b.full_name, undefined, { sensitivity: 'base' })
     )
 
     if (!q) return sorted
 
     return sorted.filter(
-      (u) =>
-        u.full_name.toLowerCase().includes(q) ||
-        (u.email ?? '').toLowerCase().includes(q)
+      (user) =>
+        user.full_name.toLowerCase().includes(q) ||
+        resolveRecipientEmail(user).toLowerCase().includes(q)
     )
-  }, [allUsers, userSearch])
+  }, [authEmail, selectableUsers, userId, userSearch])
 
   const totalUserPages = Math.max(1, Math.ceil(filteredUsers.length / RECIPIENTS_PER_PAGE))
 
@@ -145,15 +167,15 @@ export function PhishingCampaignEditPage() {
   }
 
   const toggleUser = (id: string) => {
-    const user = allUsers.find((u) => u.id === id)
-    if (!user?.email?.trim()) return
+    const user = selectableUsers.find((entry) => entry.id === id)
+    if (!user || !resolveRecipientEmail(user)) return
     setSelectedUserIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     )
   }
 
   const addSelfAsRecipient = () => {
-    if (!userId || !adminEmail?.trim()) return
+    if (!userId) return
     setSelectedUserIds((prev) => (prev.includes(userId) ? prev : [...prev, userId]))
   }
 
@@ -293,7 +315,7 @@ export function PhishingCampaignEditPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Label htmlFor="recipient-search">Recipients</Label>
                 <div className="flex flex-wrap items-center gap-2">
-                  {adminEmail && (
+                  {selfProfile && (
                     <Button
                       type="button"
                       variant="outline"
@@ -309,6 +331,29 @@ export function PhishingCampaignEditPage() {
                   </span>
                 </div>
               </div>
+              {selfProfile && (
+                <label
+                  className={`flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm ${
+                    resolveRecipientEmail(selfProfile)
+                      ? 'hover:bg-accent/50 cursor-pointer'
+                      : 'opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedUserIds.includes(userId)}
+                    disabled={!resolveRecipientEmail(selfProfile)}
+                    onChange={() => toggleUser(userId)}
+                  />
+                  <span className="font-medium">
+                    {selfProfile.full_name}
+                    <span className="text-muted-foreground font-normal"> (you)</span>
+                  </span>
+                  <span className="text-muted-foreground">
+                    ({resolveRecipientEmail(selfProfile) || 'no email on file'})
+                  </span>
+                </label>
+              )}
               <Input
                 id="recipient-search"
                 placeholder="Search by name or email…"
@@ -331,15 +376,15 @@ export function PhishingCampaignEditPage() {
                 ) : paginatedUsers.length === 0 ? (
                   <p className="p-3 text-sm text-muted-foreground">
                     {userSearch.trim()
-                      ? 'No matching users.'
-                      : allUsers.length === 0
-                        ? 'No users found in the app.'
+                      ? 'No other matching users.'
+                      : selectableUsers.length <= 1
+                        ? 'No other users found in the app.'
                         : 'No users on this page.'}
                   </p>
                 ) : (
                   paginatedUsers.map((user) => {
-                    const hasEmail = Boolean(user.email?.trim())
-                    const isSelf = user.id === userId
+                    const email = resolveRecipientEmail(user)
+                    const hasEmail = Boolean(email)
                     return (
                       <label
                         key={user.id}
@@ -355,14 +400,9 @@ export function PhishingCampaignEditPage() {
                           disabled={!hasEmail}
                           onChange={() => toggleUser(user.id)}
                         />
-                        <span className="font-medium">
-                          {user.full_name}
-                          {isSelf && (
-                            <span className="text-muted-foreground font-normal"> (you)</span>
-                          )}
-                        </span>
+                        <span className="font-medium">{user.full_name}</span>
                         <span className="text-muted-foreground">
-                          ({user.email ?? 'no email on file'})
+                          ({email || 'no email on file'})
                         </span>
                       </label>
                     )

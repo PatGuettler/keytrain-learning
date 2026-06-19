@@ -28,6 +28,39 @@ async function assertAdmin(
   }
 }
 
+async function resolveDeliveryEmail(
+  adminClient: ReturnType<typeof createClient>,
+  profile: { id: string; email: string | null }
+): Promise<string | null> {
+  const profileEmail = profile.email?.trim()
+  if (profileEmail) return profileEmail
+
+  const { data, error } = await adminClient.auth.admin.getUserById(profile.id)
+  if (error || !data.user?.email?.trim()) return null
+  return data.user.email.trim()
+}
+
+async function resolveUserIdByEmail(
+  adminClient: ReturnType<typeof createClient>,
+  email: string
+): Promise<string | null> {
+  const { data: profile, error: profileError } = await adminClient
+    .from('profiles')
+    .select('id')
+    .ilike('email', email)
+    .maybeSingle()
+  if (profileError) throw profileError
+  if (profile?.id) return profile.id
+
+  const { data: authData, error: authError } = await adminClient.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  })
+  if (authError) return null
+  const authUser = authData.users.find((user) => user.email?.trim().toLowerCase() === email)
+  return authUser?.id ?? null
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -113,14 +146,8 @@ Deno.serve(async (req) => {
 
     if (testMode && testEmails.length > 0) {
       for (const email of testEmails) {
-        const { data: profile, error: profileError } = await adminClient
-          .from('profiles')
-          .select('id')
-          .ilike('email', email)
-          .maybeSingle()
-
-        if (profileError) throw profileError
-        if (!profile) {
+        const userId = await resolveUserIdByEmail(adminClient, email)
+        if (!userId) {
           unresolvedEmails.push(email)
           continue
         }
@@ -129,7 +156,7 @@ Deno.serve(async (req) => {
           .from('phishing_recipients')
           .select('id, token, user_id')
           .eq('campaign_id', campaignId)
-          .eq('user_id', profile.id)
+          .eq('user_id', userId)
           .maybeSingle()
 
         if (existing) {
@@ -139,7 +166,7 @@ Deno.serve(async (req) => {
 
         const { data: inserted, error: insertError } = await adminClient
           .from('phishing_recipients')
-          .insert({ campaign_id: campaignId, user_id: profile.id })
+          .insert({ campaign_id: campaignId, user_id: userId })
           .select('id, token, user_id')
           .single()
 
@@ -208,7 +235,13 @@ Deno.serve(async (req) => {
 
     for (const recipient of recipients) {
       const profile = profileById.get(recipient.user_id)
-      if (!profile?.email) {
+      if (!profile) {
+        failures.push({ email: recipient.user_id, error: 'Missing profile' })
+        continue
+      }
+
+      const deliveryEmail = await resolveDeliveryEmail(adminClient, profile)
+      if (!deliveryEmail) {
         failures.push({ email: recipient.user_id, error: 'Missing email' })
         continue
       }
@@ -249,7 +282,7 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             from: `${campaign.sender_name} <${campaign.sender_email}>`,
-            to: [profile.email],
+            to: [deliveryEmail],
             subject: replacePhishingPlaceholders(campaign.subject, ctx),
             html,
             text: text || undefined,
@@ -258,7 +291,7 @@ Deno.serve(async (req) => {
 
         if (!emailRes.ok) {
           const detail = await emailRes.text()
-          failures.push({ email: profile.email, error: detail.slice(0, 200) })
+          failures.push({ email: deliveryEmail, error: detail.slice(0, 200) })
           continue
         }
       }
