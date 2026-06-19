@@ -95,6 +95,17 @@ export function createSupabaseBackend(): Backend {
           return data.session
         }
 
+        const tokenHash = searchParams.get('token_hash')
+        const type = searchParams.get('type')
+        if (tokenHash && type) {
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: type as 'recovery' | 'invite' | 'email' | 'signup',
+          })
+          if (error) throw error
+          return data.session
+        }
+
         const { data, error } = await supabase.auth.getSession()
         if (error) throw error
         return data.session

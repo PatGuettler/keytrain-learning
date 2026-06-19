@@ -1,4 +1,5 @@
 import { backend } from '@/backend'
+import { getAuthCallbackSignals, isAuthCallbackRoute } from '@/lib/auth-callback'
 import { getResetPasswordRedirectUrl } from '@/lib/backend-config'
 import { ACCOUNT_LOCKED_MESSAGE, INVALID_LOGIN_MESSAGE, isPasswordLongEnough } from '@/lib/password'
 import { updateProfile } from '@/services/users.service'
@@ -48,4 +49,16 @@ export async function getSession() {
 
 export async function recoverSessionFromUrl() {
   return backend.auth.recoverSessionFromUrl()
+}
+
+/** Run before React mounts on /reset-password and /accept-invite so tokens survive GitHub Pages redirects. */
+export async function bootstrapAuthFromUrl(): Promise<void> {
+  if (!isAuthCallbackRoute()) return
+  const { hasTokens, hasError } = getAuthCallbackSignals()
+  if (hasError || !hasTokens) return
+  try {
+    await recoverSessionFromUrl()
+  } catch (err) {
+    console.error('Auth bootstrap from URL failed:', err)
+  }
 }

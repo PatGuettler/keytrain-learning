@@ -22,3 +22,8 @@ export function getAuthCallbackSignals(): {
 
   return { hasTokens, hasError }
 }
+
+export function isAuthCallbackRoute(): boolean {
+  if (typeof window === 'undefined') return false
+  return /\/(reset-password|accept-invite)(\/|$)/.test(window.location.pathname)
+}

@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './index.css'
 import { useUiStore } from './store/uiStore'
 import { applyTheme } from './lib/theme'
+import { bootstrapAuthFromUrl } from './services/auth.service'
 
 applyTheme(useUiStore.getState().theme)
 
@@ -29,8 +30,10 @@ function restoreGhPagesSpaRedirect() {
 
 restoreGhPagesSpaRedirect()
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-)
+void bootstrapAuthFromUrl().finally(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  )
+})

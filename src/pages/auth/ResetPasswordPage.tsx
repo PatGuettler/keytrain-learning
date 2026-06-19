@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { isBackendReady } from '@/backend'
 import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
 import { useRecoveryAuthSession } from '@/hooks/useRecoveryAuthSession'
+import { getAuthCallbackSignals } from '@/lib/auth-callback'
 import { signOut, updatePassword } from '@/services/auth.service'
 import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, PASSWORD_CRITERIA_HINT, passwordLengthError } from '@/lib/password'
 
@@ -31,6 +32,7 @@ export function ResetPasswordPage() {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const { ready, checking } = useRecoveryAuthSession()
+  const { hasTokens } = getAuthCallbackSignals()
 
   const passwordTooShort = password.length > 0 && !isPasswordLongEnough(password)
 
@@ -89,9 +91,18 @@ export function ResetPasswordPage() {
           {!linkError && !checking && !ready && (
             <div className="space-y-3">
               <p className="text-sm text-destructive">
-                This reset link is invalid or has expired. Open the link directly from your email,
-                or request a new one below.
+                This reset link is invalid or has expired. Open the link directly from your email
+                in the same browser where you requested it, or request a new one below.
               </p>
+              {!hasTokens && (
+                <p className="text-sm text-muted-foreground">
+                  No reset token was found in this page URL. That usually means Supabase Auth URL
+                  settings need updating: set Site URL to{' '}
+                  <span className="font-mono text-xs">https://keytrainlearning.com</span> and add{' '}
+                  <span className="font-mono text-xs">https://keytrainlearning.com/**</span> under
+                  Redirect URLs (Supabase Dashboard → Authentication → URL Configuration).
+                </p>
+              )}
               <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                 Request a new reset link
               </Link>
