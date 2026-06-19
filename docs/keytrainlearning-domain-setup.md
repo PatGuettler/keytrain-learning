@@ -202,6 +202,16 @@ Replaces Supabase’s built-in mailer (`@supabase.co` / sandbox limits).
 - [ ] Send a test password reset to a **real** inbox you control — email arrives from `noreply@keytrainlearning.com`
 - [ ] Confirm reset link opens `https://keytrainlearning.com/reset-password`
 
+**Password reset email template (recommended for GitHub Pages):**
+
+Supabase Dashboard → **Authentication** → **Email Templates** → **Reset password**. Replace the default link with:
+
+```html
+<a href="{{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery">Reset password</a>
+```
+
+This sends the token in the query string (more reliable on static hosting than `#access_token` fragments). The app already handles `?token_hash=...&type=recovery`.
+
 **Bounce prevention:**
 
 - [ ] Stop sending auth mail to fake/typo addresses (e.g. `test@test.com`)
