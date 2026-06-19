@@ -87,11 +87,16 @@ export function createSupabaseBackend(): Backend {
         return data.session
       },
       async recoverSessionFromUrl() {
+        const { data: existing, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) throw sessionError
+        if (existing.session) return existing.session
+
         const searchParams = new URLSearchParams(window.location.search)
         const code = searchParams.get('code')
         if (code) {
           const { data, error } = await supabase.auth.exchangeCodeForSession(code)
           if (error) throw error
+          window.history.replaceState({}, '', window.location.pathname)
           return data.session
         }
 
@@ -103,12 +108,11 @@ export function createSupabaseBackend(): Backend {
             type: type as 'recovery' | 'invite' | 'email' | 'signup',
           })
           if (error) throw error
+          window.history.replaceState({}, '', window.location.pathname)
           return data.session
         }
 
-        const { data, error } = await supabase.auth.getSession()
-        if (error) throw error
-        return data.session
+        return existing.session
       },
     },
     users: {

@@ -41,6 +41,12 @@ export function useRecoveryAuthSession() {
           }
         } catch (err) {
           console.error('Failed to establish recovery session:', err)
+          const session = await getSession()
+          if (session) {
+            setReady(true)
+            setChecking(false)
+            return
+          }
           if (!cancelled) setChecking(false)
           return
         }
