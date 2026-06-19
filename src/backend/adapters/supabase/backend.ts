@@ -847,7 +847,21 @@ export function createSupabaseBackend(): Backend {
           .select('*, prayers:prayer_request_prayers(*, admin:profiles!prayer_request_prayers_admin_id_fkey(full_name))')
           .order('created_at', { ascending: false })
         if (error) throw error
-        return (data ?? []) as PrayerRequestWithPrayers[]
+
+        return (data ?? []).map((row) => {
+          const prayersRaw = row.prayers
+          const prayers = Array.isArray(prayersRaw)
+            ? prayersRaw
+            : prayersRaw
+              ? [prayersRaw]
+              : []
+          return {
+            id: row.id,
+            message: row.message,
+            created_at: row.created_at,
+            prayers,
+          } satisfies PrayerRequestWithPrayers
+        })
       },
       async markPrayerRequestPrayed(requestId, adminId) {
         const { error } = await supabase.from('prayer_request_prayers').insert({

@@ -643,7 +643,15 @@ export interface Database {
         Update: Partial<{
           message: string
         }>
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'prayer_request_prayers_request_id_fkey'
+            columns: ['id']
+            isOneToOne: false
+            referencedRelation: 'prayer_request_prayers'
+            referencedColumns: ['request_id']
+          },
+        ]
       }
       prayer_request_prayers: {
         Row: {
@@ -659,7 +667,22 @@ export interface Database {
         Update: Partial<{
           prayed_at: string
         }>
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'prayer_request_prayers_request_id_fkey'
+            columns: ['request_id']
+            isOneToOne: false
+            referencedRelation: 'prayer_requests'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'prayer_request_prayers_admin_id_fkey'
+            columns: ['admin_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: Record<string, never>
