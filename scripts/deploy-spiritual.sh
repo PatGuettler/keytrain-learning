@@ -34,7 +34,5 @@ echo "Deploying submit-prayer-request…"
 "${SUPABASE_CMD[@]}" functions deploy submit-prayer-request --project-ref "$PROJECT_REF" --no-verify-jwt
 
 echo ""
-echo "Done. Optional: set ESV_API_KEY for daily verse text:"
-echo "  ${SUPABASE_CMD[*]} secrets set ESV_API_KEY='...' --project-ref $PROJECT_REF"
-echo ""
+echo "Done. Daily verse text is bundled in get-daily-verse/references.json (World English Bible)."
 echo "Ensure migration 025_daily_verse_and_prayer.sql is applied (prayer_requests table)."

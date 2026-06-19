@@ -129,7 +129,7 @@ export function ProfilePage() {
         <CardHeader>
           <CardTitle className="text-base">Daily Bible Verse</CardTitle>
           <CardDescription>
-            Show an ESV Bible verse once per day when you sign in. You can dismiss it each day.
+            Show a Bible verse once per day when you sign in. You can dismiss it each day.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">

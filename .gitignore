@@ -33,3 +33,6 @@ coverage/
 # Supabase local dev
 supabase/.branches
 supabase/.temp
+
+# Generated from bible.helloao.org when running scripts/generate-daily-verse-text.mjs
+scripts/.cache/

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { fetchProfiles } from '@/services/users.service'
 import { sendPhishingCampaign } from '@/services/phishing.service'
+import { useAuthStore } from '@/store/authStore'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -29,6 +30,7 @@ export function PhishingTestSendPanel({
   const [emailInput, setEmailInput] = useState('')
   const [selectedEmails, setSelectedEmails] = useState<string[]>([])
   const [sending, setSending] = useState(false)
+  const myEmail = useAuthStore((s) => s.email)
 
   const { data: users = [] } = useQuery({
     queryKey: ['phishing-test-user-picker'],
@@ -113,7 +115,7 @@ export function PhishingTestSendPanel({
 
         <div className="space-y-2">
           <Label htmlFor="test-email-input">Email address</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Input
               id="test-email-input"
               type="email"
@@ -127,7 +129,18 @@ export function PhishingTestSendPanel({
                   addEmail(emailInput)
                 }
               }}
+              className="min-w-[12rem] flex-1"
             />
+            {myEmail && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={disabled || sending || selectedSet.has(normalizeEmail(myEmail))}
+                onClick={() => addEmail(myEmail)}
+              >
+                Add me
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -155,6 +168,7 @@ export function PhishingTestSendPanel({
               filteredUsers.map((user) => {
                 const email = user.email!
                 const added = selectedSet.has(normalizeEmail(email))
+                const isSelf = myEmail && normalizeEmail(email) === normalizeEmail(myEmail)
                 return (
                   <button
                     key={user.id}
@@ -163,7 +177,10 @@ export function PhishingTestSendPanel({
                     className="w-full text-left px-3 py-2 text-sm hover:bg-accent/50 disabled:opacity-50 disabled:cursor-default"
                     onClick={() => addEmail(email)}
                   >
-                    <span className="font-medium">{user.full_name}</span>
+                    <span className="font-medium">
+                      {user.full_name}
+                      {isSelf && <span className="text-muted-foreground font-normal"> (you)</span>}
+                    </span>
                     <span className="text-muted-foreground"> · {email}</span>
                     {added && <span className="text-muted-foreground ml-1">(added)</span>}
                   </button>

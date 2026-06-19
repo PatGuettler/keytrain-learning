@@ -28,6 +28,7 @@ export function PhishingCampaignEditPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const userId = useAuthStore((s) => s.userId)!
+  const adminEmail = useAuthStore((s) => s.email)
 
   const { data: existing } = useQuery({
     queryKey: ['phishing-campaign', campaignId],
@@ -71,8 +72,12 @@ export function PhishingCampaignEditPage() {
     isError: usersError,
     refetch: refetchUsers,
   } = useQuery({
-    queryKey: ['all-org-users'],
-    queryFn: () => fetchProfiles({ includeInactive: true, excludeAdmins: true }),
+    queryKey: ['all-org-users', targetScope],
+    queryFn: () =>
+      fetchProfiles({
+        includeInactive: true,
+        excludeAdmins: targetScope !== 'custom',
+      }),
   })
 
   const filteredUsers = useMemo(() => {
@@ -145,6 +150,11 @@ export function PhishingCampaignEditPage() {
     setSelectedUserIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     )
+  }
+
+  const addSelfAsRecipient = () => {
+    if (!userId || !adminEmail?.trim()) return
+    setSelectedUserIds((prev) => (prev.includes(userId) ? prev : [...prev, userId]))
   }
 
   const handleSave = async () => {
@@ -282,9 +292,22 @@ export function PhishingCampaignEditPage() {
             <CardContent className="p-4 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Label htmlFor="recipient-search">Recipients</Label>
-                <span className="text-xs text-muted-foreground">
-                  {selectedUserIds.length} selected
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {adminEmail && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={selectedUserIds.includes(userId)}
+                      onClick={addSelfAsRecipient}
+                    >
+                      {selectedUserIds.includes(userId) ? 'You are selected' : 'Add me for testing'}
+                    </Button>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {selectedUserIds.length} selected
+                  </span>
+                </div>
               </div>
               <Input
                 id="recipient-search"
@@ -316,6 +339,7 @@ export function PhishingCampaignEditPage() {
                 ) : (
                   paginatedUsers.map((user) => {
                     const hasEmail = Boolean(user.email?.trim())
+                    const isSelf = user.id === userId
                     return (
                       <label
                         key={user.id}
@@ -331,7 +355,12 @@ export function PhishingCampaignEditPage() {
                           disabled={!hasEmail}
                           onChange={() => toggleUser(user.id)}
                         />
-                        <span className="font-medium">{user.full_name}</span>
+                        <span className="font-medium">
+                          {user.full_name}
+                          {isSelf && (
+                            <span className="text-muted-foreground font-normal"> (you)</span>
+                          )}
+                        </span>
                         <span className="text-muted-foreground">
                           ({user.email ?? 'no email on file'})
                         </span>

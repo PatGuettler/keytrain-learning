@@ -1,1466 +1,1832 @@
 [
   {
     "day": 1,
-    "reference": "Genesis 1:1"
+    "reference": "Genesis 1:1",
+    "text": "In the beginning, God created the heavens and the earth."
   },
   {
     "day": 2,
-    "reference": "Genesis 1:27"
+    "reference": "Genesis 1:27",
+    "text": "God created man in his own image. In God’s image he created him; male and female he created them."
   },
   {
     "day": 3,
-    "reference": "Genesis 2:7"
+    "reference": "Genesis 2:7",
+    "text": "The LORD God formed man from the dust of the ground, and breathed into his nostrils the breath of life; and man became a living soul."
   },
   {
     "day": 4,
-    "reference": "Genesis 3:15"
+    "reference": "Genesis 3:15",
+    "text": "I will put hostility between you and the woman, and between your offspring and her offspring. He will bruise your head, and you will bruise his heel.”"
   },
   {
     "day": 5,
-    "reference": "Genesis 12:1-3"
+    "reference": "Genesis 12:1-3",
+    "text": "1 Now the LORD said to Abram, “Leave your country, and your relatives, and your father’s house, and go to the land that I will show you.\n2 I will make of you a great nation. I will bless you and make your name great. You will be a blessing.\n3 I will bless those who bless you, and I will curse him who treats you with contempt. All the families of the earth will be blessed through you.”"
   },
   {
     "day": 6,
-    "reference": "Genesis 15:6"
+    "reference": "Genesis 15:6",
+    "text": "He believed in the LORD, who credited it to him for righteousness."
   },
   {
     "day": 7,
-    "reference": "Genesis 22:8"
+    "reference": "Genesis 22:8",
+    "text": "Abraham said, “God will provide himself the lamb for a burnt offering, my son.” So they both went together."
   },
   {
     "day": 8,
-    "reference": "Genesis 28:15"
+    "reference": "Genesis 28:15",
+    "text": "Behold, I am with you, and will keep you, wherever you go, and will bring you again into this land. For I will not leave you until I have done that which I have spoken of to you.”"
   },
   {
     "day": 9,
-    "reference": "Genesis 50:20"
+    "reference": "Genesis 50:20",
+    "text": "As for you, you meant evil against me, but God meant it for good, to save many people alive, as is happening today."
   },
   {
     "day": 10,
-    "reference": "Exodus 3:14"
+    "reference": "Exodus 3:14",
+    "text": "God said to Moses, “I AM WHO I AM,” and he said, “You shall tell the children of Israel this: ‘I AM has sent me to you.’”"
   },
   {
     "day": 11,
-    "reference": "Exodus 14:14"
+    "reference": "Exodus 14:14",
+    "text": "The LORD will fight for you, and you shall be still.”"
   },
   {
     "day": 12,
-    "reference": "Exodus 20:3-4"
+    "reference": "Exodus 20:3-4",
+    "text": "3 “You shall have no other gods before me.\n4 “You shall not make for yourselves an idol, nor any image of anything that is in the heavens above, or that is in the earth beneath, or that is in the water under the earth:"
   },
   {
     "day": 13,
-    "reference": "Exodus 33:14"
+    "reference": "Exodus 33:14",
+    "text": "He said, “My presence will go with you, and I will give you rest.”"
   },
   {
     "day": 14,
-    "reference": "Exodus 34:6-7"
+    "reference": "Exodus 34:6-7",
+    "text": "6 The LORD passed by before him, and proclaimed, “The LORD! The LORD, a merciful and gracious God, slow to anger, and abundant in loving kindness and truth,\n7 keeping loving kindness for thousands, forgiving iniquity and disobedience and sin; and who will by no means clear the guilty, visiting the iniquity of the fathers on the children, and on the children’s children, on the third and on the fourth generation.”"
   },
   {
     "day": 15,
-    "reference": "Leviticus 19:18"
+    "reference": "Leviticus 19:18",
+    "text": "“‘You shall not take vengeance, nor bear any grudge against the children of your people; but you shall love your neighbor as yourself. I am the LORD."
   },
   {
     "day": 16,
-    "reference": "Leviticus 20:26"
+    "reference": "Leviticus 20:26",
+    "text": "You shall be holy to me, for I, the LORD, am holy, and have set you apart from the peoples, that you should be mine."
   },
   {
     "day": 17,
-    "reference": "Numbers 6:24-26"
+    "reference": "Numbers 6:24-26",
+    "text": "24 ‘The LORD bless you, and keep you.\n25 The LORD make his face to shine on you, and be gracious to you.\n26 The LORD lift up his face toward you, and give you peace.’"
   },
   {
     "day": 18,
-    "reference": "Numbers 23:19"
+    "reference": "Numbers 23:19",
+    "text": "God is not a man, that he should lie, nor a son of man, that he should repent. Has he said, and he won’t do it? Or has he spoken, and he won’t make it good?"
   },
   {
     "day": 19,
-    "reference": "Deuteronomy 6:4-5"
+    "reference": "Deuteronomy 6:4-5",
+    "text": "4 Hear, Israel: The LORD is our God. The LORD is one.\n5 You shall love the LORD your God with all your heart, with all your soul, and with all your might."
   },
   {
     "day": 20,
-    "reference": "Deuteronomy 31:6"
+    "reference": "Deuteronomy 31:6",
+    "text": "Be strong and courageous. Don’t be afraid or scared of them, for the LORD your God himself is who goes with you. He will not fail you nor forsake you.”"
   },
   {
     "day": 21,
-    "reference": "Deuteronomy 32:4"
+    "reference": "Deuteronomy 32:4",
+    "text": "The Rock: his work is perfect, for all his ways are just. A God of faithfulness who does no wrong, just and right is he."
   },
   {
     "day": 22,
-    "reference": "Joshua 1:9"
+    "reference": "Joshua 1:9",
+    "text": "Haven’t I commanded you? Be strong and courageous. Don’t be afraid. Don’t be dismayed, for the LORD your God is with you wherever you go.”"
   },
   {
     "day": 23,
-    "reference": "Joshua 24:15"
+    "reference": "Joshua 24:15",
+    "text": "If it seems evil to you to serve the LORD, choose today whom you will serve; whether the gods which your fathers served that were beyond the River, or the gods of the Amorites, in whose land you dwell; but as for me and my house, we will serve the LORD.”"
   },
   {
     "day": 24,
-    "reference": "Judges 6:12"
+    "reference": "Judges 6:12",
+    "text": "The LORD’s angel appeared to him, and said to him, “The LORD is with you, you mighty man of valor!”"
   },
   {
     "day": 25,
-    "reference": "Judges 21:25"
+    "reference": "Judges 21:25",
+    "text": "In those days there was no king in Israel. Everyone did that which was right in his own eyes."
   },
   {
     "day": 26,
-    "reference": "Ruth 1:16"
+    "reference": "Ruth 1:16",
+    "text": "Ruth said, “Don’t urge me to leave you, and to return from following you, for where you go, I will go; and where you stay, I will stay. Your people will be my people, and your God my God."
   },
   {
     "day": 27,
-    "reference": "Ruth 2:12"
+    "reference": "Ruth 2:12",
+    "text": "May the LORD repay your work, and a full reward be given to you from the LORD, the God of Israel, under whose wings you have come to take refuge.”"
   },
   {
     "day": 28,
-    "reference": "1 Samuel 16:7"
+    "reference": "1 Samuel 16:7",
+    "text": "But the LORD said to Samuel, “Don’t look on his face, or on the height of his stature, because I have rejected him; for I don’t see as man sees. For man looks at the outward appearance, but the LORD looks at the heart.”"
   },
   {
     "day": 29,
-    "reference": "1 Samuel 17:47"
+    "reference": "1 Samuel 17:47",
+    "text": "and that all this assembly may know that the LORD doesn’t save with sword and spear; for the battle is the LORD’s, and he will give you into our hand.”"
   },
   {
     "day": 30,
-    "reference": "2 Samuel 7:22"
+    "reference": "2 Samuel 7:22",
+    "text": "Therefore you are great, LORD God. For there is no one like you, neither is there any God besides you, according to all that we have heard with our ears."
   },
   {
     "day": 31,
-    "reference": "2 Samuel 22:31"
+    "reference": "2 Samuel 22:31",
+    "text": "As for God, his way is perfect. The LORD’s word is tested. He is a shield to all those who take refuge in him."
   },
   {
     "day": 32,
-    "reference": "1 Kings 8:23"
+    "reference": "1 Kings 8:23",
+    "text": "and he said, “LORD, the God of Israel, there is no God like you, in heaven above, or on earth beneath; who keeps covenant and loving kindness with your servants who walk before you with all their heart;"
   },
   {
     "day": 33,
-    "reference": "1 Kings 18:39"
+    "reference": "1 Kings 18:39",
+    "text": "When all the people saw it, they fell on their faces. They said, “The LORD, he is God! The LORD, he is God!”"
   },
   {
     "day": 34,
-    "reference": "2 Kings 6:16"
+    "reference": "2 Kings 6:16",
+    "text": "He answered, “Don’t be afraid, for those who are with us are more than those who are with them.”"
   },
   {
     "day": 35,
-    "reference": "2 Kings 19:19"
+    "reference": "2 Kings 19:19",
+    "text": "Now therefore, LORD our God, save us, I beg you, out of his hand, that all the kingdoms of the earth may know that you, LORD, are God alone.”"
   },
   {
     "day": 36,
-    "reference": "1 Chronicles 16:34"
+    "reference": "1 Chronicles 16:34",
+    "text": "Oh give thanks to the LORD, for he is good, for his loving kindness endures forever."
   },
   {
     "day": 37,
-    "reference": "1 Chronicles 29:11"
+    "reference": "1 Chronicles 29:11",
+    "text": "Yours, LORD, is the greatness, the power, the glory, the victory, and the majesty! For all that is in the heavens and in the earth is yours. Yours is the kingdom, LORD, and you are exalted as head above all."
   },
   {
     "day": 38,
-    "reference": "2 Chronicles 7:14"
+    "reference": "2 Chronicles 7:14",
+    "text": "if my people who are called by my name will humble themselves, pray, seek my face, and turn from their wicked ways, then I will hear from heaven, will forgive their sin, and will heal their land."
   },
   {
     "day": 39,
-    "reference": "2 Chronicles 20:15"
+    "reference": "2 Chronicles 20:15",
+    "text": "and he said, “Listen, all Judah, and you inhabitants of Jerusalem, and you, King Jehoshaphat. The LORD says to you, ‘Don’t be afraid, and don’t be dismayed because of this great multitude; for the battle is not yours, but God’s."
   },
   {
     "day": 40,
-    "reference": "Ezra 7:10"
+    "reference": "Ezra 7:10",
+    "text": "For Ezra had set his heart to seek the LORD’s law, and to do it, and to teach statutes and ordinances in Israel."
   },
   {
     "day": 41,
-    "reference": "Ezra 8:22"
+    "reference": "Ezra 8:22",
+    "text": "For I was ashamed to ask of the king a band of soldiers and horsemen to help us against the enemy on the way, because we had spoken to the king, saying, “The hand of our God is on all those who seek him, for good; but his power and his wrath is against all those who forsake him.”"
   },
   {
     "day": 42,
-    "reference": "Nehemiah 8:10"
+    "reference": "Nehemiah 8:10",
+    "text": "Then he said to them, “Go your way. Eat the fat, drink the sweet, and send portions to him for whom nothing is prepared, for today is holy to our Lord. Don’t be grieved, for the joy of the LORD is your strength.”"
   },
   {
     "day": 43,
-    "reference": "Nehemiah 9:6"
+    "reference": "Nehemiah 9:6",
+    "text": "You are the LORD, even you alone. You have made heaven, the heaven of heavens, with all their army, the earth and all things that are on it, the seas and all that is in them, and you preserve them all. The army of heaven worships you."
   },
   {
     "day": 44,
-    "reference": "Esther 4:14"
+    "reference": "Esther 4:14",
+    "text": "For if you remain silent now, then relief and deliverance will come to the Jews from another place, but you and your father’s house will perish. Who knows if you haven’t come to the kingdom for such a time as this?”"
   },
   {
     "day": 45,
-    "reference": "Job 1:21"
+    "reference": "Job 1:21",
+    "text": "He said, “Naked I came out of my mother’s womb, and naked will I return there. The LORD gave, and the LORD has taken away. Blessed be the LORD’s name.”"
   },
   {
     "day": 46,
-    "reference": "Job 19:25"
+    "reference": "Job 19:25",
+    "text": "But as for me, I know that my Redeemer lives. In the end, he will stand upon the earth."
   },
   {
     "day": 47,
-    "reference": "Job 42:2"
+    "reference": "Job 42:2",
+    "text": "“I know that you can do all things, and that no purpose of yours can be restrained."
   },
   {
     "day": 48,
-    "reference": "Psalm 1:1-2"
+    "reference": "Psalm 1:1-2",
+    "text": "1 Blessed is the man who doesn’t walk in the counsel of the wicked, nor stand on the path of sinners, nor sit in the seat of scoffers;\n2 but his delight is in the LORD’s law. On his law he meditates day and night."
   },
   {
     "day": 49,
-    "reference": "Psalm 8:1"
+    "reference": "Psalm 8:1",
+    "text": "LORD, our Lord, how majestic is your name in all the earth! You have set your glory above the heavens!"
   },
   {
     "day": 50,
-    "reference": "Psalm 16:11"
+    "reference": "Psalm 16:11",
+    "text": "You will show me the path of life. In your presence is fullness of joy. In your right hand there are pleasures forever more."
   },
   {
     "day": 51,
-    "reference": "Psalm 19:1"
+    "reference": "Psalm 19:1",
+    "text": "The heavens declare the glory of God. The expanse shows his handiwork."
   },
   {
     "day": 52,
-    "reference": "Psalm 23:1"
+    "reference": "Psalm 23:1",
+    "text": "The LORD is my shepherd; I shall lack nothing."
   },
   {
     "day": 53,
-    "reference": "Psalm 27:1"
+    "reference": "Psalm 27:1",
+    "text": "The LORD is my light and my salvation. Whom shall I fear? The LORD is the strength of my life. Of whom shall I be afraid?"
   },
   {
     "day": 54,
-    "reference": "Psalm 32:8"
+    "reference": "Psalm 32:8",
+    "text": "I will instruct you and teach you in the way which you shall go. I will counsel you with my eye on you."
   },
   {
     "day": 55,
-    "reference": "Psalm 37:4"
+    "reference": "Psalm 37:4",
+    "text": "Also delight yourself in the LORD, and he will give you the desires of your heart."
   },
   {
     "day": 56,
-    "reference": "Psalm 46:1"
+    "reference": "Psalm 46:1",
+    "text": "God is our refuge and strength, a very present help in trouble."
   },
   {
     "day": 57,
-    "reference": "Psalm 46:10"
+    "reference": "Psalm 46:10",
+    "text": "“Be still, and know that I am God. I will be exalted among the nations. I will be exalted in the earth.”"
   },
   {
     "day": 58,
-    "reference": "Psalm 51:10"
+    "reference": "Psalm 51:10",
+    "text": "Create in me a clean heart, O God. Renew a right spirit within me."
   },
   {
     "day": 59,
-    "reference": "Psalm 55:22"
+    "reference": "Psalm 55:22",
+    "text": "Cast your burden on the LORD and he will sustain you. He will never allow the righteous to be moved."
   },
   {
     "day": 60,
-    "reference": "Psalm 62:1"
+    "reference": "Psalm 62:1",
+    "text": "My soul rests in God alone. My salvation is from him."
   },
   {
     "day": 61,
-    "reference": "Psalm 73:26"
+    "reference": "Psalm 73:26",
+    "text": "My flesh and my heart fails, but God is the strength of my heart and my portion forever."
   },
   {
     "day": 62,
-    "reference": "Psalm 84:11"
+    "reference": "Psalm 84:11",
+    "text": "For the LORD God is a sun and a shield. The LORD will give grace and glory. He withholds no good thing from those who walk blamelessly."
   },
   {
     "day": 63,
-    "reference": "Psalm 90:2"
+    "reference": "Psalm 90:2",
+    "text": "Before the mountains were born, before you had formed the earth and the world, even from everlasting to everlasting, you are God."
   },
   {
     "day": 64,
-    "reference": "Psalm 91:1"
+    "reference": "Psalm 91:1",
+    "text": "He who dwells in the secret place of the Most High will rest in the shadow of the Almighty."
   },
   {
     "day": 65,
-    "reference": "Psalm 100:4"
+    "reference": "Psalm 100:4",
+    "text": "Enter into his gates with thanksgiving, and into his courts with praise. Give thanks to him, and bless his name."
   },
   {
     "day": 66,
-    "reference": "Psalm 103:12"
+    "reference": "Psalm 103:12",
+    "text": "As far as the east is from the west, so far has he removed our transgressions from us."
   },
   {
     "day": 67,
-    "reference": "Psalm 119:11"
+    "reference": "Psalm 119:11",
+    "text": "I have hidden your word in my heart, that I might not sin against you."
   },
   {
     "day": 68,
-    "reference": "Psalm 119:105"
+    "reference": "Psalm 119:105",
+    "text": "Your word is a lamp to my feet, and a light for my path."
   },
   {
     "day": 69,
-    "reference": "Psalm 121:1-2"
+    "reference": "Psalm 121:1-2",
+    "text": "1 I will lift up my eyes to the hills. Where does my help come from?\n2 My help comes from the LORD, who made heaven and earth."
   },
   {
     "day": 70,
-    "reference": "Psalm 139:14"
+    "reference": "Psalm 139:14",
+    "text": "I will give thanks to you, for I am fearfully and wonderfully made. Your works are wonderful. My soul knows that very well."
   },
   {
     "day": 71,
-    "reference": "Psalm 145:18"
+    "reference": "Psalm 145:18",
+    "text": "The LORD is near to all those who call on him, to all who call on him in truth."
   },
   {
     "day": 72,
-    "reference": "Psalm 147:3"
+    "reference": "Psalm 147:3",
+    "text": "He heals the broken in heart, and binds up their wounds."
   },
   {
     "day": 73,
-    "reference": "Proverbs 1:7"
+    "reference": "Proverbs 1:7",
+    "text": "The fear of the LORD is the beginning of knowledge, but the foolish despise wisdom and instruction."
   },
   {
     "day": 74,
-    "reference": "Proverbs 3:5-6"
+    "reference": "Proverbs 3:5-6",
+    "text": "5 Trust in the LORD with all your heart, and don’t lean on your own understanding.\n6 In all your ways acknowledge him, and he will make your paths straight."
   },
   {
     "day": 75,
-    "reference": "Proverbs 3:9-10"
+    "reference": "Proverbs 3:9-10",
+    "text": "9 Honor the LORD with your substance, with the first fruits of all your increase;\n10 so your barns will be filled with plenty, and your vats will overflow with new wine."
   },
   {
     "day": 76,
-    "reference": "Proverbs 4:23"
+    "reference": "Proverbs 4:23",
+    "text": "Keep your heart with all diligence, for out of it is the wellspring of life."
   },
   {
     "day": 77,
-    "reference": "Proverbs 9:10"
+    "reference": "Proverbs 9:10",
+    "text": "The fear of the LORD is the beginning of wisdom. The knowledge of the Holy One is understanding."
   },
   {
     "day": 78,
-    "reference": "Proverbs 11:25"
+    "reference": "Proverbs 11:25",
+    "text": "The liberal soul shall be made fat. He who waters shall be watered also himself."
   },
   {
     "day": 79,
-    "reference": "Proverbs 16:3"
+    "reference": "Proverbs 16:3",
+    "text": "Commit your deeds to the LORD, and your plans shall succeed."
   },
   {
     "day": 80,
-    "reference": "Proverbs 16:9"
+    "reference": "Proverbs 16:9",
+    "text": "A man’s heart plans his course, but the LORD directs his steps."
   },
   {
     "day": 81,
-    "reference": "Proverbs 18:10"
+    "reference": "Proverbs 18:10",
+    "text": "The LORD’s name is a strong tower: the righteous run to him, and are safe."
   },
   {
     "day": 82,
-    "reference": "Proverbs 22:6"
+    "reference": "Proverbs 22:6",
+    "text": "Train up a child in the way he should go, and when he is old he will not depart from it."
   },
   {
     "day": 83,
-    "reference": "Proverbs 27:17"
+    "reference": "Proverbs 27:17",
+    "text": "Iron sharpens iron; so a man sharpens his friend’s countenance."
   },
   {
     "day": 84,
-    "reference": "Proverbs 28:13"
+    "reference": "Proverbs 28:13",
+    "text": "He who conceals his sins doesn’t prosper, but whoever confesses and renounces them finds mercy."
   },
   {
     "day": 85,
-    "reference": "Proverbs 29:18"
+    "reference": "Proverbs 29:18",
+    "text": "Where there is no revelation, the people cast off restraint; but one who keeps the law is blessed."
   },
   {
     "day": 86,
-    "reference": "Proverbs 31:30"
+    "reference": "Proverbs 31:30",
+    "text": "Charm is deceitful, and beauty is vain; but a woman who fears the LORD, she shall be praised."
   },
   {
     "day": 87,
-    "reference": "Ecclesiastes 3:1"
+    "reference": "Ecclesiastes 3:1",
+    "text": "For everything there is a season, and a time for every purpose under heaven:"
   },
   {
     "day": 88,
-    "reference": "Ecclesiastes 12:13"
+    "reference": "Ecclesiastes 12:13",
+    "text": "This is the end of the matter. All has been heard. Fear God and keep his commandments; for this is the whole duty of man."
   },
   {
     "day": 89,
-    "reference": "Song of Solomon 2:4"
+    "reference": "Song of Solomon 2:4",
+    "text": "He brought me to the banquet hall. His banner over me is love."
   },
   {
     "day": 90,
-    "reference": "Isaiah 6:8"
+    "reference": "Isaiah 6:8",
+    "text": "I heard the Lord’s voice, saying, “Whom shall I send, and who will go for us?” Then I said, “Here I am. Send me!”"
   },
   {
     "day": 91,
-    "reference": "Isaiah 9:6"
+    "reference": "Isaiah 9:6",
+    "text": "For a child is born to us. A son is given to us; and the government will be on his shoulders. His name will be called Wonderful Counselor, Mighty God, Everlasting Father, Prince of Peace."
   },
   {
     "day": 92,
-    "reference": "Isaiah 26:3"
+    "reference": "Isaiah 26:3",
+    "text": "You will keep whoever’s mind is steadfast in perfect peace, because he trusts in you."
   },
   {
     "day": 93,
-    "reference": "Isaiah 40:8"
+    "reference": "Isaiah 40:8",
+    "text": "The grass withers, the flower fades; but the word of our God stands forever.”"
   },
   {
     "day": 94,
-    "reference": "Isaiah 40:31"
+    "reference": "Isaiah 40:31",
+    "text": "but those who wait for the LORD will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint."
   },
   {
     "day": 95,
-    "reference": "Isaiah 41:10"
+    "reference": "Isaiah 41:10",
+    "text": "Don’t you be afraid, for I am with you. Don’t be dismayed, for I am your God. I will strengthen you. Yes, I will help you. Yes, I will uphold you with the right hand of my righteousness."
   },
   {
     "day": 96,
-    "reference": "Isaiah 43:1"
+    "reference": "Isaiah 43:1",
+    "text": "But now the LORD who created you, Jacob, and he who formed you, Israel, says: “Don’t be afraid, for I have redeemed you. I have called you by your name. You are mine."
   },
   {
     "day": 97,
-    "reference": "Isaiah 53:5"
+    "reference": "Isaiah 53:5",
+    "text": "But he was pierced for our transgressions. He was crushed for our iniquities. The punishment that brought our peace was on him; and by his wounds we are healed."
   },
   {
     "day": 98,
-    "reference": "Isaiah 55:8-9"
+    "reference": "Isaiah 55:8-9",
+    "text": "8 “For my thoughts are not your thoughts, and your ways are not my ways,” says the LORD.\n9 “For as the heavens are higher than the earth, so are my ways higher than your ways, and my thoughts than your thoughts."
   },
   {
     "day": 99,
-    "reference": "Isaiah 61:1"
+    "reference": "Isaiah 61:1",
+    "text": "The Lord GOD’s Spirit is on me, because the LORD has anointed me to preach good news to the humble. He has sent me to bind up the broken hearted, to proclaim liberty to the captives and release to those who are bound,"
   },
   {
     "day": 100,
-    "reference": "Jeremiah 1:5"
+    "reference": "Jeremiah 1:5",
+    "text": "“Before I formed you in the womb, I knew you. Before you were born, I sanctified you. I have appointed you a prophet to the nations.”"
   },
   {
     "day": 101,
-    "reference": "Jeremiah 17:7-8"
+    "reference": "Jeremiah 17:7-8",
+    "text": "7 “Blessed is the man who trusts in the LORD, and whose confidence is in the LORD.\n8 For he will be as a tree planted by the waters, who spreads out its roots by the river, and will not fear when heat comes, but its leaf will be green, and will not be concerned in the year of drought. It won’t cease from yielding fruit."
   },
   {
     "day": 102,
-    "reference": "Jeremiah 29:11"
+    "reference": "Jeremiah 29:11",
+    "text": "For I know the thoughts that I think toward you,” says the LORD, “thoughts of peace, and not of evil, to give you hope and a future."
   },
   {
     "day": 103,
-    "reference": "Jeremiah 31:3"
+    "reference": "Jeremiah 31:3",
+    "text": "The LORD appeared of old to me, saying, “Yes, I have loved you with an everlasting love. Therefore I have drawn you with loving kindness."
   },
   {
     "day": 104,
-    "reference": "Jeremiah 33:3"
+    "reference": "Jeremiah 33:3",
+    "text": "‘Call to me, and I will answer you, and will show you great and difficult things, which you don’t know.’"
   },
   {
     "day": 105,
-    "reference": "Lamentations 3:22-23"
+    "reference": "Lamentations 3:22-23",
+    "text": "22 It is because of the LORD’s loving kindnesses that we are not consumed, because his mercies don’t fail.\n23 They are new every morning. Great is your faithfulness."
   },
   {
     "day": 106,
-    "reference": "Lamentations 3:24"
+    "reference": "Lamentations 3:24",
+    "text": "“The LORD is my portion,” says my soul. “Therefore I will hope in him.”"
   },
   {
     "day": 107,
-    "reference": "Ezekiel 36:26"
+    "reference": "Ezekiel 36:26",
+    "text": "I will also give you a new heart, and I will put a new spirit within you. I will take away the stony heart out of your flesh, and I will give you a heart of flesh."
   },
   {
     "day": 108,
-    "reference": "Ezekiel 37:5"
+    "reference": "Ezekiel 37:5",
+    "text": "The Lord GOD says to these bones: “Behold, I will cause breath to enter into you, and you will live."
   },
   {
     "day": 109,
-    "reference": "Daniel 2:21"
+    "reference": "Daniel 2:21",
+    "text": "He changes the times and the seasons. He removes kings and sets up kings. He gives wisdom to the wise, and knowledge to those who have understanding."
   },
   {
     "day": 110,
-    "reference": "Daniel 3:17-18"
+    "reference": "Daniel 3:17-18",
+    "text": "17 If it happens, our God whom we serve is able to deliver us from the burning fiery furnace; and he will deliver us out of your hand, O king.\n18 But if not, let it be known to you, O king, that we will not serve your gods or worship the golden image which you have set up.”"
   },
   {
     "day": 111,
-    "reference": "Daniel 6:23"
+    "reference": "Daniel 6:23",
+    "text": "Then the king was exceedingly glad, and commanded that they should take Daniel up out of the den. So Daniel was taken up out of the den, and no kind of harm was found on him, because he had trusted in his God."
   },
   {
     "day": 112,
-    "reference": "Hosea 6:6"
+    "reference": "Hosea 6:6",
+    "text": "For I desire mercy, and not sacrifice; and the knowledge of God more than burnt offerings."
   },
   {
     "day": 113,
-    "reference": "Hosea 14:4"
+    "reference": "Hosea 14:4",
+    "text": "“I will heal their waywardness. I will love them freely; for my anger is turned away from them."
   },
   {
     "day": 114,
-    "reference": "Joel 2:13"
+    "reference": "Joel 2:13",
+    "text": "Tear your heart and not your garments, and turn to the LORD, your God; for he is gracious and merciful, slow to anger, and abundant in loving kindness, and relents from sending calamity."
   },
   {
     "day": 115,
-    "reference": "Joel 2:28"
+    "reference": "Joel 2:28",
+    "text": "“It will happen afterward, that I will pour out my Spirit on all flesh; and your sons and your daughters will prophesy. Your old men will dream dreams. Your young men will see visions."
   },
   {
     "day": 116,
-    "reference": "Amos 5:24"
+    "reference": "Amos 5:24",
+    "text": "But let justice roll on like rivers, and righteousness like a mighty stream."
   },
   {
     "day": 117,
-    "reference": "Obadiah 1:15"
+    "reference": "Obadiah 1:15",
+    "text": "For the day of the LORD is near all the nations! As you have done, it will be done to you. Your deeds will return upon your own head."
   },
   {
     "day": 118,
-    "reference": "Jonah 2:2"
+    "reference": "Jonah 2:2",
+    "text": "He said, “I called because of my affliction to the LORD. He answered me. Out of the belly of Sheol I cried. You heard my voice."
   },
   {
     "day": 119,
-    "reference": "Micah 6:8"
+    "reference": "Micah 6:8",
+    "text": "He has shown you, O man, what is good. What does the LORD require of you, but to act justly, to love mercy, and to walk humbly with your God?"
   },
   {
     "day": 120,
-    "reference": "Micah 7:18"
+    "reference": "Micah 7:18",
+    "text": "Who is a God like you, who pardons iniquity, and passes over the disobedience of the remnant of his heritage? He doesn’t retain his anger forever, because he delights in loving kindness."
   },
   {
     "day": 121,
-    "reference": "Nahum 1:7"
+    "reference": "Nahum 1:7",
+    "text": "The LORD is good, a stronghold in the day of trouble; and he knows those who take refuge in him."
   },
   {
     "day": 122,
-    "reference": "Habakkuk 2:4"
+    "reference": "Habakkuk 2:4",
+    "text": "Behold, his soul is puffed up. It is not upright in him, but the righteous will live by his faith."
   },
   {
     "day": 123,
-    "reference": "Habakkuk 3:19"
+    "reference": "Habakkuk 3:19",
+    "text": "GOD, the Lord, is my strength. He makes my feet like deer’s feet, and enables me to go in high places. For the music director, on my stringed instruments."
   },
   {
     "day": 124,
-    "reference": "Zephaniah 3:17"
+    "reference": "Zephaniah 3:17",
+    "text": "The LORD, your God, is among you, a mighty one who will save. He will rejoice over you with joy. He will calm you in his love. He will rejoice over you with singing."
   },
   {
     "day": 125,
-    "reference": "Haggai 2:9"
+    "reference": "Haggai 2:9",
+    "text": "‘The latter glory of this house will be greater than the former,’ says the LORD of Armies; ‘and in this place I will give peace,’ says the LORD of Armies.”"
   },
   {
     "day": 126,
-    "reference": "Zechariah 4:6"
+    "reference": "Zechariah 4:6",
+    "text": "Then he answered and spoke to me, saying, “This is the LORD’s word to Zerubbabel, saying, ‘Not by might, nor by power, but by my Spirit,’ says the LORD of Armies."
   },
   {
     "day": 127,
-    "reference": "Zechariah 9:9"
+    "reference": "Zechariah 9:9",
+    "text": "Rejoice greatly, daughter of Zion! Shout, daughter of Jerusalem! Behold, your King comes to you! He is righteous, and having salvation; lowly, and riding on a donkey, even on a colt, the foal of a donkey."
   },
   {
     "day": 128,
-    "reference": "Malachi 3:6"
+    "reference": "Malachi 3:6",
+    "text": "“For I, the LORD, don’t change; therefore you, sons of Jacob, are not consumed."
   },
   {
     "day": 129,
-    "reference": "Malachi 4:2"
+    "reference": "Malachi 4:2",
+    "text": "But to you who fear my name shall the sun of righteousness arise with healing in its wings. You will go out and leap like calves of the stall."
   },
   {
     "day": 130,
-    "reference": "Matthew 1:21"
+    "reference": "Matthew 1:21",
+    "text": "She shall give birth to a son. You shall name him Jesus, for it is he who shall save his people from their sins.”"
   },
   {
     "day": 131,
-    "reference": "Matthew 4:19"
+    "reference": "Matthew 4:19",
+    "text": "He said to them, “Come after me, and I will make you fishers for men.”"
   },
   {
     "day": 132,
-    "reference": "Matthew 5:3-4"
+    "reference": "Matthew 5:3-4",
+    "text": "3 “Blessed are the poor in spirit, for theirs is the Kingdom of Heaven.\n4 Blessed are those who mourn, for they shall be comforted."
   },
   {
     "day": 133,
-    "reference": "Matthew 5:14"
+    "reference": "Matthew 5:14",
+    "text": "“You are the light of the world. A city located on a hill can’t be hidden."
   },
   {
     "day": 134,
-    "reference": "Matthew 5:16"
+    "reference": "Matthew 5:16",
+    "text": "Even so, let your light shine before men, that they may see your good works and glorify your Father who is in heaven."
   },
   {
     "day": 135,
-    "reference": "Matthew 6:9-10"
+    "reference": "Matthew 6:9-10",
+    "text": "9 Pray like this: “‘Our Father in heaven, may your name be kept holy.\n10 Let your Kingdom come. Let your will be done on earth as it is in heaven."
   },
   {
     "day": 136,
-    "reference": "Matthew 6:33"
+    "reference": "Matthew 6:33",
+    "text": "But seek first God’s Kingdom and his righteousness; and all these things will be given to you as well."
   },
   {
     "day": 137,
-    "reference": "Matthew 7:7"
+    "reference": "Matthew 7:7",
+    "text": "“Ask, and it will be given you. Seek, and you will find. Knock, and it will be opened for you."
   },
   {
     "day": 138,
-    "reference": "Matthew 11:28-29"
+    "reference": "Matthew 11:28-29",
+    "text": "28 “Come to me, all you who labor and are heavily burdened, and I will give you rest.\n29 Take my yoke upon you and learn from me, for I am gentle and humble in heart; and you will find rest for your souls."
   },
   {
     "day": 139,
-    "reference": "Matthew 16:24"
+    "reference": "Matthew 16:24",
+    "text": "Then Jesus said to his disciples, “If anyone desires to come after me, let him deny himself, take up his cross, and follow me."
   },
   {
     "day": 140,
-    "reference": "Matthew 18:20"
+    "reference": "Matthew 18:20",
+    "text": "For where two or three are gathered together in my name, there I am in the middle of them.”"
   },
   {
     "day": 141,
-    "reference": "Matthew 19:26"
+    "reference": "Matthew 19:26",
+    "text": "Looking at them, Jesus said, “With men this is impossible, but with God all things are possible.”"
   },
   {
     "day": 142,
-    "reference": "Matthew 22:37-39"
+    "reference": "Matthew 22:37-39",
+    "text": "37 Jesus said to him, “‘You shall love the Lord your God with all your heart, with all your soul, and with all your mind.’\n38 This is the first and great commandment.\n39 A second likewise is this, ‘You shall love your neighbor as yourself.’"
   },
   {
     "day": 143,
-    "reference": "Matthew 28:18-20"
+    "reference": "Matthew 28:18-20",
+    "text": "18 Jesus came to them and spoke to them, saying, “All authority has been given to me in heaven and on earth.\n19 Go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit,\n20 teaching them to observe all things that I commanded you. Behold, I am with you always, even to the end of the age.” Amen."
   },
   {
     "day": 144,
-    "reference": "Mark 1:15"
+    "reference": "Mark 1:15",
+    "text": "and saying, “The time is fulfilled, and God’s Kingdom is at hand! Repent, and believe in the Good News.”"
   },
   {
     "day": 145,
-    "reference": "Mark 10:45"
+    "reference": "Mark 10:45",
+    "text": "For the Son of Man also came not to be served but to serve, and to give his life as a ransom for many.”"
   },
   {
     "day": 146,
-    "reference": "Mark 12:30-31"
+    "reference": "Mark 12:30-31",
+    "text": "30 You shall love the Lord your God with all your heart, with all your soul, with all your mind, and with all your strength.’ This is the first commandment.\n31 The second is like this: ‘You shall love your neighbor as yourself.’ There is no other commandment greater than these.”"
   },
   {
     "day": 147,
-    "reference": "Mark 16:15"
+    "reference": "Mark 16:15",
+    "text": "He said to them, “Go into all the world and preach the Good News to the whole creation."
   },
   {
     "day": 148,
-    "reference": "Luke 1:37"
+    "reference": "Luke 1:37",
+    "text": "For nothing spoken by God is impossible.”"
   },
   {
     "day": 149,
-    "reference": "Luke 2:10-11"
+    "reference": "Luke 2:10-11",
+    "text": "10 The angel said to them, “Don’t be afraid, for behold, I bring you good news of great joy which will be to all the people.\n11 For there is born to you today, in David’s city, a Savior, who is Christ the Lord."
   },
   {
     "day": 150,
-    "reference": "Luke 6:31"
+    "reference": "Luke 6:31",
+    "text": "“As you would like people to do to you, do exactly so to them."
   },
   {
     "day": 151,
-    "reference": "Luke 9:23"
+    "reference": "Luke 9:23",
+    "text": "He said to all, “If anyone desires to come after me, let him deny himself, take up his cross, and follow me."
   },
   {
     "day": 152,
-    "reference": "Luke 11:9"
+    "reference": "Luke 11:9",
+    "text": "“I tell you, keep asking, and it will be given you. Keep seeking, and you will find. Keep knocking, and it will be opened to you."
   },
   {
     "day": 153,
-    "reference": "Luke 12:32"
+    "reference": "Luke 12:32",
+    "text": "“Don’t be afraid, little flock, for it is your Father’s good pleasure to give you the Kingdom."
   },
   {
     "day": 154,
-    "reference": "Luke 15:7"
+    "reference": "Luke 15:7",
+    "text": "I tell you that even so there will be more joy in heaven over one sinner who repents, than over ninety-nine righteous people who need no repentance."
   },
   {
     "day": 155,
-    "reference": "Luke 18:27"
+    "reference": "Luke 18:27",
+    "text": "But he said, “The things which are impossible with men are possible with God.”"
   },
   {
     "day": 156,
-    "reference": "Luke 24:32"
+    "reference": "Luke 24:32",
+    "text": "They said to one another, “Weren’t our hearts burning within us while he spoke to us along the way, and while he opened the Scriptures to us?”"
   },
   {
     "day": 157,
-    "reference": "John 1:1"
+    "reference": "John 1:1",
+    "text": "In the beginning was the Word, and the Word was with God, and the Word was God."
   },
   {
     "day": 158,
-    "reference": "John 1:12"
+    "reference": "John 1:12",
+    "text": "But as many as received him, to them he gave the right to become God’s children, to those who believe in his name:"
   },
   {
     "day": 159,
-    "reference": "John 1:14"
+    "reference": "John 1:14",
+    "text": "The Word became flesh and lived among us. We saw his glory, such glory as of the only born Son of the Father, full of grace and truth."
   },
   {
     "day": 160,
-    "reference": "John 3:16"
+    "reference": "John 3:16",
+    "text": "For God so loved the world, that he gave his only born Son, that whoever believes in him should not perish, but have eternal life."
   },
   {
     "day": 161,
-    "reference": "John 3:17"
+    "reference": "John 3:17",
+    "text": "For God didn’t send his Son into the world to judge the world, but that the world should be saved through him."
   },
   {
     "day": 162,
-    "reference": "John 4:24"
+    "reference": "John 4:24",
+    "text": "God is spirit, and those who worship him must worship in spirit and truth.”"
   },
   {
     "day": 163,
-    "reference": "John 6:35"
+    "reference": "John 6:35",
+    "text": "Jesus said to them, “I am the bread of life. Whoever comes to me will not be hungry, and whoever believes in me will never be thirsty."
   },
   {
     "day": 164,
-    "reference": "John 8:12"
+    "reference": "John 8:12",
+    "text": "Again, therefore, Jesus spoke to them, saying, “I am the light of the world. He who follows me will not walk in the darkness, but will have the light of life.”"
   },
   {
     "day": 165,
-    "reference": "John 8:32"
+    "reference": "John 8:32",
+    "text": "You will know the truth, and the truth will make you free.”"
   },
   {
     "day": 166,
-    "reference": "John 10:10"
+    "reference": "John 10:10",
+    "text": "The thief only comes to steal, kill, and destroy. I came that they may have life, and may have it abundantly."
   },
   {
     "day": 167,
-    "reference": "John 10:11"
+    "reference": "John 10:11",
+    "text": "“I am the good shepherd. The good shepherd lays down his life for the sheep."
   },
   {
     "day": 168,
-    "reference": "John 11:25"
+    "reference": "John 11:25",
+    "text": "Jesus said to her, “I am the resurrection and the life. He who believes in me will still live, even if he dies."
   },
   {
     "day": 169,
-    "reference": "John 14:6"
+    "reference": "John 14:6",
+    "text": "Jesus said to him, “I am the way, the truth, and the life. No one comes to the Father, except through me."
   },
   {
     "day": 170,
-    "reference": "John 14:27"
+    "reference": "John 14:27",
+    "text": "Peace I leave with you. My peace I give to you; not as the world gives, I give to you. Don’t let your heart be troubled, neither let it be fearful."
   },
   {
     "day": 171,
-    "reference": "John 15:5"
+    "reference": "John 15:5",
+    "text": "I am the vine. You are the branches. He who remains in me and I in him bears much fruit, for apart from me you can do nothing."
   },
   {
     "day": 172,
-    "reference": "John 15:13"
+    "reference": "John 15:13",
+    "text": "Greater love has no one than this, that someone lay down his life for his friends."
   },
   {
     "day": 173,
-    "reference": "John 16:33"
+    "reference": "John 16:33",
+    "text": "I have told you these things, that in me you may have peace. In the world you have trouble; but cheer up! I have overcome the world.”"
   },
   {
     "day": 174,
-    "reference": "John 17:3"
+    "reference": "John 17:3",
+    "text": "This is eternal life, that they should know you, the only true God, and him whom you sent, Jesus Christ."
   },
   {
     "day": 175,
-    "reference": "John 20:31"
+    "reference": "John 20:31",
+    "text": "but these are written that you may believe that Jesus is the Christ, the Son of God, and that believing you may have life in his name."
   },
   {
     "day": 176,
-    "reference": "Acts 1:8"
+    "reference": "Acts 1:8",
+    "text": "But you will receive power when the Holy Spirit has come upon you. You will be witnesses to me in Jerusalem, in all Judea and Samaria, and to the uttermost parts of the earth.”"
   },
   {
     "day": 177,
-    "reference": "Acts 2:38"
+    "reference": "Acts 2:38",
+    "text": "Peter said to them, “Repent and be baptized, every one of you, in the name of Jesus Christ for the forgiveness of sins, and you will receive the gift of the Holy Spirit."
   },
   {
     "day": 178,
-    "reference": "Acts 4:12"
+    "reference": "Acts 4:12",
+    "text": "There is salvation in no one else, for there is no other name under heaven that is given among men, by which we must be saved!”"
   },
   {
     "day": 179,
-    "reference": "Acts 16:31"
+    "reference": "Acts 16:31",
+    "text": "They said, “Believe in the Lord Jesus Christ, and you will be saved, you and your household.”"
   },
   {
     "day": 180,
-    "reference": "Acts 17:28"
+    "reference": "Acts 17:28",
+    "text": "‘For in him we live, move, and have our being.’ As some of your own poets have said, ‘For we are also his offspring.’"
   },
   {
     "day": 181,
-    "reference": "Acts 20:24"
+    "reference": "Acts 20:24",
+    "text": "But these things don’t count; nor do I hold my life dear to myself, so that I may finish my race with joy, and the ministry which I received from the Lord Jesus, to fully testify to the Good News of the grace of God."
   },
   {
     "day": 182,
-    "reference": "Romans 1:16"
+    "reference": "Romans 1:16",
+    "text": "For I am not ashamed of the Good News of Christ, because it is the power of God for salvation for everyone who believes, for the Jew first, and also for the Greek."
   },
   {
     "day": 183,
-    "reference": "Romans 3:23"
+    "reference": "Romans 3:23",
+    "text": "for all have sinned, and fall short of the glory of God;"
   },
   {
     "day": 184,
-    "reference": "Romans 5:8"
+    "reference": "Romans 5:8",
+    "text": "But God commends his own love toward us, in that while we were yet sinners, Christ died for us."
   },
   {
     "day": 185,
-    "reference": "Romans 6:23"
+    "reference": "Romans 6:23",
+    "text": "For the wages of sin is death, but the free gift of God is eternal life in Christ Jesus our Lord."
   },
   {
     "day": 186,
-    "reference": "Romans 8:1"
+    "reference": "Romans 8:1",
+    "text": "There is therefore now no condemnation to those who are in Christ Jesus, who don’t walk according to the flesh, but according to the Spirit."
   },
   {
     "day": 187,
-    "reference": "Romans 8:28"
+    "reference": "Romans 8:28",
+    "text": "We know that all things work together for good for those who love God, for those who are called according to his purpose."
   },
   {
     "day": 188,
-    "reference": "Romans 8:38-39"
+    "reference": "Romans 8:38-39",
+    "text": "38 For I am persuaded that neither death, nor life, nor angels, nor principalities, nor things present, nor things to come, nor powers,\n39 nor height, nor depth, nor any other created thing will be able to separate us from God’s love which is in Christ Jesus our Lord."
   },
   {
     "day": 189,
-    "reference": "Romans 10:9"
+    "reference": "Romans 10:9",
+    "text": "that if you will confess with your mouth that Jesus is Lord and believe in your heart that God raised him from the dead, you will be saved."
   },
   {
     "day": 190,
-    "reference": "Romans 12:1-2"
+    "reference": "Romans 12:1-2",
+    "text": "1 Therefore I urge you, brothers, by the mercies of God, to present your bodies a living sacrifice, holy, acceptable to God, which is your spiritual service.\n2 Don’t be conformed to this world, but be transformed by the renewing of your mind, so that you may prove what is the good, well-pleasing, and perfect will of God."
   },
   {
     "day": 191,
-    "reference": "Romans 12:12"
+    "reference": "Romans 12:12",
+    "text": "rejoicing in hope, enduring in troubles, continuing steadfastly in prayer,"
   },
   {
     "day": 192,
-    "reference": "Romans 15:13"
+    "reference": "Romans 15:13",
+    "text": "Now may the God of hope fill you with all joy and peace in believing, that you may abound in hope in the power of the Holy Spirit."
   },
   {
     "day": 193,
-    "reference": "1 Corinthians 1:18"
+    "reference": "1 Corinthians 1:18",
+    "text": "For the word of the cross is foolishness to those who are dying, but to us who are being saved it is the power of God."
   },
   {
     "day": 194,
-    "reference": "1 Corinthians 6:19-20"
+    "reference": "1 Corinthians 6:19-20",
+    "text": "19 Or don’t you know that your body is a temple of the Holy Spirit who is in you, whom you have from God? You are not your own,\n20 for you were bought with a price. Therefore glorify God in your body and in your spirit, which are God’s."
   },
   {
     "day": 195,
-    "reference": "1 Corinthians 10:13"
+    "reference": "1 Corinthians 10:13",
+    "text": "No temptation has taken you except what is common to man. God is faithful, who will not allow you to be tempted above what you are able, but will with the temptation also make the way of escape, that you may be able to endure it."
   },
   {
     "day": 196,
-    "reference": "1 Corinthians 12:27"
+    "reference": "1 Corinthians 12:27",
+    "text": "Now you are the body of Christ, and members individually."
   },
   {
     "day": 197,
-    "reference": "1 Corinthians 13:4-7"
+    "reference": "1 Corinthians 13:4-7",
+    "text": "4 Love is patient and is kind. Love doesn’t envy. Love doesn’t brag, is not proud,\n5 doesn’t behave itself inappropriately, doesn’t seek its own way, is not provoked, takes no account of evil;\n6 doesn’t rejoice in unrighteousness, but rejoices with the truth;\n7 bears all things, believes all things, hopes all things, and endures all things."
   },
   {
     "day": 198,
-    "reference": "1 Corinthians 15:3-4"
+    "reference": "1 Corinthians 15:3-4",
+    "text": "3 For I delivered to you first of all that which I also received: that Christ died for our sins according to the Scriptures,\n4 that he was buried, that he was raised on the third day according to the Scriptures,"
   },
   {
     "day": 199,
-    "reference": "1 Corinthians 15:57"
+    "reference": "1 Corinthians 15:57",
+    "text": "But thanks be to God, who gives us the victory through our Lord Jesus Christ."
   },
   {
     "day": 200,
-    "reference": "2 Corinthians 1:3-4"
+    "reference": "2 Corinthians 1:3-4",
+    "text": "3 Blessed be the God and Father of our Lord Jesus Christ, the Father of mercies and God of all comfort,\n4 who comforts us in all our affliction, that we may be able to comfort those who are in any affliction, through the comfort with which we ourselves are comforted by God."
   },
   {
     "day": 201,
-    "reference": "2 Corinthians 3:17"
+    "reference": "2 Corinthians 3:17",
+    "text": "Now the Lord is the Spirit; and where the Spirit of the Lord is, there is liberty."
   },
   {
     "day": 202,
-    "reference": "2 Corinthians 4:16-18"
+    "reference": "2 Corinthians 4:16-18",
+    "text": "16 Therefore we don’t faint, but though our outward person is decaying, yet our inward person is renewed day by day.\n17 For our light affliction, which is for the moment, works for us more and more exceedingly an eternal weight of glory,\n18 while we don’t look at the things which are seen, but at the things which are not seen. For the things which are seen are temporal, but the things which are not seen are eternal."
   },
   {
     "day": 203,
-    "reference": "2 Corinthians 5:17"
+    "reference": "2 Corinthians 5:17",
+    "text": "Therefore if anyone is in Christ, he is a new creation. The old things have passed away. Behold, all things have become new."
   },
   {
     "day": 204,
-    "reference": "2 Corinthians 5:21"
+    "reference": "2 Corinthians 5:21",
+    "text": "For him who knew no sin he made to be sin on our behalf, so that in him we might become the righteousness of God."
   },
   {
     "day": 205,
-    "reference": "2 Corinthians 9:8"
+    "reference": "2 Corinthians 9:8",
+    "text": "And God is able to make all grace abound to you, that you, always having all sufficiency in everything, may abound to every good work."
   },
   {
     "day": 206,
-    "reference": "2 Corinthians 12:9"
+    "reference": "2 Corinthians 12:9",
+    "text": "He has said to me, “My grace is sufficient for you, for my power is made perfect in weakness.” Most gladly therefore I will rather glory in my weaknesses, that the power of Christ may rest on me."
   },
   {
     "day": 207,
-    "reference": "Galatians 2:20"
+    "reference": "Galatians 2:20",
+    "text": "I have been crucified with Christ, and it is no longer I who live, but Christ lives in me. That life which I now live in the flesh, I live by faith in the Son of God, who loved me and gave himself up for me."
   },
   {
     "day": 208,
-    "reference": "Galatians 5:22-23"
+    "reference": "Galatians 5:22-23",
+    "text": "22 But the fruit of the Spirit is love, joy, peace, patience, kindness, goodness, faith,\n23 gentleness, and self-control. Against such things there is no law."
   },
   {
     "day": 209,
-    "reference": "Galatians 6:2"
+    "reference": "Galatians 6:2",
+    "text": "Bear one another’s burdens, and so fulfill the law of Christ."
   },
   {
     "day": 210,
-    "reference": "Galatians 6:9"
+    "reference": "Galatians 6:9",
+    "text": "Let’s not be weary in doing good, for we will reap in due season if we don’t give up."
   },
   {
     "day": 211,
-    "reference": "Ephesians 1:7"
+    "reference": "Ephesians 1:7",
+    "text": "In him we have our redemption through his blood, the forgiveness of our trespasses, according to the riches of his grace"
   },
   {
     "day": 212,
-    "reference": "Ephesians 2:8-9"
+    "reference": "Ephesians 2:8-9",
+    "text": "8 for by grace you have been saved through faith, and that not of yourselves; it is the gift of God,\n9 not of works, that no one would boast."
   },
   {
     "day": 213,
-    "reference": "Ephesians 4:32"
+    "reference": "Ephesians 4:32",
+    "text": "And be kind to one another, tender hearted, forgiving each other, just as God also in Christ forgave you."
   },
   {
     "day": 214,
-    "reference": "Ephesians 6:10-11"
+    "reference": "Ephesians 6:10-11",
+    "text": "10 Finally, be strong in the Lord and in the strength of his might.\n11 Put on the whole armor of God, that you may be able to stand against the wiles of the devil."
   },
   {
     "day": 215,
-    "reference": "Philippians 1:6"
+    "reference": "Philippians 1:6",
+    "text": "being confident of this very thing, that he who began a good work in you will complete it until the day of Jesus Christ."
   },
   {
     "day": 216,
-    "reference": "Philippians 2:3-4"
+    "reference": "Philippians 2:3-4",
+    "text": "3 doing nothing through rivalry or through conceit, but in humility, each counting others better than himself;\n4 each of you not just looking to his own things, but each of you also to the things of others."
   },
   {
     "day": 217,
-    "reference": "Philippians 4:4"
+    "reference": "Philippians 4:4",
+    "text": "Rejoice in the Lord always! Again I will say, “Rejoice!”"
   },
   {
     "day": 218,
-    "reference": "Philippians 4:6-7"
+    "reference": "Philippians 4:6-7",
+    "text": "6 In nothing be anxious, but in everything, by prayer and petition with thanksgiving, let your requests be made known to God.\n7 And the peace of God, which surpasses all understanding, will guard your hearts and your thoughts in Christ Jesus."
   },
   {
     "day": 219,
-    "reference": "Philippians 4:13"
+    "reference": "Philippians 4:13",
+    "text": "I can do all things through Christ who strengthens me."
   },
   {
     "day": 220,
-    "reference": "Philippians 4:19"
+    "reference": "Philippians 4:19",
+    "text": "My God will supply every need of yours according to his riches in glory in Christ Jesus."
   },
   {
     "day": 221,
-    "reference": "Colossians 1:15-17"
+    "reference": "Colossians 1:15-17",
+    "text": "15 He is the image of the invisible God, the firstborn of all creation.\n16 For by him all things were created in the heavens and on the earth, visible things and invisible things, whether thrones or dominions or principalities or powers. All things have been created through him and for him.\n17 He is before all things, and in him all things are held together."
   },
   {
     "day": 222,
-    "reference": "Colossians 3:12-14"
+    "reference": "Colossians 3:12-14",
+    "text": "12 Put on therefore, as God’s chosen ones, holy and beloved, a heart of compassion, kindness, lowliness, humility, and perseverance;\n13 bearing with one another, and forgiving each other, if any man has a complaint against any; even as Christ forgave you, so you also do.\n14 Above all these things, walk in love, which is the bond of perfection."
   },
   {
     "day": 223,
-    "reference": "Colossians 3:23"
+    "reference": "Colossians 3:23",
+    "text": "And whatever you do, work heartily, as for the Lord and not for men,"
   },
   {
     "day": 224,
-    "reference": "1 Thessalonians 5:16-18"
+    "reference": "1 Thessalonians 5:16-18",
+    "text": "16 Always rejoice.\n17 Pray without ceasing.\n18 In everything give thanks, for this is the will of God in Christ Jesus toward you."
   },
   {
     "day": 225,
-    "reference": "1 Thessalonians 5:24"
+    "reference": "1 Thessalonians 5:24",
+    "text": "He who calls you is faithful, who will also do it."
   },
   {
     "day": 226,
-    "reference": "2 Thessalonians 3:3"
+    "reference": "2 Thessalonians 3:3",
+    "text": "But the Lord is faithful, who will establish you and guard you from the evil one."
   },
   {
     "day": 227,
-    "reference": "1 Timothy 1:15"
+    "reference": "1 Timothy 1:15",
+    "text": "The saying is faithful and worthy of all acceptance, that Christ Jesus came into the world to save sinners, of whom I am chief."
   },
   {
     "day": 228,
-    "reference": "1 Timothy 2:5"
+    "reference": "1 Timothy 2:5",
+    "text": "For there is one God and one mediator between God and men, the man Christ Jesus,"
   },
   {
     "day": 229,
-    "reference": "1 Timothy 4:12"
+    "reference": "1 Timothy 4:12",
+    "text": "Let no man despise your youth; but be an example to those who believe, in word, in your way of life, in love, in spirit, in faith, and in purity."
   },
   {
     "day": 230,
-    "reference": "1 Timothy 6:12"
+    "reference": "1 Timothy 6:12",
+    "text": "Fight the good fight of faith. Take hold of the eternal life to which you were called, and you confessed the good confession in the sight of many witnesses."
   },
   {
     "day": 231,
-    "reference": "2 Timothy 1:7"
+    "reference": "2 Timothy 1:7",
+    "text": "For God didn’t give us a spirit of fear, but of power, love, and self-control."
   },
   {
     "day": 232,
-    "reference": "2 Timothy 2:15"
+    "reference": "2 Timothy 2:15",
+    "text": "Give diligence to present yourself approved by God, a workman who doesn’t need to be ashamed, properly handling the Word of Truth."
   },
   {
     "day": 233,
-    "reference": "2 Timothy 3:16-17"
+    "reference": "2 Timothy 3:16-17",
+    "text": "16 Every Scripture is God-breathed and profitable for teaching, for reproof, for correction, and for instruction in righteousness,\n17 that each person who belongs to God may be complete, thoroughly equipped for every good work."
   },
   {
     "day": 234,
-    "reference": "2 Timothy 4:7"
+    "reference": "2 Timothy 4:7",
+    "text": "I have fought the good fight. I have finished the course. I have kept the faith."
   },
   {
     "day": 235,
-    "reference": "Titus 3:5"
+    "reference": "Titus 3:5",
+    "text": "not by works of righteousness which we did ourselves, but according to his mercy, he saved us through the washing of regeneration and renewing by the Holy Spirit,"
   },
   {
     "day": 236,
-    "reference": "Philemon 1:6"
+    "reference": "Philemon 1:6",
+    "text": "that the fellowship of your faith may become effective in the knowledge of every good thing which is in us in Christ Jesus."
   },
   {
     "day": 237,
-    "reference": "Hebrews 4:12"
+    "reference": "Hebrews 4:12",
+    "text": "For the word of God is living and active, and sharper than any two-edged sword, piercing even to the dividing of soul and spirit, of both joints and marrow, and is able to discern the thoughts and intentions of the heart."
   },
   {
     "day": 238,
-    "reference": "Hebrews 4:16"
+    "reference": "Hebrews 4:16",
+    "text": "Let’s therefore draw near with boldness to the throne of grace, that we may receive mercy and may find grace for help in time of need."
   },
   {
     "day": 239,
-    "reference": "Hebrews 10:23"
+    "reference": "Hebrews 10:23",
+    "text": "let’s hold fast the confession of our hope without wavering; for he who promised is faithful."
   },
   {
     "day": 240,
-    "reference": "Hebrews 11:1"
+    "reference": "Hebrews 11:1",
+    "text": "Now faith is assurance of things hoped for, proof of things not seen."
   },
   {
     "day": 241,
-    "reference": "Hebrews 11:6"
+    "reference": "Hebrews 11:6",
+    "text": "Without faith it is impossible to be well pleasing to him, for he who comes to God must believe that he exists, and that he is a rewarder of those who seek him."
   },
   {
     "day": 242,
-    "reference": "Hebrews 12:1-2"
+    "reference": "Hebrews 12:1-2",
+    "text": "1 Therefore let’s also, seeing we are surrounded by so great a cloud of witnesses, lay aside every weight and the sin which so easily entangles us, and let’s run with perseverance the race that is set before us,\n2 looking to Jesus, the author and perfecter of faith, who for the joy that was set before him endured the cross, despising its shame, and has sat down at the right hand of the throne of God."
   },
   {
     "day": 243,
-    "reference": "Hebrews 13:5-6"
+    "reference": "Hebrews 13:5-6",
+    "text": "5 Be free from the love of money, content with such things as you have, for he has said, “I will in no way leave you, neither will I in any way forsake you.”\n6 So that with good courage we say, “The Lord is my helper. I will not fear. What can man do to me?”"
   },
   {
     "day": 244,
-    "reference": "Hebrews 13:8"
+    "reference": "Hebrews 13:8",
+    "text": "Jesus Christ is the same yesterday, today, and forever."
   },
   {
     "day": 245,
-    "reference": "James 1:2-3"
+    "reference": "James 1:2-3",
+    "text": "2 Count it all joy, my brothers, when you fall into various temptations,\n3 knowing that the testing of your faith produces endurance."
   },
   {
     "day": 246,
-    "reference": "James 1:5"
+    "reference": "James 1:5",
+    "text": "But if any of you lacks wisdom, let him ask of God, who gives to all liberally and without reproach, and it will be given to him."
   },
   {
     "day": 247,
-    "reference": "James 1:17"
+    "reference": "James 1:17",
+    "text": "Every good gift and every perfect gift is from above, coming down from the Father of lights, with whom can be no variation nor turning shadow."
   },
   {
     "day": 248,
-    "reference": "James 4:7-8"
+    "reference": "James 4:7-8",
+    "text": "7 Be subject therefore to God. Resist the devil, and he will flee from you.\n8 Draw near to God, and he will draw near to you. Cleanse your hands, you sinners. Purify your hearts, you double-minded."
   },
   {
     "day": 249,
-    "reference": "James 5:16"
+    "reference": "James 5:16",
+    "text": "Confess your sins to one another and pray for one another, that you may be healed. The insistent prayer of a righteous person is powerfully effective."
   },
   {
     "day": 250,
-    "reference": "1 Peter 1:3"
+    "reference": "1 Peter 1:3",
+    "text": "Blessed be the God and Father of our Lord Jesus Christ, who according to his great mercy caused us to be born again to a living hope through the resurrection of Jesus Christ from the dead,"
   },
   {
     "day": 251,
-    "reference": "1 Peter 2:9"
+    "reference": "1 Peter 2:9",
+    "text": "But you are a chosen race, a royal priesthood, a holy nation, a people for God’s own possession, that you may proclaim the excellence of him who called you out of darkness into his marvelous light."
   },
   {
     "day": 252,
-    "reference": "1 Peter 3:15"
+    "reference": "1 Peter 3:15",
+    "text": "But sanctify the Lord God in your hearts. Always be ready to give an answer to everyone who asks you a reason concerning the hope that is in you, with humility and fear,"
   },
   {
     "day": 253,
-    "reference": "1 Peter 5:7"
+    "reference": "1 Peter 5:7",
+    "text": "casting all your worries on him, because he cares for you."
   },
   {
     "day": 254,
-    "reference": "2 Peter 1:3"
+    "reference": "2 Peter 1:3",
+    "text": "seeing that his divine power has granted to us all things that pertain to life and godliness, through the knowledge of him who called us by his own glory and virtue,"
   },
   {
     "day": 255,
-    "reference": "2 Peter 3:9"
+    "reference": "2 Peter 3:9",
+    "text": "The Lord is not slow concerning his promise, as some count slowness; but he is patient with us, not wishing that anyone should perish, but that all should come to repentance."
   },
   {
     "day": 256,
-    "reference": "1 John 1:9"
+    "reference": "1 John 1:9",
+    "text": "If we confess our sins, he is faithful and righteous to forgive us the sins and to cleanse us from all unrighteousness."
   },
   {
     "day": 257,
-    "reference": "1 John 3:1"
+    "reference": "1 John 3:1",
+    "text": "See how great a love the Father has given to us, that we should be called children of God! For this cause the world doesn’t know us, because it didn’t know him."
   },
   {
     "day": 258,
-    "reference": "1 John 4:7-8"
+    "reference": "1 John 4:7-8",
+    "text": "7 Beloved, let’s love one another, for love is of God; and everyone who loves has been born of God and knows God.\n8 He who doesn’t love doesn’t know God, for God is love."
   },
   {
     "day": 259,
-    "reference": "1 John 4:19"
+    "reference": "1 John 4:19",
+    "text": "We love him, because he first loved us."
   },
   {
     "day": 260,
-    "reference": "1 John 5:14"
+    "reference": "1 John 5:14",
+    "text": "This is the boldness which we have toward him, that if we ask anything according to his will, he listens to us."
   },
   {
     "day": 261,
-    "reference": "2 John 1:6"
+    "reference": "2 John 1:6",
+    "text": "This is love, that we should walk according to his commandments. This is the commandment, even as you heard from the beginning, that you should walk in it."
   },
   {
     "day": 262,
-    "reference": "3 John 1:4"
+    "reference": "3 John 1:4",
+    "text": "I have no greater joy than this: to hear about my children walking in truth."
   },
   {
     "day": 263,
-    "reference": "Jude 1:24-25"
+    "reference": "Jude 1:24-25",
+    "text": "24 Now to him who is able to keep them from stumbling, and to present you faultless before the presence of his glory in great joy,\n25 to God our Savior, who alone is wise, be glory and majesty, dominion and power, both now and forever. Amen."
   },
   {
     "day": 264,
-    "reference": "Revelation 1:8"
+    "reference": "Revelation 1:8",
+    "text": "“I am the Alpha and the Omega, ” says the Lord God, “who is and who was and who is to come, the Almighty.”"
   },
   {
     "day": 265,
-    "reference": "Revelation 3:20"
+    "reference": "Revelation 3:20",
+    "text": "Behold, I stand at the door and knock. If anyone hears my voice and opens the door, then I will come in to him and will dine with him, and he with me."
   },
   {
     "day": 266,
-    "reference": "Revelation 4:11"
+    "reference": "Revelation 4:11",
+    "text": "“Worthy are you, our Lord and God, the Holy One, to receive the glory, the honor, and the power, for you created all things, and because of your desire they existed and were created!”"
   },
   {
     "day": 267,
-    "reference": "Revelation 21:4"
+    "reference": "Revelation 21:4",
+    "text": "He will wipe away every tear from their eyes. Death will be no more; neither will there be mourning, nor crying, nor pain any more. The first things have passed away.”"
   },
   {
     "day": 268,
-    "reference": "Revelation 22:13"
+    "reference": "Revelation 22:13",
+    "text": "I am the Alpha and the Omega, the First and the Last, the Beginning and the End."
   },
   {
     "day": 269,
-    "reference": "Genesis 1:1"
+    "reference": "Genesis 1:1",
+    "text": "In the beginning, God created the heavens and the earth."
   },
   {
     "day": 270,
-    "reference": "Genesis 1:27"
+    "reference": "Genesis 1:27",
+    "text": "God created man in his own image. In God’s image he created him; male and female he created them."
   },
   {
     "day": 271,
-    "reference": "Genesis 2:7"
+    "reference": "Genesis 2:7",
+    "text": "The LORD God formed man from the dust of the ground, and breathed into his nostrils the breath of life; and man became a living soul."
   },
   {
     "day": 272,
-    "reference": "Genesis 3:15"
+    "reference": "Genesis 3:15",
+    "text": "I will put hostility between you and the woman, and between your offspring and her offspring. He will bruise your head, and you will bruise his heel.”"
   },
   {
     "day": 273,
-    "reference": "Genesis 12:1-3"
+    "reference": "Genesis 12:1-3",
+    "text": "1 Now the LORD said to Abram, “Leave your country, and your relatives, and your father’s house, and go to the land that I will show you.\n2 I will make of you a great nation. I will bless you and make your name great. You will be a blessing.\n3 I will bless those who bless you, and I will curse him who treats you with contempt. All the families of the earth will be blessed through you.”"
   },
   {
     "day": 274,
-    "reference": "Genesis 15:6"
+    "reference": "Genesis 15:6",
+    "text": "He believed in the LORD, who credited it to him for righteousness."
   },
   {
     "day": 275,
-    "reference": "Genesis 22:8"
+    "reference": "Genesis 22:8",
+    "text": "Abraham said, “God will provide himself the lamb for a burnt offering, my son.” So they both went together."
   },
   {
     "day": 276,
-    "reference": "Genesis 28:15"
+    "reference": "Genesis 28:15",
+    "text": "Behold, I am with you, and will keep you, wherever you go, and will bring you again into this land. For I will not leave you until I have done that which I have spoken of to you.”"
   },
   {
     "day": 277,
-    "reference": "Genesis 50:20"
+    "reference": "Genesis 50:20",
+    "text": "As for you, you meant evil against me, but God meant it for good, to save many people alive, as is happening today."
   },
   {
     "day": 278,
-    "reference": "Exodus 3:14"
+    "reference": "Exodus 3:14",
+    "text": "God said to Moses, “I AM WHO I AM,” and he said, “You shall tell the children of Israel this: ‘I AM has sent me to you.’”"
   },
   {
     "day": 279,
-    "reference": "Exodus 14:14"
+    "reference": "Exodus 14:14",
+    "text": "The LORD will fight for you, and you shall be still.”"
   },
   {
     "day": 280,
-    "reference": "Exodus 20:3-4"
+    "reference": "Exodus 20:3-4",
+    "text": "3 “You shall have no other gods before me.\n4 “You shall not make for yourselves an idol, nor any image of anything that is in the heavens above, or that is in the earth beneath, or that is in the water under the earth:"
   },
   {
     "day": 281,
-    "reference": "Exodus 33:14"
+    "reference": "Exodus 33:14",
+    "text": "He said, “My presence will go with you, and I will give you rest.”"
   },
   {
     "day": 282,
-    "reference": "Exodus 34:6-7"
+    "reference": "Exodus 34:6-7",
+    "text": "6 The LORD passed by before him, and proclaimed, “The LORD! The LORD, a merciful and gracious God, slow to anger, and abundant in loving kindness and truth,\n7 keeping loving kindness for thousands, forgiving iniquity and disobedience and sin; and who will by no means clear the guilty, visiting the iniquity of the fathers on the children, and on the children’s children, on the third and on the fourth generation.”"
   },
   {
     "day": 283,
-    "reference": "Leviticus 19:18"
+    "reference": "Leviticus 19:18",
+    "text": "“‘You shall not take vengeance, nor bear any grudge against the children of your people; but you shall love your neighbor as yourself. I am the LORD."
   },
   {
     "day": 284,
-    "reference": "Leviticus 20:26"
+    "reference": "Leviticus 20:26",
+    "text": "You shall be holy to me, for I, the LORD, am holy, and have set you apart from the peoples, that you should be mine."
   },
   {
     "day": 285,
-    "reference": "Numbers 6:24-26"
+    "reference": "Numbers 6:24-26",
+    "text": "24 ‘The LORD bless you, and keep you.\n25 The LORD make his face to shine on you, and be gracious to you.\n26 The LORD lift up his face toward you, and give you peace.’"
   },
   {
     "day": 286,
-    "reference": "Numbers 23:19"
+    "reference": "Numbers 23:19",
+    "text": "God is not a man, that he should lie, nor a son of man, that he should repent. Has he said, and he won’t do it? Or has he spoken, and he won’t make it good?"
   },
   {
     "day": 287,
-    "reference": "Deuteronomy 6:4-5"
+    "reference": "Deuteronomy 6:4-5",
+    "text": "4 Hear, Israel: The LORD is our God. The LORD is one.\n5 You shall love the LORD your God with all your heart, with all your soul, and with all your might."
   },
   {
     "day": 288,
-    "reference": "Deuteronomy 31:6"
+    "reference": "Deuteronomy 31:6",
+    "text": "Be strong and courageous. Don’t be afraid or scared of them, for the LORD your God himself is who goes with you. He will not fail you nor forsake you.”"
   },
   {
     "day": 289,
-    "reference": "Deuteronomy 32:4"
+    "reference": "Deuteronomy 32:4",
+    "text": "The Rock: his work is perfect, for all his ways are just. A God of faithfulness who does no wrong, just and right is he."
   },
   {
     "day": 290,
-    "reference": "Joshua 1:9"
+    "reference": "Joshua 1:9",
+    "text": "Haven’t I commanded you? Be strong and courageous. Don’t be afraid. Don’t be dismayed, for the LORD your God is with you wherever you go.”"
   },
   {
     "day": 291,
-    "reference": "Joshua 24:15"
+    "reference": "Joshua 24:15",
+    "text": "If it seems evil to you to serve the LORD, choose today whom you will serve; whether the gods which your fathers served that were beyond the River, or the gods of the Amorites, in whose land you dwell; but as for me and my house, we will serve the LORD.”"
   },
   {
     "day": 292,
-    "reference": "Judges 6:12"
+    "reference": "Judges 6:12",
+    "text": "The LORD’s angel appeared to him, and said to him, “The LORD is with you, you mighty man of valor!”"
   },
   {
     "day": 293,
-    "reference": "Judges 21:25"
+    "reference": "Judges 21:25",
+    "text": "In those days there was no king in Israel. Everyone did that which was right in his own eyes."
   },
   {
     "day": 294,
-    "reference": "Ruth 1:16"
+    "reference": "Ruth 1:16",
+    "text": "Ruth said, “Don’t urge me to leave you, and to return from following you, for where you go, I will go; and where you stay, I will stay. Your people will be my people, and your God my God."
   },
   {
     "day": 295,
-    "reference": "Ruth 2:12"
+    "reference": "Ruth 2:12",
+    "text": "May the LORD repay your work, and a full reward be given to you from the LORD, the God of Israel, under whose wings you have come to take refuge.”"
   },
   {
     "day": 296,
-    "reference": "1 Samuel 16:7"
+    "reference": "1 Samuel 16:7",
+    "text": "But the LORD said to Samuel, “Don’t look on his face, or on the height of his stature, because I have rejected him; for I don’t see as man sees. For man looks at the outward appearance, but the LORD looks at the heart.”"
   },
   {
     "day": 297,
-    "reference": "1 Samuel 17:47"
+    "reference": "1 Samuel 17:47",
+    "text": "and that all this assembly may know that the LORD doesn’t save with sword and spear; for the battle is the LORD’s, and he will give you into our hand.”"
   },
   {
     "day": 298,
-    "reference": "2 Samuel 7:22"
+    "reference": "2 Samuel 7:22",
+    "text": "Therefore you are great, LORD God. For there is no one like you, neither is there any God besides you, according to all that we have heard with our ears."
   },
   {
     "day": 299,
-    "reference": "2 Samuel 22:31"
+    "reference": "2 Samuel 22:31",
+    "text": "As for God, his way is perfect. The LORD’s word is tested. He is a shield to all those who take refuge in him."
   },
   {
     "day": 300,
-    "reference": "1 Kings 8:23"
+    "reference": "1 Kings 8:23",
+    "text": "and he said, “LORD, the God of Israel, there is no God like you, in heaven above, or on earth beneath; who keeps covenant and loving kindness with your servants who walk before you with all their heart;"
   },
   {
     "day": 301,
-    "reference": "1 Kings 18:39"
+    "reference": "1 Kings 18:39",
+    "text": "When all the people saw it, they fell on their faces. They said, “The LORD, he is God! The LORD, he is God!”"
   },
   {
     "day": 302,
-    "reference": "2 Kings 6:16"
+    "reference": "2 Kings 6:16",
+    "text": "He answered, “Don’t be afraid, for those who are with us are more than those who are with them.”"
   },
   {
     "day": 303,
-    "reference": "2 Kings 19:19"
+    "reference": "2 Kings 19:19",
+    "text": "Now therefore, LORD our God, save us, I beg you, out of his hand, that all the kingdoms of the earth may know that you, LORD, are God alone.”"
   },
   {
     "day": 304,
-    "reference": "1 Chronicles 16:34"
+    "reference": "1 Chronicles 16:34",
+    "text": "Oh give thanks to the LORD, for he is good, for his loving kindness endures forever."
   },
   {
     "day": 305,
-    "reference": "1 Chronicles 29:11"
+    "reference": "1 Chronicles 29:11",
+    "text": "Yours, LORD, is the greatness, the power, the glory, the victory, and the majesty! For all that is in the heavens and in the earth is yours. Yours is the kingdom, LORD, and you are exalted as head above all."
   },
   {
     "day": 306,
-    "reference": "2 Chronicles 7:14"
+    "reference": "2 Chronicles 7:14",
+    "text": "if my people who are called by my name will humble themselves, pray, seek my face, and turn from their wicked ways, then I will hear from heaven, will forgive their sin, and will heal their land."
   },
   {
     "day": 307,
-    "reference": "2 Chronicles 20:15"
+    "reference": "2 Chronicles 20:15",
+    "text": "and he said, “Listen, all Judah, and you inhabitants of Jerusalem, and you, King Jehoshaphat. The LORD says to you, ‘Don’t be afraid, and don’t be dismayed because of this great multitude; for the battle is not yours, but God’s."
   },
   {
     "day": 308,
-    "reference": "Ezra 7:10"
+    "reference": "Ezra 7:10",
+    "text": "For Ezra had set his heart to seek the LORD’s law, and to do it, and to teach statutes and ordinances in Israel."
   },
   {
     "day": 309,
-    "reference": "Ezra 8:22"
+    "reference": "Ezra 8:22",
+    "text": "For I was ashamed to ask of the king a band of soldiers and horsemen to help us against the enemy on the way, because we had spoken to the king, saying, “The hand of our God is on all those who seek him, for good; but his power and his wrath is against all those who forsake him.”"
   },
   {
     "day": 310,
-    "reference": "Nehemiah 8:10"
+    "reference": "Nehemiah 8:10",
+    "text": "Then he said to them, “Go your way. Eat the fat, drink the sweet, and send portions to him for whom nothing is prepared, for today is holy to our Lord. Don’t be grieved, for the joy of the LORD is your strength.”"
   },
   {
     "day": 311,
-    "reference": "Nehemiah 9:6"
+    "reference": "Nehemiah 9:6",
+    "text": "You are the LORD, even you alone. You have made heaven, the heaven of heavens, with all their army, the earth and all things that are on it, the seas and all that is in them, and you preserve them all. The army of heaven worships you."
   },
   {
     "day": 312,
-    "reference": "Esther 4:14"
+    "reference": "Esther 4:14",
+    "text": "For if you remain silent now, then relief and deliverance will come to the Jews from another place, but you and your father’s house will perish. Who knows if you haven’t come to the kingdom for such a time as this?”"
   },
   {
     "day": 313,
-    "reference": "Job 1:21"
+    "reference": "Job 1:21",
+    "text": "He said, “Naked I came out of my mother’s womb, and naked will I return there. The LORD gave, and the LORD has taken away. Blessed be the LORD’s name.”"
   },
   {
     "day": 314,
-    "reference": "Job 19:25"
+    "reference": "Job 19:25",
+    "text": "But as for me, I know that my Redeemer lives. In the end, he will stand upon the earth."
   },
   {
     "day": 315,
-    "reference": "Job 42:2"
+    "reference": "Job 42:2",
+    "text": "“I know that you can do all things, and that no purpose of yours can be restrained."
   },
   {
     "day": 316,
-    "reference": "Psalm 1:1-2"
+    "reference": "Psalm 1:1-2",
+    "text": "1 Blessed is the man who doesn’t walk in the counsel of the wicked, nor stand on the path of sinners, nor sit in the seat of scoffers;\n2 but his delight is in the LORD’s law. On his law he meditates day and night."
   },
   {
     "day": 317,
-    "reference": "Psalm 8:1"
+    "reference": "Psalm 8:1",
+    "text": "LORD, our Lord, how majestic is your name in all the earth! You have set your glory above the heavens!"
   },
   {
     "day": 318,
-    "reference": "Psalm 16:11"
+    "reference": "Psalm 16:11",
+    "text": "You will show me the path of life. In your presence is fullness of joy. In your right hand there are pleasures forever more."
   },
   {
     "day": 319,
-    "reference": "Psalm 19:1"
+    "reference": "Psalm 19:1",
+    "text": "The heavens declare the glory of God. The expanse shows his handiwork."
   },
   {
     "day": 320,
-    "reference": "Psalm 23:1"
+    "reference": "Psalm 23:1",
+    "text": "The LORD is my shepherd; I shall lack nothing."
   },
   {
     "day": 321,
-    "reference": "Psalm 27:1"
+    "reference": "Psalm 27:1",
+    "text": "The LORD is my light and my salvation. Whom shall I fear? The LORD is the strength of my life. Of whom shall I be afraid?"
   },
   {
     "day": 322,
-    "reference": "Psalm 32:8"
+    "reference": "Psalm 32:8",
+    "text": "I will instruct you and teach you in the way which you shall go. I will counsel you with my eye on you."
   },
   {
     "day": 323,
-    "reference": "Psalm 37:4"
+    "reference": "Psalm 37:4",
+    "text": "Also delight yourself in the LORD, and he will give you the desires of your heart."
   },
   {
     "day": 324,
-    "reference": "Psalm 46:1"
+    "reference": "Psalm 46:1",
+    "text": "God is our refuge and strength, a very present help in trouble."
   },
   {
     "day": 325,
-    "reference": "Psalm 46:10"
+    "reference": "Psalm 46:10",
+    "text": "“Be still, and know that I am God. I will be exalted among the nations. I will be exalted in the earth.”"
   },
   {
     "day": 326,
-    "reference": "Psalm 51:10"
+    "reference": "Psalm 51:10",
+    "text": "Create in me a clean heart, O God. Renew a right spirit within me."
   },
   {
     "day": 327,
-    "reference": "Psalm 55:22"
+    "reference": "Psalm 55:22",
+    "text": "Cast your burden on the LORD and he will sustain you. He will never allow the righteous to be moved."
   },
   {
     "day": 328,
-    "reference": "Psalm 62:1"
+    "reference": "Psalm 62:1",
+    "text": "My soul rests in God alone. My salvation is from him."
   },
   {
     "day": 329,
-    "reference": "Psalm 73:26"
+    "reference": "Psalm 73:26",
+    "text": "My flesh and my heart fails, but God is the strength of my heart and my portion forever."
   },
   {
     "day": 330,
-    "reference": "Psalm 84:11"
+    "reference": "Psalm 84:11",
+    "text": "For the LORD God is a sun and a shield. The LORD will give grace and glory. He withholds no good thing from those who walk blamelessly."
   },
   {
     "day": 331,
-    "reference": "Psalm 90:2"
+    "reference": "Psalm 90:2",
+    "text": "Before the mountains were born, before you had formed the earth and the world, even from everlasting to everlasting, you are God."
   },
   {
     "day": 332,
-    "reference": "Psalm 91:1"
+    "reference": "Psalm 91:1",
+    "text": "He who dwells in the secret place of the Most High will rest in the shadow of the Almighty."
   },
   {
     "day": 333,
-    "reference": "Psalm 100:4"
+    "reference": "Psalm 100:4",
+    "text": "Enter into his gates with thanksgiving, and into his courts with praise. Give thanks to him, and bless his name."
   },
   {
     "day": 334,
-    "reference": "Psalm 103:12"
+    "reference": "Psalm 103:12",
+    "text": "As far as the east is from the west, so far has he removed our transgressions from us."
   },
   {
     "day": 335,
-    "reference": "Psalm 119:11"
+    "reference": "Psalm 119:11",
+    "text": "I have hidden your word in my heart, that I might not sin against you."
   },
   {
     "day": 336,
-    "reference": "Psalm 119:105"
+    "reference": "Psalm 119:105",
+    "text": "Your word is a lamp to my feet, and a light for my path."
   },
   {
     "day": 337,
-    "reference": "Psalm 121:1-2"
+    "reference": "Psalm 121:1-2",
+    "text": "1 I will lift up my eyes to the hills. Where does my help come from?\n2 My help comes from the LORD, who made heaven and earth."
   },
   {
     "day": 338,
-    "reference": "Psalm 139:14"
+    "reference": "Psalm 139:14",
+    "text": "I will give thanks to you, for I am fearfully and wonderfully made. Your works are wonderful. My soul knows that very well."
   },
   {
     "day": 339,
-    "reference": "Psalm 145:18"
+    "reference": "Psalm 145:18",
+    "text": "The LORD is near to all those who call on him, to all who call on him in truth."
   },
   {
     "day": 340,
-    "reference": "Psalm 147:3"
+    "reference": "Psalm 147:3",
+    "text": "He heals the broken in heart, and binds up their wounds."
   },
   {
     "day": 341,
-    "reference": "Proverbs 1:7"
+    "reference": "Proverbs 1:7",
+    "text": "The fear of the LORD is the beginning of knowledge, but the foolish despise wisdom and instruction."
   },
   {
     "day": 342,
-    "reference": "Proverbs 3:5-6"
+    "reference": "Proverbs 3:5-6",
+    "text": "5 Trust in the LORD with all your heart, and don’t lean on your own understanding.\n6 In all your ways acknowledge him, and he will make your paths straight."
   },
   {
     "day": 343,
-    "reference": "Proverbs 3:9-10"
+    "reference": "Proverbs 3:9-10",
+    "text": "9 Honor the LORD with your substance, with the first fruits of all your increase;\n10 so your barns will be filled with plenty, and your vats will overflow with new wine."
   },
   {
     "day": 344,
-    "reference": "Proverbs 4:23"
+    "reference": "Proverbs 4:23",
+    "text": "Keep your heart with all diligence, for out of it is the wellspring of life."
   },
   {
     "day": 345,
-    "reference": "Proverbs 9:10"
+    "reference": "Proverbs 9:10",
+    "text": "The fear of the LORD is the beginning of wisdom. The knowledge of the Holy One is understanding."
   },
   {
     "day": 346,
-    "reference": "Proverbs 11:25"
+    "reference": "Proverbs 11:25",
+    "text": "The liberal soul shall be made fat. He who waters shall be watered also himself."
   },
   {
     "day": 347,
-    "reference": "Proverbs 16:3"
+    "reference": "Proverbs 16:3",
+    "text": "Commit your deeds to the LORD, and your plans shall succeed."
   },
   {
     "day": 348,
-    "reference": "Proverbs 16:9"
+    "reference": "Proverbs 16:9",
+    "text": "A man’s heart plans his course, but the LORD directs his steps."
   },
   {
     "day": 349,
-    "reference": "Proverbs 18:10"
+    "reference": "Proverbs 18:10",
+    "text": "The LORD’s name is a strong tower: the righteous run to him, and are safe."
   },
   {
     "day": 350,
-    "reference": "Proverbs 22:6"
+    "reference": "Proverbs 22:6",
+    "text": "Train up a child in the way he should go, and when he is old he will not depart from it."
   },
   {
     "day": 351,
-    "reference": "Proverbs 27:17"
+    "reference": "Proverbs 27:17",
+    "text": "Iron sharpens iron; so a man sharpens his friend’s countenance."
   },
   {
     "day": 352,
-    "reference": "Proverbs 28:13"
+    "reference": "Proverbs 28:13",
+    "text": "He who conceals his sins doesn’t prosper, but whoever confesses and renounces them finds mercy."
   },
   {
     "day": 353,
-    "reference": "Proverbs 29:18"
+    "reference": "Proverbs 29:18",
+    "text": "Where there is no revelation, the people cast off restraint; but one who keeps the law is blessed."
   },
   {
     "day": 354,
-    "reference": "Proverbs 31:30"
+    "reference": "Proverbs 31:30",
+    "text": "Charm is deceitful, and beauty is vain; but a woman who fears the LORD, she shall be praised."
   },
   {
     "day": 355,
-    "reference": "Ecclesiastes 3:1"
+    "reference": "Ecclesiastes 3:1",
+    "text": "For everything there is a season, and a time for every purpose under heaven:"
   },
   {
     "day": 356,
-    "reference": "Ecclesiastes 12:13"
+    "reference": "Ecclesiastes 12:13",
+    "text": "This is the end of the matter. All has been heard. Fear God and keep his commandments; for this is the whole duty of man."
   },
   {
     "day": 357,
-    "reference": "Song of Solomon 2:4"
+    "reference": "Song of Solomon 2:4",
+    "text": "He brought me to the banquet hall. His banner over me is love."
   },
   {
     "day": 358,
-    "reference": "Isaiah 6:8"
+    "reference": "Isaiah 6:8",
+    "text": "I heard the Lord’s voice, saying, “Whom shall I send, and who will go for us?” Then I said, “Here I am. Send me!”"
   },
   {
     "day": 359,
-    "reference": "Isaiah 9:6"
+    "reference": "Isaiah 9:6",
+    "text": "For a child is born to us. A son is given to us; and the government will be on his shoulders. His name will be called Wonderful Counselor, Mighty God, Everlasting Father, Prince of Peace."
   },
   {
     "day": 360,
-    "reference": "Isaiah 26:3"
+    "reference": "Isaiah 26:3",
+    "text": "You will keep whoever’s mind is steadfast in perfect peace, because he trusts in you."
   },
   {
     "day": 361,
-    "reference": "Isaiah 40:8"
+    "reference": "Isaiah 40:8",
+    "text": "The grass withers, the flower fades; but the word of our God stands forever.”"
   },
   {
     "day": 362,
-    "reference": "Isaiah 40:31"
+    "reference": "Isaiah 40:31",
+    "text": "but those who wait for the LORD will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint."
   },
   {
     "day": 363,
-    "reference": "Isaiah 41:10"
+    "reference": "Isaiah 41:10",
+    "text": "Don’t you be afraid, for I am with you. Don’t be dismayed, for I am your God. I will strengthen you. Yes, I will help you. Yes, I will uphold you with the right hand of my righteousness."
   },
   {
     "day": 364,
-    "reference": "Isaiah 43:1"
+    "reference": "Isaiah 43:1",
+    "text": "But now the LORD who created you, Jacob, and he who formed you, Israel, says: “Don’t be afraid, for I have redeemed you. I have called you by your name. You are mine."
   },
   {
     "day": 365,
-    "reference": "Isaiah 53:5"
+    "reference": "Isaiah 53:5",
+    "text": "But he was pierced for our transgressions. He was crushed for our iniquities. The punishment that brought our peace was on him; and by his wounds we are healed."
   },
   {
     "day": 366,
-    "reference": "Isaiah 55:8-9"
+    "reference": "Isaiah 55:8-9",
+    "text": "8 “For my thoughts are not your thoughts, and your ways are not my ways,” says the LORD.\n9 “For as the heavens are higher than the earth, so are my ways higher than your ways, and my thoughts than your thoughts."
   }
 ]
