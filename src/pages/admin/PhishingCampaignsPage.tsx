@@ -36,7 +36,7 @@ export function PhishingCampaignsPage() {
               </Link>
             </Button>
             <Button size="sm" asChild>
-              <Link to="/admin/phishing/campaigns/new">
+              <Link to="/admin/phishing/campaigns/new/edit">
                 <Plus className="h-4 w-4 mr-1" />
                 New campaign
               </Link>

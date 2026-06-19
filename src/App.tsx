@@ -124,7 +124,7 @@ export default function App() {
             />
             <Route
               path="/admin/phishing/campaigns/new"
-              element={<RoleGuard roles={['admin']}><PhishingCampaignEditPage /></RoleGuard>}
+              element={<Navigate to="/admin/phishing/campaigns/new/edit" replace />}
             />
             <Route
               path="/admin/phishing/campaigns/:campaignId/edit"
