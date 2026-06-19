@@ -51,3 +51,19 @@ export function trainingPageUrl(): string {
   if (custom) return custom
   return 'https://keytrainlearning.com/phishing-training'
 }
+
+/** Allowed redirect targets after a tracked click (fake login pages). */
+export function isAllowedPhishingRedirect(target: string): boolean {
+  try {
+    const parsed = new URL(target)
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false
+    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') return true
+    if (parsed.hostname === 'keytrainlearning.com' || parsed.hostname.endsWith('.keytrainlearning.com')) {
+      return true
+    }
+    if (parsed.hostname.endsWith('.github.io')) return true
+    return false
+  } catch {
+    return false
+  }
+}

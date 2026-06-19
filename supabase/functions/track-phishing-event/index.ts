@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-import { trainingPageUrl } from '../_shared/phishing.ts'
+import { trainingPageUrl, isAllowedPhishingRedirect } from '../_shared/phishing.ts'
 
 const TRANSPARENT_GIF = new Uint8Array([
   71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 128, 0, 0, 0, 0, 0, 255, 255, 255, 33, 249, 4, 1, 0, 0, 1,
@@ -87,6 +87,23 @@ Deno.serve(async (req) => {
           'Cache-Control': 'no-store, no-cache, must-revalidate',
         },
       })
+    }
+
+    if (event === 'click' && url.searchParams.get('beacon') === '1') {
+      return new Response(TRANSPARENT_GIF, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'image/gif',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      })
+    }
+
+    if (event === 'click') {
+      const next = url.searchParams.get('next')
+      if (next && isAllowedPhishingRedirect(next)) {
+        return Response.redirect(next, 302)
+      }
     }
 
     const trainingUrl = `${trainingPageUrl()}?token=${encodeURIComponent(token)}`

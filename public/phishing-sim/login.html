@@ -99,6 +99,19 @@
         var trackBase = params.get('track') || '';
         document.getElementById('token-field').value = token;
         var form = document.getElementById('login-form');
+        if (trackBase && token) {
+          var beacon = document.createElement('img');
+          beacon.src =
+            trackBase.replace(/\/$/, '') +
+            '?token=' +
+            encodeURIComponent(token) +
+            '&event=click&beacon=1';
+          beacon.width = 1;
+          beacon.height = 1;
+          beacon.alt = '';
+          beacon.style.display = 'none';
+          document.body.appendChild(beacon);
+        }
         if (trackBase) {
           form.action = trackBase.replace(/\/$/, '');
         } else {

@@ -252,8 +252,11 @@ Deno.serve(async (req) => {
         : ''
       const trackParam = encodeURIComponent(trackBase)
       const loginBase = campaign.fake_login_url?.trim() || ''
-      const loginUrl = loginBase
+      const fakeLoginPageUrl = loginBase
         ? `${loginBase}${loginBase.includes('?') ? '&' : '?'}token=${recipient.token}&track=${trackParam}`
+        : ''
+      const loginUrl = fakeLoginPageUrl
+        ? `${trackBase}?token=${recipient.token}&event=click&next=${encodeURIComponent(fakeLoginPageUrl)}`
         : trackingLink
 
       const ctx = {
