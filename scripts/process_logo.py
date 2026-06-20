@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env python3
-"""Process Guardian logo images.
+"""Process KeyTrain Learning logo images.
 
 Splits the combined source (two logos side by side separated by a thin
 gray divider line down the center seam), keys out the white / near-white
@@ -15,10 +15,10 @@ import os
 import shutil
 from PIL import Image
 
-REPO = "/home/guettlerpj/dev/guardian-md"
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COMBINED = (
     "/mnt/c/Users/patgu/.cursor/projects/"
-    "wsl-localhost-Ubuntu-24-04-home-guettlerpj-dev-guardian-md/assets/"
+    "wsl-localhost-Ubuntu-24-04-home-guettlerpj-dev-keytrain-learning/assets/"
     "c__Users_patgu_AppData_Roaming_Cursor_User_workspaceStorage_"
     "0b3b7342c118403c63d1ceae7fd9b150_images_"
     "image-8692f37c-d1b8-4188-913e-fe2eda6ae4d1.png"

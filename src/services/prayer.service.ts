@@ -1,3 +1,4 @@
+import { getEdgeFunctionAccessToken } from '@/lib/edge-function-auth'
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
 
 type PrayerSubmitResponse = {
@@ -11,16 +12,13 @@ export async function submitPrayerRequest(message: string) {
   const anonKey = getSupabaseAnonKey()
   if (!supabase || !baseUrl || !anonKey) throw new Error('Backend is not configured.')
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  if (!session?.access_token) throw new Error('You must be signed in.')
+  const accessToken = await getEdgeFunctionAccessToken()
 
   const response = await fetch(`${baseUrl}/functions/v1/submit-prayer-request`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
+      Authorization: `Bearer ${accessToken}`,
       apikey: anonKey,
     },
     body: JSON.stringify({ message: message.trim() }),

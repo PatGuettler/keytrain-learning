@@ -4,7 +4,7 @@ Healthcare training platform for clinical incident reporting, compliance courses
 
 **Live site:** [https://keytrainlearning.com/](https://keytrainlearning.com/)
 
-**Repository:** [github.com/PatGuettler/guardian-md](https://github.com/PatGuettler/guardian-md) *(GitHub repo name may still be `guardian-md`)*
+**Repository:** [github.com/PatGuettler/keytrain-learning](https://github.com/PatGuettler/keytrain-learning)
 
 **Domain cutover checklist (keytrainlearning.com):** [docs/keytrainlearning-domain-setup.md](docs/keytrainlearning-domain-setup.md)
 
@@ -207,7 +207,7 @@ flowchart TB
 ## Project structure
 
 ```
-keytrainlearning/   # local clone (GitHub repo may still be named guardian-md)
+keytrain-learning/   # local clone
 ├── .github/workflows/deploy.yml   # GitHub Pages CI/CD
 ├── public/                        # Static assets, favicon
 ├── scripts/
@@ -254,8 +254,8 @@ keytrainlearning/   # local clone (GitHub repo may still be named guardian-md)
 ### Install & run locally
 
 ```bash
-git clone https://github.com/PatGuettler/guardian-md.git
-cd guardian-md   # or your local folder name
+git clone https://github.com/PatGuettler/keytrain-learning.git
+cd keytrain-learning
 npm install
 cp .env.example .env   # add your Supabase URL and anon key
 npm run dev

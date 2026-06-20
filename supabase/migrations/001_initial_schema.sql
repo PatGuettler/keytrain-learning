@@ -1,4 +1,4 @@
--- GuardianMD initial schema
+-- KeyTrain Learning initial schema
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TYPE user_role AS ENUM ('admin', 'manager', 'employee');

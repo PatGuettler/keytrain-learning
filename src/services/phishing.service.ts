@@ -1,4 +1,5 @@
 import { getPublicAppUrl } from '@/lib/backend-config'
+import { getEdgeFunctionAccessToken } from '@/lib/edge-function-auth'
 import { EDGE_FUNCTION_DEPLOY_HINT } from '@/lib/edge-functions'
 import { fetchProfiles } from '@/services/users.service'
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
@@ -245,13 +246,7 @@ export async function sendPhishingCampaign(
   const anonKey = getSupabaseAnonKey()
   if (!supabase || !baseUrl || !anonKey) throw new Error('Supabase is not configured.')
 
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession()
-  if (sessionError || !session?.access_token) {
-    throw new Error('You must be signed in as a platform admin.')
-  }
+  const accessToken = await getEdgeFunctionAccessToken()
 
   const body: Record<string, unknown> = { campaign_id: campaignId }
   if (options.testMode) {
@@ -269,7 +264,7 @@ export async function sendPhishingCampaign(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${accessToken}`,
         apikey: anonKey,
       },
       body: JSON.stringify(body),

@@ -1,17 +1,8 @@
-const GITHUB_PAGES_REPO = 'guardian-md'
-
-/** App base path with trailing slash, e.g. `/` or `/guardian-md/` */
+/** App base path with trailing slash, e.g. `/` */
 export function getAppBase(): string {
   const envBase = import.meta.env.BASE_URL
   if (envBase && envBase !== '/') {
     return envBase.endsWith('/') ? envBase : `${envBase}/`
-  }
-  // Fallback when build base was `/` but app is served from GitHub Pages subpath
-  if (typeof window !== 'undefined') {
-    const prefix = `/${GITHUB_PAGES_REPO}`
-    if (window.location.pathname === prefix || window.location.pathname.startsWith(`${prefix}/`)) {
-      return `${prefix}/`
-    }
   }
   return '/'
 }

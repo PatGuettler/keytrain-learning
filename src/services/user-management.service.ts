@@ -1,3 +1,4 @@
+import { getEdgeFunctionAccessToken } from '@/lib/edge-function-auth'
 import { getInviteRedirectUrl, getResetPasswordRedirectUrl } from '@/lib/backend-config'
 import { PLATFORM_ORG_ID } from '@/lib/constants'
 import { EDGE_FUNCTION_DEPLOY_HINT, isEdgeFunctionUnavailable } from '@/lib/edge-functions'
@@ -43,13 +44,7 @@ async function invokeManageUsers<T>(body: Record<string, unknown>): Promise<T> {
       ? { ...body, redirect_to: getResetPasswordRedirectUrl() }
       : { ...body }
 
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession()
-  if (sessionError || !session?.access_token) {
-    throw new Error('You must be signed in to manage users.')
-  }
+  const accessToken = await getEdgeFunctionAccessToken()
 
   let response: Response
   try {
@@ -57,7 +52,7 @@ async function invokeManageUsers<T>(body: Record<string, unknown>): Promise<T> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${accessToken}`,
         apikey: anonKey,
       },
       body: JSON.stringify(payload),

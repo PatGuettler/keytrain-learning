@@ -16,12 +16,12 @@ Login flow: sign in → load profiles row where id = Auth user UUID → redirect
 
 Phase 0 — Prerequisites
 Supabase account: https://supabase.com
-GitHub repo: https://github.com/PatGuettler/guardian-md
+GitHub repo: https://github.com/PatGuettler/keytrain-learning
 Live app (optional): https://keytrainlearning.com/
 Phase 1 — Supabase project and database
 1.1 Create project
 Supabase → New project
-Name it (e.g. guardian-md-prod)
+Name it (e.g. keytrain-learning-prod)
 Set a strong DB password and save it
 Wait until the project is Active
 1.2 Run the schema migration
@@ -271,7 +271,7 @@ No assignment for that employee + course
 Live site still shows demo logins
 Add VITE_SUPABASE_* to GitHub Actions secrets and redeploy
 Login works locally, not on Pages
-Supabase Site URL / Redirect URLs must include /guardian-md/
+Supabase Site URL / Redirect URLs must include `https://keytrainlearning.com/**`
 Suggested first-time order (30–60 min)
 Migration + org
 Admin Auth + profile → login

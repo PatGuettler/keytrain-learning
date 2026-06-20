@@ -9,11 +9,7 @@ export function getPublicAppUrl(): string {
     return envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl
   }
   if (typeof window !== 'undefined') {
-    const { origin, pathname } = window.location
-    const repoBase = pathname.startsWith('/guardian-md')
-      ? `${origin}/guardian-md`
-      : origin
-    return repoBase
+    return window.location.origin
   }
   return 'https://keytrainlearning.com'
 }

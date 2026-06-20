@@ -14,8 +14,7 @@ function getPagesBase(): string {
       const repo = process.env.GITHUB_REPOSITORY.split('/')[1]
       return `/${repo}/`
     }
-    // Fallback: https://patguettler.github.io/guardian-md/
-    return '/guardian-md/'
+    return '/'
   }
   return '/'
 }

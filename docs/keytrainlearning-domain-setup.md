@@ -24,7 +24,7 @@ All three use the **same Resend account** and **verified domain**.
 
 - [x] Sign in at [resend.com](https://resend.com)
 - [x] **Domains** → Add domain → `keytrainlearning.com`
-- [x] Add DNS records at Cloudflare (SPF, DKIM on `send` subdomain; DMARC optional for now)
+- [x] Add DNS records at Cloudflare (SPF, DKIM on `send` subdomain) — see **Phase 9** for DMARC
 - [x] Wait until Resend shows domain status **Verified**
 - [x] **API Keys** → existing key with **Sending access** (e.g. `Onboarding`) — **reuse this key; no new key required**
 
@@ -160,20 +160,16 @@ Choose **one** canonical URL (apex or www) and use it everywhere below.
 Update the codebase, commit, and push to `main` (triggers deploy).
 
 - [ ] `.github/workflows/deploy.yml` — set:
-  - `GH_PAGES_BASE: /` (was `/guardian-md/`)
+  - `GH_PAGES_BASE: /`
   - `VITE_APP_URL: https://keytrainlearning.com`
 - [ ] `package.json` — set `homepage` to `https://keytrainlearning.com/`
 - [ ] `supabase/config.toml` — update `[auth]`:
   - `site_url = "https://keytrainlearning.com"`
-  - `additional_redirect_urls` — replace `patguettler.github.io/guardian-md` URLs with `https://keytrainlearning.com/**` (keep `localhost` entries)
+  - `additional_redirect_urls` — include `https://keytrainlearning.com/**` (keep `localhost` entries)
 - [ ] `.github/workflows/deploy-edge-functions.yml` — set `INVITE_REDIRECT_URL` to `https://keytrainlearning.com/accept-invite` (if that workflow is in use)
 - [ ] Push to `main` and confirm GitHub Actions **Deploy to GitHub Pages** succeeds
 - [ ] Open `https://keytrainlearning.com` — app loads, no broken assets
 - [ ] Sign in works on the new domain
-
-**Optional (keep old URL working during cutover):**
-
-- [ ] Leave `https://patguettler.github.io/guardian-md/**` in Supabase redirect URLs until cutover is done, then remove
 
 ---
 
@@ -305,12 +301,126 @@ In Supabase **SQL Editor**, run in order:
 
 ---
 
-## Optional — deliverability & future hardening
+## Phase 9 — Phishing inbox placement (deliverability)
 
-- [ ] Add **DMARC** TXT record at `_dmarc.keytrainlearning.com`
+Phishing-style mail is filtered aggressively. Inbox placement needs **authentication + sane URLs + customer IT allowlisting** — not Resend API tweaks alone.
+
+### Already done (no action)
+
+- Resend domain `keytrainlearning.com` verified (SPF + DKIM in Cloudflare)
+- Sending from verified `@keytrainlearning.com` addresses via `send-phishing-campaign`
+- Org-aware templates with per-recipient sender names and addresses
+- Fake login page bundled at `https://keytrainlearning.com/phishing-sim/login.html`
+- Training interstitial at `https://keytrainlearning.com/phishing-training`
+
+---
+
+### 9.1 — Customer IT allowlisting (required for hospitals on M365)
+
+You cannot skip this for hospital tenants and expect consistent inbox delivery.
+
+- [ ] Ask each customer’s IT admin to configure **Microsoft Defender Advanced Delivery** for third-party phishing simulations  
+  Portal: [security.microsoft.com/advanceddelivery](https://security.microsoft.com/advanceddelivery) → **Phishing simulation** tab  
+  Microsoft docs: [Configure advanced delivery](https://learn.microsoft.com/en-us/defender-office-365/advanced-delivery-policy-configure)
+
+| Field | Value for KeyTrain |
+|-------|-------------------|
+| **Sending domains** | `keytrainlearning.com` |
+| **Sending IP ranges** | Resend outbound IPs — [Resend IP list](https://resend.com/docs/knowledge-base/what-are-resend-ip-addresses) |
+| **Simulation URLs** | `keytrainlearning.com/*` (plus any dedicated sim domain you add later) |
+
+- [ ] For **Google Workspace** customers: admin routing / spam bypass for `keytrainlearning.com` and simulation URL patterns
+- [ ] Provide a one-page **IT allowlist guide** during customer onboarding (domain, Resend IPs, URL patterns) — *draft pending*
+
+> Do **not** use broad safe-sender lists or global IP allowlists. Advanced Delivery is the scoped, supported approach for M365.
+
+---
+
+### 9.2 — Finish DNS authentication (DMARC)
+
+SPF and DKIM are in place. DMARC is still outstanding.
+
+- [ ] Add **DMARC** TXT record at Cloudflare:
+
+```
+_dmarc.keytrainlearning.com  TXT  "v=DMARC1; p=none; rua=mailto:dmarc@keytrainlearning.com"
+```
+
+- [ ] Start with `p=none` (monitor only). After Resend reports are clean for a few weeks, consider tightening policy.
+- [ ] Confirm in Resend → **Domains** that SPF, DKIM, **and** DMARC all show green.
+
+---
+
+### 9.3 — Fix link domains in email bodies
+
+Spam filters weigh URLs heavily. Click-tracking links currently default to:
+
+```
+https://rzrsudrdpnabpseatclm.supabase.co/functions/v1/track-phishing-event?...
+```
+
+That is a strong junk signal: unknown `.supabase.co` URL plus urgent CTA.
+
+| Approach | Realism | Deliverability |
+|----------|---------|----------------|
+| Fake login at `https://keytrainlearning.com/phishing-sim/login.html` | Moderate | Good (same domain as From) |
+| Separate sim domain (e.g. `memorial-itportal.com`) on Cloudflare Pages | High | Good **if** allowlisted in Defender |
+
+- [ ] Route tracking through your domain — set `PHISHING_TRACKING_BASE_URL` after building a reverse proxy or Cloudflare Worker on `keytrainlearning.com` that forwards to the Supabase edge function (not built yet):
+
+```bash
+supabase secrets set PHISHING_TRACKING_BASE_URL='https://keytrainlearning.com/api/phish-track' --project-ref rzrsudrdpnabpseatclm
+```
+
+- [ ] Confirm campaign **Fake login URL** stays on `keytrainlearning.com` (not `supabase.co`) until a dedicated sim domain is ready
+- [ ] Optional later: dedicated lookalike domain for links/login — see [`simulation-sites/README.md`](../simulation-sites/README.md); verify in Resend and add to Defender simulation URLs
+
+---
+
+### 9.4 — Campaign settings and pilot sends
+
+- [ ] Turn off the **open-tracking pixel** on production campaigns unless needed (hurts deliverability; unreliable in many clients)
+- [ ] Pilot with **test sends** to Gmail, Outlook.com, and the customer’s actual M365 tenant before **Send to everyone**
+- [ ] Check Resend → **Logs** for Delivered vs Bounced vs delayed; fix bounces before scaling volume
+- [ ] Send test mail to yourself on Outlook and Gmail — verify message headers show SPF, DKIM, and DMARC pass
+
+---
+
+### 9.5 — Realism vs junk (reference)
+
+| More realistic | More likely to hit Junk |
+|----------------|-------------------------|
+| Lookalike domain (`keytrain-hospital.com`) | Yes — unless verified in Resend **and** allowlisted |
+| “Password expires in 24 hours” urgency | Yes |
+| Display name “Memorial Hospital IT” from `@keytrainlearning.com` | Moderate — domain/name mismatch |
+| Links through `supabase.co` | Yes |
+
+For maximum realism later:
+
+1. Dedicated simulation domain for links and login pages
+2. Verify that domain in Resend if used for From addresses
+3. Customer IT allowlists domain + IPs + URLs in Defender Advanced Delivery
+
+**Inbox placement** = authentication + allowlisting + sane URLs  
+**Content realism** = templates, org names, fake login pages *(already in place)*
+
+---
+
+### 9.6 — Deliverability rollout checklist
+
+- [ ] Customer IT: M365 Advanced Delivery (or Google equivalent) configured
+- [ ] Add DMARC in Cloudflare; confirm all green in Resend
+- [ ] Replace `supabase.co` tracking URLs with `keytrainlearning.com` proxy (build + deploy worker/proxy)
+- [ ] Disable open pixel on production campaigns
+- [ ] Test-send to Gmail, Outlook, and customer M365; verify headers
+- [ ] Small test send (“Add me for testing”) before full campaign
+- [ ] Draft IT allowlist onboarding doc for hospitals
+
+---
+
+## Optional — other hardening
+
 - [ ] Set up `support@keytrainlearning.com` as a real mailbox or forwarder at your registrar
-- [ ] Remove `patguettler.github.io/guardian-md` from Supabase redirect URLs after cutover is stable
-- [ ] Later: separate lookalike domain for more realistic phishing sims (e.g. `keytrain-it.com`) — not required to go live
 
 ---
 
@@ -326,7 +436,7 @@ In Supabase **SQL Editor**, run in order:
 | Phishing says “dry run” | Unset `PHISHING_SIMULATION_DRY_RUN`; ensure `RESEND_API_KEY` is set |
 | Phishing send fails on `from` | Campaign sender email must be on verified Resend domain |
 | SMTP “DNS lookup” error | Remove trailing space from `smtp.resend.com` in Supabase SMTP host field |
-| App assets 404 on custom domain (blank white page) | `GH_PAGES_BASE` must be `/` not `/guardian-md/` — redeploy after fixing `deploy.yml` |
+| App assets 404 on custom domain (blank white page) | `GH_PAGES_BASE` must be `/` — redeploy after fixing `deploy.yml` |
 
 ---
 
@@ -339,9 +449,10 @@ In Supabase **SQL Editor**, run in order:
 | `SUPPORT_TO_EMAIL` | Supabase secrets | your inbox |
 | `INVITE_REDIRECT_URL` | Supabase secrets | `https://keytrainlearning.com/accept-invite` |
 | `PHISHING_TRAINING_URL` | Supabase secrets | `https://keytrainlearning.com/phishing-training` |
+| `PHISHING_TRACKING_BASE_URL` | Supabase secrets | Optional — `https://keytrainlearning.com/api/phish-track` after proxy is built |
 | `VITE_APP_URL` | GitHub Actions build env | `https://keytrainlearning.com` |
 | SMTP sender | Supabase Auth dashboard | `noreply@keytrainlearning.com` |
 
 ---
 
-*Last updated: domain verified in Resend (Cloudflare DNS); sender-address steps added.*
+*Last updated: Phase 9 phishing deliverability plan added.*

@@ -1,4 +1,4 @@
--- Seed data for GuardianMD
+-- Seed data for KeyTrain Learning
 -- Run after applying 001_initial_schema.sql
 -- Create real users in Supabase Auth, then insert matching rows in profiles.
 -- Full course + module definitions live in src/data/courses.ts

@@ -13,6 +13,10 @@ if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
   exit 1
 fi
 
+echo "Linking project and pushing auth config (verify_jwt=false for CORS)..."
+supabase link --project-ref "$PROJECT_REF" --yes 2>/dev/null || true
+supabase config push --yes 2>/dev/null || true
+
 echo "Deploying send-phishing-campaign..."
 supabase functions deploy send-phishing-campaign --project-ref "$PROJECT_REF" --no-verify-jwt
 

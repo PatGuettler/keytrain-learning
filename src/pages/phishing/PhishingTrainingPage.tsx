@@ -66,7 +66,7 @@ export function PhishingTrainingPage() {
           )}
 
           <Button asChild className="w-full">
-            <Link to="/login">Return to GuardianMD sign in</Link>
+            <Link to="/login">Return to KeyTrain Learning sign in</Link>
           </Button>
         </CardContent>
       </Card>

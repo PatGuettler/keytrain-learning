@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
       if (unresolvedEmails.length > 0 && recipients.length === 0) {
         return jsonResponse(
           {
-            error: `No app user found for: ${unresolvedEmails.join(', ')}. Test emails must match a user in GuardianMD.`,
+            error: `No app user found for: ${unresolvedEmails.join(', ')}. Test emails must match a user in KeyTrain Learning.`,
           },
           400
         )

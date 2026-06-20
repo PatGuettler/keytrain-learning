@@ -1,3 +1,4 @@
+import { getEdgeFunctionAccessToken } from '@/lib/edge-function-auth'
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
 import { useAuthStore } from '@/store/authStore'
 
@@ -32,16 +33,13 @@ export async function submitSupportRequest(payload: {
     manager_id: profile.manager_id,
   }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  if (!session?.access_token) throw new Error('You must be signed in.')
+  const accessToken = await getEdgeFunctionAccessToken()
 
   const response = await fetch(`${baseUrl}/functions/v1/send-support-request`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
+      Authorization: `Bearer ${accessToken}`,
       apikey: anonKey,
     },
     body: JSON.stringify({

@@ -7,7 +7,7 @@ except ImportError:
     raise SystemExit('Pillow required: pip install Pillow')
 
 src = Path(
-    '/mnt/c/Users/patgu/.cursor/projects/wsl-localhost-Ubuntu-24-04-home-guettlerpj-dev-guardian-md/assets/'
+    '/mnt/c/Users/patgu/.cursor/projects/wsl-localhost-Ubuntu-24-04-home-guettlerpj-dev-keytrain-learning/assets/'
     'c__Users_patgu_AppData_Roaming_Cursor_User_workspaceStorage_0b3b7342c118403c63d1ceae7fd9b150_images_'
     'image-8692f37c-d1b8-4188-913e-fe2eda6ae4d1.png'
 )
