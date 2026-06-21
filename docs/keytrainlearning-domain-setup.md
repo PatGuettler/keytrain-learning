@@ -17,10 +17,14 @@ These are done — no further action unless something breaks.
 | **GitHub Pages / DNS** | Custom domain on GitHub Pages with HTTPS |
 | **Repo build config** | `deploy.yml` (`GH_PAGES_BASE=/`, `VITE_APP_URL`), `package.json` homepage, `supabase/config.toml` auth URLs |
 | **Phishing module (DB)** | Migrations 022–024 applied (campaigns, templates, test send work in admin UI) |
+| **Org-aware templates (027)** | Verified in SQL: `has_027 = true` on `it_helpdesk` template |
 | **Phishing edge functions** | `send-phishing-campaign` and `track-phishing-event` deployed |
 | **Resend for phishing** | `RESEND_API_KEY` set; dry-run disabled (real sends attempted) |
 | **Org-aware send logic** | Per-recipient sender names/addresses in app + edge function code |
 | **Fake login + training URLs** | `keytrainlearning.com/phishing-sim/login.html` and `/phishing-training` |
+| **Custom SMTP (Resend)** | Enabled — `noreply@keytrainlearning.com`, `smtp.resend.com:465`, user `resend` |
+| **Reset password email template** | Uses `{{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery` |
+| **Frontend deploy** | Pushed to `main`; GitHub Actions Pages deploy succeeds |
 
 ### Email routing (reference)
 
@@ -32,27 +36,28 @@ These are done — no further action unless something breaks.
 
 One Resend API key (`re_...`) with **Sending access** covers all `@keytrainlearning.com` senders — no per-address registration in Resend.
 
+### Reauthentication email template
+
+Default Supabase template (`{{ .Token }}` in subject/body) is fine — no change needed unless you want branded copy later.
+
 ---
 
 ## Remaining work
 
 Complete in order. Check each box when done.
 
-### 1 — Deploy latest frontend
+### 1 — Confirm latest frontend in browser
 
-Recent fixes (session refresh for edge calls, client-side daily verse, phishing UI) may not be live until pushed to `main`.
-
-- [ ] Commit and push to `main` → confirm GitHub Actions **Deploy to GitHub Pages** succeeds
-- [ ] Hard-refresh `https://keytrainlearning.com` — confirm new bundle (no CORS errors for `get-daily-verse` in console)
-- [ ] Phishing **Send test** works without `401 Unauthorized` (sign out/in first if still failing on old bundle)
+- [ ] Hard-refresh `https://keytrainlearning.com` — no CORS errors for `get-daily-verse` in console
+- [ ] Phishing **Send test** works without `401 Unauthorized` (sign out/in once if needed)
 
 ---
 
-### 2 — Database migrations (025–027)
+### 2 — Database migrations (025–026 only if missing)
 
-Do **not** rerun 001–024 — schema already exists (`db push` failed on `user_role already exists`).
+**027 is applied** (`has_027 = true`). Do **not** rerun 001–024 or 027.
 
-Check what's missing in Supabase **SQL Editor**:
+If daily verse / prayer or lockout-clear-on-reset are not working, run the checks below. The SQL editor only shows the **last** query result when you run all three at once — run them one at a time if unsure.
 
 ```sql
 SELECT EXISTS (
@@ -63,14 +68,10 @@ SELECT EXISTS (
 SELECT EXISTS (
   SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_password_change'
 ) AS has_026;
-
-SELECT body_html LIKE '%{{COMPANY_NAME}}%' AS has_027
-FROM phishing_templates WHERE pretext = 'it_helpdesk';
 ```
 
-- [ ] If `has_025` is false → run [`025_daily_verse_and_prayer.sql`](../supabase/migrations/025_daily_verse_and_prayer.sql)
-- [ ] If `has_026` is false → run [`026_clear_lockout_on_password_change.sql`](../supabase/migrations/026_clear_lockout_on_password_change.sql)
-- [ ] If `has_027` is false → run [`027_phishing_templates_org_aware.sql`](../supabase/migrations/027_phishing_templates_org_aware.sql)
+- [ ] `has_025` = true (or run [`025_daily_verse_and_prayer.sql`](../supabase/migrations/025_daily_verse_and_prayer.sql))
+- [ ] `has_026` = true (or run [`026_clear_lockout_on_password_change.sql`](../supabase/migrations/026_clear_lockout_on_password_change.sql))
 
 **Optional — fix Supabase migration history** (so future `db push` works without re-running 001):
 
@@ -78,65 +79,26 @@ FROM phishing_templates WHERE pretext = 'it_helpdesk';
 npx supabase migration repair --status applied \
   001 002 003 004 005 006 007 008 009 010 \
   011 012 013 014 015 016 017 018 019 020 \
-  021 022 023 024
-npx supabase db push   # applies only 025–027 if not yet recorded
+  021 022 023 024 025 026 027
 ```
-
-- [ ] Migration history baselined (optional)
-- [ ] Redeploy phishing after 027: `npm run deploy:phishing`
 
 ---
 
-### 3 — Supabase Auth: custom SMTP
+### 3 — Auth: live tests only
 
-Confirm auth mail uses Resend, not Supabase's default mailer (`@supabase.co`).
+SMTP and reset template are configured correctly in the dashboard. Confirm with real sends:
 
-- [ ] Supabase Dashboard → **Authentication** → **Email** → **SMTP Settings** → Custom SMTP enabled
-
-| Field | Value |
-|-------|--------|
-| Host | `smtp.resend.com` |
-| Port | `465` |
-| Username | `resend` |
-| Password | your `re_...` API key |
-| Sender email | `noreply@keytrainlearning.com` |
-| Sender name | `KeyTrain Learning` |
-
-- [ ] **URL Configuration:** Site URL `https://keytrainlearning.com`; redirect URLs include `https://keytrainlearning.com/**` and `http://localhost:5173/**`
-- [ ] **Rate Limits** raised for expected invite/reset volume
-- [ ] Password reset template uses query-string link (works on static hosting):
-
-```html
-<a href="{{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery">Reset password</a>
-```
-
-- [ ] Test password reset → **From** is `noreply@keytrainlearning.com`, link opens `keytrainlearning.com/reset-password`
+- [ ] **Authentication** → **URL Configuration**: Site URL `https://keytrainlearning.com`; redirect URLs include `https://keytrainlearning.com/**`
+- [ ] **Rate Limits** raised for expected invite/reset volume (if not already)
+- [ ] Send test password reset → **From** is `noreply@keytrainlearning.com`, link opens `keytrainlearning.com/reset-password`
 
 ---
 
 ### 4 — Secrets & edge functions (verify)
 
-- [ ] `RESEND_API_KEY` set in Supabase secrets
-- [ ] `RESEND_FROM` = `KeyTrain Learning <support@keytrainlearning.com>`
-- [ ] `SUPPORT_TO_EMAIL` = your inbox
-- [ ] `INVITE_REDIRECT_URL` = `https://keytrainlearning.com/accept-invite`
-- [ ] `PHISHING_TRAINING_URL` = `https://keytrainlearning.com/phishing-training`
+- [ ] `RESEND_API_KEY`, `RESEND_FROM`, `SUPPORT_TO_EMAIL`, `INVITE_REDIRECT_URL`, `PHISHING_TRAINING_URL` set
 - [ ] `PHISHING_SIMULATION_DRY_RUN` unset or `false`
-
-Redeploy if secrets changed or functions are stale:
-
-```bash
-export SUPABASE_ACCESS_TOKEN='sbp_...'
-export SUPABASE_PROJECT_REF='rzrsudrdpnabpseatclm'
-
-supabase functions deploy send-support-request --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
-supabase functions deploy manage-users --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
-npm run deploy:phishing
-npm run deploy:spiritual   # prayer + daily verse edge functions (optional)
-bash scripts/deploy-manage-users.sh   # pushes config.toml verify_jwt=false
-```
-
-- [ ] `send-support-request`, `manage-users`, `send-phishing-campaign`, `track-phishing-event` deployed
+- [ ] `send-support-request`, `manage-users`, `send-phishing-campaign`, `track-phishing-event` deployed (redeploy if unsure: `npm run deploy:phishing`)
 
 ---
 
@@ -166,7 +128,6 @@ bash scripts/deploy-manage-users.sh   # pushes config.toml verify_jwt=false
 | Password reset → same | [ ] |
 | Phishing test send → from campaign sender on your domain | [ ] |
 | Resend → **Logs** shows Delivered (no unexpected bounces) | [ ] |
-| Auth mail no longer from `@supabase.co` | [ ] |
 
 ---
 
@@ -241,6 +202,7 @@ supabase secrets set PHISHING_TRACKING_BASE_URL='https://keytrainlearning.com/ap
 
 - [ ] Real mailbox or forwarder for `support@keytrainlearning.com` (replies only — outbound works without this)
 - [ ] Second Resend API key for key rotation (hygiene, not required)
+- [ ] Migration history baselined via `migration repair` (§2)
 
 ---
 
@@ -248,11 +210,11 @@ supabase secrets set PHISHING_TRACKING_BASE_URL='https://keytrainlearning.com/ap
 
 | Symptom | Likely fix |
 |---------|------------|
-| `401 Unauthorized` on phishing send | Sign out/in; deploy latest frontend (session refresh fix) |
-| CORS on `get-daily-verse` | Deploy latest frontend (client-side verse lookup) |
+| `401 Unauthorized` on phishing send | Sign out/in; hard-refresh for latest frontend bundle |
+| CORS on `get-daily-verse` | Hard-refresh — client-side verse should not call edge function |
 | Resend 403 | Domain not verified, or `From` not on verified domain |
 | Phishing “dry run” | Unset `PHISHING_SIMULATION_DRY_RUN`; set `RESEND_API_KEY` |
-| Auth mail from `@supabase.co` | Enable Custom SMTP (§3 above) |
+| Auth mail from `@supabase.co` | Custom SMTP is on — confirm **Save changes** was clicked; send test reset |
 | Invite link goes to wrong host | Set `INVITE_REDIRECT_URL`; rebuild with `VITE_APP_URL` |
 | `db push` fails on 001 | Schema already exists — use migration repair (§2), don't rerun 001–024 |
 | Blank page on custom domain | `GH_PAGES_BASE` must be `/` in `deploy.yml` |
@@ -275,4 +237,4 @@ supabase secrets set PHISHING_TRACKING_BASE_URL='https://keytrainlearning.com/ap
 
 ---
 
-*Last updated: trimmed to remaining work; completed phases collapsed.*
+*Last updated: SMTP, reset template, and migration 027 confirmed from dashboard screenshots.*
