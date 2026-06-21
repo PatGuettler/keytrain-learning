@@ -74,6 +74,7 @@ export function PhishingCampaignDetailPage() {
       await queryClient.invalidateQueries({ queryKey: ['phishing-recipients', campaignId] })
     } catch (e) {
       setSendError(e instanceof Error ? e.message : 'Send failed.')
+      setSendMessage('')
     } finally {
       setSending(false)
     }
@@ -106,12 +107,21 @@ export function PhishingCampaignDetailPage() {
                 {sending ? 'Sending…' : 'Send to everyone'}
               </Button>
             </div>
+          ) : metrics.sentCount === 0 ? (
+            <Button size="sm" onClick={handleSend} disabled={sending || recipients.length === 0}>
+              <Send className="h-4 w-4 mr-1" />
+              {sending ? 'Sending…' : 'Retry send'}
+            </Button>
           ) : undefined
         }
       />
 
-      {sendMessage && <p className="text-sm text-emerald-600 dark:text-emerald-400">{sendMessage}</p>}
-      {sendError && <p className="text-sm text-destructive">{sendError}</p>}
+      {sendMessage && (
+        <p className="text-sm text-emerald-600 dark:text-emerald-400 whitespace-pre-wrap">{sendMessage}</p>
+      )}
+      {sendError && (
+        <p className="text-sm text-destructive whitespace-pre-wrap">{sendError}</p>
+      )}
 
       {isDraft && campaignId && (
         <PhishingTestSendPanel

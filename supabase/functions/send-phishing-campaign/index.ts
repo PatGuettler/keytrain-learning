@@ -3,6 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 import {
   buildRecipientContext,
   isPhishingDryRun,
+  parseResendError,
   replacePhishingPlaceholders,
   resolveCampaignSenderEmail,
   trackingBaseUrl,
@@ -140,7 +141,15 @@ Deno.serve(async (req) => {
     }
 
     if (!testMode && campaign.status === 'sent') {
-      return jsonResponse({ error: 'Campaign was already sent.' }, 400)
+      const { count: priorSentCount } = await adminClient
+        .from('phishing_recipients')
+        .select('id', { count: 'exact', head: true })
+        .eq('campaign_id', campaignId)
+        .not('sent_at', 'is', null)
+
+      if ((priorSentCount ?? 0) > 0) {
+        return jsonResponse({ error: 'Campaign was already sent.' }, 400)
+      }
     }
 
     if (testMode && campaign.status === 'sent') {
@@ -305,8 +314,9 @@ Deno.serve(async (req) => {
         })
 
         if (!emailRes.ok) {
-          const detail = await emailRes.text()
-          failures.push({ email: deliveryEmail, error: detail.slice(0, 200) })
+          const detail = parseResendError(await emailRes.text())
+          console.error('Resend error:', deliveryEmail, fromEmail, detail)
+          failures.push({ email: deliveryEmail, error: detail.slice(0, 300) })
           continue
         }
       }
@@ -320,6 +330,29 @@ Deno.serve(async (req) => {
     }
 
     if (!testMode) {
+      if (sentCount === 0) {
+        const failureSummary = failures.map((f) => `${f.email}: ${f.error}`).join(' ')
+        return jsonResponse(
+          {
+            success: false,
+            dry_run: dryRun,
+            email_sent: false,
+            test_mode: false,
+            sent_count: 0,
+            failed_count: failures.length,
+            failures,
+            unresolved_emails: unresolvedEmails,
+            error: dryRun
+              ? 'Dry run only — set RESEND_API_KEY on Supabase and unset PHISHING_SIMULATION_DRY_RUN.'
+              : failureSummary || 'No emails were delivered. Check recipient emails and Resend logs.',
+            message: dryRun
+              ? `Dry run: 0 emails delivered (RESEND_API_KEY missing or PHISHING_SIMULATION_DRY_RUN=true).`
+              : `Sent 0 email(s). ${failureSummary || 'No recipients were emailed.'}`,
+          },
+          422
+        )
+      }
+
       await adminClient
         .from('phishing_campaigns')
         .update({ status: 'sent', sent_at: now, updated_at: now })

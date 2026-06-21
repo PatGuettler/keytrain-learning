@@ -279,10 +279,28 @@ export async function sendPhishingCampaign(
     | null
 
   if (!response.ok) {
-    throw new Error(data && 'error' in data && data.error ? data.error : 'Could not send campaign.')
+    const failures = data && 'failures' in data && Array.isArray(data.failures) ? data.failures : []
+    const failureText = failures
+      .map((f) => (typeof f === 'object' && f && 'email' in f && 'error' in f ? `${f.email}: ${f.error}` : ''))
+      .filter(Boolean)
+      .join('\n')
+    const base =
+      data && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : data && 'message' in data && typeof data.message === 'string'
+          ? data.message
+          : 'Could not send campaign.'
+    throw new Error(failureText ? `${base}\n${failureText}` : base)
   }
 
-  return data as SendPhishingCampaignResult
+  const result = data as SendPhishingCampaignResult
+  if (!options.testMode && result.dry_run) {
+    throw new Error(
+      `${result.message} Configure RESEND_API_KEY on Supabase and unset PHISHING_SIMULATION_DRY_RUN, then redeploy send-phishing-campaign.`
+    )
+  }
+
+  return result
 }
 
 export function getDefaultFakeLoginUrl(): string {

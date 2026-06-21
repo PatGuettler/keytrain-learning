@@ -89,7 +89,17 @@ export function resolveCampaignSenderEmail(
 
 export function isPhishingDryRun(): boolean {
   if (Deno.env.get('PHISHING_SIMULATION_DRY_RUN') === 'true') return true
-  return !Deno.env.get('RESEND_API_KEY')
+  const key = Deno.env.get('RESEND_API_KEY')?.trim()
+  return !key
+}
+
+export function parseResendError(body: string): string {
+  try {
+    const parsed = JSON.parse(body) as { message?: string }
+    return parsed.message ?? body
+  } catch {
+    return body
+  }
 }
 
 export function trackingBaseUrl(supabaseUrl: string): string {
