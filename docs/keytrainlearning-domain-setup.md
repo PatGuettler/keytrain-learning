@@ -17,6 +17,8 @@ These are done — no further action unless something breaks.
 | **GitHub Pages / DNS** | Custom domain on GitHub Pages with HTTPS |
 | **Repo build config** | `deploy.yml` (`GH_PAGES_BASE=/`, `VITE_APP_URL`), `package.json` homepage, `supabase/config.toml` auth URLs |
 | **Phishing module (DB)** | Migrations 022–024 applied (campaigns, templates, test send work in admin UI) |
+| **Daily verse / prayer (025)** | Verified in SQL: `has_025 = true` (`profiles.daily_verse_enabled`) |
+| **Lockout clear on reset (026)** | Verified in SQL: `has_026 = true` (`on_auth_user_password_change` trigger) |
 | **Org-aware templates (027)** | Verified in SQL: `has_027 = true` on `it_helpdesk` template |
 | **Phishing edge functions** | `send-phishing-campaign` and `track-phishing-event` deployed |
 | **Resend for phishing** | `RESEND_API_KEY` set; dry-run disabled (real sends attempted) |
@@ -53,38 +55,7 @@ Complete in order. Check each box when done.
 
 ---
 
-### 2 — Database migrations (025–026 only if missing)
-
-**027 is applied** (`has_027 = true`). Do **not** rerun 001–024 or 027.
-
-If daily verse / prayer or lockout-clear-on-reset are not working, run the checks below. The SQL editor only shows the **last** query result when you run all three at once — run them one at a time if unsure.
-
-```sql
-SELECT EXISTS (
-  SELECT 1 FROM information_schema.columns
-  WHERE table_name = 'profiles' AND column_name = 'daily_verse_enabled'
-) AS has_025;
-
-SELECT EXISTS (
-  SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_password_change'
-) AS has_026;
-```
-
-- [ ] `has_025` = true (or run [`025_daily_verse_and_prayer.sql`](../supabase/migrations/025_daily_verse_and_prayer.sql))
-- [ ] `has_026` = true (or run [`026_clear_lockout_on_password_change.sql`](../supabase/migrations/026_clear_lockout_on_password_change.sql))
-
-**Optional — fix Supabase migration history** (so future `db push` works without re-running 001):
-
-```bash
-npx supabase migration repair --status applied \
-  001 002 003 004 005 006 007 008 009 010 \
-  011 012 013 014 015 016 017 018 019 020 \
-  021 022 023 024 025 026 027
-```
-
----
-
-### 3 — Auth: live tests only
+### 2 — Auth: live tests only
 
 SMTP and reset template are configured correctly in the dashboard. Confirm with real sends:
 
@@ -94,7 +65,7 @@ SMTP and reset template are configured correctly in the dashboard. Confirm with 
 
 ---
 
-### 4 — Secrets & edge functions (verify)
+### 3 — Secrets & edge functions (verify)
 
 - [ ] `RESEND_API_KEY`, `RESEND_FROM`, `SUPPORT_TO_EMAIL`, `INVITE_REDIRECT_URL`, `PHISHING_TRAINING_URL` set
 - [ ] `PHISHING_SIMULATION_DRY_RUN` unset or `false`
@@ -102,7 +73,7 @@ SMTP and reset template are configured correctly in the dashboard. Confirm with 
 
 ---
 
-### 5 — Phishing production validation
+### 4 — Phishing production validation
 
 | URL | Purpose |
 |-----|---------|
@@ -118,7 +89,7 @@ SMTP and reset template are configured correctly in the dashboard. Confirm with 
 
 ---
 
-### 6 — End-to-end verification
+### 5 — End-to-end verification
 
 | Test | Done |
 |------|------|
@@ -131,11 +102,11 @@ SMTP and reset template are configured correctly in the dashboard. Confirm with 
 
 ---
 
-### 7 — Phishing inbox placement (deliverability)
+### 6 — Phishing inbox placement (deliverability)
 
 Inbox placement needs **authentication + sane URLs + customer IT allowlisting**. Content realism (templates, org names, fake login) is already in place.
 
-#### 7.1 — Customer IT allowlisting (required for hospitals on M365)
+#### 6.1 — Customer IT allowlisting (required for hospitals on M365)
 
 - [ ] Each customer's IT admin configures **Microsoft Defender Advanced Delivery** → **Phishing simulation**  
   [Configure advanced delivery](https://learn.microsoft.com/en-us/defender-office-365/advanced-delivery-policy-configure)
@@ -151,7 +122,7 @@ Inbox placement needs **authentication + sane URLs + customer IT allowlisting**.
 
 > Use Advanced Delivery — not broad safe-sender or global IP allowlists.
 
-#### 7.2 — DMARC
+#### 6.2 — DMARC
 
 SPF and DKIM are done. DMARC is not.
 
@@ -163,7 +134,7 @@ _dmarc.keytrainlearning.com  TXT  "v=DMARC1; p=none; rua=mailto:dmarc@keytrainle
 
 - [ ] Resend → **Domains** shows SPF, DKIM, and DMARC green
 
-#### 7.3 — Tracking URLs (replace supabase.co in email links)
+#### 6.3 — Tracking URLs (replace supabase.co in email links)
 
 Click-tracking currently defaults to:
 
@@ -180,7 +151,7 @@ supabase secrets set PHISHING_TRACKING_BASE_URL='https://keytrainlearning.com/ap
 
 - [ ] Optional later: dedicated sim domain — [`simulation-sites/README.md`](../simulation-sites/README.md)
 
-#### 7.4 — Campaign & pilot practices
+#### 6.4 — Campaign & pilot practices
 
 - [ ] Disable **open-tracking pixel** on production campaigns
 - [ ] Test-send to Gmail, Outlook.com, and customer M365 before full send
@@ -202,7 +173,14 @@ supabase secrets set PHISHING_TRACKING_BASE_URL='https://keytrainlearning.com/ap
 
 - [ ] Real mailbox or forwarder for `support@keytrainlearning.com` (replies only — outbound works without this)
 - [ ] Second Resend API key for key rotation (hygiene, not required)
-- [ ] Migration history baselined via `migration repair` (§2)
+- [ ] **Migration history baselined** — optional, so future `db push` works (schema 001–027 already applied; do not rerun SQL):
+
+```bash
+npx supabase migration repair --status applied \
+  001 002 003 004 005 006 007 008 009 010 \
+  011 012 013 014 015 016 017 018 019 020 \
+  021 022 023 024 025 026 027
+```
 
 ---
 
@@ -216,7 +194,7 @@ supabase secrets set PHISHING_TRACKING_BASE_URL='https://keytrainlearning.com/ap
 | Phishing “dry run” | Unset `PHISHING_SIMULATION_DRY_RUN`; set `RESEND_API_KEY` |
 | Auth mail from `@supabase.co` | Custom SMTP is on — confirm **Save changes** was clicked; send test reset |
 | Invite link goes to wrong host | Set `INVITE_REDIRECT_URL`; rebuild with `VITE_APP_URL` |
-| `db push` fails on 001 | Schema already exists — use migration repair (§2), don't rerun 001–024 |
+| `db push` fails on 001 | Schema already exists — use migration repair (Optional), don't rerun 001–027 |
 | Blank page on custom domain | `GH_PAGES_BASE` must be `/` in `deploy.yml` |
 | SMTP DNS error | Remove trailing space from `smtp.resend.com` in Supabase |
 
@@ -237,4 +215,4 @@ supabase secrets set PHISHING_TRACKING_BASE_URL='https://keytrainlearning.com/ap
 
 ---
 
-*Last updated: SMTP, reset template, and migration 027 confirmed from dashboard screenshots.*
+*Last updated: migrations 025–027 confirmed via SQL checks.*
