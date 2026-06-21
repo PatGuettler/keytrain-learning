@@ -26,7 +26,9 @@ These are done — no further action unless something breaks.
 | **Fake login + training URLs** | `keytrainlearning.com/phishing-sim/login.html` and `/phishing-training` |
 | **Custom SMTP (Resend)** | Enabled — `noreply@keytrainlearning.com`, `smtp.resend.com:465`, user `resend` |
 | **Reset password email template** | Uses `{{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery` |
+| **Password reset live test** | Email from `noreply@keytrainlearning.com`; link opens reset page; login with new password works |
 | **Frontend deploy** | Pushed to `main`; GitHub Actions Pages deploy succeeds |
+| **Frontend verified in browser** | Hard refresh + login; no console errors; daily verse loads (client-side) |
 
 ### Email routing (reference)
 
@@ -48,24 +50,7 @@ Default Supabase template (`{{ .Token }}` in subject/body) is fine — no change
 
 Complete in order. Check each box when done.
 
-### 1 — Confirm latest frontend in browser
-
-- [ ] Hard-refresh `https://keytrainlearning.com` — no CORS errors for `get-daily-verse` in console
-- [ ] Phishing **Send test** works without `401 Unauthorized` (sign out/in once if needed)
-
----
-
-### 2 — Auth: live tests only
-
-SMTP and reset template are configured correctly in the dashboard. Confirm with real sends:
-
-- [ ] **Authentication** → **URL Configuration**: Site URL `https://keytrainlearning.com`; redirect URLs include `https://keytrainlearning.com/**`
-- [ ] **Rate Limits** raised for expected invite/reset volume (if not already)
-- [ ] Send test password reset → **From** is `noreply@keytrainlearning.com`, link opens `keytrainlearning.com/reset-password`
-
----
-
-### 3 — Secrets & edge functions (verify)
+### 1 — Secrets & edge functions (verify)
 
 - [ ] `RESEND_API_KEY`, `RESEND_FROM`, `SUPPORT_TO_EMAIL`, `INVITE_REDIRECT_URL`, `PHISHING_TRAINING_URL` set
 - [ ] `PHISHING_SIMULATION_DRY_RUN` unset or `false`
@@ -73,7 +58,7 @@ SMTP and reset template are configured correctly in the dashboard. Confirm with 
 
 ---
 
-### 4 — Phishing production validation
+### 2 — Phishing production validation
 
 | URL | Purpose |
 |-----|---------|
@@ -89,24 +74,24 @@ SMTP and reset template are configured correctly in the dashboard. Confirm with 
 
 ---
 
-### 5 — End-to-end verification
+### 3 — End-to-end verification
 
 | Test | Done |
 |------|------|
 | `npm run test:resend-support` returns HTTP 200 | [ ] |
 | Profile → Contact → delivered to `SUPPORT_TO_EMAIL` | [ ] |
 | Invite user → from `noreply@keytrainlearning.com`, link opens keytrainlearning.com | [ ] |
-| Password reset → same | [ ] |
+| Password reset → same | [x] |
 | Phishing test send → from campaign sender on your domain | [ ] |
 | Resend → **Logs** shows Delivered (no unexpected bounces) | [ ] |
 
 ---
 
-### 6 — Phishing inbox placement (deliverability)
+### 4 — Phishing inbox placement (deliverability)
 
 Inbox placement needs **authentication + sane URLs + customer IT allowlisting**. Content realism (templates, org names, fake login) is already in place.
 
-#### 6.1 — Customer IT allowlisting (required for hospitals on M365)
+#### 4.1 — Customer IT allowlisting (required for hospitals on M365)
 
 - [ ] Each customer's IT admin configures **Microsoft Defender Advanced Delivery** → **Phishing simulation**  
   [Configure advanced delivery](https://learn.microsoft.com/en-us/defender-office-365/advanced-delivery-policy-configure)
@@ -122,7 +107,7 @@ Inbox placement needs **authentication + sane URLs + customer IT allowlisting**.
 
 > Use Advanced Delivery — not broad safe-sender or global IP allowlists.
 
-#### 6.2 — DMARC
+#### 4.2 — DMARC
 
 SPF and DKIM are done. DMARC is not.
 
@@ -134,7 +119,7 @@ _dmarc.keytrainlearning.com  TXT  "v=DMARC1; p=none; rua=mailto:dmarc@keytrainle
 
 - [ ] Resend → **Domains** shows SPF, DKIM, and DMARC green
 
-#### 6.3 — Tracking URLs (replace supabase.co in email links)
+#### 4.3 — Tracking URLs (replace supabase.co in email links)
 
 Click-tracking currently defaults to:
 
@@ -151,7 +136,7 @@ supabase secrets set PHISHING_TRACKING_BASE_URL='https://keytrainlearning.com/ap
 
 - [ ] Optional later: dedicated sim domain — [`simulation-sites/README.md`](../simulation-sites/README.md)
 
-#### 6.4 — Campaign & pilot practices
+#### 4.4 — Campaign & pilot practices
 
 - [ ] Disable **open-tracking pixel** on production campaigns
 - [ ] Test-send to Gmail, Outlook.com, and customer M365 before full send
@@ -190,6 +175,7 @@ npx supabase migration repair --status applied \
 |---------|------------|
 | `401 Unauthorized` on phishing send | Sign out/in; hard-refresh for latest frontend bundle |
 | CORS on `get-daily-verse` | Hard-refresh — client-side verse should not call edge function |
+| `422` on `auth/v1/user` after login | Harmless if dashboard loads; fixed by removing redundant `getUser()` on daily verse |
 | Resend 403 | Domain not verified, or `From` not on verified domain |
 | Phishing “dry run” | Unset `PHISHING_SIMULATION_DRY_RUN`; set `RESEND_API_KEY` |
 | Auth mail from `@supabase.co` | Custom SMTP is on — confirm **Save changes** was clicked; send test reset |
@@ -215,4 +201,4 @@ npx supabase migration repair --status applied \
 
 ---
 
-*Last updated: migrations 025–027 confirmed via SQL checks.*
+*Last updated: frontend verified in browser (no console errors, daily verse loads).*

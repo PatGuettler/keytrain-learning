@@ -28,9 +28,11 @@ export async function resetPassword(email: string) {
 }
 
 export async function updatePassword(password: string) {
-  await backend.auth.updatePassword(password)
   const session = (await getSession()) as { user?: { id: string } } | null
   const userId = session?.user?.id
+
+  await backend.auth.updatePassword(password)
+
   if (!userId) return
 
   // Belt-and-suspenders with DB trigger 026_clear_lockout_on_password_change.sql

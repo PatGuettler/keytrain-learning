@@ -1,6 +1,5 @@
 import { backend } from '@/backend'
 import { lookupDailyVerse } from '@/lib/daily-verse'
-import { getEdgeFunctionAccessToken } from '@/lib/edge-function-auth'
 
 export function getLocalDateString(date = new Date()): string {
   const year = date.getFullYear()
@@ -25,8 +24,6 @@ export type DailyVerseResponse = {
 }
 
 export async function fetchDailyVerse(localDate: string): Promise<DailyVerseResponse> {
-  await getEdgeFunctionAccessToken()
-
   const { reference, text } = lookupDailyVerse(localDate)
   return { reference, text, localDate }
 }
