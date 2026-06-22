@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { PhishingEmailPreview } from '@/components/admin/PhishingEmailPreview'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,6 +20,8 @@ import {
   updatePhishingCampaign,
 } from '@/services/phishing.service'
 import { fetchProfile } from '@/services/auth.service'
+import { previewPhishingText } from '@/lib/phishing-preview'
+import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { PHISHING_PRETEXT_LABELS, type PhishingTargetScope } from '@/types/phishing.types'
 import type { Profile } from '@/types/user.types'
@@ -69,6 +72,7 @@ export function PhishingCampaignEditPage() {
   const [userPage, setUserPage] = useState(1)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [bodyTab, setBodyTab] = useState<'preview' | 'html' | 'text'>('preview')
 
   const {
     data: allUsers = [],
@@ -192,6 +196,7 @@ export function PhishingCampaignEditPage() {
     setBodyHtml(template.body_html)
     setBodyText(template.body_text)
     setPretext(template.pretext)
+    setBodyTab('preview')
   }
 
   const toggleUser = (id: string) => {
@@ -281,7 +286,7 @@ export function PhishingCampaignEditPage() {
           <Label htmlFor="template">Template</Label>
           <select
             id="template"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="hidden sm:block h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={templateId}
             onChange={(e) => applyTemplate(e.target.value)}
           >
@@ -292,6 +297,27 @@ export function PhishingCampaignEditPage() {
               </option>
             ))}
           </select>
+          <div className="grid gap-2 sm:hidden">
+            {templates.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => applyTemplate(t.id)}
+                className={cn(
+                  'rounded-md border px-3 py-3 text-left text-sm transition-colors',
+                  templateId === t.id
+                    ? 'border-primary bg-primary/5'
+                    : 'bg-background hover:bg-accent/50'
+                )}
+              >
+                <span className="font-medium block">{t.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {PHISHING_PRETEXT_LABELS[t.pretext] ?? t.pretext}
+                  {t.difficulty ? ` · ${t.difficulty}` : ''}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className={targetScope === 'org' ? 'grid gap-4 sm:grid-cols-2' : 'space-y-4'}>
@@ -577,24 +603,56 @@ export function PhishingCampaignEditPage() {
           Include open-tracking pixel (unreliable in many email clients)
         </label>
 
-        <div className="space-y-2">
-          <Label htmlFor="body-html">Email HTML</Label>
-          <textarea
-            id="body-html"
-            className="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
-            value={bodyHtml}
-            onChange={(e) => setBodyHtml(e.target.value)}
-          />
-        </div>
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Label>Email body</Label>
+            <div className="flex rounded-md border p-0.5 text-xs sm:text-sm">
+              {(['preview', 'html', 'text'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setBodyTab(tab)}
+                  className={cn(
+                    'rounded px-2.5 py-1 capitalize transition-colors',
+                    bodyTab === tab
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {tab === 'text' ? 'Plain text' : tab}
+                </button>
+              ))}
+            </div>
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="body-text">Plain text fallback</Label>
-          <textarea
-            id="body-text"
-            className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
-            value={bodyText}
-            onChange={(e) => setBodyText(e.target.value)}
-          />
+          {bodyTab === 'preview' && (
+            <PhishingEmailPreview
+              subject={previewPhishingText(subject)}
+              senderName={previewPhishingText(senderName)}
+              senderEmail={previewPhishingText(senderEmail)}
+              bodyHtml={bodyHtml}
+            />
+          )}
+
+          {bodyTab === 'html' && (
+            <textarea
+              id="body-html"
+              aria-label="Email HTML"
+              className="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono break-all"
+              value={bodyHtml}
+              onChange={(e) => setBodyHtml(e.target.value)}
+            />
+          )}
+
+          {bodyTab === 'text' && (
+            <textarea
+              id="body-text"
+              aria-label="Plain text fallback"
+              className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono break-all"
+              value={bodyText}
+              onChange={(e) => setBodyText(e.target.value)}
+            />
+          )}
         </div>
       </div>
 
