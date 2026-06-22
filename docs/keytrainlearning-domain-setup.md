@@ -12,7 +12,7 @@ These are done — no further action unless something breaks.
 
 | Area | Status |
 |------|--------|
-| **Resend domain** | `keytrainlearning.com` verified in Resend; SPF + DKIM in Cloudflare |
+| **Resend domain** | `keytrainlearning.com` verified in Resend; SPF + DKIM + DMARC in Cloudflare |
 | **Live app** | `https://keytrainlearning.com` serves the app; sign-in works |
 | **GitHub Pages / DNS** | Custom domain on GitHub Pages with HTTPS |
 | **Repo build config** | `deploy.yml` (`GH_PAGES_BASE=/`, `VITE_APP_URL`), `package.json` homepage, `supabase/config.toml` auth URLs |
@@ -109,15 +109,15 @@ Inbox placement needs **authentication + sane URLs + customer IT allowlisting**.
 
 #### 4.2 — DMARC
 
-SPF and DKIM are done. DMARC is not.
-
-- [ ] Add at Cloudflare:
+- [x] **DMARC TXT** at Cloudflare — live DNS verified:
 
 ```
 _dmarc.keytrainlearning.com  TXT  "v=DMARC1; p=none; rua=mailto:dmarc@keytrainlearning.com"
 ```
 
-- [ ] Resend → **Domains** shows SPF, DKIM, and DMARC green
+Also confirmed on `send` subdomain (Resend): SPF `include:amazonses.com`, DKIM `resend._domainkey`, MX `feedback-smtp.us-east-1.amazonses.com`.
+
+- [x] Resend → **Domains** — `keytrainlearning.com` verified (Jun 17); DKIM, SPF (MX + TXT on `send`) all green; domain ready to send
 
 #### 4.3 — Tracking URLs (replace supabase.co in email links)
 
@@ -201,4 +201,4 @@ npx supabase migration repair --status applied \
 
 ---
 
-*Last updated: frontend verified in browser (no console errors, daily verse loads).*
+*Last updated: Resend domain verified (DKIM + SPF green); DMARC TXT live in Cloudflare.*
