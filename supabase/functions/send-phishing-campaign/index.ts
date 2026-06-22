@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    const resendKey = Deno.env.get('RESEND_API_KEY')
+    const resendKey = Deno.env.get('RESEND_API_KEY')?.trim() ?? ''
 
     if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
       return jsonResponse({ error: 'Server misconfigured.' }, 500)
