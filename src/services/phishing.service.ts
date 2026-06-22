@@ -1,4 +1,4 @@
-import { getPublicAppUrl } from '@/lib/backend-config'
+import { getFakeLoginUrlForPretext } from '@/lib/phishing-login-pages'
 import { getEdgeFunctionAccessToken } from '@/lib/edge-function-auth'
 import { EDGE_FUNCTION_DEPLOY_HINT } from '@/lib/edge-functions'
 import { fetchProfiles } from '@/services/users.service'
@@ -304,8 +304,10 @@ export async function sendPhishingCampaign(
 }
 
 export function getDefaultFakeLoginUrl(): string {
-  return `${getPublicAppUrl()}/phishing-sim/login.html`
+  return getFakeLoginUrlForPretext('it_helpdesk')
 }
+
+export { getFakeLoginUrlForPretext, PHISHING_LOGIN_PAGE_LABELS } from '@/lib/phishing-login-pages'
 
 /** Per-recipient sender address pattern (resolved when the campaign is sent). */
 export function defaultPhishingSenderEmail(senderEmailLocal: string): string {

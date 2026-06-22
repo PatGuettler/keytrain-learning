@@ -11,8 +11,8 @@ const SAMPLE = {
   senderEmailLocal: 'memorial-hospital-it-support',
   emailDomain: 'keytrainlearning.com',
   deadlineDate: 'Friday',
-  trackingLink: 'https://keytrainlearning.com/phishing-sim/login.html',
-  loginUrl: 'https://keytrainlearning.com/phishing-sim/login.html',
+  trackingLink: 'https://keytrainlearning.com/phishing-sim/landing.html?theme=it_helpdesk',
+  loginUrl: 'https://keytrainlearning.com/phishing-sim/landing.html?theme=it_helpdesk',
   pixelUrl: '',
 }
 

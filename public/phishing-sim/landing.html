@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif;
+        background: #f3f2f1;
+        color: #323130;
+      }
+      .shell { min-height: 100vh; display: flex; flex-direction: column; }
+      .banner {
+        padding: 14px 20px;
+        font-weight: 600;
+        font-size: 15px;
+        color: #fff;
+      }
+      .main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 16px 32px;
+      }
+      .card {
+        width: 100%;
+        max-width: 440px;
+        background: #fff;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        padding: 28px 24px 32px;
+      }
+      .card-wide { max-width: 480px; }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+      .subtitle {
+        margin: 0 0 24px;
+        color: #605e5c;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #323130;
+      }
+      input[type="email"],
+      input[type="password"],
+      input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        margin-bottom: 16px;
+        border: 1px solid #8a8886;
+        border-radius: 2px;
+        font-size: 16px;
+      }
+      input:focus {
+        outline: 2px solid #0078d4;
+        border-color: #0078d4;
+      }
+      button[type="submit"] {
+        width: 100%;
+        padding: 11px 16px;
+        border: 0;
+        border-radius: 2px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 4px;
+      }
+      .link { color: #0078d4; font-size: 13px; text-decoration: none; }
+      .doc-box {
+        border: 1px solid #e1dfdd;
+        border-radius: 4px;
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        background: #faf9f8;
+        font-size: 14px;
+      }
+      .doc-box strong { display: block; margin-bottom: 4px; }
+      .ms-split {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      @media (min-width: 768px) {
+        .ms-split { flex-direction: row; }
+        .ms-left {
+          flex: 1;
+          background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+          min-height: 100vh;
+        }
+        .ms-right {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px;
+          background: #fff;
+        }
+      }
+      .ms-mobile-banner {
+        background: #0078d4;
+        color: #fff;
+        padding: 16px 20px;
+        font-size: 20px;
+        font-weight: 600;
+      }
+      @media (min-width: 768px) {
+        .ms-mobile-banner { display: none; }
+      }
+      .note {
+        margin-top: 20px;
+        font-size: 11px;
+        color: #a19f9d;
+        text-align: center;
+        line-height: 1.4;
+      }
+      .alert-box {
+        background: #fde7e9;
+        border-left: 4px solid #d13438;
+        padding: 12px 14px;
+        margin-bottom: 20px;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .pill {
+        display: inline-block;
+        background: #f5c518;
+        color: #1a1a2e;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 3px;
+        margin-bottom: 12px;
+        letter-spacing: 0.04em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var theme = params.get('theme') || 'it_helpdesk';
+        var token = params.get('token') || '';
+        var trackBase = params.get('track') || '';
+        var company = params.get('company') || 'Your Organization';
+
+        var formTail =
+          '<form id="login-form" method="POST" action="#">' +
+          '<input type="hidden" name="event" value="credential_submission" />' +
+          '<input type="hidden" name="token" id="token-field" value="" />' +
+          '<label for="email">Email</label>' +
+          '<input id="email" name="email" type="email" placeholder="you@organization.org" required autocomplete="username" />' +
+          '<label for="password">Password</label>' +
+          '<input id="password" name="password" type="password" placeholder="Password" required autocomplete="current-password" />' +
+          '<button type="submit" id="submit-btn">Sign in</button>' +
+          '</form>' +
+          '<p class="note">Authorized security awareness simulation — credentials are never stored.</p>';
+
+        var themes = {
+          it_helpdesk: {
+            title: 'Sign in — ' + company,
+            body:
+              '<div class="shell">' +
+              '<div class="banner" style="background:#0078d4;">' + escapeHtml(company) + ' · Information Technology</div>' +
+              '<div class="main"><div class="card">' +
+              '<h1>Password reset required</h1>' +
+              '<p class="subtitle">Your organization account password must be updated. Sign in to continue the reset process.</p>' +
+              formTail.replace('Sign in', 'Continue') +
+              '</div></div></div>',
+          },
+          docusign: {
+            title: 'DocuSign — Review document',
+            body:
+              '<div class="shell">' +
+              '<div class="banner" style="background:#1a1a2e;">DocuSign</div>' +
+              '<div class="main"><div class="card card-wide">' +
+              '<span class="pill">ACTION REQUIRED</span>' +
+              '<h1>Review and sign</h1>' +
+              '<div class="doc-box"><strong>Q2 Compliance Acknowledgment.pdf</strong>Sent via ' + escapeHtml(company) + '</div>' +
+              '<p class="subtitle">Sign in to view the document. This link expires in 3 days.</p>' +
+              formTail.replace('id="submit-btn">Sign in', 'id="submit-btn" style="background:#f5c518;color:#1a1a2e;">Review Document') +
+              '</div></div></div>',
+          },
+          sharepoint: {
+            title: 'Sign in — SharePoint',
+            body:
+              '<div class="shell">' +
+              '<div class="banner" style="background:#038387;">Microsoft SharePoint</div>' +
+              '<div class="main"><div class="card">' +
+              '<h1>Sign in</h1>' +
+              '<p class="subtitle">Use your ' + escapeHtml(company) + ' account to access the shared document.</p>' +
+              formTail.replace('id="submit-btn">Sign in', 'id="submit-btn" style="background:#038387;color:#fff;">Sign in') +
+              '<p style="margin-top:12px;"><a class="link" href="#">Can\'t access your account?</a></p>' +
+              '</div></div></div>',
+          },
+          hr: {
+            title: 'Benefits enrollment — ' + company,
+            body:
+              '<div class="shell">' +
+              '<div class="banner" style="background:#2e7d6b;">Human Resources · ' + escapeHtml(company) + '</div>' +
+              '<div class="main"><div class="card">' +
+              '<h1>Open enrollment</h1>' +
+              '<p class="subtitle">Confirm your medical, dental, and FSA elections before the deadline.</p>' +
+              formTail.replace('id="submit-btn">Sign in', 'id="submit-btn" style="background:#2e7d6b;color:#fff;">Review My Benefits') +
+              '</div></div></div>',
+          },
+          microsoft: {
+            title: 'Sign in to your Microsoft account',
+            body:
+              '<div class="ms-split">' +
+              '<div class="ms-left"></div>' +
+              '<div class="ms-mobile-banner">Microsoft</div>' +
+              '<div class="ms-right"><div class="card" style="box-shadow:none;max-width:380px;padding:0;">' +
+              '<svg width="108" height="24" viewBox="0 0 108 24" style="margin-bottom:24px;" aria-hidden="true">' +
+              '<rect x="0" y="0" width="11" height="11" fill="#f25022"/><rect x="12" y="0" width="11" height="11" fill="#7fba00"/>' +
+              '<rect x="0" y="12" width="11" height="11" fill="#00a4ef"/><rect x="12" y="12" width="11" height="11" fill="#ffb900"/>' +
+              '</svg>' +
+              '<h1>Sign in</h1>' +
+              '<div class="alert-box">We detected unusual sign-in activity. Verify your identity to secure your account.</div>' +
+              formTail.replace('id="submit-btn">Sign in', 'id="submit-btn" style="background:#0067b8;color:#fff;">Next') +
+              '</div></div></div>',
+          },
+          payroll: {
+            title: 'Payroll verification — ' + company,
+            body:
+              '<div class="shell">' +
+              '<div class="banner" style="background:#1b5e20;">Payroll · ' + escapeHtml(company) + '</div>' +
+              '<div class="main"><div class="card">' +
+              '<h1>Verify direct deposit</h1>' +
+              '<p class="subtitle">Due to a payroll system update, re-verify your banking information to avoid payment delays.</p>' +
+              formTail.replace(
+                '<label for="email">Email</label>',
+                '<label for="employee-id">Employee ID</label><input id="employee-id" name="employee_id" type="text" placeholder="Employee ID" required /><label for="email">Work email</label>'
+              ).replace('id="submit-btn">Sign in', 'id="submit-btn" style="background:#1b5e20;color:#fff;">Verify My Information') +
+              '</div></div></div>',
+          },
+        };
+
+        var selected = themes[theme] || themes.it_helpdesk;
+        document.title = selected.title;
+        document.getElementById('app').innerHTML = selected.body;
+
+        document.getElementById('token-field').value = token;
+        var form = document.getElementById('login-form');
+
+        if (trackBase && token) {
+          var beacon = document.createElement('img');
+          beacon.src =
+            trackBase.replace(/\/$/, '') +
+            '?token=' +
+            encodeURIComponent(token) +
+            '&event=click&beacon=1';
+          beacon.width = 1;
+          beacon.height = 1;
+          beacon.alt = '';
+          beacon.style.display = 'none';
+          document.body.appendChild(beacon);
+        }
+
+        if (trackBase) {
+          form.action = trackBase.replace(/\/$/, '');
+        } else {
+          form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            alert('This simulation page is not linked to a campaign yet.');
+          });
+        }
+
+        function escapeHtml(value) {
+          return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -15,6 +15,8 @@ import {
   fetchPhishingCampaign,
   fetchPhishingTemplates,
   getDefaultFakeLoginUrl,
+  getFakeLoginUrlForPretext,
+  PHISHING_LOGIN_PAGE_LABELS,
   defaultPhishingSenderEmail,
   syncPhishingRecipients,
   updatePhishingCampaign,
@@ -196,6 +198,7 @@ export function PhishingCampaignEditPage() {
     setBodyHtml(template.body_html)
     setBodyText(template.body_text)
     setPretext(template.pretext)
+    setFakeLoginUrl(getFakeLoginUrlForPretext(template.pretext))
     setBodyTab('preview')
   }
 
@@ -588,8 +591,17 @@ export function PhishingCampaignEditPage() {
             onChange={(e) => setFakeLoginUrl(e.target.value)}
           />
           <p className="text-xs text-muted-foreground">
-            Default uses the bundled <code>/phishing-sim/login.html</code> page until you deploy a
-            Cloudflare Pages site on your own domain.
+            {pretext && pretext in PHISHING_LOGIN_PAGE_LABELS ? (
+              <>
+                Template uses <strong>{PHISHING_LOGIN_PAGE_LABELS[pretext as keyof typeof PHISHING_LOGIN_PAGE_LABELS]}</strong>.
+                Selecting a template updates this automatically.
+              </>
+            ) : (
+              <>
+                Each template has a matching themed page under <code>/phishing-sim/landing.html</code>.
+                Select a template to auto-fill.
+              </>
+            )}
           </p>
         </div>
 

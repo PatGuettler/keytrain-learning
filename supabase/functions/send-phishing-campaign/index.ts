@@ -266,18 +266,24 @@ Deno.serve(async (req) => {
         continue
       }
 
-      const trackingLink = `${trackBase}?token=${recipient.token}&event=click`
+      const companyName =
+        (profile.org_id ? orgNameById.get(profile.org_id) : null) ??
+        campaignOrgName ??
+        'Your Organization'
+
+      const trackingLinkBase = `${trackBase}?token=${recipient.token}&event=click`
       const pixelUrl = campaign.track_opens
         ? `${trackBase}?token=${recipient.token}&event=open`
         : ''
       const trackParam = encodeURIComponent(trackBase)
       const loginBase = campaign.fake_login_url?.trim() || ''
       const fakeLoginPageUrl = loginBase
-        ? `${loginBase}${loginBase.includes('?') ? '&' : '?'}token=${recipient.token}&track=${trackParam}`
+        ? `${loginBase}${loginBase.includes('?') ? '&' : '?'}token=${encodeURIComponent(recipient.token)}&track=${trackParam}&company=${encodeURIComponent(companyName)}`
         : ''
-      const loginUrl = fakeLoginPageUrl
-        ? `${trackBase}?token=${recipient.token}&event=click&next=${encodeURIComponent(fakeLoginPageUrl)}`
-        : trackingLink
+      const trackingLink = fakeLoginPageUrl
+        ? `${trackingLinkBase}&next=${encodeURIComponent(fakeLoginPageUrl)}`
+        : trackingLinkBase
+      const loginUrl = trackingLink
 
       const ctx = buildRecipientContext({
         profile,
