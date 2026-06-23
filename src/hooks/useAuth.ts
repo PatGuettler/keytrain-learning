@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/store/authStore'
 import { signIn, signOut } from '@/services/auth.service'
 import { syncRequiredAssignmentsForUser } from '@/services/assignments.service'
-import { updateProfile } from '@/services/users.service'
+import { getSupabase } from '@/services/supabase'
 import { ROLE_DASHBOARD } from '@/lib/constants'
 import { isPasswordLongEnough } from '@/lib/password'
 import type { UserRole } from '@/types/user.types'
@@ -13,7 +13,13 @@ export function useAuth() {
     const result = await signIn(email, password)
     let profile = result.profile
     if (!isPasswordLongEnough(password)) {
-      profile = await updateProfile(result.user.id, { password_upgrade_required: true })
+      const supabase = getSupabase()
+      if (supabase) {
+        const { error } = await supabase.rpc('flag_password_upgrade_required')
+        if (!error) {
+          profile = { ...profile, password_upgrade_required: true }
+        }
+      }
     }
     setAuth({
       userId: result.user.id,

@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
+import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
 
 type VerseEntry = { day: number; reference: string; text: string }
 
@@ -7,10 +7,12 @@ const references = JSON.parse(
   await Deno.readTextFile(new URL('./references.json', import.meta.url))
 ) as VerseEntry[]
 
+let requestCors: Record<string, string> = corsHeaders
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...requestCors, 'Content-Type': 'application/json' },
   })
 }
 
@@ -32,8 +34,10 @@ function lookupVerse(day: number): VerseEntry {
 }
 
 Deno.serve(async (req) => {
+  requestCors = corsHeadersForRequest(req)
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: requestCors })
   }
 
   if (req.method !== 'POST') {

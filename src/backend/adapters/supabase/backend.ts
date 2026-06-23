@@ -2,7 +2,7 @@
 
 import { PLATFORM_ORG_ID } from '@/lib/constants'
 import { isPublicationActive } from '@/lib/course-publications'
-import { getSupabase } from '@/services/supabase'
+import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
 import type { Backend } from '../../types'
 import type { CourseAttemptResult } from '@/types/training.types'
 import type {
@@ -32,6 +32,21 @@ import {
   type ModuleAttemptUpdate,
 } from './helpers'
 
+async function recordFailedLoginAttempt(email: string): Promise<void> {
+  const baseUrl = getSupabaseUrl()
+  const anonKey = getSupabaseAnonKey()
+  if (!baseUrl || !anonKey) return
+  try {
+    await fetch(`${baseUrl}/functions/v1/record-failed-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: anonKey },
+      body: JSON.stringify({ email }),
+    })
+  } catch {
+    // Lockout recording is best-effort; login error is still shown.
+  }
+}
+
 export function createSupabaseBackend(): Backend {
   const supabase = getSupabase()
   if (!supabase) return createUnconfiguredBackend()
@@ -55,7 +70,7 @@ export function createSupabaseBackend(): Backend {
           password,
         })
         if (error) {
-          await supabase.rpc('record_failed_login', { p_email: normalizedEmail })
+          await recordFailedLoginAttempt(normalizedEmail)
           throw error
         }
 
@@ -463,66 +478,7 @@ export function createSupabaseBackend(): Backend {
           return data as CourseAttemptResult
         }
 
-        const rpcMissing =
-          error?.code === 'PGRST202' ||
-          error?.code === '42883' ||
-          error?.message?.includes('record_course_attempt_result')
-
-        if (!rpcMissing) throw error
-
-        // Fallback when RPC migration not applied yet (requires 011_assignments_update_own RLS)
-        const { data: assignment, error: fetchError } = await supabase
-          .from('assignments')
-          .select('attempts_used, locked_at')
-          .eq('id', assignmentId)
-          .single()
-        if (fetchError) throw fetchError
-
-        const unlimitedAttempts = maxAttempts === 0
-        const attemptsUsed = assignment.attempts_used + 1
-
-        if (passed) {
-          const { error: updateError } = await supabase
-            .from('assignments')
-            .update({
-              status: 'completed',
-              locked_at: null,
-              last_score: score ?? null,
-              completed_at: new Date().toISOString(),
-              attempts_used: attemptsUsed,
-            })
-            .eq('id', assignmentId)
-          if (updateError) throw updateError
-          return {
-            passed: true,
-            attemptsUsed,
-            maxAttempts,
-            locked: false,
-            attemptsRemaining: unlimitedAttempts ? -1 : Math.max(0, maxAttempts - attemptsUsed),
-            score: score ?? null,
-          }
-        }
-
-        const locked = !unlimitedAttempts && attemptsUsed >= maxAttempts
-        const { error: updateError } = await supabase
-          .from('assignments')
-          .update({
-            attempts_used: attemptsUsed,
-            status: 'in_progress',
-            locked_at: locked ? new Date().toISOString() : null,
-            last_score: score ?? null,
-          })
-          .eq('id', assignmentId)
-        if (updateError) throw updateError
-
-        return {
-          passed: false,
-          attemptsUsed,
-          maxAttempts,
-          locked,
-          attemptsRemaining: Math.max(0, maxAttempts - attemptsUsed),
-          score: score ?? null,
-        }
+        throw error ?? new Error('Could not record course attempt.')
       },
       async requestCourseUnlock({ assignmentId, userId, courseId, orgId, message }) {
         const { data, error } = await supabase

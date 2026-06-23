@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
+import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
 
 const MAX_ROWS = 500
 const ROLE_ORDER: Record<string, number> = { admin: 0, manager: 1, employee: 2 }
@@ -22,10 +22,12 @@ interface RowResult {
   message?: string
 }
 
+let requestCors: Record<string, string> = corsHeaders
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...requestCors, 'Content-Type': 'application/json' },
   })
 }
 
@@ -469,8 +471,10 @@ async function handleImportCsv(
 }
 
 Deno.serve(async (req) => {
+  requestCors = corsHeadersForRequest(req)
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: requestCors })
   }
 
   if (req.method !== 'POST') {

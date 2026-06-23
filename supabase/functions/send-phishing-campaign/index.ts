@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
+import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
 import {
   buildRecipientContext,
   isPhishingDryRun,
@@ -9,10 +9,12 @@ import {
   trackingBaseUrl,
 } from '../_shared/phishing.ts'
 
+let requestCors: Record<string, string> = corsHeaders
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...requestCors, 'Content-Type': 'application/json' },
   })
 }
 
@@ -64,8 +66,10 @@ async function resolveUserIdByEmail(
 }
 
 Deno.serve(async (req) => {
+  requestCors = corsHeadersForRequest(req)
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: requestCors })
   }
 
   if (req.method !== 'POST') {

@@ -2,7 +2,7 @@ import { backend } from '@/backend'
 import { getAuthCallbackSignals, isAuthCallbackRoute } from '@/lib/auth-callback'
 import { getResetPasswordRedirectUrl } from '@/lib/backend-config'
 import { ACCOUNT_LOCKED_MESSAGE, INVALID_LOGIN_MESSAGE, isPasswordLongEnough } from '@/lib/password'
-import { updateProfile } from '@/services/users.service'
+import { getSupabase } from '@/services/supabase'
 import type { Profile } from '@/types/user.types'
 
 export async function signIn(email: string, password: string) {
@@ -39,7 +39,11 @@ export async function updatePassword(password: string) {
   await backend.auth.clearLoginLockout(userId)
 
   if (isPasswordLongEnough(password)) {
-    await updateProfile(userId, { password_upgrade_required: false })
+    const supabase = getSupabase()
+    if (supabase) {
+      const { error } = await supabase.rpc('complete_password_upgrade')
+      if (error) throw error
+    }
   }
 }
 
@@ -47,7 +51,10 @@ export async function completeInvitationRegistration() {
   const session = (await getSession()) as { user?: { id: string } } | null
   const userId = session?.user?.id
   if (!userId) throw new Error('Not signed in.')
-  await updateProfile(userId, { invitation_pending: false })
+  const supabase = getSupabase()
+  if (!supabase) throw new Error('Backend not configured.')
+  const { error } = await supabase.from('profiles').update({ invitation_pending: false }).eq('id', userId)
+  if (error) throw error
 }
 
 export async function getSession() {

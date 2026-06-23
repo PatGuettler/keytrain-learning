@@ -1,16 +1,20 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
+import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
+
+let requestCors: Record<string, string> = corsHeaders
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...requestCors, 'Content-Type': 'application/json' },
   })
 }
 
 Deno.serve(async (req) => {
+  requestCors = corsHeadersForRequest(req)
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: requestCors })
   }
 
   if (req.method !== 'POST') {

@@ -66,6 +66,9 @@ echo "Setting INVITE_REDIRECT_URL=$INVITE_URL"
 echo "Deploying manage-users (JWT checked inside function, not at gateway)…"
 "${SUPABASE_CMD[@]}" functions deploy manage-users --project-ref "$PROJECT_REF" --no-verify-jwt
 
+echo "Deploying record-failed-login (rate-limited lockout recording)…"
+"${SUPABASE_CMD[@]}" functions deploy record-failed-login --project-ref "$PROJECT_REF" --no-verify-jwt
+
 echo ""
 echo "Verifying deployment…"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X OPTIONS \

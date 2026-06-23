@@ -123,7 +123,6 @@ export function isAllowedPhishingRedirect(target: string): boolean {
     if (parsed.hostname === 'keytrainlearning.com' || parsed.hostname.endsWith('.keytrainlearning.com')) {
       return true
     }
-    if (parsed.hostname.endsWith('.github.io')) return true
     return false
   } catch {
     return false

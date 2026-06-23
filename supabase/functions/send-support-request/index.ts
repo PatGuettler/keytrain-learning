@@ -1,13 +1,15 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
+import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
 
 const DEFAULT_TO = 'patguettler@gmail.com'
 const DEFAULT_FROM = 'KeyTrain Learning Support <onboarding@resend.dev>'
 
+let requestCors: Record<string, string> = corsHeaders
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...requestCors, 'Content-Type': 'application/json' },
   })
 }
 
@@ -21,8 +23,10 @@ function parseResendError(body: string): string {
 }
 
 Deno.serve(async (req) => {
+  requestCors = corsHeadersForRequest(req)
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: requestCors })
   }
 
   if (req.method !== 'POST') {

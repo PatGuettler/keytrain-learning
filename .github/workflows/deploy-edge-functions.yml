@@ -33,6 +33,7 @@ jobs:
           npx --yes supabase@latest config push --yes || true
           npx --yes supabase@latest secrets set "INVITE_REDIRECT_URL=$INVITE_REDIRECT_URL" --project-ref "$SUPABASE_PROJECT_REF"
           npx --yes supabase@latest functions deploy manage-users --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+          npx --yes supabase@latest functions deploy record-failed-login --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
 
       - name: Deploy spiritual functions
         env:

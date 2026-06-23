@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
+import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
 import { trainingPageUrl, isAllowedPhishingRedirect } from '../_shared/phishing.ts'
 
 const TRANSPARENT_GIF = new Uint8Array([
@@ -27,19 +27,21 @@ async function resolveToken(
 }
 
 Deno.serve(async (req) => {
+  const cors = corsHeadersForRequest(req)
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: cors })
   }
 
   if (req.method !== 'GET' && req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405, headers: corsHeaders })
+    return new Response('Method not allowed', { status: 405, headers: cors })
   }
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     if (!supabaseUrl || !serviceRoleKey) {
-      return new Response('Server misconfigured', { status: 500, headers: corsHeaders })
+      return new Response('Server misconfigured', { status: 500, headers: cors })
     }
 
     const url = new URL(req.url)
@@ -82,7 +84,7 @@ Deno.serve(async (req) => {
     if (event === 'open') {
       return new Response(TRANSPARENT_GIF, {
         headers: {
-          ...corsHeaders,
+          ...cors,
           'Content-Type': 'image/gif',
           'Cache-Control': 'no-store, no-cache, must-revalidate',
         },
@@ -92,7 +94,7 @@ Deno.serve(async (req) => {
     if (event === 'click' && url.searchParams.get('beacon') === '1') {
       return new Response(TRANSPARENT_GIF, {
         headers: {
-          ...corsHeaders,
+          ...cors,
           'Content-Type': 'image/gif',
           'Cache-Control': 'no-store, no-cache, must-revalidate',
         },

@@ -723,6 +723,14 @@ export interface Database {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      flag_password_upgrade_required: {
+        Args: Record<string, never>
+        Returns: undefined
+      }
+      complete_password_upgrade: {
+        Args: Record<string, never>
+        Returns: undefined
+      }
       approve_course_unlock: {
         Args: {
           p_request_id: string
