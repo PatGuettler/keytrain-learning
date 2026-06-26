@@ -1,12 +1,12 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Settings2, X } from 'lucide-react'
+import { Check, ChevronDown, Settings2 } from 'lucide-react'
 import { createTrainingTag, fetchTrainingTags } from '@/services/training-tags.service'
 import { ManageTagsDialog } from '@/components/admin/ManageTagsDialog'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 type TagMultiSelectProps = {
   id?: string
@@ -14,7 +14,6 @@ type TagMultiSelectProps = {
   description?: string
   selectedTagIds: string[]
   onChange: (tagIds: string[]) => void
-  /** Show manage-tags dialog button (default true). */
   allowManage?: boolean
 }
 
@@ -27,10 +26,11 @@ export function TagMultiSelect({
   allowManage = true,
 }: TagMultiSelectProps) {
   const queryClient = useQueryClient()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [inputValue, setInputValue] = useState('')
+  const rootRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
   const [createError, setCreateError] = useState('')
-  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [manageOpen, setManageOpen] = useState(false)
 
   const { data: tags = [], isLoading } = useQuery({
@@ -44,24 +44,36 @@ export function TagMultiSelect({
   )
 
   const filteredTags = useMemo(() => {
-    const q = inputValue.trim().toLowerCase()
+    const q = search.trim().toLowerCase()
     if (!q) return tags
     return tags.filter((tag) => tag.name.toLowerCase().includes(q))
-  }, [tags, inputValue])
+  }, [tags, search])
 
   const exactMatch = useMemo(() => {
-    const q = inputValue.trim().toLowerCase()
+    const q = search.trim().toLowerCase()
     if (!q) return null
     return tags.find((tag) => tag.name.toLowerCase() === q) ?? null
-  }, [tags, inputValue])
+  }, [tags, search])
 
-  const toggleTag = (tagId: string) => {
-    if (selectedTagIds.includes(tagId)) {
-      onChange(selectedTagIds.filter((id) => id !== tagId))
-    } else {
-      onChange([...selectedTagIds, tagId])
+  const showCreateOption = search.trim().length > 0 && !exactMatch
+
+  useEffect(() => {
+    if (!open) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false)
+        setSearch('')
+      }
     }
-  }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [open])
+
+  useEffect(() => {
+    if (open) {
+      window.setTimeout(() => searchRef.current?.focus(), 0)
+    }
+  }, [open])
 
   const invalidateTags = () => {
     void queryClient.invalidateQueries({ queryKey: ['training-tags'] })
@@ -72,9 +84,8 @@ export function TagMultiSelect({
   const createMutation = useMutation({
     mutationFn: (name: string) => createTrainingTag(name),
     onSuccess: (tag) => {
-      setInputValue('')
+      setSearch('')
       setCreateError('')
-      setDropdownOpen(false)
       if (!selectedTagIds.includes(tag.id)) {
         onChange([...selectedTagIds, tag.id])
       }
@@ -83,27 +94,31 @@ export function TagMultiSelect({
     onError: (e: Error) => setCreateError(e.message),
   })
 
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const toggleTag = (tagId: string) => {
+    if (selectedTagIds.includes(tagId)) {
+      onChange(selectedTagIds.filter((id) => id !== tagId))
+    } else {
+      onChange([...selectedTagIds, tagId])
+    }
+  }
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault()
-      const trimmed = inputValue.trim()
+      const trimmed = search.trim()
       if (!trimmed) return
-
       if (exactMatch) {
         if (!selectedTagIds.includes(exactMatch.id)) {
           onChange([...selectedTagIds, exactMatch.id])
         }
-        setInputValue('')
-        setDropdownOpen(false)
+        setSearch('')
         return
       }
-
       createMutation.mutate(trimmed)
     }
-
     if (e.key === 'Escape') {
-      setDropdownOpen(false)
-      setInputValue('')
+      setOpen(false)
+      setSearch('')
     }
   }
 
@@ -113,11 +128,15 @@ export function TagMultiSelect({
     }
   }
 
-  const showCreateOption =
-    inputValue.trim().length > 0 && !exactMatch && !createMutation.isPending
+  const triggerLabel =
+    selectedTags.length === 0
+      ? 'Select tags…'
+      : selectedTags.length <= 2
+        ? selectedTags.map((t) => t.name).join(', ')
+        : `${selectedTags.length} tags selected`
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" ref={rootRef}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Label htmlFor={id}>{label}</Label>
         {allowManage && (
@@ -135,87 +154,84 @@ export function TagMultiSelect({
       </div>
       {description && <p className="text-xs text-muted-foreground">{description}</p>}
 
-      {selectedTags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {selectedTags.map((tag) => (
-            <Badge key={tag.id} variant="secondary" className="gap-1 pr-1">
-              {tag.name}
-              <button
-                type="button"
-                className="rounded-sm p-0.5 hover:bg-muted"
-                aria-label={`Remove ${tag.name}`}
-                onClick={() => toggleTag(tag.id)}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
-
-      <div className="relative">
-        <Input
-          ref={inputRef}
+      <div className="relative max-w-md">
+        <button
           id={id}
-          value={inputValue}
-          onChange={(e) => {
-            setInputValue(e.target.value)
-            setCreateError('')
-            setDropdownOpen(true)
-          }}
-          onFocus={() => setDropdownOpen(true)}
-          onBlur={() => {
-            window.setTimeout(() => setDropdownOpen(false), 150)
-          }}
-          onKeyDown={handleInputKeyDown}
-          placeholder={
-            isLoading
-              ? 'Loading tags…'
-              : tags.length === 0
-                ? 'Type a tag name and press Enter'
-                : 'Search tags or type a new name and press Enter'
-          }
-          disabled={isLoading || createMutation.isPending}
-          autoComplete="off"
-        />
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          disabled={isLoading}
+          className={cn(
+            'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm',
+            'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+            selectedTags.length === 0 && 'text-muted-foreground'
+          )}
+          onClick={() => setOpen((prev) => !prev)}
+        >
+          <span className="truncate text-left">{isLoading ? 'Loading tags…' : triggerLabel}</span>
+          <ChevronDown className={cn('h-4 w-4 shrink-0 opacity-60 transition-transform', open && 'rotate-180')} />
+        </button>
 
-        {dropdownOpen && (filteredTags.length > 0 || showCreateOption) && (
-          <ul className="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto rounded-md border bg-popover py-1 shadow-md">
-            {filteredTags.map((tag) => {
-              const selected = selectedTagIds.includes(tag.id)
-              return (
-                <li key={tag.id}>
+        {open && (
+          <div className="absolute z-30 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md">
+            <div className="border-b p-2">
+              <Input
+                ref={searchRef}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setCreateError('')
+                }}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search or type new tag, press Enter"
+                className="h-8"
+                autoComplete="off"
+                disabled={createMutation.isPending}
+              />
+            </div>
+
+            <ul className="max-h-52 overflow-y-auto py-1" role="listbox" aria-multiselectable>
+              {filteredTags.length === 0 && !showCreateOption ? (
+                <li className="px-3 py-2 text-sm text-muted-foreground">No tags found.</li>
+              ) : (
+                filteredTags.map((tag) => {
+                  const selected = selectedTagIds.includes(tag.id)
+                  return (
+                    <li key={tag.id}>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left hover:bg-muted/80"
+                        onClick={() => toggleTag(tag.id)}
+                      >
+                        <span
+                          className={cn(
+                            'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
+                            selected ? 'border-primary bg-primary text-primary-foreground' : 'border-input'
+                          )}
+                        >
+                          {selected && <Check className="h-3 w-3" />}
+                        </span>
+                        {tag.name}
+                      </button>
+                    </li>
+                  )
+                })
+              )}
+              {showCreateOption && (
+                <li>
                   <button
                     type="button"
-                    className={`flex w-full items-center px-3 py-2 text-sm text-left hover:bg-muted/80 ${
-                      selected ? 'bg-primary/10 text-primary' : ''
-                    }`}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      toggleTag(tag.id)
-                      setInputValue('')
-                      setDropdownOpen(false)
-                    }}
+                    className="w-full px-3 py-2 text-sm text-left text-primary hover:bg-muted/80"
+                    onClick={() => createMutation.mutate(search.trim())}
                   >
-                    {tag.name}
-                    {selected && <span className="ml-auto text-xs opacity-70">Selected</span>}
+                    Create &ldquo;{search.trim()}&rdquo;
                   </button>
                 </li>
-              )
-            })}
-            {showCreateOption && (
-              <li>
-                <button
-                  type="button"
-                  className="flex w-full items-center px-3 py-2 text-sm text-left hover:bg-muted/80 text-primary"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => createMutation.mutate(inputValue.trim())}
-                >
-                  Create &ldquo;{inputValue.trim()}&rdquo;
-                </button>
-              </li>
-            )}
-          </ul>
+              )}
+            </ul>
+          </div>
         )}
       </div>
 

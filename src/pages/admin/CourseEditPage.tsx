@@ -171,11 +171,11 @@ export function CourseEditPage() {
         )}
       </div>
 
-      <div className="max-w-2xl">
+      <div className="max-w-md">
         <TagMultiSelect
           id="course-tags"
           label="Tags"
-          description="Search or type a new tag and press Enter. Use Manage tags to rename or delete."
+          description="Choose tags from the dropdown. Type a new name and press Enter to create one."
           selectedTagIds={selectedTagIds}
           onChange={setSelectedTagIds}
         />
