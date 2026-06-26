@@ -28,10 +28,10 @@ echo "Linking project and pushing auth config…"
 "${SUPABASE_CMD[@]}" config push --yes || true
 
 echo "Deploying get-daily-verse…"
-"${SUPABASE_CMD[@]}" functions deploy get-daily-verse --project-ref "$PROJECT_REF" --no-verify-jwt
+"${SUPABASE_CMD[@]}" functions deploy get-daily-verse --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
 
 echo "Deploying submit-prayer-request…"
-"${SUPABASE_CMD[@]}" functions deploy submit-prayer-request --project-ref "$PROJECT_REF" --no-verify-jwt
+"${SUPABASE_CMD[@]}" functions deploy submit-prayer-request --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
 
 echo ""
 echo "Done. Daily verse text is bundled in get-daily-verse/references.json (World English Bible)."

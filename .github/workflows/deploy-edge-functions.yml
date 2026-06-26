@@ -32,8 +32,8 @@ jobs:
           npx --yes supabase@latest link --project-ref "$SUPABASE_PROJECT_REF" --yes || true
           npx --yes supabase@latest config push --yes || true
           npx --yes supabase@latest secrets set "INVITE_REDIRECT_URL=$INVITE_REDIRECT_URL" --project-ref "$SUPABASE_PROJECT_REF"
-          npx --yes supabase@latest functions deploy manage-users --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
-          npx --yes supabase@latest functions deploy record-failed-login --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+          npx --yes supabase@latest functions deploy manage-users --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
+          npx --yes supabase@latest functions deploy record-failed-login --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
 
       - name: Deploy spiritual functions
         env:
@@ -44,8 +44,8 @@ jobs:
             echo "Skipping spiritual deploy: missing repo secrets."
             exit 0
           fi
-          npx --yes supabase@latest functions deploy get-daily-verse --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
-          npx --yes supabase@latest functions deploy submit-prayer-request --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+          npx --yes supabase@latest functions deploy get-daily-verse --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
+          npx --yes supabase@latest functions deploy submit-prayer-request --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
 
       - name: Deploy phishing functions
         env:
@@ -56,8 +56,8 @@ jobs:
             echo "Skipping phishing deploy: missing repo secrets."
             exit 0
           fi
-          npx --yes supabase@latest functions deploy send-phishing-campaign --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
-          npx --yes supabase@latest functions deploy track-phishing-event --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+          npx --yes supabase@latest functions deploy send-phishing-campaign --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
+          npx --yes supabase@latest functions deploy track-phishing-event --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
 
       - name: Verify function exists
         env:

@@ -18,10 +18,10 @@ supabase link --project-ref "$PROJECT_REF" --yes 2>/dev/null || true
 supabase config push --yes 2>/dev/null || true
 
 echo "Deploying send-phishing-campaign..."
-supabase functions deploy send-phishing-campaign --project-ref "$PROJECT_REF" --no-verify-jwt
+supabase functions deploy send-phishing-campaign --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
 
 echo "Deploying track-phishing-event..."
-supabase functions deploy track-phishing-event --project-ref "$PROJECT_REF" --no-verify-jwt
+supabase functions deploy track-phishing-event --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
 
 echo "Done. Optional secrets:"
 echo "  supabase secrets set PHISHING_SIMULATION_DRY_RUN=true --project-ref $PROJECT_REF"

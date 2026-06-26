@@ -64,10 +64,10 @@ echo "Setting INVITE_REDIRECT_URL=$INVITE_URL"
 "${SUPABASE_CMD[@]}" secrets set "INVITE_REDIRECT_URL=$INVITE_URL" --project-ref "$PROJECT_REF"
 
 echo "Deploying manage-users (JWT checked inside function, not at gateway)…"
-"${SUPABASE_CMD[@]}" functions deploy manage-users --project-ref "$PROJECT_REF" --no-verify-jwt
+"${SUPABASE_CMD[@]}" functions deploy manage-users --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
 
 echo "Deploying record-failed-login (rate-limited lockout recording)…"
-"${SUPABASE_CMD[@]}" functions deploy record-failed-login --project-ref "$PROJECT_REF" --no-verify-jwt
+"${SUPABASE_CMD[@]}" functions deploy record-failed-login --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
 
 echo ""
 echo "Verifying deployment…"
