@@ -10,7 +10,6 @@ import {
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
 import { fetchTrainingTags } from '@/services/training-tags.service'
 import { PublishToAllOrgsDialog } from '@/components/admin/PublishToAllOrgsDialog'
-import { TrainingTagsPanel } from '@/components/admin/TrainingTagsPanel'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -163,8 +162,6 @@ export function CourseManagementPage() {
           </Link>
         </Button>
       </div>
-
-      <TrainingTagsPanel />
 
       <div className="flex flex-wrap items-center gap-2">
         <Label htmlFor="tag-filter" className="text-sm text-muted-foreground">

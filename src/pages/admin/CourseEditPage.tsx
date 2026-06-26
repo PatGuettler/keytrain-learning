@@ -175,7 +175,7 @@ export function CourseEditPage() {
         <TagMultiSelect
           id="course-tags"
           label="Tags"
-          description="Select one or more tags to categorize this course for filtering and organization assignment."
+          description="Search or type a new tag and press Enter. Use Manage tags to rename or delete."
           selectedTagIds={selectedTagIds}
           onChange={setSelectedTagIds}
         />

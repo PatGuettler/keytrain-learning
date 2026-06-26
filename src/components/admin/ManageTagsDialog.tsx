@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Pencil, Trash2, X } from 'lucide-react'
 import {
   createTrainingTag,
   deleteTrainingTag,
@@ -8,11 +8,24 @@ import {
   updateTrainingTag,
 } from '@/services/training-tags.service'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { TrainingTag } from '@/types/training-tag.types'
 
-export function TrainingTagsPanel() {
+type ManageTagsDialogProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onTagDeleted?: (tagId: string) => void
+}
+
+export function ManageTagsDialog({ open, onOpenChange, onTagDeleted }: ManageTagsDialogProps) {
   const queryClient = useQueryClient()
   const [newTagName, setNewTagName] = useState('')
   const [createError, setCreateError] = useState('')
@@ -22,6 +35,7 @@ export function TrainingTagsPanel() {
   const { data: tags = [], isLoading } = useQuery({
     queryKey: ['training-tags'],
     queryFn: fetchTrainingTags,
+    enabled: open,
   })
 
   const invalidate = () => {
@@ -31,7 +45,7 @@ export function TrainingTagsPanel() {
   }
 
   const createMutation = useMutation({
-    mutationFn: () => createTrainingTag(newTagName),
+    mutationFn: (name: string) => createTrainingTag(name),
     onSuccess: () => {
       setNewTagName('')
       setCreateError('')
@@ -51,64 +65,63 @@ export function TrainingTagsPanel() {
 
   const deleteMutation = useMutation({
     mutationFn: deleteTrainingTag,
-    onSuccess: invalidate,
+    onSuccess: (_data, tagId) => {
+      onTagDeleted?.(tagId)
+      invalidate()
+    },
   })
 
-  const startEdit = (id: string, name: string) => {
-    setEditingId(id)
-    setEditName(name)
+  const submitNewTag = () => {
+    const trimmed = newTagName.trim()
+    if (!trimmed) return
+    createMutation.mutate(trimmed)
   }
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = (tag: TrainingTag) => {
     const confirmed = window.confirm(
-      `Delete tag "${name}"? It will be removed from all courses and organizations.`
+      `Delete tag "${tag.name}"? It will be removed from all courses and organizations.`
     )
     if (!confirmed) return
-    deleteMutation.mutate(id)
+    deleteMutation.mutate(tag.id)
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Training tags</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Create industry or topic tags. Courses and organizations can have multiple tags.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Manage tags</DialogTitle>
+          <DialogDescription>
+            Create, rename, or delete tags. Type a name and press Enter to add one.
+          </DialogDescription>
+        </DialogHeader>
+
         <form
-          className="flex flex-wrap items-end gap-2"
+          className="space-y-2"
           onSubmit={(e) => {
             e.preventDefault()
-            if (!newTagName.trim()) return
-            createMutation.mutate()
+            submitNewTag()
           }}
         >
-          <div className="space-y-1 min-w-[12rem] flex-1">
-            <Label htmlFor="new-tag-name">New tag</Label>
-            <Input
-              id="new-tag-name"
-              value={newTagName}
-              onChange={(e) => {
-                setNewTagName(e.target.value)
-                setCreateError('')
-              }}
-              placeholder="e.g. Healthcare"
-            />
-          </div>
-          <Button type="submit" disabled={!newTagName.trim() || createMutation.isPending}>
-            <Plus className="h-4 w-4 mr-1" />
-            {createMutation.isPending ? 'Adding…' : 'Add tag'}
-          </Button>
+          <Label htmlFor="manage-new-tag">New tag</Label>
+          <Input
+            id="manage-new-tag"
+            value={newTagName}
+            onChange={(e) => {
+              setNewTagName(e.target.value)
+              setCreateError('')
+            }}
+            placeholder="e.g. Healthcare — press Enter to save"
+            disabled={createMutation.isPending}
+          />
+          {createError && <p className="text-sm text-destructive">{createError}</p>}
         </form>
-        {createError && <p className="text-sm text-destructive">{createError}</p>}
 
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading tags…</p>
         ) : tags.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No tags yet. Add one above.</p>
+          <p className="text-sm text-muted-foreground">No tags yet.</p>
         ) : (
-          <ul className="divide-y rounded-md border">
+          <ul className="divide-y rounded-md border max-h-64 overflow-y-auto">
             {tags.map((tag) => (
               <li key={tag.id} className="flex flex-wrap items-center gap-2 px-3 py-2">
                 {editingId === tag.id ? (
@@ -116,8 +129,18 @@ export function TrainingTagsPanel() {
                     <Input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="max-w-xs"
+                      className="flex-1 min-w-[8rem]"
                       autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && editName.trim()) {
+                          e.preventDefault()
+                          updateMutation.mutate({ id: tag.id, name: editName })
+                        }
+                        if (e.key === 'Escape') {
+                          setEditingId(null)
+                          setEditName('')
+                        }
+                      }}
                     />
                     <Button
                       type="button"
@@ -146,7 +169,11 @@ export function TrainingTagsPanel() {
                       type="button"
                       size="sm"
                       variant="ghost"
-                      onClick={() => startEdit(tag.id, tag.name)}
+                      aria-label={`Edit ${tag.name}`}
+                      onClick={() => {
+                        setEditingId(tag.id)
+                        setEditName(tag.name)
+                      }}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -155,8 +182,9 @@ export function TrainingTagsPanel() {
                       size="sm"
                       variant="ghost"
                       className="text-destructive hover:text-destructive"
+                      aria-label={`Delete ${tag.name}`}
                       disabled={deleteMutation.isPending}
-                      onClick={() => handleDelete(tag.id, tag.name)}
+                      onClick={() => handleDelete(tag)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -166,7 +194,7 @@ export function TrainingTagsPanel() {
             ))}
           </ul>
         )}
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   )
 }
