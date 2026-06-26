@@ -173,8 +173,8 @@ export function TagMultiSelect({
         </button>
 
         {open && (
-          <div className="absolute z-30 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md">
-            <div className="border-b p-2">
+          <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-md border border-border bg-card text-card-foreground shadow-lg">
+            <div className="border-b border-border bg-card p-2">
               <Input
                 ref={searchRef}
                 value={search}
@@ -190,7 +190,7 @@ export function TagMultiSelect({
               />
             </div>
 
-            <ul className="max-h-52 overflow-y-auto py-1" role="listbox" aria-multiselectable>
+            <ul className="max-h-52 overflow-y-auto bg-card py-1" role="listbox" aria-multiselectable>
               {filteredTags.length === 0 && !showCreateOption ? (
                 <li className="px-3 py-2 text-sm text-muted-foreground">No tags found.</li>
               ) : (
@@ -202,7 +202,7 @@ export function TagMultiSelect({
                         type="button"
                         role="option"
                         aria-selected={selected}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left hover:bg-muted/80"
+                        className="flex w-full items-center gap-2 bg-card px-3 py-2 text-sm text-left hover:bg-muted"
                         onClick={() => toggleTag(tag.id)}
                       >
                         <span
@@ -223,7 +223,7 @@ export function TagMultiSelect({
                 <li>
                   <button
                     type="button"
-                    className="w-full px-3 py-2 text-sm text-left text-primary hover:bg-muted/80"
+                    className="w-full bg-card px-3 py-2 text-sm text-left text-primary hover:bg-muted"
                     onClick={() => createMutation.mutate(search.trim())}
                   >
                     Create &ldquo;{search.trim()}&rdquo;
