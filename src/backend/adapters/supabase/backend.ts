@@ -1,6 +1,7 @@
 // Supabase adapter — all SQL/PostgREST logic lives here.
 
 import { PLATFORM_ORG_ID } from '@/lib/constants'
+import { attachTagsToCourses } from '@/lib/course-tags'
 import { isPublicationActive } from '@/lib/course-publications'
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
 import type { Backend } from '../../types'
@@ -16,6 +17,7 @@ import type {
   TrainingSession,
 } from '@/types/course.types'
 import type { Organization, Profile } from '@/types/user.types'
+import type { TrainingTag } from '@/types/training-tag.types'
 import type { PrayerRequestWithPrayers } from '@/types/prayer.types'
 import { createUnconfiguredBackend } from '../unconfigured'
 import {
@@ -45,6 +47,23 @@ async function recordFailedLoginAttempt(email: string): Promise<void> {
   } catch {
     // Lockout recording is best-effort; login error is still shown.
   }
+}
+
+async function loadTagsForCourses(
+  supabase: NonNullable<ReturnType<typeof getSupabase>>,
+  courseIds: string[]
+): Promise<{ links: { course_id: string; tag_id: string }[]; tags: TrainingTag[] }> {
+  if (courseIds.length === 0) return { links: [], tags: [] }
+  const { data: links, error: linksError } = await supabase
+    .from('course_training_tags')
+    .select('course_id, tag_id')
+    .in('course_id', courseIds)
+  if (linksError) throw linksError
+  const tagIds = [...new Set((links ?? []).map((row) => row.tag_id))]
+  if (tagIds.length === 0) return { links: links ?? [], tags: [] }
+  const { data: tags, error: tagsError } = await supabase.from('training_tags').select('*').in('id', tagIds)
+  if (tagsError) throw tagsError
+  return { links: links ?? [], tags: (tags ?? []) as TrainingTag[] }
 }
 
 export function createSupabaseBackend(): Backend {
@@ -206,12 +225,19 @@ export function createSupabaseBackend(): Backend {
           .neq('org_id', PLATFORM_ORG_ID)
           .order('title')
         if (error) throw error
-        return data as Course[]
+        const courses = (data ?? []) as Course[]
+        const { links, tags } = await loadTagsForCourses(
+          supabase,
+          courses.map((course) => course.id)
+        )
+        return attachTagsToCourses(courses, links, tags)
       },
       async fetchCourse(id) {
         const { data, error } = await supabase.from('courses').select('*').eq('id', id).single()
         if (error) return null
-        return data as Course
+        const course = data as Course
+        const { links, tags } = await loadTagsForCourses(supabase, [course.id])
+        return attachTagsToCourses([course], links, tags)[0] ?? null
       },
       async fetchLearnerCourse(courseId, orgId) {
         const { data, error } = await supabase
@@ -835,6 +861,80 @@ export function createSupabaseBackend(): Backend {
       },
       async deletePrayerRequest(requestId) {
         const { error } = await supabase.from('prayer_requests').delete().eq('id', requestId)
+        if (error) throw error
+      },
+    },
+    trainingTags: {
+      async fetchTags() {
+        const { data, error } = await supabase.from('training_tags').select('*').order('name')
+        if (error) throw error
+        return data as TrainingTag[]
+      },
+      async createTag(name) {
+        const trimmed = name.trim()
+        if (!trimmed) throw new Error('Tag name is required.')
+        const { data, error } = await supabase
+          .from('training_tags')
+          .insert({ name: trimmed })
+          .select()
+          .single()
+        if (error) throw error
+        return data as TrainingTag
+      },
+      async updateTag(id, name) {
+        const trimmed = name.trim()
+        if (!trimmed) throw new Error('Tag name is required.')
+        const { data, error } = await supabase
+          .from('training_tags')
+          .update({ name: trimmed, updated_at: new Date().toISOString() })
+          .eq('id', id)
+          .select()
+          .single()
+        if (error) throw error
+        return data as TrainingTag
+      },
+      async deleteTag(id) {
+        const { error } = await supabase.from('training_tags').delete().eq('id', id)
+        if (error) throw error
+      },
+      async fetchCourseTagIds(courseId) {
+        const { data, error } = await supabase
+          .from('course_training_tags')
+          .select('tag_id')
+          .eq('course_id', courseId)
+        if (error) throw error
+        return (data ?? []).map((row) => row.tag_id)
+      },
+      async setCourseTags(courseId, tagIds) {
+        const { error: deleteError } = await supabase
+          .from('course_training_tags')
+          .delete()
+          .eq('course_id', courseId)
+        if (deleteError) throw deleteError
+        if (tagIds.length === 0) return
+        const { error } = await supabase
+          .from('course_training_tags')
+          .insert(tagIds.map((tag_id) => ({ course_id: courseId, tag_id })))
+        if (error) throw error
+      },
+      async fetchOrgTagIds(orgId) {
+        const { data, error } = await supabase
+          .from('organization_training_tags')
+          .select('tag_id')
+          .eq('org_id', orgId)
+        if (error) throw error
+        return (data ?? []).map((row) => row.tag_id)
+      },
+      async setOrgTags(orgId, tagIds) {
+        const { error: deleteError } = await supabase
+          .from('organization_training_tags')
+          .delete()
+          .eq('org_id', orgId)
+        if (deleteError) throw deleteError
+        if (tagIds.length === 0) return
+        const { error } = await supabase
+          .from('organization_training_tags')
+          .insert(tagIds.map((tag_id) => ({ org_id: orgId, tag_id })))
         if (error) throw error
       },
     },

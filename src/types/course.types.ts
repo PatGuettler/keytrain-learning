@@ -1,3 +1,5 @@
+import type { TrainingTag } from '@/types/training-tag.types'
+
 export type ModuleType = 'lesson' | 'quiz' | 'workshop'
 export type AssignmentStatus = 'pending' | 'in_progress' | 'completed' | 'overdue'
 
@@ -10,7 +12,7 @@ export interface Course {
   estimated_minutes: number
   is_published: boolean
   max_attempts: number
-  training_category?: string
+  tags?: TrainingTag[]
   created_by: string | null
   created_at: string
   updated_at: string

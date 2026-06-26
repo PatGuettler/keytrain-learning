@@ -8,18 +8,15 @@ import {
   unpublishCourseEverywhere,
 } from '@/services/course-publications.service'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
+import { fetchTrainingTags } from '@/services/training-tags.service'
 import { PublishToAllOrgsDialog } from '@/components/admin/PublishToAllOrgsDialog'
+import { TrainingTagsPanel } from '@/components/admin/TrainingTagsPanel'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Plus } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
-import {
-  TRAINING_CATEGORIES,
-  TRAINING_CATEGORY_LABELS,
-  type TrainingCategory,
-} from '@/lib/training-categories'
 import type { CoursePublication } from '@/types/course.types'
 
 function isActive(pub: CoursePublication): boolean {
@@ -136,15 +133,20 @@ function CourseRowActions({
 }
 
 export function CourseManagementPage() {
-  const [categoryFilter, setCategoryFilter] = useState<'all' | TrainingCategory>('all')
+  const [tagFilter, setTagFilter] = useState<'all' | string>('all')
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ['hospital-courses'],
     queryFn: fetchHospitalCourses,
   })
+  const { data: tags = [] } = useQuery({
+    queryKey: ['training-tags'],
+    queryFn: fetchTrainingTags,
+  })
 
-  const filteredCourses = courses.filter(
-    (course) => categoryFilter === 'all' || (course.training_category ?? 'healthcare') === categoryFilter
-  )
+  const filteredCourses = courses.filter((course) => {
+    if (tagFilter === 'all') return true
+    return (course.tags ?? []).some((tag) => tag.id === tagFilter)
+  })
 
   return (
     <div className="space-y-6">
@@ -162,20 +164,22 @@ export function CourseManagementPage() {
         </Button>
       </div>
 
+      <TrainingTagsPanel />
+
       <div className="flex flex-wrap items-center gap-2">
-        <Label htmlFor="category-filter" className="text-sm text-muted-foreground">
-          Category
+        <Label htmlFor="tag-filter" className="text-sm text-muted-foreground">
+          Filter by tag
         </Label>
         <select
-          id="category-filter"
+          id="tag-filter"
           className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value as 'all' | TrainingCategory)}
+          value={tagFilter}
+          onChange={(e) => setTagFilter(e.target.value)}
         >
-          <option value="all">All industries</option>
-          {TRAINING_CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {TRAINING_CATEGORY_LABELS[cat]}
+          <option value="all">All tags</option>
+          {tags.map((tag) => (
+            <option key={tag.id} value={tag.id}>
+              {tag.name}
             </option>
           ))}
         </select>
@@ -185,7 +189,7 @@ export function CourseManagementPage() {
         <p className="text-sm text-muted-foreground">Loading courses…</p>
       ) : filteredCourses.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          {courses.length === 0 ? 'No courses yet. Create one to get started.' : 'No courses match this category.'}
+          {courses.length === 0 ? 'No courses yet. Create one to get started.' : 'No courses match this tag.'}
         </p>
       ) : (
         <div className="space-y-3">
@@ -195,10 +199,14 @@ export function CourseManagementPage() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <CardTitle className="text-lg">{c.title}</CardTitle>
-                    <Badge variant="secondary">
-                      {TRAINING_CATEGORY_LABELS[(c.training_category ?? 'healthcare') as TrainingCategory] ??
-                        c.training_category}
-                    </Badge>
+                    {(c.tags ?? []).map((tag) => (
+                      <Badge key={tag.id} variant="secondary">
+                        {tag.name}
+                      </Badge>
+                    ))}
+                    {(c.tags ?? []).length === 0 && (
+                      <Badge variant="outline">No tags</Badge>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground">{c.estimated_minutes} min</p>
                 </div>

@@ -18,6 +18,7 @@ import type {
   UserRole,
 } from '@/types/user.types'
 import type { PrayerRequestWithPrayers } from '@/types/prayer.types'
+import type { TrainingTag } from '@/types/training-tag.types'
 import type { CourseAttemptResult } from '@/types/training.types'
 
 export type { CourseAttemptResult }
@@ -53,7 +54,7 @@ export interface UsersBackend {
 export interface OrganizationsBackend {
   fetchOrganizations(): Promise<Organization[]>
   createOrganization(name: string): Promise<Organization>
-  updateOrganization(id: string, patch: { name?: string; industry?: string }): Promise<Organization>
+  updateOrganization(id: string, patch: { name?: string }): Promise<Organization>
   deleteOrganization(id: string): Promise<void>
 }
 
@@ -143,6 +144,17 @@ export interface SpiritualBackend {
   deletePrayerRequest(requestId: string): Promise<void>
 }
 
+export interface TrainingTagsBackend {
+  fetchTags(): Promise<TrainingTag[]>
+  createTag(name: string): Promise<TrainingTag>
+  updateTag(id: string, name: string): Promise<TrainingTag>
+  deleteTag(id: string): Promise<void>
+  fetchCourseTagIds(courseId: string): Promise<string[]>
+  setCourseTags(courseId: string, tagIds: string[]): Promise<void>
+  fetchOrgTagIds(orgId: string): Promise<string[]>
+  setOrgTags(orgId: string, tagIds: string[]): Promise<void>
+}
+
 export interface Backend {
   auth: AuthBackend
   users: UsersBackend
@@ -151,6 +163,7 @@ export interface Backend {
   assignments: AssignmentsBackend
   training: TrainingBackend
   spiritual: SpiritualBackend
+  trainingTags: TrainingTagsBackend
   /** Indicates which backend is active (supabase/aws...). */
   kind: string
 }

@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { updateOrganization } from '@/services/organizations.service'
+import { fetchOrgTagIds, setOrgTags } from '@/services/training-tags.service'
 import { fetchOrgMembers } from '@/services/users.service'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { TagMultiSelect } from '@/components/admin/TagMultiSelect'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -16,18 +18,21 @@ import { DeleteHospitalCard } from '@/components/admin/DeleteHospitalCard'
 import { useOrgRoute } from '@/hooks/useOrgRoute'
 import { adminOrganizationPath, getOrgSlug } from '@/lib/org-slugs'
 import { PLATFORM_ORG_ID } from '@/lib/constants'
-import {
-  TRAINING_CATEGORIES,
-  TRAINING_CATEGORY_LABELS,
-  type TrainingCategory,
-} from '@/lib/training-categories'
+
+function tagIdsEqual(a: string[], b: string[]) {
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort()
+  const sortedB = [...b].sort()
+  return sortedA.every((id, i) => id === sortedB[i])
+}
 
 export function OrganizationDetailPage() {
   const navigate = useNavigate()
   const { org, orgId, orgs, isLoading: orgsLoading } = useOrgRoute()
   const queryClient = useQueryClient()
   const [orgName, setOrgName] = useState('')
-  const [orgIndustry, setOrgIndustry] = useState<TrainingCategory>('healthcare')
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
+  const [savedTagIds, setSavedTagIds] = useState<string[]>([])
   const [renameError, setRenameError] = useState('')
   const [renameSuccess, setRenameSuccess] = useState('')
 
@@ -37,22 +42,37 @@ export function OrganizationDetailPage() {
     enabled: Boolean(orgId),
   })
 
+  const { data: orgTagIds = [] } = useQuery({
+    queryKey: ['org-tags', orgId],
+    queryFn: () => fetchOrgTagIds(orgId!),
+    enabled: Boolean(orgId),
+  })
+
   const managers = users.filter((u) => u.role === 'manager')
 
   useEffect(() => {
     if (org) {
       setOrgName(org.name)
-      setOrgIndustry((org.industry ?? 'healthcare') as TrainingCategory)
     }
-  }, [org?.name, org?.industry, org])
+  }, [org?.name, org])
+
+  useEffect(() => {
+    setSelectedTagIds(orgTagIds)
+    setSavedTagIds(orgTagIds)
+  }, [orgTagIds])
 
   const settingsMutation = useMutation({
-    mutationFn: (payload: { name: string; industry: TrainingCategory }) =>
-      updateOrganization(orgId!, payload),
+    mutationFn: async (payload: { name: string; tagIds: string[] }) => {
+      const updated = await updateOrganization(orgId!, { name: payload.name })
+      await setOrgTags(orgId!, payload.tagIds)
+      return updated
+    },
     onSuccess: (updated) => {
       setRenameError('')
       setRenameSuccess('Organization settings saved.')
+      setSavedTagIds(selectedTagIds)
       void queryClient.invalidateQueries({ queryKey: ['organizations'] })
+      void queryClient.invalidateQueries({ queryKey: ['org-tags', orgId] })
       const nextOrgs = orgs.map((o) => (o.id === updated.id ? updated : o))
       navigate(adminOrganizationPath(getOrgSlug(updated, nextOrgs)), { replace: true })
     },
@@ -63,8 +83,7 @@ export function OrganizationDetailPage() {
   })
 
   const settingsChanged =
-    org &&
-    (orgName.trim() !== org.name || (org.industry ?? 'healthcare') !== orgIndustry)
+    org && (orgName.trim() !== org.name || !tagIdsEqual(selectedTagIds, savedTagIds))
 
   if (!orgsLoading && !org) {
     return (
@@ -108,7 +127,7 @@ export function OrganizationDetailPage() {
                 e.preventDefault()
                 const trimmed = orgName.trim()
                 if (!trimmed || !settingsChanged) return
-                settingsMutation.mutate({ name: trimmed, industry: orgIndustry })
+                settingsMutation.mutate({ name: trimmed, tagIds: selectedTagIds })
               }}
             >
               <div className="space-y-2">
@@ -124,25 +143,17 @@ export function OrganizationDetailPage() {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="org-industry">Industry</Label>
-                <select
-                  id="org-industry"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={orgIndustry}
-                  onChange={(e) => {
-                    setOrgIndustry(e.target.value as TrainingCategory)
-                    setRenameSuccess('')
-                    setRenameError('')
-                  }}
-                >
-                  {TRAINING_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {TRAINING_CATEGORY_LABELS[cat]}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <TagMultiSelect
+                id="org-tags"
+                label="Industry tags"
+                description="Select tags that match this organization's industry. Used to find relevant courses."
+                selectedTagIds={selectedTagIds}
+                onChange={(ids) => {
+                  setSelectedTagIds(ids)
+                  setRenameSuccess('')
+                  setRenameError('')
+                }}
+              />
               <Button type="submit" disabled={!settingsChanged || settingsMutation.isPending}>
                 {settingsMutation.isPending ? 'Saving…' : 'Save settings'}
               </Button>

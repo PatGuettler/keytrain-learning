@@ -105,6 +105,55 @@ export interface Database {
         }>
         Relationships: []
       }
+      training_tags: {
+        Row: {
+          id: string
+          name: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<{
+          name: string
+          updated_at: string
+        }>
+        Relationships: []
+      }
+      course_training_tags: {
+        Row: {
+          course_id: string
+          tag_id: string
+        }
+        Insert: {
+          course_id: string
+          tag_id: string
+        }
+        Update: Partial<{
+          course_id: string
+          tag_id: string
+        }>
+        Relationships: []
+      }
+      organization_training_tags: {
+        Row: {
+          org_id: string
+          tag_id: string
+        }
+        Insert: {
+          org_id: string
+          tag_id: string
+        }
+        Update: Partial<{
+          org_id: string
+          tag_id: string
+        }>
+        Relationships: []
+      }
       modules: {
         Row: {
           id: string

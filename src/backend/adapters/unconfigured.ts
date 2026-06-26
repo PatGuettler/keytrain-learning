@@ -74,5 +74,15 @@ export function createUnconfiguredBackend(): Backend {
       markPrayerRequestPrayed: fail,
       deletePrayerRequest: fail,
     },
+    trainingTags: {
+      fetchTags: fail,
+      createTag: fail,
+      updateTag: fail,
+      deleteTag: fail,
+      fetchCourseTagIds: fail,
+      setCourseTags: fail,
+      fetchOrgTagIds: fail,
+      setOrgTags: fail,
+    },
   }
 }

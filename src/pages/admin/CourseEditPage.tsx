@@ -10,12 +10,9 @@ import { getIncidentAwarenessTemplate } from '@/lib/course-templates'
 import { createEmptyModule } from '@/lib/module-defaults'
 import { parseCourseImport, downloadCourseExport } from '@/lib/course-export'
 import { syncCourseModules, upsertCourse, upsertModule } from '@/services/courses.service'
+import { setCourseTags } from '@/services/training-tags.service'
 import { useAuthStore } from '@/store/authStore'
-import {
-  TRAINING_CATEGORIES,
-  TRAINING_CATEGORY_LABELS,
-  type TrainingCategory,
-} from '@/lib/training-categories'
+import { TagMultiSelect } from '@/components/admin/TagMultiSelect'
 import type { Module } from '@/types/course.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,7 +35,7 @@ export function CourseEditPage() {
   const [modules, setModules] = useState<Module[]>([])
   const [maxAttemptsInput, setMaxAttemptsInput] = useState('3')
   const [unlimitedAttempts, setUnlimitedAttempts] = useState(false)
-  const [trainingCategory, setTrainingCategory] = useState<TrainingCategory>('healthcare')
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
   const [savedCourseId, setSavedCourseId] = useState(isNew ? '' : courseId!)
   const [saveError, setSaveError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -51,12 +48,12 @@ export function CourseEditPage() {
       if (course.max_attempts === 0) {
         setUnlimitedAttempts(true)
         setMaxAttemptsInput('3')
-      } else       if (course.max_attempts) {
+      } else if (course.max_attempts) {
         setMaxAttemptsInput(String(course.max_attempts))
         setUnlimitedAttempts(false)
       }
-      if (course.training_category) {
-        setTrainingCategory(course.training_category as TrainingCategory)
+      if (course.tags?.length) {
+        setSelectedTagIds(course.tags.map((t) => t.id))
       }
     }
   }, [course])
@@ -130,10 +127,10 @@ export function CourseEditPage() {
         is_published: course?.is_published ?? false,
         max_attempts: resolvedMaxAttempts,
         estimated_minutes: Math.max(1, estimatedMinutes),
-        training_category: trainingCategory,
         created_by: userId,
       })
 
+      await setCourseTags(saved.id, selectedTagIds)
       const savedModuleIds: string[] = []
       for (const m of modules) {
         const mod = await upsertModule({ ...m, course_id: saved.id })
@@ -142,6 +139,7 @@ export function CourseEditPage() {
       await syncCourseModules(saved.id, savedModuleIds)
       await queryClient.invalidateQueries({ queryKey: ['courses'] })
       await queryClient.invalidateQueries({ queryKey: ['course', saved.id] })
+      await queryClient.invalidateQueries({ queryKey: ['hospital-courses'] })
       await queryClient.invalidateQueries({ queryKey: ['modules', saved.id] })
       setSavedCourseId(saved.id)
       if (isNew) {
@@ -173,25 +171,14 @@ export function CourseEditPage() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
-        <div className="space-y-2">
-          <Label htmlFor="training-category">Industry category</Label>
-          <select
-            id="training-category"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={trainingCategory}
-            onChange={(e) => setTrainingCategory(e.target.value as TrainingCategory)}
-          >
-            {TRAINING_CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {TRAINING_CATEGORY_LABELS[cat]}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-muted-foreground">
-            Tag courses by industry to filter and assign training for different client types.
-          </p>
-        </div>
+      <div className="max-w-2xl">
+        <TagMultiSelect
+          id="course-tags"
+          label="Tags"
+          description="Select one or more tags to categorize this course for filtering and organization assignment."
+          selectedTagIds={selectedTagIds}
+          onChange={setSelectedTagIds}
+        />
       </div>
 
       <div className="max-w-xs space-y-3">
