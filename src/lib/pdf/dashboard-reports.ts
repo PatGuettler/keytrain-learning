@@ -48,13 +48,13 @@ export function exportPlatformDashboardPdf(
     overdueCount: number
   }
 ) {
-  const doc = createDashboardPdf(`${APP_NAME} Platform Dashboard`, 'Overview across all hospitals')
-  let y = pdfStartY('Overview across all hospitals')
+  const doc = createDashboardPdf(`${APP_NAME} Platform Dashboard`, 'Overview across all organizations')
+  let y = pdfStartY('Overview across all organizations')
 
   y = addMetricsSection(
     doc,
     [
-      { label: 'Hospitals', value: String(totals.hospitalCount) },
+      { label: 'Organizations', value: String(totals.hospitalCount) },
       { label: 'Total staff', value: String(totals.totalUsers) },
       {
         label: 'Courses (published/total)',
@@ -66,10 +66,10 @@ export function exportPlatformDashboardPdf(
     y
   )
 
-  y = addSectionHeading(doc, 'Hospitals', y)
+  y = addSectionHeading(doc, 'Organizations', y)
   addDataTable(
     doc,
-    ['Hospital', 'Staff', 'Courses', 'Published', 'Completion', 'Overdue'],
+    ['Organization', 'Staff', 'Courses', 'Published', 'Completion', 'Overdue'],
     hospitals.map(({ org, userCount, totalCourses, publishedCourses, completionRate, overdueCount }) => [
       org.name,
       userCount,
@@ -93,8 +93,8 @@ export function exportOrgDashboardPdf(
   assignments: Assignment[],
   trainingNeeds: TrainingNeed[]
 ) {
-  const doc = createDashboardPdf(`${orgName} Training Report`, 'Hospital dashboard summary')
-  let y = pdfStartY('Hospital dashboard summary')
+  const doc = createDashboardPdf(`${orgName} Training Report`, 'Organization dashboard summary')
+  let y = pdfStartY('Organization dashboard summary')
 
   y = addMetricsSection(
     doc,

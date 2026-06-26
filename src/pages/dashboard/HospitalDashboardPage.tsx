@@ -23,13 +23,13 @@ export function HospitalDashboardPage() {
   const avgScore = computeAvgScore(assignments)
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading hospital dashboard…</p>
+    return <p className="text-sm text-muted-foreground">Loading organization dashboard…</p>
   }
 
   if (!org || !metrics) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Hospital not found.</p>
+        <p className="text-sm text-muted-foreground">Organization not found.</p>
         <Button variant="outline" asChild>
           <Link to="/admin/dashboard">Back to dashboard</Link>
         </Button>
@@ -44,7 +44,7 @@ export function HospitalDashboardPage() {
           <Button variant="ghost" size="sm" asChild>
             <Link to="/admin/dashboard">
               <ArrowLeft className="h-4 w-4 mr-1" />
-              All hospitals
+              All organizations
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
@@ -69,7 +69,7 @@ export function HospitalDashboardPage() {
         />
       </div>
 
-      <PageHeader title={org.name} description="Course and training overview for this hospital" />
+      <PageHeader title={org.name} description="Course and training overview for this organization" />
 
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-5">
         <StatCard title="Staff" value={metrics.userCount} icon={Users} />
@@ -88,7 +88,7 @@ export function HospitalDashboardPage() {
         <CompletionChart
           completed={metrics.completionRate}
           remaining={100 - metrics.completionRate}
-          title="Hospital Completion"
+          title="Organization completion"
         />
         <OrgTrainingNeedsPanel needs={trainingNeeds} orgSlug={orgSlug!} />
       </div>

@@ -13,14 +13,14 @@ export function HospitalOverviewList({
 }) {
   const orgs = hospitals.map((h) => h.org)
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading hospitals…</p>
+    return <p className="text-sm text-muted-foreground">Loading organizations…</p>
   }
 
   if (hospitals.length === 0) {
     return (
       <Card className="bg-muted/50">
         <CardContent className="p-6 text-sm text-muted-foreground">
-          No hospitals yet. Create an organization to start tracking training.
+          No organizations yet. Create one to start tracking training.
         </CardContent>
       </Card>
     )
@@ -29,7 +29,7 @@ export function HospitalOverviewList({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Hospitals</CardTitle>
+        <CardTitle className="text-base">Organizations</CardTitle>
       </CardHeader>
       <CardContent className="p-0 sm:p-0">
         <ul className="divide-y">

@@ -80,6 +80,8 @@ export function PhishingCampaignEditPage() {
   const [bodyTab, setBodyTab] = useState<'preview' | 'html' | 'text'>('preview')
   const [templateSaving, setTemplateSaving] = useState(false)
   const [templateMessage, setTemplateMessage] = useState('')
+  const [templateName, setTemplateName] = useState('')
+  const [composingNewTemplate, setComposingNewTemplate] = useState(false)
 
   const {
     data: allUsers = [],
@@ -188,6 +190,15 @@ export function PhishingCampaignEditPage() {
     setExcludeAdmins(existing.exclude_admins)
   }, [existing])
 
+  useEffect(() => {
+    if (!existing?.template_id || !templates.length) return
+    const t = templates.find((x) => x.id === existing.template_id)
+    if (t) {
+      setTemplateName(t.name)
+      setComposingNewTemplate(false)
+    }
+  }, [existing?.template_id, templates])
+
   const selectedTemplate = useMemo(
     () => templates.find((t) => t.id === templateId),
     [templates, templateId]
@@ -197,6 +208,8 @@ export function PhishingCampaignEditPage() {
     const template = templates.find((t) => t.id === id)
     if (!template) return
     setTemplateId(id)
+    setTemplateName(template.name)
+    setComposingNewTemplate(false)
     setSubject(template.subject)
     setSenderName(template.sender_name)
     setSenderEmail(defaultPhishingSenderEmail(template.sender_email_local))
@@ -208,7 +221,7 @@ export function PhishingCampaignEditPage() {
   }
 
   const templatePayload = () => ({
-    name: name.trim() || subject.trim() || 'Untitled template',
+    name: templateName.trim() || 'Untitled template',
     pretext: (pretext || 'it_helpdesk') as PhishingPretext,
     sender_name: senderName.trim() || 'IT Support',
     sender_email_local: senderEmail.includes('@')
@@ -225,11 +238,16 @@ export function PhishingCampaignEditPage() {
     setTemplateMessage('')
     setError('')
     try {
+      if (!templateName.trim()) {
+        throw new Error('Enter a template name before saving.')
+      }
       if (!subject.trim() || !bodyHtml.trim()) {
         throw new Error('Subject and email body are required to save a template.')
       }
       const template = await createPhishingTemplate(templatePayload())
       setTemplateId(template.id)
+      setTemplateName(template.name)
+      setComposingNewTemplate(false)
       setPretext(template.pretext)
       setTemplateMessage(`Template "${template.name}" saved.`)
       await queryClient.invalidateQueries({ queryKey: ['phishing-templates'] })
@@ -246,10 +264,14 @@ export function PhishingCampaignEditPage() {
     setTemplateMessage('')
     setError('')
     try {
+      if (!templateName.trim()) {
+        throw new Error('Template name is required.')
+      }
       if (!subject.trim() || !bodyHtml.trim()) {
         throw new Error('Subject and email body are required.')
       }
       const template = await updatePhishingTemplate(templateId, templatePayload())
+      setTemplateName(template.name)
       setTemplateMessage(`Template "${template.name}" updated.`)
       await queryClient.invalidateQueries({ queryKey: ['phishing-templates'] })
     } catch (e) {
@@ -270,6 +292,8 @@ export function PhishingCampaignEditPage() {
     try {
       await deletePhishingTemplate(templateId)
       setTemplateId('')
+      setTemplateName('')
+      setComposingNewTemplate(false)
       setTemplateMessage('Template removed.')
       await queryClient.invalidateQueries({ queryKey: ['phishing-templates'] })
     } catch (e) {
@@ -281,6 +305,8 @@ export function PhishingCampaignEditPage() {
 
   const startBlankTemplate = () => {
     setTemplateId('')
+    setTemplateName('')
+    setComposingNewTemplate(true)
     setSubject('')
     setSenderName('')
     setSenderEmail(defaultPhishingSenderEmail('noreply'))
@@ -374,14 +400,22 @@ export function PhishingCampaignEditPage() {
           <Input id="campaign-name" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="template">Template</Label>
-          <select
-            id="template"
-            className="hidden sm:block h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={templateId}
-            onChange={(e) => applyTemplate(e.target.value)}
-          >
+        <div className="space-y-3 rounded-lg border p-4">
+          <div className="space-y-2">
+            <Label htmlFor="template">Template</Label>
+            <select
+              id="template"
+              className="hidden sm:block h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={templateId}
+              onChange={(e) => {
+                if (e.target.value) {
+                  applyTemplate(e.target.value)
+                } else {
+                  setTemplateId('')
+                  setComposingNewTemplate(true)
+                }
+              }}
+            >
             <option value="">Select a template…</option>
             {templates.map((t) => (
               <option key={t.id} value={t.id}>
@@ -410,6 +444,33 @@ export function PhishingCampaignEditPage() {
               </button>
             ))}
           </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="template-name">
+              Template name{' '}
+              {!templateId && composingNewTemplate && <span className="text-destructive">*</span>}
+            </Label>
+            <Input
+              id="template-name"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              placeholder={
+                templateId
+                  ? 'Edit template name…'
+                  : 'e.g. IT Password Reset (required for new templates)'
+              }
+              autoFocus={composingNewTemplate && !templateName}
+            />
+            <p className="text-xs text-muted-foreground">
+              {templateId
+                ? 'Rename here, then click Update template. Campaign name above is separate.'
+                : composingNewTemplate
+                  ? 'Enter a name for your new template before saving.'
+                  : 'Optional until you save — used when you click Save as new template or Update template.'}
+            </p>
+          </div>
+
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" size="sm" onClick={startBlankTemplate}>
               New template
@@ -419,7 +480,14 @@ export function PhishingCampaignEditPage() {
               variant="outline"
               size="sm"
               disabled={templateSaving}
-              onClick={handleSaveNewTemplate}
+              onClick={() => {
+                if (!templateName.trim() && !templateId) {
+                  setComposingNewTemplate(true)
+                  setError('Enter a template name first.')
+                  return
+                }
+                handleSaveNewTemplate()
+              }}
             >
               Save as new template
             </Button>

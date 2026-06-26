@@ -15,7 +15,7 @@ export function AdminDashboard() {
     <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title="Platform Dashboard"
-        description="Overview across all hospitals — select a hospital to view course details"
+        description="Overview across all organizations — select one to view course details"
         action={
           <ExportPdfButton
             disabled={isLoading}
@@ -25,7 +25,7 @@ export function AdminDashboard() {
       />
 
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Hospitals" value={platformTotals.hospitalCount} icon={Building2} />
+        <StatCard title="Organizations" value={platformTotals.hospitalCount} icon={Building2} />
         <StatCard
           title="Users"
           value={platformTotals.totalUsers}

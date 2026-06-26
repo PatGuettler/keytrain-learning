@@ -29,7 +29,7 @@ export function OrgCourseTable({
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-8">
-            No courses for this hospital yet.
+            No courses for this organization yet.
           </p>
         </CardContent>
       </Card>
