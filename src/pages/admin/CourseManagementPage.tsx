@@ -12,8 +12,14 @@ import { PublishToAllOrgsDialog } from '@/components/admin/PublishToAllOrgsDialo
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 import { Plus } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
+import {
+  TRAINING_CATEGORIES,
+  TRAINING_CATEGORY_LABELS,
+  type TrainingCategory,
+} from '@/lib/training-categories'
 import type { CoursePublication } from '@/types/course.types'
 
 function isActive(pub: CoursePublication): boolean {
@@ -130,10 +136,15 @@ function CourseRowActions({
 }
 
 export function CourseManagementPage() {
+  const [categoryFilter, setCategoryFilter] = useState<'all' | TrainingCategory>('all')
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ['hospital-courses'],
     queryFn: fetchHospitalCourses,
   })
+
+  const filteredCourses = courses.filter(
+    (course) => categoryFilter === 'all' || (course.training_category ?? 'healthcare') === categoryFilter
+  )
 
   return (
     <div className="space-y-6">
@@ -151,17 +162,44 @@ export function CourseManagementPage() {
         </Button>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <Label htmlFor="category-filter" className="text-sm text-muted-foreground">
+          Category
+        </Label>
+        <select
+          id="category-filter"
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value as 'all' | TrainingCategory)}
+        >
+          <option value="all">All industries</option>
+          {TRAINING_CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {TRAINING_CATEGORY_LABELS[cat]}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading courses…</p>
-      ) : courses.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No courses yet. Create one to get started.</p>
+      ) : filteredCourses.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          {courses.length === 0 ? 'No courses yet. Create one to get started.' : 'No courses match this category.'}
+        </p>
       ) : (
         <div className="space-y-3">
-          {courses.map((c) => (
+          {filteredCourses.map((c) => (
             <Card key={c.id}>
               <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between py-4">
                 <div className="min-w-0">
-                  <CardTitle className="text-lg">{c.title}</CardTitle>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle className="text-lg">{c.title}</CardTitle>
+                    <Badge variant="secondary">
+                      {TRAINING_CATEGORY_LABELS[(c.training_category ?? 'healthcare') as TrainingCategory] ??
+                        c.training_category}
+                    </Badge>
+                  </div>
                   <p className="text-sm text-muted-foreground">{c.estimated_minutes} min</p>
                 </div>
                 <CourseRowActions courseId={c.id} courseTitle={c.title} />

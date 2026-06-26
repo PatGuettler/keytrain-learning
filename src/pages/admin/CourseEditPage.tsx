@@ -11,6 +11,11 @@ import { createEmptyModule } from '@/lib/module-defaults'
 import { parseCourseImport, downloadCourseExport } from '@/lib/course-export'
 import { syncCourseModules, upsertCourse, upsertModule } from '@/services/courses.service'
 import { useAuthStore } from '@/store/authStore'
+import {
+  TRAINING_CATEGORIES,
+  TRAINING_CATEGORY_LABELS,
+  type TrainingCategory,
+} from '@/lib/training-categories'
 import type { Module } from '@/types/course.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,6 +38,7 @@ export function CourseEditPage() {
   const [modules, setModules] = useState<Module[]>([])
   const [maxAttemptsInput, setMaxAttemptsInput] = useState('3')
   const [unlimitedAttempts, setUnlimitedAttempts] = useState(false)
+  const [trainingCategory, setTrainingCategory] = useState<TrainingCategory>('healthcare')
   const [savedCourseId, setSavedCourseId] = useState(isNew ? '' : courseId!)
   const [saveError, setSaveError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -45,9 +51,12 @@ export function CourseEditPage() {
       if (course.max_attempts === 0) {
         setUnlimitedAttempts(true)
         setMaxAttemptsInput('3')
-      } else if (course.max_attempts) {
+      } else       if (course.max_attempts) {
         setMaxAttemptsInput(String(course.max_attempts))
         setUnlimitedAttempts(false)
+      }
+      if (course.training_category) {
+        setTrainingCategory(course.training_category as TrainingCategory)
       }
     }
   }, [course])
@@ -121,6 +130,7 @@ export function CourseEditPage() {
         is_published: course?.is_published ?? false,
         max_attempts: resolvedMaxAttempts,
         estimated_minutes: Math.max(1, estimatedMinutes),
+        training_category: trainingCategory,
         created_by: userId,
       })
 
@@ -161,6 +171,27 @@ export function CourseEditPage() {
             Load Incident Awareness example
           </Button>
         )}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
+        <div className="space-y-2">
+          <Label htmlFor="training-category">Industry category</Label>
+          <select
+            id="training-category"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={trainingCategory}
+            onChange={(e) => setTrainingCategory(e.target.value as TrainingCategory)}
+          >
+            {TRAINING_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {TRAINING_CATEGORY_LABELS[cat]}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Tag courses by industry to filter and assign training for different client types.
+          </p>
+        </div>
       </div>
 
       <div className="max-w-xs space-y-3">

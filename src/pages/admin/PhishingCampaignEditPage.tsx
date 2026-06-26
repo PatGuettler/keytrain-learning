@@ -11,6 +11,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
 import {
   createPhishingCampaign,
+  createPhishingTemplate,
+  updatePhishingTemplate,
+  deletePhishingTemplate,
   fetchHandPickRecipients,
   fetchPhishingCampaign,
   fetchPhishingTemplates,
@@ -25,7 +28,7 @@ import { fetchProfile } from '@/services/auth.service'
 import { previewPhishingText } from '@/lib/phishing-preview'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { PHISHING_PRETEXT_LABELS, type PhishingTargetScope } from '@/types/phishing.types'
+import { PHISHING_PRETEXT_LABELS, type PhishingPretext, type PhishingTargetScope } from '@/types/phishing.types'
 import type { Profile } from '@/types/user.types'
 
 const RECIPIENTS_PER_PAGE = 8
@@ -75,6 +78,8 @@ export function PhishingCampaignEditPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [bodyTab, setBodyTab] = useState<'preview' | 'html' | 'text'>('preview')
+  const [templateSaving, setTemplateSaving] = useState(false)
+  const [templateMessage, setTemplateMessage] = useState('')
 
   const {
     data: allUsers = [],
@@ -202,6 +207,90 @@ export function PhishingCampaignEditPage() {
     setBodyTab('preview')
   }
 
+  const templatePayload = () => ({
+    name: name.trim() || subject.trim() || 'Untitled template',
+    pretext: (pretext || 'it_helpdesk') as PhishingPretext,
+    sender_name: senderName.trim() || 'IT Support',
+    sender_email_local: senderEmail.includes('@')
+      ? senderEmail.split('@')[0]?.replace(/\{\{[^}]+\}\}-?/g, '').replace(/^-+/, '') || 'noreply'
+      : 'noreply',
+    subject: subject.trim(),
+    body_html: bodyHtml,
+    body_text: bodyText,
+    difficulty: selectedTemplate?.difficulty ?? 'medium',
+  })
+
+  const handleSaveNewTemplate = async () => {
+    setTemplateSaving(true)
+    setTemplateMessage('')
+    setError('')
+    try {
+      if (!subject.trim() || !bodyHtml.trim()) {
+        throw new Error('Subject and email body are required to save a template.')
+      }
+      const template = await createPhishingTemplate(templatePayload())
+      setTemplateId(template.id)
+      setPretext(template.pretext)
+      setTemplateMessage(`Template "${template.name}" saved.`)
+      await queryClient.invalidateQueries({ queryKey: ['phishing-templates'] })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not save template.')
+    } finally {
+      setTemplateSaving(false)
+    }
+  }
+
+  const handleUpdateTemplate = async () => {
+    if (!templateId) return
+    setTemplateSaving(true)
+    setTemplateMessage('')
+    setError('')
+    try {
+      if (!subject.trim() || !bodyHtml.trim()) {
+        throw new Error('Subject and email body are required.')
+      }
+      const template = await updatePhishingTemplate(templateId, templatePayload())
+      setTemplateMessage(`Template "${template.name}" updated.`)
+      await queryClient.invalidateQueries({ queryKey: ['phishing-templates'] })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not update template.')
+    } finally {
+      setTemplateSaving(false)
+    }
+  }
+
+  const handleDeleteTemplate = async () => {
+    if (!templateId) return
+    const template = templates.find((t) => t.id === templateId)
+    if (!window.confirm(`Remove template "${template?.name ?? 'this template'}" from the library?`)) {
+      return
+    }
+    setTemplateSaving(true)
+    setError('')
+    try {
+      await deletePhishingTemplate(templateId)
+      setTemplateId('')
+      setTemplateMessage('Template removed.')
+      await queryClient.invalidateQueries({ queryKey: ['phishing-templates'] })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not delete template.')
+    } finally {
+      setTemplateSaving(false)
+    }
+  }
+
+  const startBlankTemplate = () => {
+    setTemplateId('')
+    setSubject('')
+    setSenderName('')
+    setSenderEmail(defaultPhishingSenderEmail('noreply'))
+    setBodyHtml('')
+    setBodyText('')
+    setPretext('it_helpdesk')
+    setFakeLoginUrl(getDefaultFakeLoginUrl())
+    setBodyTab('html')
+  }
+
   const toggleUser = (id: string) => {
     const user = selectableUsers.find((entry) => entry.id === id)
     if (!user || !canSelectRecipient(user)) return
@@ -321,6 +410,46 @@ export function PhishingCampaignEditPage() {
               </button>
             ))}
           </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={startBlankTemplate}>
+              New template
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={templateSaving}
+              onClick={handleSaveNewTemplate}
+            >
+              Save as new template
+            </Button>
+            {templateId && (
+              <>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={templateSaving}
+                  onClick={handleUpdateTemplate}
+                >
+                  Update template
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive"
+                  disabled={templateSaving}
+                  onClick={handleDeleteTemplate}
+                >
+                  Delete template
+                </Button>
+              </>
+            )}
+          </div>
+          {templateMessage && (
+            <p className="text-xs text-emerald-600 dark:text-emerald-400">{templateMessage}</p>
+          )}
         </div>
 
         <div className={targetScope === 'org' ? 'grid gap-4 sm:grid-cols-2' : 'space-y-4'}>

@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
+import { getEmailValidationError, isValidEmail } from '../_shared/email-validation.ts'
 
 const MAX_ROWS = 500
 const ROLE_ORDER: Record<string, number> = { admin: 0, manager: 1, employee: 2 }
@@ -136,14 +137,16 @@ function validateRows(rows: CsvRow[]): string | null {
     if (row.role === 'admin') {
       return `Line ${row.line}: platform admins cannot be added to an organization via CSV.`
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
-      return `Line ${row.line}: invalid email "${row.email}".`
+    const emailError = getEmailValidationError(row.email)
+    if (emailError) {
+      return `Line ${row.line}: ${emailError}`
     }
     if (emails.has(row.email)) return `Duplicate email in CSV: ${row.email}`
     emails.add(row.email)
 
-    if (row.role === 'employee' && row.manager_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.manager_email)) {
-      return `Line ${row.line}: invalid manager_email.`
+    if (row.role === 'employee' && row.manager_email) {
+      const managerError = getEmailValidationError(row.manager_email)
+      if (managerError) return `Line ${row.line}: ${managerError}`
     }
     if (row.role !== 'employee' && row.manager_email) {
       return `Line ${row.line}: manager_email should only be set for employees.`
@@ -228,8 +231,9 @@ async function invitePlatformAdmin(
   const normalizedEmail = email.toLowerCase().trim()
   const name = fullName.trim() || deriveName(normalizedEmail)
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-    return { email: normalizedEmail, status: 'error', message: 'Invalid email.' }
+  const emailError = getEmailValidationError(normalizedEmail)
+  if (emailError) {
+    return { email: normalizedEmail, status: 'error', message: emailError }
   }
 
   await ensurePlatformOrg(adminClient)
@@ -337,8 +341,9 @@ async function inviteOneUser(
       message: 'Platform admins are not organization members. Create admins via Supabase bootstrap SQL.',
     }
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
-    return { email: row.email, status: 'error', message: 'Invalid email.' }
+  const rowEmailError = getEmailValidationError(row.email)
+  if (rowEmailError) {
+    return { email: row.email, status: 'error', message: rowEmailError }
   }
 
   const existingId = await findUserIdByEmail(adminClient, row.email)

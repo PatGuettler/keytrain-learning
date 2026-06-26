@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { Fish, Plus, BarChart3 } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Fish, Plus, BarChart3, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { fetchPhishingCampaigns } from '@/services/phishing.service'
+import { fetchPhishingCampaigns, deletePhishingCampaign } from '@/services/phishing.service'
 import { formatDate } from '@/lib/utils'
 import type { PhishingCampaignStatus } from '@/types/phishing.types'
 
@@ -17,10 +17,19 @@ const statusVariant: Record<PhishingCampaignStatus, 'secondary' | 'default' | 's
 }
 
 export function PhishingCampaignsPage() {
+  const queryClient = useQueryClient()
   const { data: campaigns = [], isLoading } = useQuery({
     queryKey: ['phishing-campaigns'],
     queryFn: fetchPhishingCampaigns,
   })
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Delete "${name}"? All recipients and results will be permanently removed.`)) {
+      return
+    }
+    await deletePhishingCampaign(id)
+    await queryClient.invalidateQueries({ queryKey: ['phishing-campaigns'] })
+  }
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -100,6 +109,15 @@ export function PhishingCampaignsPage() {
                           <Link to={`/admin/phishing/campaigns/${campaign.id}/edit`}>Edit</Link>
                         </Button>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDelete(campaign.id, campaign.name)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
                     </div>
                   </td>
                 </tr>

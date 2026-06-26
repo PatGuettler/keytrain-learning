@@ -129,7 +129,7 @@ export function exportOrgDashboardPdf(
 
   const courseMetrics = computeCourseMetrics(courses, assignments)
   y = addSectionHeading(doc, 'Courses', y)
-  addDataTable(
+  y = addDataTable(
     doc,
     ['Course', 'Status', 'Assigned', 'Completed', 'Completion', 'Avg score', 'Overdue'],
     courseMetrics.map(({ course, assignmentCount, completedCount, completionRate, avgScore, overdueCount }) => [
@@ -158,7 +158,16 @@ export function exportOrgDashboardPdf(
         `${need.avgScore}%`,
         need.issues.join('; ') || '—',
       ]),
-      y
+      y,
+      {
+        0: { cellWidth: 28 },
+        1: { cellWidth: 28 },
+        2: { cellWidth: 16 },
+        3: { cellWidth: 16 },
+        4: { cellWidth: 16 },
+        5: { cellWidth: 16 },
+        6: { cellWidth: 'wrap' },
+      }
     )
   }
 

@@ -10,6 +10,7 @@ export interface Course {
   estimated_minutes: number
   is_published: boolean
   max_attempts: number
+  training_category?: string
   created_by: string | null
   created_at: string
   updated_at: string

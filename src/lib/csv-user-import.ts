@@ -1,3 +1,5 @@
+import { getEmailValidationError } from '@/lib/email-validation'
+
 const MAX_ROWS = 500
 const VALID_ROLES = new Set(['admin', 'manager', 'employee'])
 const DEFAULT_ROLE = 'employee'
@@ -120,8 +122,9 @@ export function validateUserImportRows(rows: CsvUserImportRow[]): string | null 
     if (row.role === 'admin') {
       return `Line ${row.line}: platform admins cannot be added to an organization via CSV.`
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email)) {
-      return `Line ${row.line}: invalid email "${row.email}".`
+    const emailError = getEmailValidationError(row.email)
+    if (emailError) {
+      return `Line ${row.line}: ${emailError}`
     }
     if (emails.has(row.email)) return `Duplicate email in CSV: ${row.email}`
     emails.add(row.email)
@@ -129,9 +132,9 @@ export function validateUserImportRows(rows: CsvUserImportRow[]): string | null 
     if (
       row.role === 'employee' &&
       row.manager_email &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.manager_email)
+      getEmailValidationError(row.manager_email)
     ) {
-      return `Line ${row.line}: invalid manager_email.`
+      return `Line ${row.line}: ${getEmailValidationError(row.manager_email)}`
     }
     if (row.role !== 'employee' && row.manager_email) {
       return `Line ${row.line}: manager_email should only be set for employees.`

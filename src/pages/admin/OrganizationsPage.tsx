@@ -51,7 +51,7 @@ export function OrganizationsPage() {
         action={
           <Button onClick={() => setShowForm((v) => !v)} className="w-full sm:w-auto min-h-11">
             <Plus className="h-4 w-4 mr-1" />
-            New hospital
+            New Organization
           </Button>
         }
       />

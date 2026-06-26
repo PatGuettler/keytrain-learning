@@ -53,7 +53,7 @@ export interface UsersBackend {
 export interface OrganizationsBackend {
   fetchOrganizations(): Promise<Organization[]>
   createOrganization(name: string): Promise<Organization>
-  updateOrganization(id: string, patch: { name: string }): Promise<Organization>
+  updateOrganization(id: string, patch: { name?: string; industry?: string }): Promise<Organization>
   deleteOrganization(id: string): Promise<void>
 }
 

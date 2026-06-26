@@ -15,7 +15,7 @@ export async function createOrganization(name: string) {
   return backend.organizations.createOrganization(name)
 }
 
-export async function updateOrganization(id: string, patch: { name: string }) {
+export async function updateOrganization(id: string, patch: { name?: string; industry?: string }) {
   return backend.organizations.updateOrganization(id, patch)
 }
 

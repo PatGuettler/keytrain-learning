@@ -16,12 +16,18 @@ import { DeleteHospitalCard } from '@/components/admin/DeleteHospitalCard'
 import { useOrgRoute } from '@/hooks/useOrgRoute'
 import { adminOrganizationPath, getOrgSlug } from '@/lib/org-slugs'
 import { PLATFORM_ORG_ID } from '@/lib/constants'
+import {
+  TRAINING_CATEGORIES,
+  TRAINING_CATEGORY_LABELS,
+  type TrainingCategory,
+} from '@/lib/training-categories'
 
 export function OrganizationDetailPage() {
   const navigate = useNavigate()
   const { org, orgId, orgs, isLoading: orgsLoading } = useOrgRoute()
   const queryClient = useQueryClient()
   const [orgName, setOrgName] = useState('')
+  const [orgIndustry, setOrgIndustry] = useState<TrainingCategory>('healthcare')
   const [renameError, setRenameError] = useState('')
   const [renameSuccess, setRenameSuccess] = useState('')
 
@@ -34,14 +40,18 @@ export function OrganizationDetailPage() {
   const managers = users.filter((u) => u.role === 'manager')
 
   useEffect(() => {
-    if (org) setOrgName(org.name)
-  }, [org?.name, org])
+    if (org) {
+      setOrgName(org.name)
+      setOrgIndustry((org.industry ?? 'healthcare') as TrainingCategory)
+    }
+  }, [org?.name, org?.industry, org])
 
-  const renameMutation = useMutation({
-    mutationFn: (name: string) => updateOrganization(orgId!, { name }),
+  const settingsMutation = useMutation({
+    mutationFn: (payload: { name: string; industry: TrainingCategory }) =>
+      updateOrganization(orgId!, payload),
     onSuccess: (updated) => {
       setRenameError('')
-      setRenameSuccess('Organization name saved.')
+      setRenameSuccess('Organization settings saved.')
       void queryClient.invalidateQueries({ queryKey: ['organizations'] })
       const nextOrgs = orgs.map((o) => (o.id === updated.id ? updated : o))
       navigate(adminOrganizationPath(getOrgSlug(updated, nextOrgs)), { replace: true })
@@ -52,7 +62,9 @@ export function OrganizationDetailPage() {
     },
   })
 
-  const nameChanged = org && orgName.trim() !== org.name
+  const settingsChanged =
+    org &&
+    (orgName.trim() !== org.name || (org.industry ?? 'healthcare') !== orgIndustry)
 
   if (!orgsLoading && !org) {
     return (
@@ -87,20 +99,20 @@ export function OrganizationDetailPage() {
       {orgId && org && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Organization name</CardTitle>
+            <CardTitle className="text-base">Organization settings</CardTitle>
           </CardHeader>
           <CardContent>
             <form
-              className="flex flex-col sm:flex-row gap-3"
+              className="space-y-4"
               onSubmit={(e) => {
                 e.preventDefault()
                 const trimmed = orgName.trim()
-                if (!trimmed || !nameChanged) return
-                renameMutation.mutate(trimmed)
+                if (!trimmed || !settingsChanged) return
+                settingsMutation.mutate({ name: trimmed, industry: orgIndustry })
               }}
             >
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="org-rename">Hospital name</Label>
+              <div className="space-y-2">
+                <Label htmlFor="org-rename">Organization name</Label>
                 <Input
                   id="org-rename"
                   value={orgName}
@@ -112,12 +124,27 @@ export function OrganizationDetailPage() {
                   required
                 />
               </div>
-              <Button
-                type="submit"
-                disabled={!nameChanged || renameMutation.isPending}
-                className="sm:self-end min-h-10"
-              >
-                {renameMutation.isPending ? 'Saving…' : 'Save name'}
+              <div className="space-y-2">
+                <Label htmlFor="org-industry">Industry</Label>
+                <select
+                  id="org-industry"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={orgIndustry}
+                  onChange={(e) => {
+                    setOrgIndustry(e.target.value as TrainingCategory)
+                    setRenameSuccess('')
+                    setRenameError('')
+                  }}
+                >
+                  {TRAINING_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {TRAINING_CATEGORY_LABELS[cat]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <Button type="submit" disabled={!settingsChanged || settingsMutation.isPending}>
+                {settingsMutation.isPending ? 'Saving…' : 'Save settings'}
               </Button>
             </form>
             {renameError && <p className="text-sm text-destructive mt-2">{renameError}</p>}

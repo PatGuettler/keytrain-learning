@@ -30,6 +30,18 @@ export interface PhishingTemplate {
   created_at: string
 }
 
+export interface PhishingTemplateInput {
+  name: string
+  pretext: PhishingPretext | string
+  sender_name: string
+  sender_email_local: string
+  subject: string
+  body_html: string
+  body_text: string
+  difficulty?: PhishingDifficulty
+  red_flags?: string[]
+}
+
 export interface PhishingCampaign {
   id: string
   org_id: string | null

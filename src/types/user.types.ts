@@ -39,5 +39,6 @@ export type AdminProfileUpdate = Partial<
 export interface Organization {
   id: string
   name: string
+  industry?: string
   created_at: string
 }

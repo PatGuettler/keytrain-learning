@@ -92,14 +92,15 @@ export function addSectionHeading(doc: jsPDF, title: string, startY: number): nu
   doc.setFont('helvetica', 'bold')
   doc.text(title, 14, startY)
   doc.setFont('helvetica', 'normal')
-  return startY + 6
+  return startY + 8
 }
 
 export function addDataTable(
   doc: jsPDF,
   head: string[],
   body: (string | number)[][],
-  startY: number
+  startY: number,
+  columnStyles?: Record<number, { cellWidth?: number | 'auto' | 'wrap' }>
 ): number {
   autoTable(doc, {
     startY,
@@ -108,8 +109,9 @@ export function addDataTable(
     styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak' },
     headStyles: { fillColor: BRAND_RGB, textColor: 255, fontStyle: 'bold' },
     margin: { left: 14, right: 14 },
+    columnStyles,
   })
-  return ((doc as JsPDFWithAutoTable).lastAutoTable?.finalY ?? startY) + 8
+  return ((doc as JsPDFWithAutoTable).lastAutoTable?.finalY ?? startY) + 10
 }
 
 export function saveDashboardPdf(doc: jsPDF, filename: string) {

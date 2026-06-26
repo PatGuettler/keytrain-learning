@@ -11,6 +11,7 @@ import type {
   PhishingRecipient,
   PhishingRecipientRow,
   PhishingTemplate,
+  PhishingTemplateInput,
   SendPhishingCampaignOptions,
   SendPhishingCampaignResult,
 } from '@/types/phishing.types'
@@ -33,6 +34,64 @@ export async function fetchPhishingTemplates(): Promise<PhishingTemplate[]> {
     ...row,
     red_flags: Array.isArray(row.red_flags) ? (row.red_flags as string[]) : [],
   })) as PhishingTemplate[]
+}
+
+export async function createPhishingTemplate(input: PhishingTemplateInput): Promise<PhishingTemplate> {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase
+    .from('phishing_templates')
+    .insert({
+      name: input.name.trim(),
+      pretext: input.pretext,
+      sender_name: input.sender_name.trim(),
+      sender_email_local: input.sender_email_local.trim(),
+      subject: input.subject.trim(),
+      body_html: input.body_html,
+      body_text: input.body_text,
+      difficulty: input.difficulty ?? 'medium',
+      red_flags: input.red_flags ?? [],
+    })
+    .select('*')
+    .single()
+  if (error) throw error
+  return {
+    ...data,
+    red_flags: Array.isArray(data.red_flags) ? (data.red_flags as string[]) : [],
+  } as PhishingTemplate
+}
+
+export async function updatePhishingTemplate(
+  id: string,
+  input: PhishingTemplateInput
+): Promise<PhishingTemplate> {
+  const supabase = requireSupabase()
+  const { data, error } = await supabase
+    .from('phishing_templates')
+    .update({
+      name: input.name.trim(),
+      pretext: input.pretext,
+      sender_name: input.sender_name.trim(),
+      sender_email_local: input.sender_email_local.trim(),
+      subject: input.subject.trim(),
+      body_html: input.body_html,
+      body_text: input.body_text,
+      difficulty: input.difficulty ?? 'medium',
+      red_flags: input.red_flags ?? [],
+    })
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (error) throw error
+  return {
+    ...data,
+    red_flags: Array.isArray(data.red_flags) ? (data.red_flags as string[]) : [],
+  } as PhishingTemplate
+}
+
+export async function deletePhishingTemplate(id: string): Promise<void> {
+  const supabase = requireSupabase()
+  const { error } = await supabase.from('phishing_templates').update({ is_active: false }).eq('id', id)
+  if (error) throw error
 }
 
 export async function fetchPhishingCampaigns(): Promise<PhishingCampaign[]> {

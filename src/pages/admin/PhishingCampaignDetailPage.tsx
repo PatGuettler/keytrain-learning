@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Send } from 'lucide-react'
+import { ArrowLeft, Send, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { PhishingTestSendPanel } from '@/components/admin/PhishingTestSendPanel'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,14 +11,17 @@ import {
   fetchPhishingEvents,
   fetchPhishingRecipients,
   sendPhishingCampaign,
+  deletePhishingCampaign,
 } from '@/services/phishing.service'
 import { buildRecipientOutcomes, computeCampaignMetrics } from '@/lib/phishing-stats'
 import { formatDate } from '@/lib/utils'
 
 export function PhishingCampaignDetailPage() {
   const { campaignId } = useParams<{ campaignId: string }>()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [sending, setSending] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [sendMessage, setSendMessage] = useState('')
   const [sendError, setSendError] = useState('')
 
@@ -80,6 +82,28 @@ export function PhishingCampaignDetailPage() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!campaignId || !campaign) return
+    if (
+      !window.confirm(
+        `Delete "${campaign.name}"? All recipients and results will be permanently removed.`
+      )
+    ) {
+      return
+    }
+    setDeleting(true)
+    setSendError('')
+    try {
+      await deletePhishingCampaign(campaignId)
+      await queryClient.invalidateQueries({ queryKey: ['phishing-campaigns'] })
+      navigate('/admin/phishing/campaigns')
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : 'Could not delete campaign.')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (isLoading || !campaign) {
     return <p className="text-sm text-muted-foreground">Loading campaign…</p>
   }
@@ -97,22 +121,34 @@ export function PhishingCampaignDetailPage() {
         title={campaign.name}
         description={statusDescription}
         action={
-          isDraft ? (
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" asChild>
-                <Link to={`/admin/phishing/campaigns/${campaign.id}/edit`}>Edit</Link>
-              </Button>
+          <div className="flex flex-wrap gap-2">
+            {isDraft ? (
+              <>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to={`/admin/phishing/campaigns/${campaign.id}/edit`}>Edit</Link>
+                </Button>
+                <Button size="sm" onClick={handleSend} disabled={sending || recipients.length === 0}>
+                  <Send className="h-4 w-4 mr-1" />
+                  {sending ? 'Sending…' : 'Send to everyone'}
+                </Button>
+              </>
+            ) : metrics.sentCount === 0 ? (
               <Button size="sm" onClick={handleSend} disabled={sending || recipients.length === 0}>
                 <Send className="h-4 w-4 mr-1" />
-                {sending ? 'Sending…' : 'Send to everyone'}
+                {sending ? 'Sending…' : 'Retry send'}
               </Button>
-            </div>
-          ) : metrics.sentCount === 0 ? (
-            <Button size="sm" onClick={handleSend} disabled={sending || recipients.length === 0}>
-              <Send className="h-4 w-4 mr-1" />
-              {sending ? 'Sending…' : 'Retry send'}
+            ) : null}
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive border-destructive/40 hover:bg-destructive/10"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              {deleting ? 'Deleting…' : 'Delete'}
             </Button>
-          ) : undefined
+          </div>
         }
       />
 
@@ -121,23 +157,6 @@ export function PhishingCampaignDetailPage() {
       )}
       {sendError && (
         <p className="text-sm text-destructive whitespace-pre-wrap">{sendError}</p>
-      )}
-
-      {isDraft && campaignId && (
-        <PhishingTestSendPanel
-          campaignId={campaignId}
-          onSent={async (message) => {
-            setSendMessage(message)
-            setSendError('')
-            await queryClient.invalidateQueries({ queryKey: ['phishing-campaign', campaignId] })
-            await queryClient.invalidateQueries({ queryKey: ['phishing-campaigns'] })
-            await queryClient.invalidateQueries({ queryKey: ['phishing-recipients', campaignId] })
-          }}
-          onError={(message) => {
-            setSendError(message)
-            setSendMessage('')
-          }}
-        />
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

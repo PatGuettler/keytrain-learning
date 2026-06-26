@@ -9,7 +9,7 @@ import { fetchProfiles } from '@/services/users.service'
 import { sendPhishingCampaign } from '@/services/phishing.service'
 import { useAuthStore } from '@/store/authStore'
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+import { isValidEmail, getEmailValidationError } from '@/lib/email-validation'
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
@@ -56,8 +56,8 @@ export function PhishingTestSendPanel({
   const addEmail = (raw: string) => {
     const email = normalizeEmail(raw)
     if (!email) return
-    if (!EMAIL_RE.test(email)) {
-      onError('Enter a valid email address.')
+    if (!isValidEmail(email)) {
+      onError(getEmailValidationError(email) ?? 'Enter a valid email address.')
       return
     }
     if (selectedSet.has(email)) return
