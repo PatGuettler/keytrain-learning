@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Fish, Plus, BarChart3, Trash2 } from 'lucide-react'
+import { Plus, BarChart3, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -35,7 +35,7 @@ export function PhishingCampaignsPage() {
     <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title="Phishing campaigns"
-        description="Build and run authorized security awareness simulations. Emails stay in dry-run mode until Resend and your simulation domain are configured."
+        description="Build and run authorized security awareness simulations on your verified domain."
         action={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
@@ -54,21 +54,12 @@ export function PhishingCampaignsPage() {
         }
       />
 
-      <Card className="bg-muted/40 border-dashed">
-        <CardContent className="p-4 text-sm text-muted-foreground">
-          <Fish className="h-4 w-4 inline mr-1 text-primary" />
-          Campaigns run in <strong>dry-run</strong> when <code className="text-xs">RESEND_API_KEY</code> is
-          missing or <code className="text-xs">PHISHING_SIMULATION_DRY_RUN=true</code>. Recipients and events are
-          still recorded so you can test the full workflow before buying a domain.
-        </CardContent>
-      </Card>
-
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading campaigns…</p>
       ) : campaigns.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
-            No campaigns yet. Create one from a template, select recipients, then send (or dry-run).
+            No campaigns yet. Create one from a template, select recipients, then send.
           </CardContent>
         </Card>
       ) : (
