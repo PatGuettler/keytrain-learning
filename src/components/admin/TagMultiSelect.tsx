@@ -141,7 +141,7 @@ export function TagMultiSelect({
       </div>
       {description && <p className="text-xs text-muted-foreground">{description}</p>}
 
-      <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
         <div className="max-w-md">
           <DropdownMenuTrigger asChild>
             <button
