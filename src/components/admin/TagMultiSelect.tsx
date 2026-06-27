@@ -1,15 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronDown, Settings2 } from 'lucide-react'
 import { createTrainingTag, fetchTrainingTags } from '@/services/training-tags.service'
 import { ManageTagsDialog } from '@/components/admin/ManageTagsDialog'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
@@ -32,6 +26,8 @@ export function TagMultiSelect({
   allowManage = true,
 }: TagMultiSelectProps) {
   const queryClient = useQueryClient()
+  const rootRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [createError, setCreateError] = useState('')
@@ -60,6 +56,23 @@ export function TagMultiSelect({
   }, [tags, search])
 
   const showCreateOption = search.trim().length > 0 && !exactMatch
+
+  useEffect(() => {
+    if (!open) return
+    const handlePointerDown = (e: PointerEvent) => {
+      if (rootRef.current?.contains(e.target as Node)) return
+      setOpen(false)
+      setSearch('')
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [open])
+
+  useEffect(() => {
+    if (open) {
+      window.setTimeout(() => searchRef.current?.focus(), 0)
+    }
+  }, [open])
 
   const invalidateTags = () => {
     void queryClient.invalidateQueries({ queryKey: ['training-tags'] })
@@ -102,10 +115,13 @@ export function TagMultiSelect({
   }
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    e.stopPropagation()
     if (e.key === 'Enter') {
       e.preventDefault()
       createFromSearch()
+    }
+    if (e.key === 'Escape') {
+      setOpen(false)
+      setSearch('')
     }
   }
 
@@ -141,90 +157,88 @@ export function TagMultiSelect({
       </div>
       {description && <p className="text-xs text-muted-foreground">{description}</p>}
 
-      <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
-        <div className="max-w-md">
-          <DropdownMenuTrigger asChild>
-            <button
-              id={id}
-              type="button"
-              disabled={isLoading}
-              className={cn(
-                'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm',
-                'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-                selectedTags.length === 0 && 'text-muted-foreground'
-              )}
-            >
-              <span className="truncate text-left">{isLoading ? 'Loading tags…' : triggerLabel}</span>
-              <ChevronDown className={cn('h-4 w-4 shrink-0 opacity-60 transition-transform', open && 'rotate-180')} />
-            </button>
-          </DropdownMenuTrigger>
-        </div>
-
-        <DropdownMenuContent
-          align="start"
-          className="w-[var(--radix-dropdown-menu-trigger-width)] p-0 bg-card"
-          onCloseAutoFocus={(e) => e.preventDefault()}
+      <div ref={rootRef} className={cn('relative max-w-md', open && 'z-50')}>
+        <button
+          id={id}
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          disabled={isLoading}
+          className={cn(
+            'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            selectedTags.length === 0 && 'text-muted-foreground'
+          )}
+          onClick={() => setOpen((prev) => !prev)}
         >
-          <div
-            className="border-b border-border p-2 bg-card"
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                setCreateError('')
-              }}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Search or type new tag, press Enter"
-              className="h-8 bg-background"
-              autoComplete="off"
-              disabled={createMutation.isPending}
-            />
-          </div>
+          <span className="truncate text-left">{isLoading ? 'Loading tags…' : triggerLabel}</span>
+          <ChevronDown className={cn('h-4 w-4 shrink-0 opacity-60 transition-transform', open && 'rotate-180')} />
+        </button>
 
-          <div className="max-h-52 overflow-y-auto bg-card py-1">
-            {filteredTags.length === 0 && !showCreateOption ? (
-              <p className="px-3 py-2 text-sm text-muted-foreground">No tags found.</p>
-            ) : (
-              filteredTags.map((tag) => {
-                const selected = selectedTagIds.includes(tag.id)
-                return (
-                  <DropdownMenuItem
-                    key={tag.id}
-                    className="cursor-pointer bg-card focus:bg-muted"
-                    onSelect={(e) => {
-                      e.preventDefault()
-                      toggleTag(tag.id)
-                    }}
-                  >
-                    <span
-                      className={cn(
-                        'mr-2 flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-                        selected ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-background'
-                      )}
-                    >
-                      {selected && <Check className="h-3 w-3" />}
-                    </span>
-                    {tag.name}
-                  </DropdownMenuItem>
-                )
-              })
-            )}
-            {showCreateOption && (
-              <DropdownMenuItem
-                className="cursor-pointer text-primary bg-card focus:bg-muted"
-                onSelect={(e) => {
-                  e.preventDefault()
-                  createFromSearch()
+        {open && (
+          <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-md border border-border bg-card text-card-foreground shadow-lg">
+            <div className="border-b border-border p-2">
+              <Input
+                ref={searchRef}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setCreateError('')
                 }}
-              >
-                Create &ldquo;{search.trim()}&rdquo;
-              </DropdownMenuItem>
-            )}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search or type new tag, press Enter"
+                className="h-8 bg-background"
+                autoComplete="off"
+                disabled={createMutation.isPending}
+              />
+            </div>
+
+            <ul className="max-h-52 overflow-y-auto py-1" role="listbox" aria-multiselectable>
+              {filteredTags.length === 0 && !showCreateOption ? (
+                <li className="px-3 py-2 text-sm text-muted-foreground">No tags found.</li>
+              ) : (
+                filteredTags.map((tag) => {
+                  const selected = selectedTagIds.includes(tag.id)
+                  return (
+                    <li key={tag.id}>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left hover:bg-muted"
+                        onClick={() => toggleTag(tag.id)}
+                      >
+                        <span
+                          className={cn(
+                            'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
+                            selected
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-input bg-background'
+                          )}
+                        >
+                          {selected && <Check className="h-3 w-3" />}
+                        </span>
+                        {tag.name}
+                      </button>
+                    </li>
+                  )
+                })
+              )}
+              {showCreateOption && (
+                <li>
+                  <button
+                    type="button"
+                    className="w-full px-3 py-2 text-sm text-left text-primary hover:bg-muted"
+                    onClick={() => createFromSearch()}
+                  >
+                    Create &ldquo;{search.trim()}&rdquo;
+                  </button>
+                </li>
+              )}
+            </ul>
           </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        )}
+      </div>
 
       {createError && <p className="text-sm text-destructive">{createError}</p>}
 

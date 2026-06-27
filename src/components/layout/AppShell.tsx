@@ -34,7 +34,7 @@ export function AppShell() {
         )}
         <main
           className={cn(
-            'flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4 lg:p-6 safe-area-px',
+            'flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4 lg:p-6 safe-area-px [scrollbar-gutter:stable]',
             inTrainingPlayer && 'pb-0'
           )}
         >
