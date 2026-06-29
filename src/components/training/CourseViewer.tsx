@@ -97,6 +97,7 @@ export function CourseViewer({
           modules={modules}
           currentIndex={currentIndex}
           completedIndices={completedIndices}
+          hideProgressBar={module.type === 'quiz'}
         />
       </aside>
       <div className="min-w-0 w-full max-w-full">

@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -46,6 +46,14 @@ export function QuizEditor({
   const removeQuestion = (index: number) => {
     if (questions.length <= 1) return
     onChange({ ...content, questions: questions.filter((_, i) => i !== index) })
+  }
+
+  const moveQuestion = (index: number, direction: -1 | 1) => {
+    const target = index + direction
+    if (target < 0 || target >= questions.length) return
+    const next = [...questions]
+    ;[next[index], next[target]] = [next[target], next[index]]
+    onChange({ ...content, questions: next })
   }
 
   const setCorrectOption = (questionIndex: number, optionId: string) => {
@@ -119,16 +127,41 @@ export function QuizEditor({
         <div key={question.id} className="rounded-lg border bg-muted/20 p-4 space-y-3">
           <div className="flex items-start justify-between gap-2">
             <p className="text-sm font-medium">Question {qIndex + 1}</p>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-destructive shrink-0"
-              disabled={questions.length <= 1}
-              onClick={() => removeQuestion(qIndex)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-1 shrink-0">
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                disabled={qIndex === 0}
+                onClick={() => moveQuestion(qIndex, -1)}
+                aria-label="Move question up"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                disabled={qIndex === questions.length - 1}
+                onClick={() => moveQuestion(qIndex, 1)}
+                aria-label="Move question down"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-destructive"
+                disabled={questions.length <= 1}
+                onClick={() => removeQuestion(qIndex)}
+                aria-label="Remove question"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">

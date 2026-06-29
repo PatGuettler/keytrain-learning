@@ -7,6 +7,7 @@ interface ModuleProgressProps {
   currentIndex: number
   completedIndices: Set<number>
   sequential?: boolean
+  hideProgressBar?: boolean
 }
 
 export function ModuleProgress({
@@ -14,6 +15,7 @@ export function ModuleProgress({
   currentIndex,
   completedIndices,
   sequential = true,
+  hideProgressBar = false,
 }: ModuleProgressProps) {
   const current = modules[currentIndex]
   const progressPct =
@@ -29,12 +31,14 @@ export function ModuleProgress({
           </span>
           <span className="capitalize">{current?.type ?? 'module'}</span>
         </div>
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
+        {!hideProgressBar && (
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all duration-300"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        )}
         <p className="text-sm font-medium leading-snug line-clamp-2">{current?.title}</p>
       </div>
 

@@ -42,6 +42,8 @@
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "lucide-react": "^0.469.0",
+    "dompurify": "^3.4.11",
+    "marked": "^18.0.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
@@ -54,6 +56,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",

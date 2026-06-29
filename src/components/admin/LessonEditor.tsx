@@ -1,10 +1,13 @@
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { LessonImageInput } from '@/components/admin/LessonImageInput'
+import { SlideBodyContent } from '@/components/training/SlideBodyContent'
 import { LESSON_ILLUSTRATION_KEYS } from '@/components/training/lesson-illustrations'
 import { LESSON_LAYOUTS, newSlideId } from '@/lib/module-defaults'
 import { parseYouTubeVideoId } from '@/lib/youtube'
+import { useState } from 'react'
 import type { LessonContent, LessonSlide } from '@/types/course.types'
 
 const selectClass =
@@ -21,6 +24,7 @@ export function LessonEditor({
   onChange: (content: LessonContent) => void
 }) {
   const slides = content.slides ?? []
+  const [previewSlideIds, setPreviewSlideIds] = useState<Set<string>>(new Set())
 
   const updateSlide = (index: number, patch: Partial<LessonSlide>) => {
     const next = slides.map((slide, i) => (i === index ? { ...slide, ...patch } : slide))
@@ -72,6 +76,15 @@ export function LessonEditor({
     const next = [...slides]
     ;[next[index], next[target]] = [next[target], next[index]]
     onChange({ ...content, slides: next })
+  }
+
+  const togglePreview = (slideId: string) => {
+    setPreviewSlideIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(slideId)) next.delete(slideId)
+      else next.add(slideId)
+      return next
+    })
   }
 
   return (
@@ -133,12 +146,47 @@ export function LessonEditor({
           </div>
 
           <div className="space-y-2">
-            <Label>Body</Label>
-            <textarea
-              className={textareaClass}
-              value={slide.body}
-              onChange={(e) => updateSlide(index, { body: e.target.value })}
-            />
+            <div className="flex items-center justify-between gap-2">
+              <Label>Body</Label>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-8"
+                onClick={() => togglePreview(slide.id)}
+              >
+                {previewSlideIds.has(slide.id) ? (
+                  <>
+                    <EyeOff className="h-4 w-4 mr-1" /> Edit
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-4 w-4 mr-1" /> Preview
+                  </>
+                )}
+              </Button>
+            </div>
+            {previewSlideIds.has(slide.id) ? (
+              <div className="rounded-md border bg-background p-4 min-h-[96px]">
+                {slide.body.trim() ? (
+                  <SlideBodyContent body={slide.body} />
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">No body content yet.</p>
+                )}
+              </div>
+            ) : (
+              <>
+                <textarea
+                  className={textareaClass}
+                  value={slide.body}
+                  onChange={(e) => updateSlide(index, { body: e.target.value })}
+                  placeholder="Supports Markdown and HTML: **bold**, lists, links, etc."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Markdown and HTML supported. Use Preview to see how learners will view this slide.
+                </p>
+              </>
+            )}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -211,14 +259,17 @@ export function LessonEditor({
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label>Custom image URL (optional)</Label>
-            <Input
-              value={slide.illustration?.url ?? ''}
-              onChange={(e) => updateIllustration(index, { url: e.target.value })}
-              placeholder="https://… or leave blank for built-in illustration"
-            />
-          </div>
+          <LessonImageInput
+            url={slide.illustration?.url ?? ''}
+            alt={slide.illustration?.alt ?? slide.heading}
+            onUrlChange={(nextUrl) => {
+              if (!nextUrl.trim()) {
+                updateIllustration(index, { url: undefined })
+              } else {
+                updateIllustration(index, { url: nextUrl })
+              }
+            }}
+          />
         </div>
       ))}
     </div>

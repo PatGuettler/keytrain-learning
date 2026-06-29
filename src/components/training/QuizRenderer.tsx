@@ -113,19 +113,11 @@ export function QuizRenderer({
 
   return (
     <div className="space-y-4 min-w-0 w-full max-w-full">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2 text-sm">
-          <span className="font-medium">
-            Question {questionIndex + 1} of {questions.length}
-          </span>
-          <span className="text-muted-foreground">Pass: {content.passing_score}%</span>
-        </div>
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }}
-          />
-        </div>
+      <div className="flex items-center justify-between gap-2 text-sm">
+        <span className="font-medium">
+          Question {questionIndex + 1} of {questions.length}
+        </span>
+        <span className="text-muted-foreground">Pass: {content.passing_score}%</span>
       </div>
 
       {currentQuestion && (

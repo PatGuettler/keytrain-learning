@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import type { LessonContent, LessonSlide } from '@/types/course.types'
 import { cn } from '@/lib/utils'
 import { LessonIllustration, resolveIllustrationKey } from './lesson-illustrations'
+import { SlideBodyContent } from './SlideBodyContent'
 import { YouTubePlayer } from './YouTubePlayer'
 
 export function LessonRenderer({
@@ -139,7 +140,7 @@ function SlideView({
     layout === 'image-top' ||
     (layout === 'full-bleed' && illustration !== undefined)
 
-  const prose = 'text-muted-foreground leading-relaxed whitespace-pre-wrap break-anywhere min-w-0'
+  const prose = 'min-w-0'
 
   const visualBlock = (
     <figure className="rounded-lg overflow-hidden border bg-muted/50 min-w-0 w-full">
@@ -167,7 +168,7 @@ function SlideView({
         {showVisual && visualBlock}
         <div className="min-w-0">
           <h2 className={heading}>{slide.heading}</h2>
-          <p className={prose}>{slide.body}</p>
+          <SlideBodyContent body={slide.body} className={prose} />
         </div>
       </div>
     )
@@ -182,7 +183,7 @@ function SlideView({
         {showVisual && visualBlock}
         <div className="min-w-0">
           <h2 className={heading}>{slide.heading}</h2>
-          <p className={prose}>{slide.body}</p>
+          <SlideBodyContent body={slide.body} className={prose} />
         </div>
       </div>
     )
@@ -202,7 +203,7 @@ function SlideView({
         )}
         <div>
           <h2 className={heading}>{slide.heading}</h2>
-          <p className={prose}>{slide.body}</p>
+          <SlideBodyContent body={slide.body} className={prose} />
         </div>
       </div>
       {showVisual && <div className="min-w-0 order-1 md:order-none">{visualBlock}</div>}
