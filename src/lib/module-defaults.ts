@@ -8,7 +8,7 @@ import type {
   WorkshopType,
 } from '@/types/workshop.types'
 
-const selectLayouts = ['image-right', 'image-left', 'image-top', 'full-bleed'] as const
+const selectLayouts = ['image-right', 'image-left', 'image-top', 'full-bleed', 'image-only'] as const
 
 export function newSlideId(): string {
   return `slide_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
@@ -208,3 +208,11 @@ export function cloneModulesForBuilder(modules: Module[], courseId = 'new'): Mod
 }
 
 export const LESSON_LAYOUTS = selectLayouts
+
+export const LESSON_LAYOUT_LABELS: Record<(typeof selectLayouts)[number], string> = {
+  'image-right': 'Image right',
+  'image-left': 'Image left',
+  'image-top': 'Image top',
+  'full-bleed': 'Full bleed',
+  'image-only': 'Image only',
+}

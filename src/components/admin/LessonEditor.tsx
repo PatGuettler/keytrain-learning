@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { LessonImageInput } from '@/components/admin/LessonImageInput'
 import { SlideBodyContent } from '@/components/training/SlideBodyContent'
 import { LESSON_ILLUSTRATION_KEYS } from '@/components/training/lesson-illustrations'
-import { LESSON_LAYOUTS, newSlideId } from '@/lib/module-defaults'
+import { LESSON_LAYOUTS, LESSON_LAYOUT_LABELS, newSlideId } from '@/lib/module-defaults'
 import { parseYouTubeVideoId } from '@/lib/youtube'
 import { useState } from 'react'
 import type { LessonContent, LessonSlide } from '@/types/course.types'
@@ -65,6 +65,22 @@ export function LessonEditor({
     })
   }
 
+  const addImageOnlySlide = () => {
+    onChange({
+      ...content,
+      slides: [
+        ...slides,
+        {
+          id: newSlideId(),
+          heading: 'Image slide',
+          body: '',
+          layout: 'image-only',
+          illustration: { alt: 'Slide image', caption: '' },
+        },
+      ],
+    })
+  }
+
   const removeSlide = (index: number) => {
     if (slides.length <= 1) return
     onChange({ ...content, slides: slides.filter((_, i) => i !== index) })
@@ -89,14 +105,21 @@ export function LessonEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium">Slides ({slides.length})</p>
-        <Button type="button" size="sm" variant="outline" onClick={addSlide}>
-          <Plus className="h-3 w-3 mr-1" /> Add slide
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" size="sm" variant="outline" onClick={addImageOnlySlide}>
+            <Plus className="h-3 w-3 mr-1" /> Add image slide
+          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={addSlide}>
+            <Plus className="h-3 w-3 mr-1" /> Add slide
+          </Button>
+        </div>
       </div>
 
-      {slides.map((slide, index) => (
+      {slides.map((slide, index) => {
+        const isImageOnly = slide.layout === 'image-only'
+        return (
         <div key={slide.id} className="rounded-lg border bg-muted/20 p-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-medium">Slide {index + 1}</p>
@@ -138,74 +161,84 @@ export function LessonEditor({
           </div>
 
           <div className="space-y-2">
-            <Label>Heading</Label>
-            <Input
-              value={slide.heading}
-              onChange={(e) => updateSlide(index, { heading: e.target.value })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <Label>Body</Label>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="h-8"
-                onClick={() => togglePreview(slide.id)}
-              >
-                {previewSlideIds.has(slide.id) ? (
-                  <>
-                    <EyeOff className="h-4 w-4 mr-1" /> Edit
-                  </>
-                ) : (
-                  <>
-                    <Eye className="h-4 w-4 mr-1" /> Preview
-                  </>
-                )}
-              </Button>
-            </div>
-            {previewSlideIds.has(slide.id) ? (
-              <div className="rounded-md border bg-background p-4 min-h-[96px]">
-                {slide.body.trim() ? (
-                  <SlideBodyContent body={slide.body} />
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">No body content yet.</p>
-                )}
-              </div>
-            ) : (
-              <>
-                <textarea
-                  className={textareaClass}
-                  value={slide.body}
-                  onChange={(e) => updateSlide(index, { body: e.target.value })}
-                  placeholder="Supports Markdown and HTML: **bold**, lists, links, etc."
-                />
-                <p className="text-xs text-muted-foreground">
-                  Markdown and HTML supported. Use Preview to see how learners will view this slide.
-                </p>
-              </>
+            <Label>Layout</Label>
+            <select
+              className={selectClass}
+              value={slide.layout ?? 'image-right'}
+              onChange={(e) =>
+                updateSlide(index, { layout: e.target.value as LessonSlide['layout'] })
+              }
+            >
+              {LESSON_LAYOUTS.map((layout) => (
+                <option key={layout} value={layout}>
+                  {LESSON_LAYOUT_LABELS[layout]}
+                </option>
+              ))}
+            </select>
+            {isImageOnly && (
+              <p className="text-xs text-muted-foreground">
+                Image-only slides show the picture full width. Heading and body are hidden from learners.
+              </p>
             )}
           </div>
 
+          {!isImageOnly && (
+            <>
+              <div className="space-y-2">
+                <Label>Heading</Label>
+                <Input
+                  value={slide.heading}
+                  onChange={(e) => updateSlide(index, { heading: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <Label>Body</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8"
+                    onClick={() => togglePreview(slide.id)}
+                  >
+                    {previewSlideIds.has(slide.id) ? (
+                      <>
+                        <EyeOff className="h-4 w-4 mr-1" /> Edit
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="h-4 w-4 mr-1" /> Preview
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {previewSlideIds.has(slide.id) ? (
+                  <div className="rounded-md border bg-background p-4 min-h-[96px]">
+                    {slide.body.trim() ? (
+                      <SlideBodyContent body={slide.body} />
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">No body content yet.</p>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <textarea
+                      className={textareaClass}
+                      value={slide.body}
+                      onChange={(e) => updateSlide(index, { body: e.target.value })}
+                      placeholder="Supports Markdown and HTML: **bold**, lists, links, etc."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Markdown and HTML supported. Use Preview to see how learners will view this slide.
+                    </p>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Layout</Label>
-              <select
-                className={selectClass}
-                value={slide.layout ?? 'image-right'}
-                onChange={(e) =>
-                  updateSlide(index, { layout: e.target.value as LessonSlide['layout'] })
-                }
-              >
-                {LESSON_LAYOUTS.map((layout) => (
-                  <option key={layout} value={layout}>
-                    {layout.replace('-', ' ')}
-                  </option>
-                ))}
-              </select>
-            </div>
             <div className="space-y-2">
               <Label>Built-in illustration</Label>
               <select
@@ -228,36 +261,36 @@ export function LessonEditor({
                 ))}
               </select>
             </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Illustration alt text</Label>
+              <Label>{isImageOnly ? 'Image alt text' : 'Illustration alt text'}</Label>
               <Input
                 value={slide.illustration?.alt ?? ''}
                 onChange={(e) => updateIllustration(index, { alt: e.target.value })}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Caption (optional)</Label>
-              <Input
-                value={slide.illustration?.caption ?? ''}
-                onChange={(e) => updateIllustration(index, { caption: e.target.value })}
-              />
-            </div>
           </div>
 
           <div className="space-y-2">
-            <Label>YouTube video URL (optional)</Label>
+            <Label>Caption (optional)</Label>
             <Input
-              value={slide.youtube?.videoId ?? ''}
-              onChange={(e) => updateYouTubeUrl(index, e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=…"
+              value={slide.illustration?.caption ?? ''}
+              onChange={(e) => updateIllustration(index, { caption: e.target.value })}
             />
-            <p className="text-xs text-muted-foreground">
-              When set, learners must watch the full video before advancing past this slide.
-            </p>
           </div>
+
+          {!isImageOnly && (
+            <div className="space-y-2">
+              <Label>YouTube video URL (optional)</Label>
+              <Input
+                value={slide.youtube?.videoId ?? ''}
+                onChange={(e) => updateYouTubeUrl(index, e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=…"
+              />
+              <p className="text-xs text-muted-foreground">
+                When set, learners must watch the full video before advancing past this slide.
+              </p>
+            </div>
+          )}
 
           <LessonImageInput
             url={slide.illustration?.url ?? ''}
@@ -270,8 +303,15 @@ export function LessonEditor({
               }
             }}
           />
+
+          {isImageOnly && !slide.illustration?.url && !slide.illustration?.key && (
+            <p className="text-sm text-amber-600 dark:text-amber-400">
+              Add an image URL, upload, or choose a built-in illustration for this slide.
+            </p>
+          )}
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

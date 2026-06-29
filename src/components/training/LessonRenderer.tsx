@@ -87,7 +87,7 @@ export function LessonRenderer({
             transition={{ duration: 0.2 }}
             className={cn(
               'rounded-lg border bg-card p-4 sm:p-6 min-w-0',
-              layout === 'full-bleed' && 'bg-primary/5'
+              (layout === 'full-bleed' || layout === 'image-only') && 'bg-primary/5'
             )}
           >
             <SlideView slide={slide} onVideoWatched={handleVideoWatched} />
@@ -138,19 +138,33 @@ function SlideView({
   const showVisual =
     hasIllustration ||
     layout === 'image-top' ||
+    layout === 'image-only' ||
     (layout === 'full-bleed' && illustration !== undefined)
 
   const prose = 'min-w-0'
 
+  const imageOnly = layout === 'image-only'
+
   const visualBlock = (
     <figure className="rounded-lg overflow-hidden border bg-muted/50 min-w-0 w-full">
       {imageUrl ? (
-        <img src={imageUrl} alt={alt} className="w-full h-auto max-h-64 object-cover" />
-      ) : (
+        <img
+          src={imageUrl}
+          alt={alt}
+          className={cn(
+            'w-full h-auto object-contain',
+            imageOnly ? 'max-h-[min(70vh,720px)]' : 'max-h-64 object-cover'
+          )}
+        />
+      ) : hasIllustration ? (
         <LessonIllustration illustrationKey={illustrationKey} alt={alt} className="w-full" />
+      ) : (
+        <div className="flex items-center justify-center min-h-[12rem] px-4 py-8 text-sm text-muted-foreground">
+          No image on this slide
+        </div>
       )}
       {illustration?.caption && (
-        <figcaption className="text-xs text-muted-foreground px-3 py-2 border-t bg-card">
+        <figcaption className="text-xs text-muted-foreground px-3 py-2 border-t bg-card text-center">
           {illustration.caption}
         </figcaption>
       )}
@@ -158,6 +172,14 @@ function SlideView({
   )
 
   const heading = 'text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 break-anywhere leading-snug'
+
+  if (imageOnly) {
+    return (
+      <div className="space-y-4 min-w-0">
+        {showVisual && visualBlock}
+      </div>
+    )
+  }
 
   if (layout === 'full-bleed') {
     return (

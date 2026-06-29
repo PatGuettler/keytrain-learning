@@ -24,7 +24,7 @@ function normalizeSlide(raw: unknown, index: number): LessonSlide | null {
   const heading = typeof s.heading === 'string' ? s.heading : `Slide ${index + 1}`
   const body = typeof s.body === 'string' ? s.body : ''
   const layout = s.layout as LessonSlide['layout'] | undefined
-  const validLayouts = new Set(['image-right', 'image-left', 'image-top', 'full-bleed'])
+  const validLayouts = new Set(['image-right', 'image-left', 'image-top', 'full-bleed', 'image-only'])
   const rawYoutube = s.youtube
   let youtube: LessonSlide['youtube'] | undefined
   if (rawYoutube && typeof rawYoutube === 'object') {
