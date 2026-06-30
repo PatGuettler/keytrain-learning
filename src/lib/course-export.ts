@@ -10,6 +10,7 @@ export interface CourseExportBundle {
     description: string
     estimated_minutes: number
     max_attempts: number
+    show_results_after_completion?: boolean
   }
   modules: Array<{
     title: string
@@ -28,6 +29,7 @@ export function exportCourseBundle(course: Course, modules: Module[]): CourseExp
       description: course.description,
       estimated_minutes: course.estimated_minutes,
       max_attempts: course.max_attempts,
+      show_results_after_completion: course.show_results_after_completion,
     },
     modules: [...modules]
       .sort((a, b) => a.order_index - b.order_index)
@@ -63,6 +65,7 @@ export interface ImportedCourseDraft {
   description: string
   estimated_minutes: number
   max_attempts: number
+  show_results_after_completion: boolean
   modules: Array<{
     title: string
     type: Module['type']
@@ -84,6 +87,7 @@ export function parseCourseImport(raw: unknown): ImportedCourseDraft {
       description: '',
       estimated_minutes: 30,
       max_attempts: 3,
+      show_results_after_completion: false,
       modules: [],
       warnings: ['File was not a JSON object — using empty defaults.'],
     }
@@ -120,6 +124,8 @@ export function parseCourseImport(raw: unknown): ImportedCourseDraft {
     warnings.push('Max attempts was missing — defaulting to 3.')
   }
 
+  const show_results_after_completion = Boolean(courseBlock.show_results_after_completion)
+
   const rawModules = Array.isArray(root.modules) ? root.modules : []
   if (!Array.isArray(root.modules)) warnings.push('Modules list was missing — add modules manually.')
 
@@ -148,5 +154,5 @@ export function parseCourseImport(raw: unknown): ImportedCourseDraft {
     .sort((a, b) => a.order_index - b.order_index)
     .map((m, i) => ({ ...m, order_index: i }))
 
-  return { title, description, estimated_minutes, max_attempts, modules, warnings }
+  return { title, description, estimated_minutes, max_attempts, show_results_after_completion, modules, warnings }
 }

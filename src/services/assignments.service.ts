@@ -54,6 +54,10 @@ export async function updateAssignment(
   return backend.assignments.updateAssignment(id, patch)
 }
 
+export async function assignCourseRetake(assignmentId: string, adminId: string): Promise<void> {
+  return backend.assignments.assignCourseRetake(assignmentId, adminId)
+}
+
 export async function deleteAssignment(id: string) {
   return backend.assignments.deleteAssignment(id)
 }

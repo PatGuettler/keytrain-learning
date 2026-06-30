@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, ClipboardX, PartyPopper } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CourseViewer } from '@/components/training/CourseViewer'
+import { CourseAttemptResultsView } from '@/components/training/CourseAttemptResultsView'
 import { CourseLockedScreen } from '@/components/training/CourseLockedScreen'
 import { CourseUnavailable } from '@/components/training/CourseUnavailable'
 import { useCourse, useModules } from '@/hooks/useCourses'
@@ -41,6 +42,8 @@ export function CoursePlayerPage({
 }) {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const viewResults = searchParams.get('results') === '1'
   const userId = useAuthStore((s) => s.userId)!
   const orgId = useAuthStore((s) => s.profile?.org_id)!
   const queryClient = useQueryClient()
@@ -196,6 +199,23 @@ export function CoursePlayerPage({
     return <Skeleton className="h-64 sm:h-96 w-full" />
   }
 
+  if (
+    viewResults &&
+    course.show_results_after_completion &&
+    assignment &&
+    assignment.status !== 'completed'
+  ) {
+    return (
+      <CourseAttemptResultsView
+        courseId={courseId!}
+        courseTitle={course.title}
+        assignmentId={assignment.id}
+        userId={userId}
+        trainingPath={trainingPath}
+      />
+    )
+  }
+
   if (assignment && isLocked) {
     return (
       <CourseLockedScreen
@@ -213,6 +233,17 @@ export function CoursePlayerPage({
   }
 
   if (assignment?.status === 'completed' && !finished) {
+    if (course.show_results_after_completion) {
+      return (
+        <CourseAttemptResultsView
+          courseId={courseId!}
+          courseTitle={course.title}
+          assignmentId={assignment.id}
+          userId={userId}
+          trainingPath={trainingPath}
+        />
+      )
+    }
     return (
       <div className="max-w-lg mx-auto text-center space-y-4 py-12">
         <PartyPopper className="h-12 w-12 text-primary mx-auto" />

@@ -12,6 +12,8 @@ export interface Course {
   estimated_minutes: number
   is_published: boolean
   max_attempts: number
+  /** When true, learners can view pass/fail results after finishing an attempt. */
+  show_results_after_completion: boolean
   tags?: TrainingTag[]
   created_by: string | null
   created_at: string

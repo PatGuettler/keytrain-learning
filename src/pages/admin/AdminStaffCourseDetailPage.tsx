@@ -110,6 +110,7 @@ export function AdminStaffCourseDetailPage() {
         sessions={sessions}
         moduleAttempts={moduleAttempts}
         unlockRequests={unlockRequests}
+        userId={userId!}
       />
     </div>
   )

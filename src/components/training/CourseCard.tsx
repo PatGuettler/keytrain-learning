@@ -11,13 +11,22 @@ interface CourseCardProps {
   course: Course
   assignment?: Assignment
   playHref: string
+  hasCompletedAttempt?: boolean
 }
 
-export function CourseCard({ course, assignment, playHref }: CourseCardProps) {
+export function CourseCard({
+  course,
+  assignment,
+  playHref,
+  hasCompletedAttempt = false,
+}: CourseCardProps) {
   const takeBy = course.publication?.available_until ?? assignment?.due_date
   const maxAttempts = course.max_attempts ?? 3
   const isLocked = Boolean(assignment?.locked_at)
   const attemptsUsed = assignment?.attempts_used ?? 0
+  const showResults = Boolean(course.show_results_after_completion && hasCompletedAttempt)
+  const isCompleted = assignment?.status === 'completed'
+  const resultsHref = `${playHref}?results=1`
 
   return (
     <Card className="flex flex-col h-full hover:shadow-md transition-shadow overflow-hidden">
@@ -71,9 +80,25 @@ export function CourseCard({ course, assignment, playHref }: CourseCardProps) {
           <Clock className="h-4 w-4 shrink-0" />
           {course.estimated_minutes} min
         </span>
-        <Button asChild size="sm" className="min-h-11 w-full sm:w-auto sm:min-w-[5.5rem]">
-          <Link to={playHref}>{isLocked ? 'View' : assignment?.status === 'in_progress' ? 'Continue' : 'Start'}</Link>
-        </Button>
+        <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row">
+          {showResults && (
+            <Button asChild size="sm" variant="outline" className="min-h-11 w-full sm:w-auto">
+              <Link to={resultsHref}>View results</Link>
+            </Button>
+          )}
+          {!isCompleted && (
+            <Button asChild size="sm" className="min-h-11 w-full sm:w-auto sm:min-w-[5.5rem]">
+              <Link to={playHref}>
+                {isLocked ? 'View' : assignment?.status === 'in_progress' ? 'Continue' : 'Start'}
+              </Link>
+            </Button>
+          )}
+          {isCompleted && !showResults && (
+            <Button size="sm" className="min-h-11 w-full sm:w-auto" disabled>
+              Completed
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   )

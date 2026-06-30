@@ -35,6 +35,7 @@ export function CourseEditPage() {
   const [modules, setModules] = useState<Module[]>([])
   const [maxAttemptsInput, setMaxAttemptsInput] = useState('3')
   const [unlimitedAttempts, setUnlimitedAttempts] = useState(false)
+  const [showResultsAfterCompletion, setShowResultsAfterCompletion] = useState(false)
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
   const [savedCourseId, setSavedCourseId] = useState(isNew ? '' : courseId!)
   const [saveError, setSaveError] = useState('')
@@ -52,6 +53,7 @@ export function CourseEditPage() {
         setMaxAttemptsInput(String(course.max_attempts))
         setUnlimitedAttempts(false)
       }
+      setShowResultsAfterCompletion(Boolean(course.show_results_after_completion))
       if (course.tags?.length) {
         setSelectedTagIds(course.tags.map((t) => t.id))
       }
@@ -126,6 +128,7 @@ export function CourseEditPage() {
         description,
         is_published: course?.is_published ?? false,
         max_attempts: resolvedMaxAttempts,
+        show_results_after_completion: showResultsAfterCompletion,
         estimated_minutes: Math.max(1, estimatedMinutes),
         created_by: userId,
       })
@@ -214,6 +217,22 @@ export function CourseEditPage() {
         )}
       </div>
 
+      <div className="max-w-md space-y-2">
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showResultsAfterCompletion}
+            onChange={(e) => setShowResultsAfterCompletion(e.target.checked)}
+            className="rounded border-input"
+          />
+          Let learners view pass/fail results after completing an attempt
+        </label>
+        <p className="text-xs text-muted-foreground">
+          When enabled, learners can open their most recent attempt results from Required Training
+          after they submit the course. Off by default.
+        </p>
+      </div>
+
       <div className="flex flex-wrap gap-3 items-center">
         <Label className="sr-only">Import course JSON</Label>
         <Input
@@ -235,6 +254,7 @@ export function CourseEditPage() {
                   setUnlimitedAttempts(false)
                   setMaxAttemptsInput(String(draft.max_attempts))
                 }
+                setShowResultsAfterCompletion(draft.show_results_after_completion)
                 setModules(
                   draft.modules.map((m, i) => ({
                     ...createEmptyModule(m.type, i, courseId ?? 'new'),

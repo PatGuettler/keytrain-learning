@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge'
+import { AssignCourseRetakeButton } from '@/components/admin/AssignCourseRetakeButton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { STATUS_LABELS } from '@/lib/constants'
 import { formatAttemptsLabel, formatMaxAttempts } from '@/lib/course-attempts'
@@ -48,11 +49,13 @@ export function StaffCourseDetailSections({
   sessions,
   moduleAttempts,
   unlockRequests = [],
+  userId,
 }: {
   courseRow: StaffTrainingRow
   sessions: TrainingSession[]
   moduleAttempts: ModuleAttempt[]
   unlockRequests?: CourseUnlockRequest[]
+  userId: string
 }) {
   const courseSessions = sessions.filter((s) => s.course_id === courseRow.courseId)
   const courseModuleAttempts = moduleAttempts.filter(
@@ -117,6 +120,9 @@ export function StaffCourseDetailSections({
               <dd className="mt-1 font-medium text-foreground">{formatDate(courseRow.dueDate)}</dd>
             </div>
           </dl>
+          <div className="mt-4 pt-4 border-t">
+            <AssignCourseRetakeButton courseRow={courseRow} userId={userId} />
+          </div>
         </CardContent>
       </Card>
 

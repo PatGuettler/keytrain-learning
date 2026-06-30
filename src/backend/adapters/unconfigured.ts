@@ -53,6 +53,7 @@ export function createUnconfiguredBackend(): Backend {
       fetchUnlockRequestsForAssignment: fail,
       fetchPendingUnlockForAssignment: fail,
       resolveUnlockRequest: fail,
+      assignCourseRetake: fail,
       deleteUnlockRequests: fail,
       createAssignment: fail,
       updateAssignment: fail,

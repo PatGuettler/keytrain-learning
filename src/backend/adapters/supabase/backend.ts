@@ -603,6 +603,13 @@ export function createSupabaseBackend(): Backend {
           if (unlockError) throw unlockError
         }
       },
+      async assignCourseRetake(assignmentId, adminId) {
+        const { error } = await supabase.rpc('admin_assign_course_retake', {
+          p_assignment_id: assignmentId,
+          p_admin_id: adminId,
+        })
+        if (error) throw error
+      },
       async deleteUnlockRequests({ ids, status }) {
         let q = supabase.from('course_unlock_requests').delete({ count: 'exact' })
         if (ids?.length) {

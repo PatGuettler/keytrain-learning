@@ -76,6 +76,7 @@ export interface Database {
           estimated_minutes: number
           is_published: boolean
           max_attempts: number
+          show_results_after_completion: boolean
           created_by: string | null
           created_at: string
           updated_at: string
@@ -89,6 +90,7 @@ export interface Database {
           estimated_minutes?: number
           is_published?: boolean
           max_attempts?: number
+          show_results_after_completion?: boolean
           created_by?: string | null
           created_at?: string
           updated_at?: string
@@ -101,6 +103,7 @@ export interface Database {
           estimated_minutes: number
           is_published: boolean
           max_attempts: number
+          show_results_after_completion: boolean
           created_by: string | null
         }>
         Relationships: []
@@ -785,6 +788,13 @@ export interface Database {
           p_request_id: string
           p_admin_id: string
           p_approved: boolean
+        }
+        Returns: undefined
+      }
+      admin_assign_course_retake: {
+        Args: {
+          p_assignment_id: string
+          p_admin_id: string
         }
         Returns: undefined
       }
