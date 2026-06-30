@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { LessonIllustration, resolveIllustrationKey } from './lesson-illustrations'
 import { SlideBodyContent } from './SlideBodyContent'
 import { YouTubePlayer } from './YouTubePlayer'
+import { ZoomableSlideImage } from './ZoomableSlideImage'
 
 export function LessonRenderer({
   moduleId,
@@ -148,14 +149,7 @@ function SlideView({
   const visualBlock = (
     <figure className="rounded-lg overflow-hidden border bg-muted/50 min-w-0 w-full">
       {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={alt}
-          className={cn(
-            'w-full h-auto object-contain',
-            imageOnly ? 'max-h-[min(70vh,720px)]' : 'max-h-64 object-cover'
-          )}
-        />
+        <ZoomableSlideImage src={imageUrl} alt={alt} imageOnly={imageOnly} />
       ) : hasIllustration ? (
         <LessonIllustration illustrationKey={illustrationKey} alt={alt} className="w-full" />
       ) : (
