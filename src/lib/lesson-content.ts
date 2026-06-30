@@ -1,4 +1,32 @@
-import type { LessonContent, LessonSlide } from '@/types/course.types'
+import type { LessonContent, LessonSlide, LessonSlideVideo } from '@/types/course.types'
+
+function normalizeVideo(raw: unknown, legacyYoutube?: unknown): LessonSlideVideo | undefined {
+  if (raw && typeof raw === 'object') {
+    const v = raw as Record<string, unknown>
+    const provider = v.provider
+    if (provider === 'youtube' && typeof v.youtubeId === 'string' && v.youtubeId.length > 0) {
+      return { provider: 'youtube', youtubeId: v.youtubeId }
+    }
+    if (provider === 'vimeo' && typeof v.vimeoId === 'string' && v.vimeoId.length > 0) {
+      return { provider: 'vimeo', vimeoId: v.vimeoId }
+    }
+    if (provider === 'loom' && typeof v.loomId === 'string' && v.loomId.length > 0) {
+      return { provider: 'loom', loomId: v.loomId }
+    }
+    if (provider === 'direct' && typeof v.url === 'string' && v.url.length > 0) {
+      return { provider: 'direct', url: v.url }
+    }
+  }
+
+  if (legacyYoutube && typeof legacyYoutube === 'object') {
+    const videoId = (legacyYoutube as { videoId?: string }).videoId
+    if (typeof videoId === 'string' && videoId.length > 0) {
+      return { provider: 'youtube', youtubeId: videoId }
+    }
+  }
+
+  return undefined
+}
 
 export function coerceRecord(value: unknown): Record<string, unknown> {
   if (typeof value === 'string') {
@@ -26,6 +54,7 @@ function normalizeSlide(raw: unknown, index: number): LessonSlide | null {
   const layout = s.layout as LessonSlide['layout'] | undefined
   const validLayouts = new Set(['image-right', 'image-left', 'image-top', 'full-bleed', 'image-only'])
   const rawYoutube = s.youtube
+  const video = normalizeVideo(s.video, rawYoutube)
   let youtube: LessonSlide['youtube'] | undefined
   if (rawYoutube && typeof rawYoutube === 'object') {
     const videoId = (rawYoutube as { videoId?: string }).videoId
@@ -42,6 +71,7 @@ function normalizeSlide(raw: unknown, index: number): LessonSlide | null {
       s.illustration && typeof s.illustration === 'object'
         ? (s.illustration as LessonSlide['illustration'])
         : undefined,
+    video,
     youtube,
   }
 }

@@ -5,7 +5,8 @@ import type { LessonContent, LessonSlide } from '@/types/course.types'
 import { cn } from '@/lib/utils'
 import { LessonIllustration, resolveIllustrationKey } from './lesson-illustrations'
 import { SlideBodyContent } from './SlideBodyContent'
-import { YouTubePlayer } from './YouTubePlayer'
+import { SlideVideoPlayer } from './SlideVideoPlayer'
+import { resolveSlideVideo, slideRequiresVideo } from '@/lib/video'
 import { ZoomableSlideImage } from './ZoomableSlideImage'
 
 export function LessonRenderer({
@@ -37,7 +38,7 @@ export function LessonRenderer({
   const slide: LessonSlide | undefined = slides[safeIndex]
   const layout = slide?.layout ?? 'image-right'
   const isLast = slides.length === 0 || safeIndex >= slides.length - 1
-  const requiresVideo = Boolean(slide?.youtube?.videoId)
+  const requiresVideo = slide ? slideRequiresVideo(slide) : false
   const canAdvance = !requiresVideo || videoWatched
 
   const handleVideoWatched = useCallback(() => {
@@ -174,8 +175,10 @@ function SlideView({
     </div>
   )
 
-  const videoBlock = slide.youtube?.videoId ? (
-    <YouTubePlayer videoId={slide.youtube.videoId} onWatched={onVideoWatched} />
+  const slideVideo = resolveSlideVideo(slide)
+
+  const videoBlock = slideVideo ? (
+    <SlideVideoPlayer video={slideVideo} onWatched={onVideoWatched} />
   ) : null
 
   if (imageOnly) {

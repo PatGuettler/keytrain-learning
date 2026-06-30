@@ -112,6 +112,12 @@ export interface ModuleAttempt {
   module?: Pick<Module, 'id' | 'title' | 'type' | 'course_id' | 'content'>
 }
 
+export type LessonSlideVideo =
+  | { provider: 'youtube'; youtubeId: string }
+  | { provider: 'vimeo'; vimeoId: string }
+  | { provider: 'loom'; loomId: string }
+  | { provider: 'direct'; url: string }
+
 export interface LessonSlide {
   id: string
   heading: string
@@ -125,7 +131,9 @@ export interface LessonSlide {
     alt: string
     caption?: string
   }
-  /** YouTube video to embed; learner must watch before advancing. */
+  /** Video on this slide; learner must watch before advancing when set. */
+  video?: LessonSlideVideo
+  /** @deprecated Use `video` instead. Kept for legacy course JSON. */
   youtube?: {
     videoId: string
   }

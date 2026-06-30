@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LessonImageInput } from '@/components/admin/LessonImageInput'
+import { LessonVideoInput } from '@/components/admin/LessonVideoInput'
 import { SlideBodyContent } from '@/components/training/SlideBodyContent'
 import { LESSON_ILLUSTRATION_KEYS } from '@/components/training/lesson-illustrations'
 import { LESSON_LAYOUTS, LESSON_LAYOUT_LABELS, newSlideId } from '@/lib/module-defaults'
-import { parseYouTubeVideoId } from '@/lib/youtube'
 import { useState } from 'react'
 import type { LessonContent, LessonSlide } from '@/types/course.types'
 
@@ -38,15 +38,8 @@ export function LessonEditor({
     })
   }
 
-  const updateYouTubeUrl = (index: number, rawUrl: string) => {
-    const videoId = parseYouTubeVideoId(rawUrl)
-    if (!rawUrl.trim()) {
-      updateSlide(index, { youtube: undefined })
-      return
-    }
-    if (videoId) {
-      updateSlide(index, { youtube: { videoId } })
-    }
+  const updateVideo = (index: number, video: LessonSlide['video']) => {
+    updateSlide(index, { video, youtube: undefined })
   }
 
   const addSlide = () => {
@@ -279,17 +272,10 @@ export function LessonEditor({
           </div>
 
           {!isImageOnly && (
-            <div className="space-y-2">
-              <Label>YouTube video URL (optional)</Label>
-              <Input
-                value={slide.youtube?.videoId ?? ''}
-                onChange={(e) => updateYouTubeUrl(index, e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=…"
-              />
-              <p className="text-xs text-muted-foreground">
-                When set, learners must watch the full video before advancing past this slide.
-              </p>
-            </div>
+            <LessonVideoInput
+              slide={slide}
+              onVideoChange={(video) => updateVideo(index, video)}
+            />
           )}
 
           <LessonImageInput
