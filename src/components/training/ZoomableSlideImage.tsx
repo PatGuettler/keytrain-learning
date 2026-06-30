@@ -161,17 +161,6 @@ export function ZoomableSlideImage({
         </span>
       </button>
 
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="mt-2 w-full touch-manipulation"
-        onClick={openLightbox}
-      >
-        <ZoomIn className="h-4 w-4 mr-2" />
-        Enlarge image
-      </Button>
-
       {lightbox}
     </div>
   )
