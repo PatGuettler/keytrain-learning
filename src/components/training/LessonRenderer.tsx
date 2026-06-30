@@ -167,6 +167,17 @@ function SlideView({
 
   const heading = 'text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 break-anywhere leading-snug'
 
+  const textBlock = (
+    <div className="min-w-0">
+      <h2 className={heading}>{slide.heading}</h2>
+      <SlideBodyContent body={slide.body} className={prose} />
+    </div>
+  )
+
+  const videoBlock = slide.youtube?.videoId ? (
+    <YouTubePlayer videoId={slide.youtube.videoId} onWatched={onVideoWatched} />
+  ) : null
+
   if (imageOnly) {
     return (
       <div className="space-y-4 min-w-0">
@@ -175,32 +186,12 @@ function SlideView({
     )
   }
 
-  if (layout === 'full-bleed') {
+  if (layout === 'full-bleed' || layout === 'image-top') {
     return (
       <div className="space-y-4 sm:space-y-6 min-w-0">
-        {slide.youtube?.videoId && (
-          <YouTubePlayer videoId={slide.youtube.videoId} onWatched={onVideoWatched} />
-        )}
+        {textBlock}
+        {videoBlock}
         {showVisual && visualBlock}
-        <div className="min-w-0">
-          <h2 className={heading}>{slide.heading}</h2>
-          <SlideBodyContent body={slide.body} className={prose} />
-        </div>
-      </div>
-    )
-  }
-
-  if (layout === 'image-top') {
-    return (
-      <div className="space-y-4 sm:space-y-6 min-w-0">
-        {slide.youtube?.videoId && (
-          <YouTubePlayer videoId={slide.youtube.videoId} onWatched={onVideoWatched} />
-        )}
-        {showVisual && visualBlock}
-        <div className="min-w-0">
-          <h2 className={heading}>{slide.heading}</h2>
-          <SlideBodyContent body={slide.body} className={prose} />
-        </div>
       </div>
     )
   }
@@ -213,16 +204,11 @@ function SlideView({
         showVisual && layout === 'image-left' && 'md:grid-cols-2 md:[direction:rtl] md:*:[direction:ltr]'
       )}
     >
-      <div className="min-w-0 order-2 md:order-none space-y-4">
-        {slide.youtube?.videoId && (
-          <YouTubePlayer videoId={slide.youtube.videoId} onWatched={onVideoWatched} />
-        )}
-        <div>
-          <h2 className={heading}>{slide.heading}</h2>
-          <SlideBodyContent body={slide.body} className={prose} />
-        </div>
+      <div className="min-w-0 space-y-4">
+        {textBlock}
+        {videoBlock}
       </div>
-      {showVisual && <div className="min-w-0 order-1 md:order-none">{visualBlock}</div>}
+      {showVisual && <div className="min-w-0">{visualBlock}</div>}
     </div>
   )
 }
