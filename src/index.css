@@ -54,20 +54,20 @@
   }
 
   html {
+    @apply bg-background;
     -webkit-text-size-adjust: 100%;
     overflow-x: hidden;
-    scrollbar-gutter: stable;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     overflow-x: hidden;
     min-height: 100dvh;
-    scrollbar-gutter: stable;
   }
 
   #root {
     min-height: 100dvh;
+    width: 100%;
     @apply text-foreground;
   }
 

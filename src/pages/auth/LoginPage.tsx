@@ -70,7 +70,12 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background to-accent/30 p-4 safe-area-pt safe-area-pb safe-area-px">
+    <div className="relative min-h-dvh w-full overflow-x-hidden">
+      <div
+        aria-hidden
+        className="fixed inset-0 -z-10 bg-gradient-to-br from-background to-accent/30"
+      />
+      <div className="flex min-h-dvh items-center justify-center p-4 safe-area-pt safe-area-pb safe-area-px">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2">
@@ -117,6 +122,7 @@ export function LoginPage() {
           </p>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

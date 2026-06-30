@@ -55,7 +55,12 @@ export function UpdatePasswordRequiredPage() {
   }
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-background to-accent/30 p-4">
+    <div className="relative min-h-dvh w-full overflow-x-hidden">
+      <div
+        aria-hidden
+        className="fixed inset-0 -z-10 bg-gradient-to-br from-background to-accent/30"
+      />
+      <div className="flex min-h-dvh items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2">
@@ -100,6 +105,7 @@ export function UpdatePasswordRequiredPage() {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }
