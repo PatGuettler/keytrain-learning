@@ -147,7 +147,7 @@ function SlideView({
   const imageOnly = layout === 'image-only'
 
   const visualBlock = (
-    <figure className="rounded-lg overflow-hidden border bg-muted/50 min-w-0 w-full">
+    <figure className="rounded-lg border bg-muted/50 min-w-0 w-full">
       {imageUrl ? (
         <ZoomableSlideImage src={imageUrl} alt={alt} imageOnly={imageOnly} />
       ) : hasIllustration ? (
