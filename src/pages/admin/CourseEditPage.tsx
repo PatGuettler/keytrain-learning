@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useMatch, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useMatch, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { BookOpen } from 'lucide-react'
 import { CourseBuilder } from '@/components/admin/CourseBuilder'
@@ -8,7 +8,9 @@ import { DeleteCourseCard } from '@/components/admin/DeleteCourseCard'
 import { useCourse, useModules } from '@/hooks/useCourses'
 import { getIncidentAwarenessTemplate } from '@/lib/course-templates'
 import { createEmptyModule } from '@/lib/module-defaults'
-import { parseCourseImport, downloadCourseExport } from '@/lib/course-export'
+import { parseCourseImport, downloadCourseExport, exportCourseBundle } from '@/lib/course-export'
+import type { CourseExportBundle } from '@/lib/course-export'
+import { updateCourseStagingContent } from '@/services/course-staging.service'
 import { syncCourseModules, upsertCourse, upsertModule } from '@/services/courses.service'
 import { setCourseTags } from '@/services/training-tags.service'
 import { useAuthStore } from '@/store/authStore'
@@ -23,6 +25,10 @@ export function CourseEditPage() {
   const isCreateRoute = useMatch('/admin/courses/create')
   const isNew = Boolean(isCreateRoute) || courseId === 'new'
   const navigate = useNavigate()
+  const location = useLocation()
+  const hiveStagingIdRef = useRef(
+    (location.state as { hiveStagingId?: string } | null)?.hiveStagingId
+  )
   const queryClient = useQueryClient()
   const orgId = useAuthStore((s) => s.profile?.org_id)!
   const userId = useAuthStore((s) => s.userId)!
@@ -63,6 +69,40 @@ export function CourseEditPage() {
   useEffect(() => {
     if (!isNew && fetchedModules.length) setModules(fetchedModules)
   }, [isNew, fetchedModules])
+
+  useEffect(() => {
+    if (!isNew) return
+    const bundle = (location.state as { hiveImportBundle?: CourseExportBundle } | null)
+      ?.hiveImportBundle
+    if (!bundle) return
+
+    const draft = parseCourseImport(bundle)
+    setTitle(draft.title)
+    setDescription(draft.description)
+    setEstimatedMinutes(draft.estimated_minutes)
+    if (draft.max_attempts === 0) {
+      setUnlimitedAttempts(true)
+    } else {
+      setUnlimitedAttempts(false)
+      setMaxAttemptsInput(String(draft.max_attempts))
+    }
+    setShowResultsAfterCompletion(draft.show_results_after_completion)
+    setModules(
+      draft.modules.map((m, i) => ({
+        id: `temp-hive-${i}`,
+        course_id: 'new',
+        title: m.title,
+        type: m.type,
+        order_index: m.order_index,
+        content: m.content,
+        created_at: new Date().toISOString(),
+      }))
+    )
+    navigate(location.pathname, {
+      replace: true,
+      state: hiveStagingIdRef.current ? { hiveStagingId: hiveStagingIdRef.current } : {},
+    })
+  }, [isNew, location.pathname, location.state, navigate])
 
   const updateModule = (moduleId: string, patch: Partial<Module>) => {
     setModules((prev) =>
@@ -135,11 +175,20 @@ export function CourseEditPage() {
 
       await setCourseTags(saved.id, selectedTagIds)
       const savedModuleIds: string[] = []
+      const savedModules: Module[] = []
       for (const m of modules) {
         const mod = await upsertModule({ ...m, course_id: saved.id })
         savedModuleIds.push(mod.id)
+        savedModules.push(mod)
       }
       await syncCourseModules(saved.id, savedModuleIds)
+
+      if (hiveStagingIdRef.current) {
+        const bundle = exportCourseBundle(saved, savedModules)
+        await updateCourseStagingContent(hiveStagingIdRef.current, bundle)
+        await queryClient.invalidateQueries({ queryKey: ['course-staging'] })
+      }
+
       await queryClient.invalidateQueries({ queryKey: ['courses'] })
       await queryClient.invalidateQueries({ queryKey: ['course', saved.id] })
       await queryClient.invalidateQueries({ queryKey: ['hospital-courses'] })

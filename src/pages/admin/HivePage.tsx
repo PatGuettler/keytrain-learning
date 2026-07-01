@@ -11,10 +11,19 @@ import { HiveSecurityPosturePanel } from '@/components/hive/HiveSecurityPostureP
 import { HiveReportingPanel } from '@/components/hive/HiveReportingPanel'
 import { HiveHostUploadsPanel } from '@/components/hive/HiveHostUploadsPanel'
 import { HiveTrainingPanel } from '@/components/hive/HiveTrainingPanel'
+import { HiveCourseStagingPanel } from '@/components/hive/HiveCourseStagingPanel'
+import { HiveCompliancePanel } from '@/components/hive/HiveCompliancePanel'
 import { fetchHiveData } from '@/services/hive.service'
 import { exportHiveReportPdf } from '@/lib/pdf/hive-reports'
 
-type HiveView = 'overview' | 'security' | 'reporting' | 'host-uploads' | 'training'
+type HiveView =
+  | 'overview'
+  | 'security'
+  | 'reporting'
+  | 'host-uploads'
+  | 'training'
+  | 'staging'
+  | 'compliance'
 
 function formatFetchedAt(value: string): string {
   return new Intl.DateTimeFormat('en-US', {
@@ -33,6 +42,8 @@ const VIEW_OPTIONS: { id: HiveView; label: string }[] = [
   { id: 'reporting', label: 'Reporting' },
   { id: 'host-uploads', label: 'Host uploads' },
   { id: 'training', label: 'Training' },
+  { id: 'staging', label: 'Course staging' },
+  { id: 'compliance', label: 'Compliance' },
 ]
 
 export function HivePage() {
@@ -172,6 +183,15 @@ export function HivePage() {
           )}
           {view === 'training' && (
             <HiveTrainingPanel trainingAssignments={data.training_assignments} />
+          )}
+          {view === 'staging' && (
+            <HiveCourseStagingPanel trainingAssignments={data.training_assignments} />
+          )}
+          {view === 'compliance' && (
+            <HiveCompliancePanel
+              trendReports={data.trend_reports}
+              signatures={data.signatures}
+            />
           )}
         </>
       )}
