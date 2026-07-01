@@ -5,12 +5,14 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatCard } from '@/components/dashboard/StatCard'
+import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { HiveOrgFilter } from '@/components/hive/HiveOrgFilter'
 import { HiveSecurityPosturePanel } from '@/components/hive/HiveSecurityPosturePanel'
 import { HiveReportingPanel } from '@/components/hive/HiveReportingPanel'
 import { HiveHostUploadsPanel } from '@/components/hive/HiveHostUploadsPanel'
 import { HiveTrainingPanel } from '@/components/hive/HiveTrainingPanel'
 import { fetchHiveData } from '@/services/hive.service'
+import { exportHiveReportPdf } from '@/lib/pdf/hive-reports'
 
 type HiveView = 'overview' | 'security' | 'reporting' | 'host-uploads' | 'training'
 
@@ -69,10 +71,20 @@ export function HivePage() {
         title="Hive"
         description="AWS-backed host uploads, signatures, trend reports, and training assignments."
         action={
-          <Button type="button" variant="outline" onClick={() => refetch()} disabled={isFetching}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-            Refresh from AWS
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <ExportPdfButton
+              disabled={!data || isLoading}
+              label="Export PDF"
+              onExport={() => {
+                if (!data) return
+                exportHiveReportPdf(data, selectedOrgIds)
+              }}
+            />
+            <Button type="button" variant="outline" onClick={() => refetch()} disabled={isFetching}>
+              <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+              Refresh from AWS
+            </Button>
+          </div>
         }
       />
 
