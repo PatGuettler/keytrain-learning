@@ -30,6 +30,7 @@ import sys
 import time
 import uuid
 from typing import Any, TYPE_CHECKING
+from decimal import Decimal
 
 if TYPE_CHECKING:
     from botocore.exceptions import ClientError
@@ -200,7 +201,7 @@ def aggregate_org_metrics(org_id: str) -> dict[str, Any]:
         "domain_counts": domain_counts,
         "software_findings": software_findings[:8],
         "training_summary": {
-            "average_score": round(sum(training_scores) / len(training_scores), 1),
+            "average_score": Decimal(str(round(sum(training_scores) / len(training_scores), 1))),
             "weak_domains": sorted(all_weak),
             "host_count": len(HOST_PROFILES),
         },
@@ -261,7 +262,7 @@ def build_items(org_ids: list[str]) -> dict[str, list[dict[str, Any]]]:
                     "severity": sig["severity"],
                     "approval_status": sig["approval_status"],
                     "Explain": f"Test signature for {org_id}: {sig['phrase']}",
-                    "reputation_score": 0.82 if sig["approval_status"] == "approved" else 0.41,
+                    "reputation_score": Decimal("0.82") if sig["approval_status"] == "approved" else Decimal("0.41"),
                     "usage_count": 12 + org_index,
                     "seed_tag": "ktl-hive-test-data",
                 }

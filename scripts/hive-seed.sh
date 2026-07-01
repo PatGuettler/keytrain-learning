@@ -2,7 +2,7 @@
 # Seed KeyTrain Hive DynamoDB test data. See scripts/hive-seed/README.md
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$ROOT/hive-seed"
+cd "$ROOT/scripts/hive-seed"
 
 if [ ! -d venv ]; then
   python3 -m venv venv

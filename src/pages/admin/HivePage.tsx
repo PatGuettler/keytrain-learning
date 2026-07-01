@@ -158,7 +158,12 @@ export function HivePage() {
           )}
 
           {view === 'security' && <HiveSecurityPosturePanel signatures={data.signatures} />}
-          {view === 'reporting' && <HiveReportingPanel trendReports={data.trend_reports} />}
+          {view === 'reporting' && (
+            <HiveReportingPanel
+              trendReports={data.trend_reports}
+              hostBatches={data.indicators}
+            />
+          )}
           {view === 'host-uploads' && (
             <HiveHostUploadsPanel
               indicators={data.indicators}

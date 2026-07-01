@@ -99,3 +99,115 @@ export function trainingSummary(record: HiveRecord): string {
   if (record.assignment_type) parts.push(String(record.assignment_type))
   return parts.join(' · ')
 }
+
+export function trendReportKey(record: HiveRecord): string {
+  return `${String(record.pk ?? '')}|${String(record.sk ?? '')}`
+}
+
+export function trendReportLabel(record: HiveRecord): string {
+  const org = String(record.hive_org_id ?? '—')
+  const period = getTrendReportingPeriod(record)
+  const sk = String(record.sk ?? '')
+  return `${org} · ${period}${sk ? ` · ${sk}` : ''}`
+}
+
+export function sortTrendReports(reports: HiveRecord[]): HiveRecord[] {
+  return [...reports].sort((a, b) => {
+    const byPeriod = getTrendReportingPeriod(b).localeCompare(getTrendReportingPeriod(a))
+    if (byPeriod !== 0) return byPeriod
+    return String(a.hive_org_id ?? '').localeCompare(String(b.hive_org_id ?? ''))
+  })
+}
+
+export function getNumericRecordMap(value: unknown): Record<string, number> {
+  const obj = getRecordObject(value)
+  if (!obj) return {}
+  const result: Record<string, number> = {}
+  for (const [key, entry] of Object.entries(obj)) {
+    if (typeof entry === 'number') result[key] = entry
+  }
+  return result
+}
+
+export function getHostAlertMetrics(record: HiveRecord): Record<string, number> {
+  return getNumericRecordMap(record.alert_metrics)
+}
+
+export function sumHostAlertMetrics(batches: HiveRecord[]): Record<string, number> {
+  const totals: Record<string, number> = {}
+  for (const batch of batches) {
+    for (const [key, value] of Object.entries(getHostAlertMetrics(batch))) {
+      totals[key] = (totals[key] ?? 0) + value
+    }
+  }
+  return totals
+}
+
+export function getBatchesForTrendReport(
+  batches: HiveRecord[],
+  report: HiveRecord
+): HiveRecord[] {
+  const orgId = String(report.hive_org_id ?? '')
+  const period = getTrendReportingPeriod(report)
+  return batches.filter((batch) => {
+    if (String(batch.hive_org_id ?? '') !== orgId) return false
+    if (classifyHostUpload(batch) !== 'batch') return false
+    const batchPeriod =
+      typeof batch.reporting_period === 'string' ? batch.reporting_period.trim() : ''
+    if (batchPeriod && period !== '—') return batchPeriod === period
+    return true
+  })
+}
+
+export type AlertReconciliationRow = {
+  severity: string
+  trendReport: number
+  hostBatchSum: number
+  delta: number
+  matches: boolean
+}
+
+export function reconcileAlertCounts(
+  trendCounts: Record<string, number>,
+  hostTotals: Record<string, number>
+): AlertReconciliationRow[] {
+  const keys = new Set([...Object.keys(trendCounts), ...Object.keys(hostTotals)])
+  return [...keys]
+    .sort((a, b) => a.localeCompare(b))
+    .map((severity) => {
+      const trendReport = trendCounts[severity] ?? 0
+      const hostBatchSum = hostTotals[severity] ?? 0
+      return {
+        severity,
+        trendReport,
+        hostBatchSum,
+        delta: trendReport - hostBatchSum,
+        matches: trendReport === hostBatchSum,
+      }
+    })
+}
+
+export function getDomainCounts(record: HiveRecord): Record<string, number> {
+  const metrics = getTrendRawMetrics(record)
+  return getNumericRecordMap(metrics?.domain_counts)
+}
+
+export function getTrainingSummaryMetrics(record: HiveRecord): Record<string, unknown> | null {
+  const metrics = getTrendRawMetrics(record)
+  return getRecordObject(metrics?.training_summary)
+}
+
+export function getSoftwareFindingsFromTrend(record: HiveRecord): unknown[] {
+  const metrics = getTrendRawMetrics(record)
+  const findings = metrics?.software_findings
+  return Array.isArray(findings) ? findings : []
+}
+
+export function getIocSummary(record: HiveRecord): Record<string, unknown> | null {
+  const metrics = getTrendRawMetrics(record)
+  return getRecordObject(metrics?.ioc_summary)
+}
+
+export function alertCountsTotal(counts: Record<string, number>): number {
+  return Object.values(counts).reduce((sum, value) => sum + value, 0)
+}

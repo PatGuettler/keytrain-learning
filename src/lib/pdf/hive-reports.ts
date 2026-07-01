@@ -2,11 +2,14 @@ import type { HiveDataResponse } from '@/types/hive.types'
 import {
   countSignaturesByStatus,
   getAlertCounts,
+  getBatchesForTrendReport,
   getRiskScores,
   getTrendReportingPeriod,
   hostUploadSummary,
+  reconcileAlertCounts,
   signatureSummary,
   splitHostUploads,
+  sumHostAlertMetrics,
   trainingSummary,
 } from '@/lib/hive-records'
 import {
@@ -108,7 +111,7 @@ export function exportHiveReportPdf(data: HiveDataResponse, selectedOrgIds: stri
   } else {
     y = addDataTable(
       doc,
-      ['Org', 'Period', 'Risk scores', 'Alert counts', 'Sort key'],
+      ['Org', 'Period', 'Alert total', 'Risk scores', 'Alert counts', 'Reconcile', 'Sort key'],
       data.trend_reports.map((record) => {
         const risks = getRiskScores(record)
         const alerts = getAlertCounts(record)
@@ -124,21 +127,37 @@ export function exportHiveReportPdf(data: HiveDataResponse, selectedOrgIds: stri
                 .map(([k, v]) => `${k}: ${v}`)
                 .join('; ')
             : '—'
+        const alertTotal = Object.values(alerts).reduce((s, v) => s + v, 0)
+        const batches = getBatchesForTrendReport(
+          splitHostUploads(data.indicators).batches,
+          record
+        )
+        const hostSum = sumHostAlertMetrics(batches)
+        const reconcileNote =
+          batches.length > 0
+            ? reconcileAlertCounts(alerts, hostSum).every((r) => r.matches)
+              ? 'host sum matches'
+              : 'host sum differs'
+            : 'no host batches'
         return [
           String(record.hive_org_id ?? '—'),
           getTrendReportingPeriod(record),
+          String(alertTotal || '—'),
           riskText,
           alertText,
+          reconcileNote,
           record.sk ? String(record.sk) : '—',
         ]
       }),
       y,
       {
-        0: { cellWidth: 20 },
-        1: { cellWidth: 18 },
-        2: { cellWidth: 40 },
-        3: { cellWidth: 40 },
-        4: { cellWidth: 'wrap' },
+        0: { cellWidth: 18 },
+        1: { cellWidth: 14 },
+        2: { cellWidth: 14 },
+        3: { cellWidth: 32 },
+        4: { cellWidth: 32 },
+        5: { cellWidth: 18 },
+        6: { cellWidth: 'wrap' },
       }
     )
   }
