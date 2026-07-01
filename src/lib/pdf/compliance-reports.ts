@@ -1,5 +1,5 @@
-import type { ComplianceDocument, ComplianceTemplate } from '@/types/compliance.types'
-import type { ComplianceDocumentVersion } from '@/types/compliance.types'
+import type { ComplianceDocument, ComplianceDocumentVersion, ComplianceTemplate } from '@/types/compliance.types'
+import { COMPLIANCE_DRAFT_DISCLAIMER } from '@/lib/compliance-generator'
 import {
   addDataTable,
   addSectionHeading,
@@ -24,6 +24,12 @@ export function exportComplianceDocumentPdf(
 
   const doc = createDashboardPdf(document.title, subtitle)
   let y = pdfStartY(subtitle)
+
+  doc.setFontSize(8)
+  doc.setTextColor(120)
+  const disclaimerLines = doc.splitTextToSize(COMPLIANCE_DRAFT_DISCLAIMER, 180)
+  doc.text(disclaimerLines, 14, y)
+  y += disclaimerLines.length * 4 + 6
 
   const sections = template?.template_structure?.sections ?? []
   if (sections.length === 0) {

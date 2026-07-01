@@ -21,6 +21,13 @@ export type ComplianceTemplateStructure = {
 
 export type ComplianceDraftContent = Record<string, string>
 
+export const COMPLIANCE_DRAFT_DISCLAIMER =
+  'DRAFT — Auto-filled from KeyTrain Hive security telemetry only. Not legal advice. No patient data (ePHI) is stored in Hive or used to generate this document. A qualified reviewer must edit before use.'
+
+export function isTestHiveOrg(orgId: string): boolean {
+  return orgId.startsWith('hive-test-') || orgId.startsWith('testorg')
+}
+
 function approvedSignaturesText(signatures: HiveRecord[]): string {
   const approved = signatures.filter(
     (s) => String(s.approval_status ?? '').toLowerCase() === 'approved'
@@ -73,10 +80,15 @@ export function buildComplianceDraftContent(
     .join(', ')
 
   const executive = [
+    COMPLIANCE_DRAFT_DISCLAIMER,
+    '',
     `Organization: ${orgId}`,
+    isTestHiveOrg(orgId) ? 'Environment: test/demo (not production PHI)' : '',
     `Reporting period: ${period}`,
     riskSummary ? `Risk scores — ${riskSummary}` : '',
     alertSummary ? `Alert counts — ${alertSummary}` : '',
+    '',
+    'Metrics above are security alerts and risk scores from AWS Hive — not clinical or patient records.',
   ]
     .filter(Boolean)
     .join('\n')
@@ -112,9 +124,11 @@ export function buildComplianceDraftContent(
     case 'hipaa_risk_analysis':
       return {
         ...base,
-        scope: `Risk analysis for ${orgId} workforce endpoints and cloud services handling ePHI.`,
+        scope: isTestHiveOrg(orgId)
+          ? `DRAFT scope for ${orgId} (test org). Replace with your organization's actual systems and whether you handle ePHI before any compliance use.`
+          : `Risk analysis for ${orgId} workforce endpoints and cloud services. [Confirm whether your organization handles ePHI and edit this section.]`,
         threat_landscape: alertSummary
-          ? `Current threat indicators: ${alertSummary}.`
+          ? `Security telemetry (not PHI): ${alertSummary}.`
           : 'Phishing, ransomware, and insider threat scenarios.',
         safeguards: approvedSignaturesText(signatures.filter((s) => s.hive_org_id === orgId || !orgId)),
         residual_risk: riskSummary
@@ -126,9 +140,11 @@ export function buildComplianceDraftContent(
         ...base,
         purpose: 'Define acceptable use of organizational IT resources for workforce members.',
         acceptable_use:
-          'Business email, approved SaaS, and clinical systems per policy; security training required.',
+          'Business email, approved SaaS, and authorized systems per policy; security training required.',
         prohibited_use:
-          'Unauthorized software, credential sharing, personal cloud storage of ePHI, unapproved USB devices.',
+          isTestHiveOrg(orgId)
+            ? 'Unauthorized software, credential sharing, unapproved USB devices. [Edit for your policy.]'
+            : 'Unauthorized software, credential sharing, unapproved storage of sensitive data, unapproved USB devices.',
         security_awareness: `Average training score: ${avgScore}. Weak domains: ${weakDomains}.`,
       }
     case 'vulnerability_management':

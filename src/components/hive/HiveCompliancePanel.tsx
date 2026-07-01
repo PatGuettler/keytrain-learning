@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
-import { buildComplianceDraftContent } from '@/lib/compliance-generator'
+import { buildComplianceDraftContent, COMPLIANCE_DRAFT_DISCLAIMER } from '@/lib/compliance-generator'
 import { exportComplianceDocumentPdf } from '@/lib/pdf/compliance-reports'
 import { sortTrendReports, trendReportKey, trendReportLabel } from '@/lib/hive-records'
 import {
@@ -151,6 +151,9 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
           <p className="text-sm text-muted-foreground">
             Auto-fill draft sections from Hive trend reports and approved signatures. Review and
             edit before exporting PDF.
+          </p>
+          <p className="text-xs text-amber-700 dark:text-amber-300 rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+            {COMPLIANCE_DRAFT_DISCLAIMER}
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2">
