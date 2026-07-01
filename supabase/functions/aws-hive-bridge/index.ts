@@ -1,0 +1,134 @@
+import { createClient } from 'npm:@supabase/supabase-js@2'
+import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
+import {
+  collectOrgIds,
+  configuredHiveOrgIds,
+  createHiveDynamoClient,
+  fetchHiveTable,
+  filterByOrgIds,
+  HIVE_TABLES,
+} from '../_shared/hive-aws.ts'
+
+let requestCors: Record<string, string> = corsHeaders
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...requestCors, 'Content-Type': 'application/json' },
+  })
+}
+
+async function assertAdmin(
+  adminClient: ReturnType<typeof createClient>,
+  userId: string
+) {
+  const { data: profile, error } = await adminClient
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  if (error || profile?.role !== 'admin') {
+    throw new Error('Only admins can access Hive data.')
+  }
+}
+
+function parseOrgFilter(body: Record<string, unknown>): string[] | undefined {
+  if (!Array.isArray(body.hive_org_ids)) return undefined
+  const ids = body.hive_org_ids
+    .filter((value): value is string => typeof value === 'string')
+    .map((value) => value.trim())
+    .filter(Boolean)
+  return ids.length > 0 ? [...new Set(ids)] : undefined
+}
+
+Deno.serve(async (req) => {
+  requestCors = corsHeadersForRequest(req)
+
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: requestCors })
+  }
+
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405)
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+    if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
+      return jsonResponse({ error: 'Server misconfigured.' }, 500)
+    }
+
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return jsonResponse({ error: 'Missing authorization header.' }, 401)
+    }
+
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    })
+
+    const {
+      data: { user },
+      error: userError,
+    } = await userClient.auth.getUser()
+
+    if (userError || !user) {
+      return jsonResponse({ error: 'Unauthorized.' }, 401)
+    }
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+
+    await assertAdmin(adminClient, user.id)
+
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
+    const orgFilter = parseOrgFilter(body)
+    const queryOrgIds = configuredHiveOrgIds()
+    const dynamo = createHiveDynamoClient()
+
+    const [indicators, trendReports, trainingAssignments, signatures] = await Promise.all([
+      fetchHiveTable(dynamo, HIVE_TABLES.indicators, queryOrgIds),
+      fetchHiveTable(dynamo, HIVE_TABLES.trendReports, queryOrgIds),
+      fetchHiveTable(dynamo, HIVE_TABLES.trainingAssignments, queryOrgIds),
+      fetchHiveTable(dynamo, HIVE_TABLES.signatures, queryOrgIds),
+    ])
+
+    const filteredIndicators = filterByOrgIds(indicators, orgFilter)
+    const filteredTrendReports = filterByOrgIds(trendReports, orgFilter)
+    const filteredTrainingAssignments = filterByOrgIds(trainingAssignments, orgFilter)
+    const filteredSignatures = filterByOrgIds(signatures, orgFilter)
+
+    const orgIds = collectOrgIds(
+      filteredIndicators,
+      filteredTrendReports,
+      filteredTrainingAssignments,
+      filteredSignatures
+    )
+
+    return jsonResponse({
+      fetched_at: new Date().toISOString(),
+      region: Deno.env.get('AWS_REGION')?.trim() ?? 'us-east-2',
+      org_ids: orgIds,
+      counts: {
+        indicators: filteredIndicators.length,
+        trend_reports: filteredTrendReports.length,
+        training_assignments: filteredTrainingAssignments.length,
+        signatures: filteredSignatures.length,
+      },
+      indicators: filteredIndicators,
+      trend_reports: filteredTrendReports,
+      training_assignments: filteredTrainingAssignments,
+      signatures: filteredSignatures,
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch Hive data.'
+    console.error('aws-hive-bridge error:', message)
+    const status = message.includes('Only admins') ? 403 : 500
+    return jsonResponse({ error: message }, status)
+  }
+})
