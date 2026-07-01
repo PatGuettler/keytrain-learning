@@ -103,6 +103,13 @@ Deno.serve(async (req) => {
     const filteredTrainingAssignments = filterByOrgIds(trainingAssignments, orgFilter)
     const filteredSignatures = filterByOrgIds(signatures, orgFilter)
 
+    const hostBatchCount = filteredIndicators.filter((item) =>
+      String(item.sk ?? '').startsWith('BATCH#')
+    ).length
+    const legacyIocCount = filteredIndicators.filter((item) =>
+      String(item.sk ?? '').startsWith('TS#')
+    ).length
+
     const orgIds = collectOrgIds(
       filteredIndicators,
       filteredTrendReports,
@@ -116,6 +123,8 @@ Deno.serve(async (req) => {
       org_ids: orgIds,
       counts: {
         indicators: filteredIndicators.length,
+        host_batches: hostBatchCount,
+        legacy_iocs: legacyIocCount,
         trend_reports: filteredTrendReports.length,
         training_assignments: filteredTrainingAssignments.length,
         signatures: filteredSignatures.length,

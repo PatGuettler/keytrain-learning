@@ -10,6 +10,8 @@ export type HiveDataResponse = {
   org_ids: string[]
   counts: {
     indicators: number
+    host_batches: number
+    legacy_iocs: number
     trend_reports: number
     training_assignments: number
     signatures: number

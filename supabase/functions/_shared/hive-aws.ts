@@ -49,10 +49,19 @@ export function configuredHiveOrgIds(): string[] {
 }
 
 function normalizeItem(item: Record<string, unknown>): Record<string, unknown> {
-  return {
+  const sk = String(item.sk ?? '')
+  const record: Record<string, unknown> = {
     ...item,
     hive_org_id: parseHiveOrgId(item.pk),
   }
+
+  if (sk.startsWith('BATCH#')) record.record_kind = 'batch'
+  else if (sk.startsWith('TS#')) record.record_kind = 'legacy_ioc'
+  else if (sk.startsWith('SIG#')) record.record_kind = 'signature'
+  else if (sk.startsWith('TREND#')) record.record_kind = 'trend_report'
+  else if (sk.startsWith('TRAINING#')) record.record_kind = 'training_assignment'
+
+  return record
 }
 
 async function queryOrgItems(
