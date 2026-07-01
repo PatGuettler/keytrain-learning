@@ -14,6 +14,7 @@
     "deploy:manage-users": "bash scripts/deploy-manage-users.sh",
     "deploy:phishing": "bash scripts/deploy-phishing.sh",
     "deploy:spiritual": "bash scripts/deploy-spiritual.sh",
+    "deploy:hive-bridge": "bash scripts/deploy-hive-bridge.sh",
     "test:resend-support": "bash scripts/test-resend-support.sh",
     "set-test-passwords": "bash scripts/set-test-passwords.sh"
   },

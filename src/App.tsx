@@ -32,6 +32,7 @@ import { PhishingCampaignsPage } from '@/pages/admin/PhishingCampaignsPage'
 import { PhishingCampaignEditPage } from '@/pages/admin/PhishingCampaignEditPage'
 import { PhishingCampaignDetailPage } from '@/pages/admin/PhishingCampaignDetailPage'
 import { PhishingDashboardPage } from '@/pages/admin/PhishingDashboardPage'
+import { HivePage } from '@/pages/admin/HivePage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { useAuthStore } from '@/store/authStore'
 import { ROLE_DASHBOARD } from '@/lib/constants'
@@ -117,6 +118,10 @@ export default function App() {
             <Route
               path="/admin/prayer-requests"
               element={<RoleGuard roles={['admin']}><PrayerRequestsPage /></RoleGuard>}
+            />
+            <Route
+              path="/admin/hive"
+              element={<RoleGuard roles={['admin']}><HivePage /></RoleGuard>}
             />
             <Route
               path="/admin/phishing/campaigns"
