@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from decimal import Decimal
 from typing import Any, TYPE_CHECKING
 
 from seed_catalog import DEFAULT_ORGS, build_all_items, summary_text
@@ -45,6 +46,17 @@ TABLES = {
 }
 
 
+def dynamo_safe(value: Any) -> Any:
+    """Recursively convert floats to Decimal — boto3 rejects float in DynamoDB items."""
+    if isinstance(value, float):
+        return Decimal(str(value))
+    if isinstance(value, dict):
+        return {key: dynamo_safe(entry) for key, entry in value.items()}
+    if isinstance(value, list):
+        return [dynamo_safe(entry) for entry in value]
+    return value
+
+
 def write_table(dynamo: Any, table_name: str, items: list[dict[str, Any]], dry_run: bool) -> int:
     if dry_run:
         return len(items)
@@ -52,7 +64,7 @@ def write_table(dynamo: Any, table_name: str, items: list[dict[str, Any]], dry_r
     written = 0
     with table.batch_writer(overwrite_by_pkeys=["pk", "sk"]) as batch:
         for item in items:
-            batch.put_item(Item=item)
+            batch.put_item(Item=dynamo_safe(item))
             written += 1
     return written
 
@@ -104,8 +116,8 @@ def main() -> int:
         for key, table_name in TABLES.items():
             count = write_table(dynamo, table_name, items[key], dry_run=False)
             print(f"Wrote {count} items to {table_name}")
-    except ClientError as exc:
-        print(f"\nAWS error: {exc}", file=sys.stderr)
+    except Exception as exc:
+        print(f"\nWrite error: {exc}", file=sys.stderr)
         print(
             "\nCommon fixes:\n"
             "  - Use credentials with dynamodb:PutItem / BatchWriteItem (not read-only)\n"

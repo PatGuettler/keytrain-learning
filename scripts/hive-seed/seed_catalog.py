@@ -350,11 +350,11 @@ def _aggregate_batches(batches: list[dict[str, Any]]) -> dict[str, Any]:
             "hosts_with_iocs": sum(1 for b in batches if b.get("candidate_iocs")),
         },
         "performance_summary": {
-            "avg_cpu_pct": round(
-                sum(b["performance_metrics"]["cpu_avg_pct"] for b in batches) / len(batches), 1
+            "avg_cpu_pct": Decimal(
+                str(round(sum(b["performance_metrics"]["cpu_avg_pct"] for b in batches) / len(batches), 1))
             ),
-            "avg_memory_pct": round(
-                sum(b["performance_metrics"]["memory_avg_pct"] for b in batches) / len(batches), 1
+            "avg_memory_pct": Decimal(
+                str(round(sum(b["performance_metrics"]["memory_avg_pct"] for b in batches) / len(batches), 1))
             ),
         },
     }
@@ -438,8 +438,8 @@ def _ai_report(org_id: str, period: str, metrics: dict[str, Any]) -> dict[str, A
                 "Patch critical software findings within SLA.",
             ],
             "candidate_signatures": [
-                {"phrase": "payroll adjustment", "domain": "email_security", "confidence": 0.87},
-                {"phrase": "secure-doc-share.net", "domain": "network", "confidence": 0.74},
+                {"phrase": "payroll adjustment", "domain": "email_security", "confidence": Decimal("0.87")},
+                {"phrase": "secure-doc-share.net", "domain": "network", "confidence": Decimal("0.74")},
             ],
         }
     }
