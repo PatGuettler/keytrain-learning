@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
-import { buildComplianceDraftContent, COMPLIANCE_DRAFT_DISCLAIMER } from '@/lib/compliance-generator'
+import { buildComplianceDraftContent, COMPLIANCE_DISCLAIMER } from '@/lib/compliance-generator'
 import { exportComplianceDocumentPdf } from '@/lib/pdf/compliance-reports'
 import { sortTrendReports, trendReportKey, trendReportLabel } from '@/lib/hive-records'
 import {
@@ -18,6 +18,7 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import {
   COMPLIANCE_DOC_TYPE_LABELS,
+  COMPLIANCE_STATUS_LABELS,
   type ComplianceDocument,
   type ComplianceDocumentType,
 } from '@/types/compliance.types'
@@ -149,11 +150,11 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Auto-fill draft sections from Hive trend reports and approved signatures. Review and
-            edit before exporting PDF.
+            Auto-fill sections from Hive trend reports and approved signatures. Review and edit
+            before exporting PDF.
           </p>
           <p className="text-xs text-amber-700 dark:text-amber-300 rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
-            {COMPLIANCE_DRAFT_DISCLAIMER}
+            {COMPLIANCE_DISCLAIMER}
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -209,7 +210,7 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
             disabled={createMutation.isPending}
             onClick={() => createMutation.mutate()}
           >
-            Create draft from AWS data
+            Create from AWS data
           </Button>
         </CardContent>
       </Card>
@@ -229,9 +230,9 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
                   setFormStatus(e.target.value as ComplianceDocument['status'])
                 }
               >
-                <option value="draft">Draft</option>
-                <option value="in_review">In review</option>
-                <option value="approved">Approved</option>
+                <option value="draft">{COMPLIANCE_STATUS_LABELS.draft}</option>
+                <option value="in_review">{COMPLIANCE_STATUS_LABELS.in_review}</option>
+                <option value="approved">{COMPLIANCE_STATUS_LABELS.approved}</option>
               </select>
             </div>
             {sections.map((section) => (
@@ -291,7 +292,7 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
                           '—'
                         )}
                       </td>
-                      <td className="px-3 py-2 capitalize">{doc.status.replace('_', ' ')}</td>
+                      <td className="px-3 py-2">{COMPLIANCE_STATUS_LABELS[doc.status]}</td>
                       <td className="px-3 py-2">
                         <div className="flex flex-wrap gap-1">
                           <Button

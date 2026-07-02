@@ -8,6 +8,12 @@ export type ComplianceDocumentType =
 
 export type ComplianceDocumentStatus = 'draft' | 'in_review' | 'approved'
 
+export const COMPLIANCE_STATUS_LABELS: Record<ComplianceDocumentStatus, string> = {
+  draft: 'In progress',
+  in_review: 'In review',
+  approved: 'Approved',
+}
+
 export const COMPLIANCE_DOC_TYPE_LABELS: Record<ComplianceDocumentType, string> = {
   disaster_recovery: 'Disaster Recovery',
   incident_response: 'Incident Response',

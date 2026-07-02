@@ -21,8 +21,11 @@ export type ComplianceTemplateStructure = {
 
 export type ComplianceDraftContent = Record<string, string>
 
-export const COMPLIANCE_DRAFT_DISCLAIMER =
-  'DRAFT — Auto-filled from KeyTrain Hive security telemetry only. Not legal advice. No patient data (ePHI) is stored in Hive or used to generate this document. A qualified reviewer must edit before use.'
+export const COMPLIANCE_DISCLAIMER =
+  'Auto-filled from KeyTrain Hive security telemetry only. Not legal advice. No patient data (ePHI) is stored in Hive or used to generate this document. A qualified reviewer must edit before use.'
+
+/** @deprecated Use COMPLIANCE_DISCLAIMER */
+export const COMPLIANCE_DRAFT_DISCLAIMER = COMPLIANCE_DISCLAIMER
 
 export function isTestHiveOrg(orgId: string): boolean {
   return orgId.startsWith('hive-test-') || orgId.startsWith('testorg')
@@ -80,7 +83,7 @@ export function buildComplianceDraftContent(
     .join(', ')
 
   const executive = [
-    COMPLIANCE_DRAFT_DISCLAIMER,
+    COMPLIANCE_DISCLAIMER,
     '',
     `Organization: ${orgId}`,
     isTestHiveOrg(orgId) ? 'Environment: test/demo (not production PHI)' : '',
@@ -125,7 +128,7 @@ export function buildComplianceDraftContent(
       return {
         ...base,
         scope: isTestHiveOrg(orgId)
-          ? `DRAFT scope for ${orgId} (test org). Replace with your organization's actual systems and whether you handle ePHI before any compliance use.`
+          ? `Scope for ${orgId} (test org). Replace with your organization's actual systems and whether you handle ePHI before compliance use.`
           : `Risk analysis for ${orgId} workforce endpoints and cloud services. [Confirm whether your organization handles ePHI and edit this section.]`,
         threat_landscape: alertSummary
           ? `Security telemetry (not PHI): ${alertSummary}.`

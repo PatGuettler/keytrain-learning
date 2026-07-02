@@ -1,5 +1,5 @@
 import type { ComplianceDocument, ComplianceDocumentVersion, ComplianceTemplate } from '@/types/compliance.types'
-import { COMPLIANCE_DRAFT_DISCLAIMER } from '@/lib/compliance-generator'
+import { COMPLIANCE_DISCLAIMER } from '@/lib/compliance-generator'
 import {
   addDataTable,
   addSectionHeading,
@@ -7,7 +7,7 @@ import {
   pdfStartY,
   saveDashboardPdf,
 } from '@/lib/pdf/pdf-base'
-import { COMPLIANCE_DOC_TYPE_LABELS } from '@/types/compliance.types'
+import { COMPLIANCE_DOC_TYPE_LABELS, COMPLIANCE_STATUS_LABELS } from '@/types/compliance.types'
 
 export function exportComplianceDocumentPdf(
   document: ComplianceDocument,
@@ -16,7 +16,7 @@ export function exportComplianceDocumentPdf(
 ) {
   const subtitle = [
     document.hive_org_id ? `Org: ${document.hive_org_id}` : null,
-    `Status: ${document.status}`,
+    `Status: ${COMPLIANCE_STATUS_LABELS[document.status]}`,
     `Version ${version.version_number}`,
   ]
     .filter(Boolean)
@@ -27,7 +27,7 @@ export function exportComplianceDocumentPdf(
 
   doc.setFontSize(8)
   doc.setTextColor(120)
-  const disclaimerLines = doc.splitTextToSize(COMPLIANCE_DRAFT_DISCLAIMER, 180)
+  const disclaimerLines = doc.splitTextToSize(COMPLIANCE_DISCLAIMER, 180)
   doc.text(disclaimerLines, 14, y)
   y += disclaimerLines.length * 4 + 6
 
