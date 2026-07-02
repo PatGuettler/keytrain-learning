@@ -25,7 +25,13 @@ except ImportError:
 
 REGION = "us-east-2"
 SEED_TAG = "ktl-hive-test-data"
-DEFAULT_ORGS = ["hive-test-alpha", "hive-test-beta", "hive-test-church"]
+DEFAULT_ORGS = [
+    "hive-test-alpha",
+    "hive-test-beta",
+    "hive-test-church",
+    "hive-test-delta",
+    "hive-test-epsilon",
+]
 
 TABLES = [
     "KeyTrainHiveIndicators",
