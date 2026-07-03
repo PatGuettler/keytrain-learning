@@ -67,7 +67,7 @@ export function HiveOrgFilter({
           </div>
         )}
         <p className="text-xs text-muted-foreground">
-          Platform admins can filter across all AWS orgs. Select one or more to narrow dashboards
+          KTL admins can filter across all AWS orgs. Select one or more to narrow dashboards
           below.
         </p>
       </CardContent>

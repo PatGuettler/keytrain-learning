@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchOrganizationById } from '@/services/organizations.service'
-import { canAccessRailnet, isPlatformAdmin } from '@/services/org-license.service'
+import { canAccessRailnet, isKtlAdmin } from '@/services/org-license.service'
 import { useAuthStore } from '@/store/authStore'
 
 export function useRailnetAccess() {
@@ -8,28 +8,30 @@ export function useRailnetAccess() {
 
   return {
     canAccessRailnet: canAccessRailnet(profile),
-    isPlatformAdmin: isPlatformAdmin(profile),
+    isKtlAdmin: isKtlAdmin(profile),
+    /** @deprecated */ isPlatformAdmin: isKtlAdmin(profile),
     isLoading: false,
   }
 }
 
 export function useRailnetOrgScope() {
   const profile = useAuthStore((s) => s.profile)
-  const platformAdmin = isPlatformAdmin(profile)
+  const ktlAdmin = isKtlAdmin(profile)
 
   const { data: organization, isLoading } = useQuery({
     queryKey: ['organization', profile?.org_id, 'railnet-scope'],
     queryFn: () => fetchOrganizationById(profile!.org_id),
-    enabled: Boolean(!platformAdmin && profile?.org_id),
+    enabled: Boolean(!ktlAdmin && profile?.org_id),
     staleTime: 5 * 60_000,
   })
 
   const hiveOrgId = organization?.hive_org_id?.trim() || null
 
   return {
-    platformAdmin,
+    ktlAdmin,
+    platformAdmin: ktlAdmin,
     hiveOrgId,
-    isConfigured: platformAdmin || Boolean(hiveOrgId),
-    isLoading: !platformAdmin && Boolean(profile?.org_id) && isLoading,
+    isConfigured: ktlAdmin || Boolean(hiveOrgId),
+    isLoading: !ktlAdmin && Boolean(profile?.org_id) && isLoading,
   }
 }

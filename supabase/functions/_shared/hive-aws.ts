@@ -18,7 +18,7 @@ export const HIVE_TABLES = {
 export const PLATFORM_ORG_ID = '00000000-0000-0000-0000-000000000099'
 
 export type RailnetBridgeAccess = {
-  isPlatformAdmin: boolean
+  isKtlAdmin: boolean
   /** When set, responses are limited to this AWS org id. */
   hiveOrgId: string | null
 }
@@ -37,11 +37,10 @@ export async function resolveRailnetBridgeAccess(
     throw new Error('Profile not found.')
   }
 
-  const isPlatformAdmin =
-    profile.role === 'admin' && profile.org_id === PLATFORM_ORG_ID
+  const isKtlAdmin = profile.role === 'admin'
 
-  if (isPlatformAdmin) {
-    return { isPlatformAdmin: true, hiveOrgId: null }
+  if (isKtlAdmin) {
+    return { isKtlAdmin: true, hiveOrgId: null }
   }
 
   if (profile.railnet_enabled !== true) {
@@ -63,7 +62,7 @@ export async function resolveRailnetBridgeAccess(
     throw new Error('RailNet is not configured for your organization.')
   }
 
-  return { isPlatformAdmin: false, hiveOrgId }
+  return { isKtlAdmin: false, hiveOrgId }
 }
 
 export type HiveTableKey = keyof typeof HIVE_TABLES

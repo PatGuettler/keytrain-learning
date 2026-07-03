@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
     const requestedFilter = parseOrgFilter(body)
-    const orgFilter = access.isPlatformAdmin
+    const orgFilter = access.isKtlAdmin
       ? requestedFilter
       : access.hiveOrgId
         ? [access.hiveOrgId]

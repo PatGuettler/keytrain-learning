@@ -17,7 +17,7 @@ export type NavItem = {
   to: string
   label: string
   icon: LucideIcon
-  /** Hidden unless the user has RailNet access on their profile (platform admins always). */
+  /** Org users need RailNet granted on their profile; KTL admins always see this item. */
   requiresRailnet?: boolean
 }
 
@@ -33,7 +33,7 @@ export const navByRole: Record<UserRole, NavItem[]> = {
     { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
     { to: '/admin/organizations', label: 'Organizations', icon: Building2 },
     { to: '/admin/courses', label: 'Courses', icon: BookOpen },
-    { to: '/admin/hive', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
+    { to: '/admin/hive', label: 'RailNet', icon: Hexagon },
     { to: '/admin/phishing/campaigns', label: 'Phishing sims', icon: Fish },
     { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
     { to: '/admin/prayer-requests', label: 'Prayer requests', icon: HeartHandshake },
