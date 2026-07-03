@@ -46,19 +46,44 @@ function ghPagesSpaFallback(): Plugin {
       fs.writeFileSync(path.join(dist, '404.html'), fallbackHtml, 'utf-8')
       fs.writeFileSync(path.join(dist, '.nojekyll'), '')
 
-      // GitHub Pages serves /reset-password as reset-password.html (before 404.html).
-      // Must be the full SPA — a redirect stub strips Supabase #access_token fragments.
+      // GitHub Pages checks <path>.html and <path>/index.html before 404.html.
+      // Copy the SPA shell for bookmarkable routes (avoids console 404 on refresh).
       const indexHtml = path.join(dist, 'index.html')
       if (fs.existsSync(indexHtml)) {
-        for (const route of ['reset-password', 'accept-invite', 'forgot-password']) {
-          fs.copyFileSync(indexHtml, path.join(dist, `${route}.html`))
-          const dir = path.join(dist, route)
-          fs.mkdirSync(dir, { recursive: true })
-          fs.copyFileSync(indexHtml, path.join(dir, 'index.html'))
+        const spaRoutes = [
+          'reset-password',
+          'accept-invite',
+          'forgot-password',
+          'admin/hive',
+          'admin/dashboard',
+          'admin/courses',
+          'admin/organizations',
+          'admin/phishing/campaigns',
+          'employee/training',
+          'employee/railnet',
+          'manager/training',
+          'manager/railnet',
+          'employee/profile',
+          'manager/profile',
+          'admin/profile',
+        ]
+        for (const route of spaRoutes) {
+          installGhPagesSpaRoute(dist, indexHtml, route)
         }
       }
     },
   }
+}
+
+/** Mirrors index.html to route.html and route/index.html under dist. */
+function installGhPagesSpaRoute(dist: string, indexHtml: string, route: string) {
+  const routeHtml = path.join(dist, `${route}.html`)
+  fs.mkdirSync(path.dirname(routeHtml), { recursive: true })
+  fs.copyFileSync(indexHtml, routeHtml)
+
+  const routeDir = path.join(dist, route)
+  fs.mkdirSync(routeDir, { recursive: true })
+  fs.copyFileSync(indexHtml, path.join(routeDir, 'index.html'))
 }
 
 export default defineConfig({

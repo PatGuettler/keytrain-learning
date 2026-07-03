@@ -129,4 +129,25 @@
     padding-right: 0 !important;
     margin-right: 0 !important;
   }
+
+  /* RailNet configurable tables — visible column grid + resize affordance */
+  .railnet-configurable-table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .railnet-table-header-cell {
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .railnet-col-resize-handle {
+    opacity: 0.85;
+    transition: background-color 0.15s ease;
+  }
+
+  .railnet-col-resize-handle:hover,
+  .railnet-col-resize-handle:focus-visible {
+    opacity: 1;
+    background-color: hsl(var(--primary) / 0.45);
+  }
 }

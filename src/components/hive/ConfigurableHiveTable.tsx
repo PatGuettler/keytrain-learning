@@ -55,14 +55,14 @@ function ResizableHeader({
 
   return (
     <th
-      className="relative px-3 py-2 font-medium"
+      className="railnet-table-header-cell relative border-r border-border px-3 py-2 font-medium last:border-r-0"
       style={{ width: column.width, minWidth: column.minWidth, maxWidth: column.maxWidth }}
     >
-      <span className="block truncate pr-2">{column.label}</span>
+      <span className="block truncate pr-3">{column.label}</span>
       <button
         type="button"
         aria-label={`Resize ${column.label} column`}
-        className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize border-0 bg-transparent hover:bg-primary/30"
+        className="railnet-col-resize-handle absolute right-0 top-0 h-full w-2 cursor-col-resize border-0 bg-border/70 hover:bg-primary/50"
         onMouseDown={onMouseDown}
       />
     </th>
@@ -113,8 +113,8 @@ export function ConfigurableHiveTable<T>({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-md border">
-        <table className="w-full table-fixed text-sm">
+      <div className="overflow-x-auto rounded-md border border-border">
+        <table className="railnet-configurable-table w-full table-fixed border-collapse text-sm">
           <thead className="bg-muted/50">
             <tr className="text-left">
               {displayColumns.map((column) => (
@@ -124,11 +124,13 @@ export function ConfigurableHiveTable<T>({
           </thead>
           <tbody>
             {rows.map((row, index) => (
-              <tr key={rowKey(row, index)} className="border-t">
-                {displayColumns.map((column) => (
+              <tr key={rowKey(row, index)} className="border-t border-border">
+                {displayColumns.map((column, columnIndex) => (
                   <td
                     key={column.id}
-                    className="px-3 py-2 align-top overflow-hidden"
+                    className={`border-border px-3 py-2 align-top overflow-hidden ${
+                      columnIndex < displayColumns.length - 1 ? 'border-r' : ''
+                    }`}
                     style={{
                       width: column.width,
                       minWidth: column.minWidth,
