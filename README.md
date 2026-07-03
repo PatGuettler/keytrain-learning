@@ -639,6 +639,17 @@ On every push to **`main`**, or manually via **Actions → Deploy to GitHub Page
 3. **Settings → Actions → General** — actions are enabled.
 4. If deploy job is blocked: **Settings → Environments → `github-pages`** — remove required reviewers / wait timer for personal repos.
 
+#### Deploy failed with “Deployment failed, try again later”?
+
+The **build usually succeeded** — this error comes from GitHub’s Pages backend after the artifact uploads (not from your app code). The `punycode` warning is harmless.
+
+1. **Re-run** the failed workflow (Actions → run → **Re-run all jobs**) — often fixes transient Pages API failures.
+2. Confirm **Settings → Pages → Source** is **GitHub Actions** (not “Deploy from a branch”).
+3. Check [githubstatus.com](https://www.githubstatus.com/) for Pages incidents.
+4. If it keeps failing, open **Settings → Environments → `github-pages`** and ensure no approval gate is timing out.
+
+The deploy workflow retries Pages once automatically and avoids cancelling in-flight deploys (which can wedge the environment).
+
 ### Backend — Supabase
 
 After schema migrations and Edge Function deploys:

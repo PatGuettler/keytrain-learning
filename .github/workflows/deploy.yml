@@ -13,7 +13,8 @@ permissions:
 
 concurrency:
   group: pages-${{ github.ref }}
-  cancel-in-progress: true
+  # Do not cancel an in-flight Pages deploy — it can wedge the environment (deploy-pages #22).
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -37,6 +38,13 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+      - name: Verify Pages artifact
+        run: |
+          test -f dist/index.html
+          test -f dist/.nojekyll
+          test -f dist/404.html
+          echo "Pages artifact OK ($(du -sh dist | cut -f1))"
+
       # v3 action archives are no longer on codeload.github.com — use v5.
       - uses: actions/upload-pages-artifact@v5
         with:
@@ -48,6 +56,20 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
+      url: ${{ steps.deployment_retry.outputs.page_url || steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v5
+        continue-on-error: true
+
+      - name: Retry Pages deploy (transient GitHub failures)
+        if: steps.deployment.outcome == 'failure'
+        id: deployment_retry
+        uses: actions/deploy-pages@v5
+
+      - name: Require successful deploy
+        if: steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure'
+        run: |
+          echo "::error::Pages deploy failed twice. Re-run this workflow or check Settings → Pages."
+          exit 1
