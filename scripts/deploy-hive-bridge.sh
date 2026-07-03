@@ -4,6 +4,11 @@
 #
 # Requires Supabase secrets (set once in dashboard or via CLI):
 #   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION=us-east-2
+#
+# IAM (one user for both edge functions, e.g. ktl-hive-write):
+#   Read:  dynamodb:Query, dynamodb:Scan, dynamodb:GetItem on Hive tables
+#   Write: dynamodb:PutItem, dynamodb:UpdateItem on Indicators + Signatures
+#   "Invalid security token" = wrong key pair in Supabase secrets, not missing Query.
 # Optional: HIVE_ORG_IDS=church001,KeyTrainAdmins (comma-separated; omit to scan all ORG# rows)
 #
 # Non-interactive:

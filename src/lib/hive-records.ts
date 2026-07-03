@@ -209,6 +209,147 @@ export function signatureSummary(record: HiveRecord): string {
   return String(record.phrase ?? record.signature_id ?? record.sk ?? '—')
 }
 
+export type SignatureStatusFilter = 'all' | 'approved' | 'pending' | 'rejected' | 'other'
+
+export type SignatureSort =
+  | 'status'
+  | 'org'
+  | 'phrase'
+  | 'approved_newest'
+  | 'rule_id'
+
+export function getSignatureStatus(record: HiveRecord): string {
+  return String(record.approval_status ?? '').toLowerCase().trim() || 'unknown'
+}
+
+export function getSignatureRuleId(record: HiveRecord): string {
+  if (typeof record.signature_id === 'string' && record.signature_id.trim()) {
+    return record.signature_id.trim()
+  }
+  const sk = String(record.sk ?? '')
+  if (sk.startsWith('SIG#')) return sk.slice(4)
+  return sk || '—'
+}
+
+export function getSignatureApprovedBy(record: HiveRecord): string {
+  const by = record.approved_by
+  return typeof by === 'string' && by.trim() ? by.trim() : '—'
+}
+
+export function getSignatureApprovedEpoch(record: HiveRecord): number {
+  const raw = record.approved_utc
+  if (typeof raw === 'number') {
+    return raw > 1e12 ? Math.floor(raw / 1000) : raw
+  }
+  if (typeof raw === 'string' && raw.trim()) {
+    const trimmed = raw.trim()
+    if (/^\d+$/.test(trimmed)) {
+      const n = Number(trimmed)
+      return n > 1e12 ? Math.floor(n / 1000) : n
+    }
+    const ms = Date.parse(trimmed)
+    if (!Number.isNaN(ms)) return Math.floor(ms / 1000)
+  }
+  return 0
+}
+
+export function formatSignatureApprovedAt(record: HiveRecord): string {
+  const epoch = getSignatureApprovedEpoch(record)
+  if (epoch > 0) {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(epoch * 1000))
+  }
+  if (typeof record.approved_utc === 'string' && record.approved_utc.trim()) {
+    return record.approved_utc
+  }
+  return '—'
+}
+
+export function signatureMatchesQuery(record: HiveRecord, query: string): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const haystack = [
+    record.hive_org_id,
+    record.org_id,
+    record.pk,
+    record.sk,
+    record.signature_id,
+    record.phrase,
+    record.approval_status,
+    record.approved_by,
+    record.approved_utc,
+    record.domain,
+    record.signature_type,
+    record.severity,
+    signatureSummary(record),
+    getSignatureRuleId(record),
+  ]
+    .filter(Boolean)
+    .map(String)
+    .join(' ')
+    .toLowerCase()
+  return haystack.includes(q)
+}
+
+export function signatureMatchesStatusFilter(
+  record: HiveRecord,
+  filter: SignatureStatusFilter
+): boolean {
+  if (filter === 'all') return true
+  const status = getSignatureStatus(record)
+  if (filter === 'approved') return status === 'approved'
+  if (filter === 'pending') return status === 'pending'
+  if (filter === 'rejected') return status === 'rejected'
+  return status !== 'approved' && status !== 'pending' && status !== 'rejected'
+}
+
+export function sortSignatures(records: HiveRecord[], sort: SignatureSort): HiveRecord[] {
+  const sorted = [...records]
+  sorted.sort((a, b) => {
+    switch (sort) {
+      case 'org':
+        return (
+          String(a.hive_org_id ?? '').localeCompare(String(b.hive_org_id ?? '')) ||
+          getSignatureRuleId(a).localeCompare(getSignatureRuleId(b))
+        )
+      case 'phrase':
+        return signatureSummary(a).localeCompare(signatureSummary(b))
+      case 'rule_id':
+        return getSignatureRuleId(a).localeCompare(getSignatureRuleId(b))
+      case 'approved_newest':
+        return getSignatureApprovedEpoch(b) - getSignatureApprovedEpoch(a)
+      case 'status':
+      default:
+        return (
+          getSignatureStatus(a).localeCompare(getSignatureStatus(b)) ||
+          String(a.hive_org_id ?? '').localeCompare(String(b.hive_org_id ?? ''))
+        )
+    }
+  })
+  return sorted
+}
+
+export function filterAndSortSignatures(
+  records: HiveRecord[],
+  options: {
+    query?: string
+    status?: SignatureStatusFilter
+    sort?: SignatureSort
+  }
+): HiveRecord[] {
+  const status = options.status ?? 'all'
+  const query = options.query ?? ''
+  const filtered = records.filter(
+    (record) => signatureMatchesStatusFilter(record, status) && signatureMatchesQuery(record, query)
+  )
+  return sortSignatures(filtered, options.sort ?? 'status')
+}
+
 export function trainingSummary(record: HiveRecord): string {
   const period = record.reporting_period ?? getTrendReportingPeriod(record)
   const count = record.total_question_count ?? (Array.isArray(record.questions) ? record.questions.length : null)

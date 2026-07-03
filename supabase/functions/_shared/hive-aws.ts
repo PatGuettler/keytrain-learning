@@ -95,6 +95,37 @@ export function createHiveDynamoClient(): DynamoDBDocumentClient {
   })
 }
 
+/** Map AWS SDK errors to actionable messages for Supabase edge function responses. */
+export function formatAwsError(error: unknown): string {
+  const name =
+    error && typeof error === 'object' && 'name' in error
+      ? String((error as { name?: string }).name)
+      : ''
+  const message = error instanceof Error ? error.message : String(error)
+
+  if (
+    name === 'UnrecognizedClientException' ||
+    name === 'InvalidClientTokenId' ||
+    message.includes('security token included in the request is invalid')
+  ) {
+    return (
+      'AWS credentials rejected (invalid access key or secret). ' +
+      'In Supabase → Edge Functions → Secrets, verify AWS_ACCESS_KEY_ID and ' +
+      'AWS_SECRET_ACCESS_KEY are a matching pair with no extra spaces, and AWS_REGION=us-east-2.'
+    )
+  }
+
+  if (name === 'AccessDeniedException' || message.includes('not authorized')) {
+    return (
+      `AWS denied DynamoDB access: ${message} ` +
+      'The IAM user needs dynamodb:Query and dynamodb:Scan on Hive tables for reads, ' +
+      'and dynamodb:UpdateItem on KeyTrainHiveSignatures for signature approve.'
+    )
+  }
+
+  return message || 'AWS request failed.'
+}
+
 export function configuredHiveOrgIds(): string[] {
   const raw = Deno.env.get('HIVE_ORG_IDS')?.trim()
   if (!raw) return []

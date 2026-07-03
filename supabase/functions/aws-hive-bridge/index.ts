@@ -6,6 +6,7 @@ import {
   createHiveDynamoClient,
   fetchHiveTable,
   filterByOrgIds,
+  formatAwsError,
   HIVE_TABLES,
   resolveRailnetBridgeAccess,
 } from '../_shared/hive-aws.ts'
@@ -141,7 +142,7 @@ Deno.serve(async (req) => {
       signatures: filteredSignatures,
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch Hive data.'
+    const message = formatAwsError(error)
     console.error('aws-hive-bridge error:', message)
     return jsonResponse({ error: message }, errorStatus(message))
   }

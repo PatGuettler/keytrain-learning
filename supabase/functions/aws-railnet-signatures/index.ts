@@ -2,6 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
 import {
   createHiveDynamoClient,
+  formatAwsError,
   HIVE_TABLES,
   updateSignatureApproval,
 } from '../_shared/hive-aws.ts'
@@ -108,7 +109,7 @@ Deno.serve(async (req) => {
       signature: updated,
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to update signature.'
+    const message = formatAwsError(error)
     console.error('aws-railnet-signatures error:', message)
     const status = message.includes('Only admins') ? 403 : message.includes('required') ? 400 : 500
     return jsonResponse({ error: message }, status)
