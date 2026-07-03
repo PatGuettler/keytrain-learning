@@ -14,6 +14,13 @@ import { submitSupportRequest } from '@/services/support.service'
 import { updateDailyVerseEnabled } from '@/services/daily-verse.service'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLE_PRAYER } from '@/lib/constants'
+import {
+  SUPPORT_CATEGORIES,
+  TRAINING_REQUEST_GUIDANCE,
+  TRAINING_REQUEST_MESSAGE_TEMPLATE,
+  TRAINING_REQUEST_SUBJECT_SUGGESTION,
+  type SupportCategory,
+} from '@/lib/support-categories'
 
 const selectClass =
   'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm'
@@ -33,7 +40,7 @@ export function ProfilePage() {
     select: (rows) => rows.find((p) => p.id === profile?.manager_id) ?? null,
   })
 
-  const [category, setCategory] = useState<'bug' | 'feature' | 'question' | 'other'>('question')
+  const [category, setCategory] = useState<SupportCategory>('question')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -42,6 +49,18 @@ export function ProfilePage() {
   const [deliveryWarning, setDeliveryWarning] = useState('')
   const [verseToggleLoading, setVerseToggleLoading] = useState(false)
   const [verseToggleError, setVerseToggleError] = useState('')
+
+  const handleCategoryChange = (next: SupportCategory) => {
+    setCategory(next)
+    if (next === 'training_request') {
+      if (!subject.trim()) {
+        setSubject(TRAINING_REQUEST_SUBJECT_SUGGESTION)
+      }
+      if (!message.trim()) {
+        setMessage(TRAINING_REQUEST_MESSAGE_TEMPLATE)
+      }
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -166,7 +185,8 @@ export function ProfilePage() {
         <CardHeader>
           <CardTitle className="text-base">Contact</CardTitle>
           <CardDescription>
-            Report bugs, request features, or ask questions. Your profile details are included automatically.
+            Report bugs, request features, ask questions, or ask us to build custom training from
+            your KeyTrain and RailNet insights. Your profile details are included automatically.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -177,20 +197,47 @@ export function ProfilePage() {
                 id="support-category"
                 className={selectClass}
                 value={category}
-                onChange={(e) => setCategory(e.target.value as typeof category)}
+                onChange={(e) => handleCategoryChange(e.target.value as SupportCategory)}
               >
-                <option value="bug">Bug report</option>
-                <option value="feature">Feature request</option>
-                <option value="question">General question</option>
-                <option value="other">Other</option>
+                {SUPPORT_CATEGORIES.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
+            {category === 'training_request' && (
+              <div
+                className="rounded-md border border-primary/30 bg-primary/5 px-4 py-3 text-sm space-y-2"
+                role="note"
+              >
+                <p className="font-medium text-foreground">
+                  Help us build training tailored to your organization
+                </p>
+                <p className="text-muted-foreground">
+                  If KeyTrain or RailNet surfaced alerts, weak scores, or trends you want addressed,
+                  tell us what you saw and who should be trained. The message below is a starting
+                  template — edit or replace any section.
+                </p>
+                <p className="text-muted-foreground font-medium">Please include:</p>
+                <ul className="list-disc pl-5 text-muted-foreground space-y-1">
+                  {TRAINING_REQUEST_GUIDANCE.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="support-subject">Subject</Label>
               <Input
                 id="support-subject"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
+                placeholder={
+                  category === 'training_request'
+                    ? 'e.g. Phishing training after Q2 alert spike'
+                    : undefined
+                }
                 required
               />
             </div>
@@ -201,6 +248,12 @@ export function ProfilePage() {
                 className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                rows={category === 'training_request' ? 16 : undefined}
+                placeholder={
+                  category === 'training_request'
+                    ? 'Use the template above or write your own — the more specific, the better.'
+                    : undefined
+                }
                 required
               />
             </div>

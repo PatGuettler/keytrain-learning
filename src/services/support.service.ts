@@ -1,3 +1,4 @@
+import type { SupportCategory } from '@/lib/support-categories'
 import { getEdgeFunctionAccessToken } from '@/lib/edge-function-auth'
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
 import { useAuthStore } from '@/store/authStore'
@@ -11,7 +12,7 @@ type SupportResponse = {
 }
 
 export async function submitSupportRequest(payload: {
-  category: 'bug' | 'feature' | 'question' | 'other'
+  category: SupportCategory
   subject: string
   message: string
 }) {

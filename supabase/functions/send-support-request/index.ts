@@ -4,6 +4,18 @@ import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
 const DEFAULT_TO = 'patguettler@gmail.com'
 const DEFAULT_FROM = 'KeyTrain Learning Support <onboarding@resend.dev>'
 
+const CATEGORY_LABELS: Record<string, string> = {
+  bug: 'Bug report',
+  feature: 'Feature request',
+  training_request: 'Request training',
+  question: 'General question',
+  other: 'Other',
+}
+
+function categoryLabel(category: string): string {
+  return CATEGORY_LABELS[category] ?? category
+}
+
 let requestCors: Record<string, string> = corsHeaders
 
 function jsonResponse(body: unknown, status = 200) {
@@ -85,7 +97,7 @@ Deno.serve(async (req) => {
     }
 
     const emailBody = [
-      `Category: ${category}`,
+      `Category: ${categoryLabel(category)}`,
       `Subject: ${subject}`,
       '',
       message,
@@ -113,7 +125,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: fromEmail,
         to: [toEmail],
-        subject: `[KeyTrain Learning ${category}] ${subject}`,
+        subject: `[KeyTrain Learning — ${categoryLabel(category)}] ${subject}`,
         text: emailBody,
       }),
     })
