@@ -33,6 +33,16 @@ coverage/
 # Supabase local dev
 supabase/.branches
 supabase/.temp
+supabase/.env
+supabase/.env.local
+
+# Python venvs under scripts
+scripts/**/venv/
+scripts/hive-seed/venv/
+
+# Editor / tooling
+.cursor/
+*.tsbuildinfo
 
 # Generated from bible.helloao.org when running scripts/generate-daily-verse-text.mjs
 scripts/.cache/
