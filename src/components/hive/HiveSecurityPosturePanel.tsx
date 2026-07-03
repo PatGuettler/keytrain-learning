@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { StatCard } from '@/components/dashboard/StatCard'
+import { ConfigurableHiveTable } from '@/components/hive/ConfigurableHiveTable'
 import {
   countSignaturesByStatus,
   filterAndSortSignatures,
@@ -100,6 +101,88 @@ export function HiveSecurityPosturePanel({
 
   const isRowBusy = (record: HiveRecord) =>
     pendingKey === `${String(record.pk ?? '')}|${String(record.sk ?? '')}`
+
+  const renderSignatureCell = (columnId: string, record: HiveRecord) => {
+    const pk = String(record.pk ?? '')
+    const sk = String(record.sk ?? '')
+    const status = getSignatureStatus(record)
+    const pending = isPendingSignature(record)
+    const busy = isRowBusy(record)
+
+    switch (columnId) {
+      case 'org':
+        return <Badge variant="outline">{String(record.hive_org_id ?? '—')}</Badge>
+      case 'rule_id':
+        return (
+          <span className="block truncate font-mono text-xs" title={getSignatureRuleId(record)}>
+            {getSignatureRuleId(record)}
+          </span>
+        )
+      case 'phrase':
+        return (
+          <span className="block truncate" title={signatureSummary(record)}>
+            {signatureSummary(record)}
+          </span>
+        )
+      case 'domain':
+        return record.domain ? String(record.domain) : '—'
+      case 'type':
+        return record.signature_type ? String(record.signature_type) : '—'
+      case 'status':
+        return <Badge variant={statusBadgeVariant(status)}>{status}</Badge>
+      case 'approved_by':
+        return (
+          <span className="block truncate text-muted-foreground" title={getSignatureApprovedBy(record)}>
+            {getSignatureApprovedBy(record)}
+          </span>
+        )
+      case 'approved_at':
+        return (
+          <span className="whitespace-nowrap text-muted-foreground">
+            {formatSignatureApprovedAt(record)}
+          </span>
+        )
+      case 'severity':
+        return record.severity ? String(record.severity) : '—'
+      case 'sort_key':
+        return (
+          <span className="block truncate font-mono text-xs text-muted-foreground" title={sk}>
+            {sk || '—'}
+          </span>
+        )
+      case 'actions':
+        if (!canManageSignatures) return '—'
+        if (!pending || !pk || !sk) {
+          return <span className="text-muted-foreground">—</span>
+        }
+        return (
+          <div className="flex flex-wrap gap-1">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={() => approveMutation.mutate({ pk, sk })}
+            >
+              <CheckCircle className="mr-1 h-3.5 w-3.5" />
+              Approve
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={busy}
+              onClick={() => rejectMutation.mutate({ pk, sk })}
+            >
+              <XCircle className="mr-1 h-3.5 w-3.5" />
+              Reject
+            </Button>
+          </div>
+        )
+      default:
+        return '—'
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -197,118 +280,16 @@ export function HiveSecurityPosturePanel({
                 </p>
               </div>
 
-              {filteredSignatures.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-2">
-                  No signatures match your filters. Clear search or set status to “All statuses”.
-                </p>
-              ) : (
-                <div className="overflow-x-auto rounded-md border">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50">
-                      <tr className="text-left">
-                        <th className="px-3 py-2 font-medium">Org</th>
-                        <th className="px-3 py-2 font-medium">Rule id</th>
-                        <th className="px-3 py-2 font-medium">Phrase / rule</th>
-                        <th className="px-3 py-2 font-medium">Domain</th>
-                        <th className="px-3 py-2 font-medium">Type</th>
-                        <th className="px-3 py-2 font-medium">Status</th>
-                        <th className="px-3 py-2 font-medium">Approved by</th>
-                        <th className="px-3 py-2 font-medium">Approved at</th>
-                        <th className="px-3 py-2 font-medium">Severity</th>
-                        <th className="px-3 py-2 font-medium">Sort key</th>
-                        {canManageSignatures && (
-                          <th className="px-3 py-2 font-medium">Actions</th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredSignatures.map((record, index) => {
-                        const pending = isPendingSignature(record)
-                        const busy = isRowBusy(record)
-                        const pk = String(record.pk ?? '')
-                        const sk = String(record.sk ?? '')
-                        const status = getSignatureStatus(record)
-                        const approvedBy = getSignatureApprovedBy(record)
-                        const approvedAt = formatSignatureApprovedAt(record)
-
-                        return (
-                          <tr key={signatureRowKey(record, index)} className="border-t">
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              <Badge variant="outline">{String(record.hive_org_id ?? '—')}</Badge>
-                            </td>
-                            <td
-                              className="px-3 py-2 font-mono text-xs whitespace-nowrap"
-                              title={getSignatureRuleId(record)}
-                            >
-                              {getSignatureRuleId(record)}
-                            </td>
-                            <td className="px-3 py-2 max-w-xs truncate" title={signatureSummary(record)}>
-                              {signatureSummary(record)}
-                            </td>
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {record.domain ? String(record.domain) : '—'}
-                            </td>
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {record.signature_type ? String(record.signature_type) : '—'}
-                            </td>
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              <Badge variant={statusBadgeVariant(status)}>{status}</Badge>
-                            </td>
-                            <td
-                              className="px-3 py-2 max-w-[10rem] truncate text-muted-foreground"
-                              title={approvedBy}
-                            >
-                              {approvedBy}
-                            </td>
-                            <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
-                              {approvedAt}
-                            </td>
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {record.severity ? String(record.severity) : '—'}
-                            </td>
-                            <td
-                              className="px-3 py-2 font-mono text-xs text-muted-foreground max-w-[8rem] truncate"
-                              title={sk}
-                            >
-                              {sk || '—'}
-                            </td>
-                            {canManageSignatures && (
-                              <td className="px-3 py-2 whitespace-nowrap">
-                                {pending && pk && sk ? (
-                                  <div className="flex flex-wrap gap-1">
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      disabled={busy}
-                                      onClick={() => approveMutation.mutate({ pk, sk })}
-                                    >
-                                      <CheckCircle className="mr-1 h-3.5 w-3.5" />
-                                      Approve
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="ghost"
-                                      disabled={busy}
-                                      onClick={() => rejectMutation.mutate({ pk, sk })}
-                                    >
-                                      <XCircle className="mr-1 h-3.5 w-3.5" />
-                                      Reject
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <span className="text-muted-foreground">—</span>
-                                )}
-                              </td>
-                            )}
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <ConfigurableHiveTable
+                viewId="security_posture"
+                rows={filteredSignatures}
+                rowKey={(record, index) => signatureRowKey(record, index)}
+                renderCell={(columnId, record) => renderSignatureCell(columnId, record)}
+                columnFilter={(column) =>
+                  column.id !== 'actions' || canManageSignatures
+                }
+                emptyMessage="No signatures match your filters. Clear search or set status to “All statuses”."
+              />
             </>
           )}
         </CardContent>

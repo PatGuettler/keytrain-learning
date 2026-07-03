@@ -1,3 +1,5 @@
+import type { RailnetTablePrefs } from '@/types/table-column-prefs.types'
+
 export type UserRole = 'admin' | 'manager' | 'employee'
 
 export interface Profile {
@@ -16,11 +18,14 @@ export interface Profile {
   last_login_at: string | null
   daily_verse_enabled: boolean
   railnet_enabled?: boolean
+  railnet_table_prefs?: RailnetTablePrefs
   created_at: string
   updated_at: string
 }
 
-export type UserPreferencesUpdate = Partial<Pick<Profile, 'daily_verse_enabled'>>
+export type UserPreferencesUpdate = Partial<
+  Pick<Profile, 'daily_verse_enabled' | 'railnet_table_prefs'>
+>
 
 export type AdminProfileUpdate = Partial<
   Pick<

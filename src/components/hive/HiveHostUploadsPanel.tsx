@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { StatCard } from '@/components/dashboard/StatCard'
+import { ConfigurableHiveTable } from '@/components/hive/ConfigurableHiveTable'
 import {
   filterAndSortHostBatches,
   formatAlertMetricsSummary,
@@ -29,91 +30,79 @@ const BATCH_SORT_OPTIONS: { value: HostBatchSort; label: string }[] = [
   { value: 'period', label: 'Reporting period' },
 ]
 
-function HostUploadTable({
-  records,
-  emptyMessage,
-  showLegacyColumns = false,
-  showBatchColumns = false,
-}: {
-  records: HiveRecord[]
-  emptyMessage: string
-  showLegacyColumns?: boolean
-  showBatchColumns?: boolean
-}) {
-  if (records.length === 0) {
-    return <p className="text-sm text-muted-foreground py-2">{emptyMessage}</p>
+function renderBatchCell(columnId: string, record: HiveRecord): ReactNode {
+  switch (columnId) {
+    case 'org':
+      return <Badge variant="outline">{String(record.hive_org_id ?? '—')}</Badge>
+    case 'host':
+      return (
+        <span
+          className="block truncate font-mono text-xs"
+          title={String(record.host_id ?? '')}
+        >
+          {record.host_id ? String(record.host_id) : '—'}
+        </span>
+      )
+    case 'period':
+      return getBatchReportingPeriod(record)
+    case 'uploaded':
+      return (
+        <span className="text-muted-foreground whitespace-nowrap">
+          {formatBatchUploadedAt(record)}
+        </span>
+      )
+    case 'alerts':
+      return (
+        <span
+          className="block truncate text-muted-foreground"
+          title={formatAlertMetricsSummary(record)}
+        >
+          {formatAlertMetricsSummary(record)}
+        </span>
+      )
+    case 'sort_key':
+      return (
+        <span className="block truncate font-mono text-xs text-muted-foreground">
+          {record.sk ? String(record.sk) : '—'}
+        </span>
+      )
+    default:
+      return '—'
   }
+}
 
-  return (
-    <div className="overflow-x-auto rounded-md border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50">
-          <tr className="text-left">
-            <th className="px-3 py-2 font-medium">Org</th>
-            {!showBatchColumns && <th className="px-3 py-2 font-medium">Summary</th>}
-            <th className="px-3 py-2 font-medium">Host</th>
-            {showBatchColumns && (
-              <>
-                <th className="px-3 py-2 font-medium">Period</th>
-                <th className="px-3 py-2 font-medium">Uploaded</th>
-                <th className="px-3 py-2 font-medium">Alerts</th>
-              </>
-            )}
-            {showLegacyColumns && (
-              <>
-                <th className="px-3 py-2 font-medium">Indicator</th>
-                <th className="px-3 py-2 font-medium">Severity</th>
-              </>
-            )}
-            <th className="px-3 py-2 font-medium">Sort key</th>
-          </tr>
-        </thead>
-        <tbody>
-          {records.map((record, index) => (
-            <tr key={`${record.pk}-${record.sk}-${index}`} className="border-t">
-              <td className="px-3 py-2 whitespace-nowrap">
-                <Badge variant="outline">{String(record.hive_org_id ?? '—')}</Badge>
-              </td>
-              {!showBatchColumns && (
-                <td className="px-3 py-2 max-w-xs truncate" title={hostUploadSummary(record)}>
-                  {hostUploadSummary(record)}
-                </td>
-              )}
-              <td className="px-3 py-2 font-mono text-xs max-w-[14rem] truncate" title={String(record.host_id ?? '')}>
-                {record.host_id ? String(record.host_id) : '—'}
-              </td>
-              {showBatchColumns && (
-                <>
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    {getBatchReportingPeriod(record)}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
-                    {formatBatchUploadedAt(record)}
-                  </td>
-                  <td className="px-3 py-2 max-w-xs truncate text-muted-foreground" title={formatAlertMetricsSummary(record)}>
-                    {formatAlertMetricsSummary(record)}
-                  </td>
-                </>
-              )}
-              {showLegacyColumns && (
-                <>
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    {record.indicator ? String(record.indicator) : '—'}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    {record.severity ? String(record.severity) : '—'}
-                  </td>
-                </>
-              )}
-              <td className="px-3 py-2 font-mono text-xs text-muted-foreground max-w-xs truncate">
-                {record.sk ? String(record.sk) : '—'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
+function renderLegacyCell(columnId: string, record: HiveRecord): ReactNode {
+  switch (columnId) {
+    case 'org':
+      return <Badge variant="outline">{String(record.hive_org_id ?? '—')}</Badge>
+    case 'summary':
+      return (
+        <span className="block truncate" title={hostUploadSummary(record)}>
+          {hostUploadSummary(record)}
+        </span>
+      )
+    case 'host':
+      return (
+        <span
+          className="block truncate font-mono text-xs"
+          title={String(record.host_id ?? '')}
+        >
+          {record.host_id ? String(record.host_id) : '—'}
+        </span>
+      )
+    case 'indicator':
+      return record.indicator ? String(record.indicator) : '—'
+    case 'severity':
+      return record.severity ? String(record.severity) : '—'
+    case 'sort_key':
+      return (
+        <span className="block truncate font-mono text-xs text-muted-foreground">
+          {record.sk ? String(record.sk) : '—'}
+        </span>
+      )
+    default:
+      return '—'
+  }
 }
 
 function BatchUploadToolbar({
@@ -220,9 +209,11 @@ export function HiveHostUploadsPanel({ indicators, legacyIocCount = 0 }: HiveHos
             shown={filteredBatches.length}
             total={batches.length}
           />
-          <HostUploadTable
-            records={filteredBatches}
-            showBatchColumns
+          <ConfigurableHiveTable
+            viewId="host_uploads_batch"
+            rows={filteredBatches}
+            rowKey={(record, index) => `${record.pk}-${record.sk}-${index}`}
+            renderCell={(columnId, record) => renderBatchCell(columnId, record)}
             emptyMessage={
               batches.length === 0
                 ? 'No BATCH# host uploads yet. KT hosts push monthly batches under ORG#… partition keys.'
@@ -238,10 +229,12 @@ export function HiveHostUploadsPanel({ indicators, legacyIocCount = 0 }: HiveHos
             <CardTitle className="text-base">Legacy IOC rows (TS# — pending AWS migration)</CardTitle>
           </CardHeader>
           <CardContent>
-            <HostUploadTable
-              records={legacyIocs}
+            <ConfigurableHiveTable
+              viewId="host_uploads_legacy"
+              rows={legacyIocs}
+              rowKey={(record, index) => `${record.pk}-${record.sk}-${index}`}
+              renderCell={(columnId, record) => renderLegacyCell(columnId, record)}
               emptyMessage="No legacy rows."
-              showLegacyColumns
             />
           </CardContent>
         </Card>
