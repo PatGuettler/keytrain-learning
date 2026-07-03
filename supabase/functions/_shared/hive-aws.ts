@@ -5,6 +5,7 @@ import {
   ScanCommand,
   UpdateCommand,
 } from 'npm:@aws-sdk/lib-dynamodb@3'
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
 
 export const HIVE_TABLES = {
   indicators: 'KeyTrainHiveIndicators',
@@ -12,6 +13,58 @@ export const HIVE_TABLES = {
   trainingAssignments: 'KeyTrainTrainingAssignments',
   signatures: 'KeyTrainHiveSignatures',
 } as const
+
+/** Internal platform org — platform admins live here. */
+export const PLATFORM_ORG_ID = '00000000-0000-0000-0000-000000000099'
+
+export type RailnetBridgeAccess = {
+  isPlatformAdmin: boolean
+  /** When set, responses are limited to this AWS org id. */
+  hiveOrgId: string | null
+}
+
+export async function resolveRailnetBridgeAccess(
+  adminClient: SupabaseClient,
+  userId: string
+): Promise<RailnetBridgeAccess> {
+  const { data: profile, error: profileError } = await adminClient
+    .from('profiles')
+    .select('role, org_id, railnet_enabled')
+    .eq('id', userId)
+    .single()
+
+  if (profileError || !profile) {
+    throw new Error('Profile not found.')
+  }
+
+  const isPlatformAdmin =
+    profile.role === 'admin' && profile.org_id === PLATFORM_ORG_ID
+
+  if (isPlatformAdmin) {
+    return { isPlatformAdmin: true, hiveOrgId: null }
+  }
+
+  if (profile.railnet_enabled !== true) {
+    throw new Error('You do not have RailNet access.')
+  }
+
+  const { data: org, error: orgError } = await adminClient
+    .from('organizations')
+    .select('hive_org_id')
+    .eq('id', profile.org_id)
+    .single()
+
+  if (orgError || !org) {
+    throw new Error('Organization not found.')
+  }
+
+  const hiveOrgId = String(org.hive_org_id ?? '').trim()
+  if (!hiveOrgId) {
+    throw new Error('RailNet is not configured for your organization.')
+  }
+
+  return { isPlatformAdmin: false, hiveOrgId }
+}
 
 export type HiveTableKey = keyof typeof HIVE_TABLES
 

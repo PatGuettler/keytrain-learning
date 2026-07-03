@@ -56,6 +56,7 @@ export function OrgUsersTable({
               <th className="p-3 pr-4">Role</th>
               <th className="p-3 pr-4">Manager</th>
               <th className="p-3 pr-4">Status</th>
+              <th className="p-3 pr-4">RailNet</th>
               <th className="p-3">Actions</th>
             </tr>
           </thead>
@@ -73,6 +74,13 @@ export function OrgUsersTable({
                     const status = getProfileStatusBadge(u)
                     return <Badge variant={status.variant}>{status.label}</Badge>
                   })()}
+                </td>
+                <td className="p-3 pr-4">
+                  {u.railnet_enabled ? (
+                    <Badge variant="default">On</Badge>
+                  ) : (
+                    <Badge variant="outline">Off</Badge>
+                  )}
                 </td>
                 <td className="p-3">
                   <div className="flex flex-wrap gap-2">

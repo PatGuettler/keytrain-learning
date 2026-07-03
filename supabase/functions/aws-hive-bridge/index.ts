@@ -7,6 +7,7 @@ import {
   fetchHiveTable,
   filterByOrgIds,
   HIVE_TABLES,
+  resolveRailnetBridgeAccess,
 } from '../_shared/hive-aws.ts'
 
 let requestCors: Record<string, string> = corsHeaders
@@ -18,21 +19,6 @@ function jsonResponse(body: unknown, status = 200) {
   })
 }
 
-async function assertAdmin(
-  adminClient: ReturnType<typeof createClient>,
-  userId: string
-) {
-  const { data: profile, error } = await adminClient
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single()
-
-  if (error || profile?.role !== 'admin') {
-    throw new Error('Only admins can access Hive data.')
-  }
-}
-
 function parseOrgFilter(body: Record<string, unknown>): string[] | undefined {
   if (!Array.isArray(body.hive_org_ids)) return undefined
   const ids = body.hive_org_ids
@@ -40,6 +26,20 @@ function parseOrgFilter(body: Record<string, unknown>): string[] | undefined {
     .map((value) => value.trim())
     .filter(Boolean)
   return ids.length > 0 ? [...new Set(ids)] : undefined
+}
+
+function errorStatus(message: string): number {
+  if (
+    message.includes('RailNet access') ||
+    message.includes('Only admins') ||
+    message.includes('not configured')
+  ) {
+    return 403
+  }
+  if (message.includes('Unauthorized') || message.includes('authorization')) {
+    return 401
+  }
+  return 500
 }
 
 Deno.serve(async (req) => {
@@ -84,10 +84,16 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     })
 
-    await assertAdmin(adminClient, user.id)
+    const access = await resolveRailnetBridgeAccess(adminClient, user.id)
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
-    const orgFilter = parseOrgFilter(body)
+    const requestedFilter = parseOrgFilter(body)
+    const orgFilter = access.isPlatformAdmin
+      ? requestedFilter
+      : access.hiveOrgId
+        ? [access.hiveOrgId]
+        : undefined
+
     const queryOrgIds = configuredHiveOrgIds()
     const dynamo = createHiveDynamoClient()
 
@@ -137,7 +143,6 @@ Deno.serve(async (req) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch Hive data.'
     console.error('aws-hive-bridge error:', message)
-    const status = message.includes('Only admins') ? 403 : 500
-    return jsonResponse({ error: message }, status)
+    return jsonResponse({ error: message }, errorStatus(message))
   }
 })

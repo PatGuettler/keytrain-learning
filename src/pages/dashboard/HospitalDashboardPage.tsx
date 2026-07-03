@@ -50,7 +50,7 @@ export function HospitalDashboardPage() {
           <Button variant="outline" size="sm" asChild>
             <Link to={adminOrganizationPath(orgSlug!)}>
               <Building2 className="h-4 w-4 mr-1" />
-              Manage staff
+              Settings &amp; users
             </Link>
           </Button>
         </div>
