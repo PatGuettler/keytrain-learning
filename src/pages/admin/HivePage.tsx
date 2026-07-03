@@ -112,7 +112,7 @@ export function HivePage() {
             />
             <Button type="button" variant="outline" onClick={() => refetch()} disabled={isFetching}>
               <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-              Refresh from AWS
+              Refresh Data
             </Button>
           </div>
         }

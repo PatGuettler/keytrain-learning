@@ -63,7 +63,7 @@ Or from repo root: `npm run seed:hive:dry-run` / `npm run seed:hive`
 ## Verify in KTL
 
 1. Deploy `aws-hive-bridge` if not already live
-2. Log in as platform **admin** → **Hive** tab → **Refresh from AWS**
+2. Log in as platform **admin** → **Hive** tab → **Refresh Data**
 3. Org filter should list all five `hive-test-*` orgs
 4. **Reporting** — pick different months; alert reconciliation should match host batch sums
 5. **Host uploads** — legacy `TS#` warning should appear (15 rows total)
