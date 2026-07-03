@@ -3,11 +3,15 @@ import { cn } from '@/lib/utils'
 import { APP_NAME } from '@/lib/constants'
 import { useRole } from '@/hooks/useRole'
 import { AppLogo } from '@/components/brand/AppLogo'
+import { useRailnetAccess } from '@/hooks/useRailnetAccess'
 import { navByRole } from './nav-config'
 
 export function Sidebar() {
   const { role } = useRole()
-  const items = role ? navByRole[role] : []
+  const { canAccessRailnet } = useRailnetAccess()
+  const items = (role ? navByRole[role] : []).filter(
+    (item) => !item.requiresRailnet || canAccessRailnet
+  )
 
   return (
     <aside className="hidden lg:flex w-64 flex-col border-r bg-card">

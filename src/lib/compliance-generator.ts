@@ -1,6 +1,7 @@
 import type { CourseExportBundle } from '@/lib/course-export'
 import {
   getAlertCounts,
+  getLeadershipBrief,
   getRiskScores,
   getSoftwareFindingsFromTrend,
   getTrainingSummaryMetrics,
@@ -22,7 +23,7 @@ export type ComplianceTemplateStructure = {
 export type ComplianceDraftContent = Record<string, string>
 
 export const COMPLIANCE_DISCLAIMER =
-  'Auto-filled from KeyTrain Hive security telemetry only. Not legal advice. No patient data (ePHI) is stored in Hive or used to generate this document. A qualified reviewer must edit before use.'
+  'Auto-filled from KeyTrain RailNet security telemetry only. Not legal advice. No patient data (ePHI) is stored in RailNet or used to generate this document. A qualified reviewer must edit before use.'
 
 /** @deprecated Use COMPLIANCE_DISCLAIMER */
 export const COMPLIANCE_DRAFT_DISCLAIMER = COMPLIANCE_DISCLAIMER
@@ -82,6 +83,8 @@ export function buildComplianceDraftContent(
     .map(([k, v]) => `${k}: ${v}/100`)
     .join(', ')
 
+  const leadershipBrief = trendReport ? getLeadershipBrief(trendReport) : null
+
   const executive = [
     COMPLIANCE_DISCLAIMER,
     '',
@@ -90,8 +93,9 @@ export function buildComplianceDraftContent(
     `Reporting period: ${period}`,
     riskSummary ? `Risk scores — ${riskSummary}` : '',
     alertSummary ? `Alert counts — ${alertSummary}` : '',
+    leadershipBrief ? `\nLeadership brief:\n${leadershipBrief}` : '',
     '',
-    'Metrics above are security alerts and risk scores from AWS Hive — not clinical or patient records.',
+    'Metrics above are security alerts and risk scores from AWS RailNet — not clinical or patient records.',
   ]
     .filter(Boolean)
     .join('\n')
@@ -117,7 +121,7 @@ export function buildComplianceDraftContent(
           'Security lead, IT operations, privacy officer, and executive sponsor roles during incidents.',
         detection_reporting:
           alertSummary
-            ? `Hive detected ${alertSummary} during ${period}. Employees report suspicious activity to IT.`
+            ? `RailNet detected ${alertSummary} during ${period}. Employees report suspicious activity to IT.`
             : 'Employees report suspicious email and endpoint alerts to IT helpdesk.',
         containment_eradication:
           'Isolate affected hosts, revoke sessions, patch vulnerabilities, and preserve forensic evidence.',
@@ -153,7 +157,7 @@ export function buildComplianceDraftContent(
     case 'vulnerability_management':
       return {
         ...base,
-        scanning_cadence: 'Monthly host telemetry aggregated via KeyTrain Hive; critical patches within 72 hours.',
+        scanning_cadence: 'Monthly host telemetry aggregated via KeyTrain RailNet; critical patches within 72 hours.',
         patch_management: 'IT deploys OS and application patches per change window.',
         outdated_software: softwareFindingsText(trendReport),
         remediation_sla: 'Critical: 72h · High: 14d · Medium: 30d · Low: next maintenance cycle.',
@@ -161,7 +165,7 @@ export function buildComplianceDraftContent(
     case 'security_awareness':
       return {
         ...base,
-        training_program: `Monthly targeted assignments based on Hive trend analysis (${period}).`,
+        training_program: `Monthly targeted assignments based on RailNet trend analysis (${period}).`,
         weak_domains: weakDomains,
         approved_controls: approvedSignaturesText(
           signatures.filter((s) => String(s.hive_org_id) === orgId)

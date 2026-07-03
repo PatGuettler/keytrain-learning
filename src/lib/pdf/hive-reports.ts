@@ -40,7 +40,7 @@ function formatFetchedAt(value: string): string {
 
 export function exportHiveReportPdf(data: HiveDataResponse, selectedOrgIds: string[]) {
   const subtitle = orgFilterLabel(selectedOrgIds, data.org_ids)
-  const doc = createDashboardPdf('Hive Security Report', subtitle)
+  const doc = createDashboardPdf('RailNet Security Report', subtitle)
   let y = pdfStartY(subtitle)
 
   const signatureStatus = countSignaturesByStatus(data.signatures)

@@ -7,13 +7,17 @@ import { useRole } from '@/hooks/useRole'
 import { useUiStore } from '@/store/uiStore'
 import { Button } from '@/components/ui/button'
 import { AppLogo } from '@/components/brand/AppLogo'
+import { useRailnetAccess } from '@/hooks/useRailnetAccess'
 import { navByRole } from './nav-config'
 
 export function MobileSidebar() {
   const { role } = useRole()
   const location = useLocation()
   const { sidebarOpen, setSidebarOpen } = useUiStore()
-  const items = role ? navByRole[role] : []
+  const { canAccessRailnet } = useRailnetAccess()
+  const items = (role ? navByRole[role] : []).filter(
+    (item) => !item.requiresRailnet || canAccessRailnet
+  )
 
   useEffect(() => {
     setSidebarOpen(false)

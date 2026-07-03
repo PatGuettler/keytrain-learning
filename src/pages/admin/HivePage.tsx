@@ -79,8 +79,8 @@ export function HivePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Hive"
-        description="AWS-backed host uploads, signatures, trend reports, and training assignments."
+        title="RailNet"
+        description="Shared intelligence network — host uploads, signatures, trend reports, and training assignments."
         action={
           <div className="flex flex-wrap gap-2">
             <ExportPdfButton
@@ -102,7 +102,7 @@ export function HivePage() {
       {error && (
         <Card className="border-destructive/40">
           <CardContent className="pt-6 text-sm text-destructive">
-            {error instanceof Error ? error.message : 'Could not load Hive data.'}
+            {error instanceof Error ? error.message : 'Could not load RailNet data.'}
           </CardContent>
         </Card>
       )}
@@ -110,7 +110,7 @@ export function HivePage() {
       {isLoading && (
         <Card>
           <CardContent className="pt-6 text-sm text-muted-foreground">
-            Loading Hive data from AWS…
+            Loading RailNet data from AWS…
           </CardContent>
         </Card>
       )}

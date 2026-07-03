@@ -15,6 +15,7 @@
     "deploy:phishing": "bash scripts/deploy-phishing.sh",
     "deploy:spiritual": "bash scripts/deploy-spiritual.sh",
     "deploy:hive-bridge": "bash scripts/deploy-hive-bridge.sh",
+    "deploy:railnet-signatures": "bash scripts/deploy-railnet-signatures.sh",
     "seed:hive": "bash scripts/hive-seed.sh",
     "seed:hive:dry-run": "bash scripts/hive-seed.sh --dry-run",
     "test:resend-support": "bash scripts/test-resend-support.sh",

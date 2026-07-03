@@ -17,6 +17,8 @@ export type NavItem = {
   to: string
   label: string
   icon: LucideIcon
+  /** Hidden unless org has RailNet enabled (platform admins always see it). */
+  requiresRailnet?: boolean
 }
 
 export const navByRole: Record<UserRole, NavItem[]> = {
@@ -25,7 +27,7 @@ export const navByRole: Record<UserRole, NavItem[]> = {
     { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
     { to: '/admin/organizations', label: 'Organizations', icon: Building2 },
     { to: '/admin/courses', label: 'Courses', icon: BookOpen },
-    { to: '/admin/hive', label: 'Hive', icon: Hexagon },
+    { to: '/admin/hive', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
     { to: '/admin/phishing/campaigns', label: 'Phishing sims', icon: Fish },
     { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
     { to: '/admin/prayer-requests', label: 'Prayer requests', icon: HeartHandshake },

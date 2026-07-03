@@ -150,7 +150,7 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Auto-fill sections from Hive trend reports and approved signatures. Review and edit
+            Auto-fill sections from RailNet trend reports and approved signatures. Review and edit
             before exporting PDF.
           </p>
           <p className="text-xs text-amber-700 dark:text-amber-300 rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
@@ -173,7 +173,7 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
               </select>
             </div>
             <div className="space-y-2">
-              <Label>Hive org</Label>
+              <Label>RailNet org</Label>
               <select
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={hiveOrgId}

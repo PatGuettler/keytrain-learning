@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.aws-hive-bridge]
 verify_jwt = false
+
+[functions.aws-railnet-signatures]
+verify_jwt = false

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthGuard } from '@/guards/AuthGuard'
 import { PasswordPolicyGuard } from '@/guards/PasswordPolicyGuard'
 import { RoleGuard } from '@/guards/RoleGuard'
+import { RailNetGuard } from '@/guards/RailNetGuard'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
@@ -121,7 +122,13 @@ export default function App() {
             />
             <Route
               path="/admin/hive"
-              element={<RoleGuard roles={['admin']}><HivePage /></RoleGuard>}
+              element={
+                <RoleGuard roles={['admin']}>
+                  <RailNetGuard>
+                    <HivePage />
+                  </RailNetGuard>
+                </RoleGuard>
+              }
             />
             <Route
               path="/admin/phishing/campaigns"

@@ -22,7 +22,7 @@ export function HiveOrgFilter({
       <CardContent className="space-y-3">
         {orgIds.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No Hive orgs found in AWS yet. KT hosts push data under partition keys like{' '}
+            No RailNet orgs found in AWS yet. KT hosts push data under partition keys like{' '}
             <code className="text-xs">ORG#church001</code>.
           </p>
         ) : (

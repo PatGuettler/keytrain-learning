@@ -13,9 +13,12 @@ import { StatCard } from '@/components/dashboard/StatCard'
 import {
   alertCountsTotal,
   getAlertCounts,
+  getAiRecommendations,
   getBatchesForTrendReport,
+  getCandidateSignaturesFromAi,
   getDomainCounts,
   getIocSummary,
+  getLeadershipBrief,
   getRiskScores,
   getSoftwareFindingsFromTrend,
   getTrainingSummaryMetrics,
@@ -130,6 +133,9 @@ export function HiveReportingPanel({ trendReports, hostBatches }: HiveReportingP
   const trainingSummary = selectedReport ? getTrainingSummaryMetrics(selectedReport) : null
   const softwareFindings = selectedReport ? getSoftwareFindingsFromTrend(selectedReport) : []
   const iocSummary = selectedReport ? getIocSummary(selectedReport) : null
+  const leadershipBrief = selectedReport ? getLeadershipBrief(selectedReport) : null
+  const aiRecommendations = selectedReport ? getAiRecommendations(selectedReport) : []
+  const candidateSignatures = selectedReport ? getCandidateSignaturesFromAi(selectedReport) : []
   const allReconciled =
     reconciliation.length > 0 && reconciliation.every((row) => row.matches)
   const hasHostData = relatedBatches.length > 0
@@ -398,6 +404,46 @@ export function HiveReportingPanel({ trendReports, hostBatches }: HiveReportingP
                         </tbody>
                       </table>
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {(leadershipBrief || aiRecommendations.length > 0 || candidateSignatures.length > 0) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">AI analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm">
+                    {leadershipBrief && (
+                      <div>
+                        <p className="font-medium mb-1">Leadership brief</p>
+                        <p className="text-muted-foreground leading-relaxed">{leadershipBrief}</p>
+                      </div>
+                    )}
+                    {aiRecommendations.length > 0 && (
+                      <div>
+                        <p className="font-medium mb-1">Recommendations</p>
+                        <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                          {aiRecommendations.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {candidateSignatures.length > 0 && (
+                      <div>
+                        <p className="font-medium mb-1">Candidate signatures</p>
+                        <ul className="space-y-1 text-muted-foreground">
+                          {candidateSignatures.map((sig, index) => (
+                            <li key={index}>
+                              {String(sig.phrase ?? '—')}
+                              {sig.domain ? ` · ${String(sig.domain)}` : ''}
+                              {sig.confidence != null ? ` · ${String(sig.confidence)}` : ''}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}

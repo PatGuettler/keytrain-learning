@@ -47,8 +47,8 @@ export function hiveAssignmentToCourseBundle(assignment: HiveRecord): CourseExpo
 
   const title =
     weakDomains.length > 0
-      ? `Hive Training — ${period} (${weakDomains.slice(0, 2).join(', ')})`
-      : `Hive Training — ${period}`
+      ? `RailNet Training — ${period} (${weakDomains.slice(0, 2).join(', ')})`
+      : `RailNet Training — ${period}`
 
   const description = [
     `AI-proposed training for ${orgId}.`,
@@ -72,7 +72,7 @@ export function hiveAssignmentToCourseBundle(assignment: HiveRecord): CourseExpo
     },
     modules: [
       {
-        title: weakDomains[0] ? `Quiz — ${weakDomains[0]}` : 'Hive training quiz',
+        title: weakDomains[0] ? `Quiz — ${weakDomains[0]}` : 'RailNet training quiz',
         type: 'quiz',
         order_index: 0,
         content: {

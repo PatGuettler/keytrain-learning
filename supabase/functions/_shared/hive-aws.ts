@@ -3,6 +3,7 @@ import {
   DynamoDBDocumentClient,
   QueryCommand,
   ScanCommand,
+  UpdateCommand,
 } from 'npm:@aws-sdk/lib-dynamodb@3'
 
 export const HIVE_TABLES = {
@@ -151,4 +152,48 @@ export function collectOrgIds(...itemGroups: Record<string, unknown>[][]): strin
     }
   }
   return [...ids].sort((a, b) => a.localeCompare(b))
+}
+
+export async function updateSignatureApproval(
+  client: DynamoDBDocumentClient,
+  input: {
+    pk: string
+    sk: string
+    action: 'approve' | 'reject'
+    approvedBy: string
+  }
+): Promise<Record<string, unknown>> {
+  const now = new Date().toISOString()
+
+  if (input.action === 'approve') {
+    const result = await client.send(
+      new UpdateCommand({
+        TableName: HIVE_TABLES.signatures,
+        Key: { pk: input.pk, sk: input.sk },
+        UpdateExpression:
+          'SET approval_status = :status, approved_by = :by, approved_utc = :utc',
+        ExpressionAttributeValues: {
+          ':status': 'approved',
+          ':by': input.approvedBy,
+          ':utc': now,
+        },
+        ReturnValues: 'ALL_NEW',
+      })
+    )
+    return (result.Attributes ?? {}) as Record<string, unknown>
+  }
+
+  const result = await client.send(
+    new UpdateCommand({
+      TableName: HIVE_TABLES.signatures,
+      Key: { pk: input.pk, sk: input.sk },
+      UpdateExpression: 'SET approval_status = :status, rejected_utc = :utc',
+      ExpressionAttributeValues: {
+        ':status': 'rejected',
+        ':utc': now,
+      },
+      ReturnValues: 'ALL_NEW',
+    })
+  )
+  return (result.Attributes ?? {}) as Record<string, unknown>
 }

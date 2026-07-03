@@ -79,6 +79,10 @@ export function countSignaturesByStatus(records: HiveRecord[]) {
   return counts
 }
 
+export function isPendingSignature(record: HiveRecord): boolean {
+  return String(record.approval_status ?? '').toLowerCase() === 'pending'
+}
+
 export function hostUploadSummary(record: HiveRecord): string {
   const hostId = record.host_id ? String(record.host_id) : 'Unknown host'
   const sk = String(record.sk ?? '')
@@ -206,6 +210,33 @@ export function getSoftwareFindingsFromTrend(record: HiveRecord): unknown[] {
 export function getIocSummary(record: HiveRecord): Record<string, unknown> | null {
   const metrics = getTrendRawMetrics(record)
   return getRecordObject(metrics?.ioc_summary)
+}
+
+export function getAiReportOutput(record: HiveRecord): Record<string, unknown> | null {
+  const aiReport = getRecordObject(record.ai_report)
+  if (!aiReport) return null
+  return getRecordObject(aiReport.raw_ai_output) ?? aiReport
+}
+
+export function getLeadershipBrief(record: HiveRecord): string | null {
+  const output = getAiReportOutput(record)
+  const brief = output?.leadership_brief
+  return typeof brief === 'string' && brief.trim() ? brief.trim() : null
+}
+
+export function getAiRecommendations(record: HiveRecord): string[] {
+  const output = getAiReportOutput(record)
+  if (!Array.isArray(output?.recommendations)) return []
+  return output!.recommendations.filter((entry): entry is string => typeof entry === 'string')
+}
+
+export function getCandidateSignaturesFromAi(record: HiveRecord): Record<string, unknown>[] {
+  const output = getAiReportOutput(record)
+  if (!Array.isArray(output?.candidate_signatures)) return []
+  return output!.candidate_signatures.filter(
+    (entry): entry is Record<string, unknown> =>
+      Boolean(entry) && typeof entry === 'object' && !Array.isArray(entry)
+  )
 }
 
 export function alertCountsTotal(counts: Record<string, number>): number {

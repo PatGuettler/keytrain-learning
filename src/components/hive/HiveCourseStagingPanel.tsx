@@ -105,7 +105,7 @@ export function HiveCourseStagingPanel({ trainingAssignments }: HiveCourseStagin
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Transform a Hive monthly assignment into a{' '}
+            Transform a RailNet monthly assignment into a{' '}
             <code className="text-xs">CourseExportBundle</code> for review in Course Builder.
           </p>
           {trainingAssignments.length === 0 ? (
