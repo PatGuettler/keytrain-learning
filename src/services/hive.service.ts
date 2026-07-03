@@ -65,6 +65,11 @@ async function updateSignatureApproval(
 
   const data = (await response.json().catch(() => null)) as { error?: string } | null
   if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(
+        'RailNet signature updates are not deployed. Run npm run deploy:railnet-signatures (or deploy:hive-bridge) on the server.'
+      )
+    }
     throw new Error(data?.error ?? 'Could not update signature in AWS.')
   }
 }

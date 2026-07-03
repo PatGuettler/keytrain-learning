@@ -69,6 +69,7 @@ jobs:
             exit 0
           fi
           npx --yes supabase@latest functions deploy aws-hive-bridge --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
+          npx --yes supabase@latest functions deploy aws-railnet-signatures --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
 
       - name: Verify function exists
         env:

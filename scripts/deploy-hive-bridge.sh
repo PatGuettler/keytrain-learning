@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Deploy aws-hive-bridge Edge Function (verify_jwt=false in supabase/config.toml).
+# Deploy RailNet Edge Functions (verify_jwt=false in supabase/config.toml):
+#   aws-hive-bridge (read) + aws-railnet-signatures (approve/reject write)
 #
 # Requires Supabase secrets (set once in dashboard or via CLI):
 #   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION=us-east-2
@@ -49,20 +50,27 @@ echo "Linking project and pushing config…"
 echo "Deploying aws-hive-bridge…"
 "${SUPABASE_CMD[@]}" functions deploy aws-hive-bridge --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
 
+echo "Deploying aws-railnet-signatures…"
+"${SUPABASE_CMD[@]}" functions deploy aws-railnet-signatures --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
+
 echo ""
 echo "Verify AWS secrets are set in Supabase Dashboard → Edge Functions → Secrets:"
 echo "  AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION=us-east-2"
+echo "  (signatures write needs DynamoDB UpdateItem on KeyTrainHiveSignatures)"
 echo ""
-echo "OPTIONS check…"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X OPTIONS \
-  "https://${PROJECT_REF}.supabase.co/functions/v1/aws-hive-bridge" \
-  -H "Origin: https://keytrainlearning.com" \
-  -H "Access-Control-Request-Method: POST" \
-  -H "Access-Control-Request-Headers: authorization,content-type,apikey")
+for fn in aws-hive-bridge aws-railnet-signatures; do
+  echo "OPTIONS check $fn…"
+  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X OPTIONS \
+    "https://${PROJECT_REF}.supabase.co/functions/v1/${fn}" \
+    -H "Origin: https://keytrainlearning.com" \
+    -H "Access-Control-Request-Method: POST" \
+    -H "Access-Control-Request-Headers: authorization,content-type,apikey")
 
-if [ "$HTTP_CODE" = "404" ]; then
-  echo "ERROR: aws-hive-bridge still returns 404." >&2
-  exit 1
-fi
+  if [ "$HTTP_CODE" = "404" ]; then
+    echo "ERROR: ${fn} still returns 404." >&2
+    exit 1
+  fi
+  echo "  $fn OPTIONS returned $HTTP_CODE"
+done
 
-echo "OPTIONS returned $HTTP_CODE — deploy looks good."
+echo "RailNet edge functions deploy looks good."
