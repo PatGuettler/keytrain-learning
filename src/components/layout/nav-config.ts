@@ -52,6 +52,7 @@ export const navByRole: Record<UserRole, NavItem[]> = {
 export const mobileTabNavByRole: Record<UserRole, NavItem[]> = {
   admin: [
     { to: '/admin/dashboard', label: 'Home', icon: LayoutDashboard },
+    { to: '/admin/hive', label: 'RailNet', icon: Hexagon },
     { to: '/admin/courses', label: 'Courses', icon: BookOpen },
     { to: '/admin/phishing/campaigns', label: 'Phishing', icon: Fish },
   ],

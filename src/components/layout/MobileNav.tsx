@@ -2,15 +2,19 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useRole } from '@/hooks/useRole'
 import { isTrainingPlayerPath } from '@/lib/training-paths'
+import { useRailnetAccess } from '@/hooks/useRailnetAccess'
 import { mobileTabNavByRole } from './nav-config'
 
 export function MobileNav() {
   const location = useLocation()
   const { role } = useRole()
+  const { canAccessRailnet } = useRailnetAccess()
 
   if (isTrainingPlayerPath(location.pathname)) return null
 
-  const items = role ? mobileTabNavByRole[role] : []
+  const items = (role ? mobileTabNavByRole[role] : []).filter(
+    (item) => !item.requiresRailnet || canAccessRailnet
+  )
 
   return (
     <nav
