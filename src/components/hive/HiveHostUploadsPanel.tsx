@@ -1,7 +1,18 @@
+import { useMemo, useState } from 'react'
+import { Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { StatCard } from '@/components/dashboard/StatCard'
-import { hostUploadSummary, splitHostUploads } from '@/lib/hive-records'
+import {
+  filterAndSortHostBatches,
+  formatAlertMetricsSummary,
+  formatBatchUploadedAt,
+  getBatchReportingPeriod,
+  hostUploadSummary,
+  splitHostUploads,
+  type HostBatchSort,
+} from '@/lib/hive-records'
 import type { HiveRecord } from '@/types/hive.types'
 import { AlertTriangle, Server } from 'lucide-react'
 
@@ -10,14 +21,24 @@ type HiveHostUploadsPanelProps = {
   legacyIocCount?: number
 }
 
+const BATCH_SORT_OPTIONS: { value: HostBatchSort; label: string }[] = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'host', label: 'Host id (A–Z)' },
+  { value: 'org', label: 'Org (A–Z)' },
+  { value: 'period', label: 'Reporting period' },
+]
+
 function HostUploadTable({
   records,
   emptyMessage,
   showLegacyColumns = false,
+  showBatchColumns = false,
 }: {
   records: HiveRecord[]
   emptyMessage: string
   showLegacyColumns?: boolean
+  showBatchColumns?: boolean
 }) {
   if (records.length === 0) {
     return <p className="text-sm text-muted-foreground py-2">{emptyMessage}</p>
@@ -29,8 +50,15 @@ function HostUploadTable({
         <thead className="bg-muted/50">
           <tr className="text-left">
             <th className="px-3 py-2 font-medium">Org</th>
-            <th className="px-3 py-2 font-medium">Summary</th>
+            {!showBatchColumns && <th className="px-3 py-2 font-medium">Summary</th>}
             <th className="px-3 py-2 font-medium">Host</th>
+            {showBatchColumns && (
+              <>
+                <th className="px-3 py-2 font-medium">Period</th>
+                <th className="px-3 py-2 font-medium">Uploaded</th>
+                <th className="px-3 py-2 font-medium">Alerts</th>
+              </>
+            )}
             {showLegacyColumns && (
               <>
                 <th className="px-3 py-2 font-medium">Indicator</th>
@@ -46,12 +74,27 @@ function HostUploadTable({
               <td className="px-3 py-2 whitespace-nowrap">
                 <Badge variant="outline">{String(record.hive_org_id ?? '—')}</Badge>
               </td>
-              <td className="px-3 py-2 max-w-xs truncate" title={hostUploadSummary(record)}>
-                {hostUploadSummary(record)}
-              </td>
-              <td className="px-3 py-2 whitespace-nowrap">
+              {!showBatchColumns && (
+                <td className="px-3 py-2 max-w-xs truncate" title={hostUploadSummary(record)}>
+                  {hostUploadSummary(record)}
+                </td>
+              )}
+              <td className="px-3 py-2 font-mono text-xs max-w-[14rem] truncate" title={String(record.host_id ?? '')}>
                 {record.host_id ? String(record.host_id) : '—'}
               </td>
+              {showBatchColumns && (
+                <>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {getBatchReportingPeriod(record)}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
+                    {formatBatchUploadedAt(record)}
+                  </td>
+                  <td className="px-3 py-2 max-w-xs truncate text-muted-foreground" title={formatAlertMetricsSummary(record)}>
+                    {formatAlertMetricsSummary(record)}
+                  </td>
+                </>
+              )}
               {showLegacyColumns && (
                 <>
                   <td className="px-3 py-2 whitespace-nowrap">
@@ -73,8 +116,71 @@ function HostUploadTable({
   )
 }
 
+function BatchUploadToolbar({
+  search,
+  onSearchChange,
+  sort,
+  onSortChange,
+  shown,
+  total,
+}: {
+  search: string
+  onSearchChange: (value: string) => void
+  sort: HostBatchSort
+  onSortChange: (value: HostBatchSort) => void
+  shown: number
+  total: number
+}) {
+  return (
+    <div className="mb-4 space-y-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search host id, org, BATCH#, period…"
+            className="pl-9"
+            aria-label="Search host batches"
+          />
+        </div>
+        <label className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
+          <span className="whitespace-nowrap">Sort</span>
+          <select
+            value={sort}
+            onChange={(e) => onSortChange(e.target.value as HostBatchSort)}
+            className="h-11 rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Sort host batches"
+          >
+            {BATCH_SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Showing {shown} of {total} batch{total === 1 ? '' : 'es'}
+        {search.trim() ? ` matching “${search.trim()}”` : ''}
+        . Try your KT <code className="text-xs">host_id</code> (e.g.{' '}
+        <code className="text-xs">host-e0be505f-…</code>) or org{' '}
+        <code className="text-xs">KeyTrainAdmins</code>.
+      </p>
+    </div>
+  )
+}
+
 export function HiveHostUploadsPanel({ indicators, legacyIocCount = 0 }: HiveHostUploadsPanelProps) {
   const { batches, legacyIocs, other } = splitHostUploads(indicators)
+  const [batchSearch, setBatchSearch] = useState('')
+  const [batchSort, setBatchSort] = useState<HostBatchSort>('newest')
+
+  const filteredBatches = useMemo(
+    () => filterAndSortHostBatches(batches, { query: batchSearch, sort: batchSort }),
+    [batches, batchSearch, batchSort]
+  )
 
   return (
     <div className="space-y-4">
@@ -106,9 +212,22 @@ export function HiveHostUploadsPanel({ indicators, legacyIocCount = 0 }: HiveHos
           <CardTitle className="text-base">Monthly host uploads (BATCH#)</CardTitle>
         </CardHeader>
         <CardContent>
+          <BatchUploadToolbar
+            search={batchSearch}
+            onSearchChange={setBatchSearch}
+            sort={batchSort}
+            onSortChange={setBatchSort}
+            shown={filteredBatches.length}
+            total={batches.length}
+          />
           <HostUploadTable
-            records={batches}
-            emptyMessage="No BATCH# host uploads yet. KT hosts push monthly batches under ORG#… partition keys."
+            records={filteredBatches}
+            showBatchColumns
+            emptyMessage={
+              batches.length === 0
+                ? 'No BATCH# host uploads yet. KT hosts push monthly batches under ORG#… partition keys.'
+                : 'No batches match your search. Clear the filter or check the org filter above.'
+            }
           />
         </CardContent>
       </Card>

@@ -91,6 +91,120 @@ export function hostUploadSummary(record: HiveRecord): string {
   return hostId
 }
 
+export type HostBatchSort = 'newest' | 'oldest' | 'org' | 'host' | 'period'
+
+export function getBatchEpoch(record: HiveRecord): number {
+  const sk = String(record.sk ?? '')
+  const match = sk.match(/^BATCH#(\d+)/)
+  if (match) return Number(match[1])
+  const uploaded = record.uploaded_at
+  if (typeof uploaded === 'string') {
+    const ms = Date.parse(uploaded)
+    if (!Number.isNaN(ms)) return Math.floor(ms / 1000)
+  }
+  return 0
+}
+
+export function getBatchReportingPeriod(record: HiveRecord): string {
+  if (typeof record.reporting_period === 'string' && record.reporting_period.trim()) {
+    return record.reporting_period.trim()
+  }
+  return '—'
+}
+
+export function formatBatchUploadedAt(record: HiveRecord): string {
+  if (typeof record.uploaded_at === 'string' && record.uploaded_at.trim()) {
+    const ms = Date.parse(record.uploaded_at)
+    if (!Number.isNaN(ms)) {
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      }).format(new Date(ms))
+    }
+    return record.uploaded_at
+  }
+  const epoch = getBatchEpoch(record)
+  if (epoch > 0) {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(epoch * 1000))
+  }
+  return '—'
+}
+
+export function formatAlertMetricsSummary(record: HiveRecord): string {
+  const metrics = getHostAlertMetrics(record)
+  const entries = Object.entries(metrics)
+  if (entries.length === 0) return '—'
+  return entries.map(([key, value]) => `${key}: ${value}`).join(', ')
+}
+
+export function hostBatchMatchesQuery(record: HiveRecord, query: string): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  const haystack = [
+    record.hive_org_id,
+    record.org_id,
+    record.host_id,
+    record.sk,
+    record.pk,
+    record.reporting_period,
+    record.uploaded_at,
+    hostUploadSummary(record),
+    formatAlertMetricsSummary(record),
+  ]
+    .filter(Boolean)
+    .map(String)
+    .join(' ')
+    .toLowerCase()
+  return haystack.includes(q)
+}
+
+export function sortHostBatches(records: HiveRecord[], sort: HostBatchSort): HiveRecord[] {
+  const sorted = [...records]
+  sorted.sort((a, b) => {
+    switch (sort) {
+      case 'oldest':
+        return getBatchEpoch(a) - getBatchEpoch(b)
+      case 'org':
+        return (
+          String(a.hive_org_id ?? '').localeCompare(String(b.hive_org_id ?? '')) ||
+          getBatchEpoch(b) - getBatchEpoch(a)
+        )
+      case 'host':
+        return (
+          String(a.host_id ?? '').localeCompare(String(b.host_id ?? '')) ||
+          getBatchEpoch(b) - getBatchEpoch(a)
+        )
+      case 'period':
+        return (
+          getBatchReportingPeriod(b).localeCompare(getBatchReportingPeriod(a)) ||
+          getBatchEpoch(b) - getBatchEpoch(a)
+        )
+      case 'newest':
+      default:
+        return getBatchEpoch(b) - getBatchEpoch(a)
+    }
+  })
+  return sorted
+}
+
+export function filterAndSortHostBatches(
+  records: HiveRecord[],
+  options: { query?: string; sort?: HostBatchSort }
+): HiveRecord[] {
+  const query = options.query ?? ''
+  const filtered = records.filter((record) => hostBatchMatchesQuery(record, query))
+  return sortHostBatches(filtered, options.sort ?? 'newest')
+}
+
 export function signatureSummary(record: HiveRecord): string {
   return String(record.phrase ?? record.signature_id ?? record.sk ?? '—')
 }
