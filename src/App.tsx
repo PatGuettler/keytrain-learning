@@ -186,6 +186,16 @@ export default function App() {
                 </RoleGuard>
               }
             />
+            <Route
+              path="/manager/railnet"
+              element={
+                <RoleGuard roles={['manager']}>
+                  <RailNetGuard>
+                    <HivePage />
+                  </RailNetGuard>
+                </RoleGuard>
+              }
+            />
 
             <Route path="/employee/dashboard" element={<Navigate to="/employee/training" replace />} />
             <Route
@@ -197,6 +207,16 @@ export default function App() {
               element={
                 <RoleGuard roles={['employee']}>
                   <CoursePlayerPage trainingPath="/employee/training" />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="/employee/railnet"
+              element={
+                <RoleGuard roles={['employee']}>
+                  <RailNetGuard>
+                    <HivePage />
+                  </RailNetGuard>
                 </RoleGuard>
               }
             />

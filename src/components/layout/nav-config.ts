@@ -17,8 +17,14 @@ export type NavItem = {
   to: string
   label: string
   icon: LucideIcon
-  /** Hidden unless org has RailNet enabled (platform admins always see it). */
+  /** Hidden unless the user has RailNet access on their profile (platform admins always). */
   requiresRailnet?: boolean
+}
+
+export const RAILNET_PATH_BY_ROLE: Record<UserRole, string> = {
+  admin: '/admin/hive',
+  manager: '/manager/railnet',
+  employee: '/employee/railnet',
 }
 
 export const navByRole: Record<UserRole, NavItem[]> = {
@@ -35,8 +41,12 @@ export const navByRole: Record<UserRole, NavItem[]> = {
   manager: [
     { to: '/manager/training', label: 'Required Training', icon: GraduationCap },
     { to: '/manager/team', label: 'My Team', icon: Users },
+    { to: '/manager/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
   ],
-  employee: [{ to: '/employee/training', label: 'Required Training', icon: GraduationCap }],
+  employee: [
+    { to: '/employee/training', label: 'Required Training', icon: GraduationCap },
+    { to: '/employee/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
+  ],
 }
 
 export const mobileTabNavByRole: Record<UserRole, NavItem[]> = {

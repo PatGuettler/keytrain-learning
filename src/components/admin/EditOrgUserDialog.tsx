@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { updateOrgUser, sendUserPasswordReset, unlockUserLogin } from '@/services/user-management.service'
 import type { Profile, UserRole } from '@/types/user.types'
 
@@ -22,6 +23,7 @@ export function EditOrgUserDialog({
   orgId,
   user,
   managers,
+  hiveOrgId,
   onSaved,
 }: {
   open: boolean
@@ -29,12 +31,14 @@ export function EditOrgUserDialog({
   orgId: string
   user: Profile | null
   managers: Profile[]
+  hiveOrgId: string | null
   onSaved: () => void
 }) {
   const [fullName, setFullName] = useState('')
   const [role, setRole] = useState<UserRole>('employee')
   const [managerId, setManagerId] = useState('')
   const [isActive, setIsActive] = useState(true)
+  const [railnetEnabled, setRailnetEnabled] = useState(false)
   const [loading, setLoading] = useState(false)
   const [securityLoading, setSecurityLoading] = useState<'unlock' | 'reset' | null>(null)
   const [securityMessage, setSecurityMessage] = useState('')
@@ -46,6 +50,7 @@ export function EditOrgUserDialog({
     setRole(user.role === 'manager' ? 'manager' : 'employee')
     setManagerId(user.manager_id ?? '')
     setIsActive(user.is_active)
+    setRailnetEnabled(user.railnet_enabled === true)
     setError('')
     setSecurityMessage('')
   }, [user, open])
@@ -100,6 +105,7 @@ export function EditOrgUserDialog({
         role?: UserRole
         manager_id?: string | null
         is_active?: boolean
+        railnet_enabled?: boolean
       } = {}
 
       if (trimmedName !== user.full_name) patch.full_name = trimmedName
@@ -109,6 +115,7 @@ export function EditOrgUserDialog({
       }
       if (role === 'manager' && user.role === 'employee') patch.manager_id = null
       if (isActive !== user.is_active) patch.is_active = isActive
+      if (railnetEnabled !== user.railnet_enabled) patch.railnet_enabled = railnetEnabled
 
       if (Object.keys(patch).length === 0) {
         onOpenChange(false)
@@ -193,6 +200,33 @@ export function EditOrgUserDialog({
               />
               Active account (can sign in and take training)
             </label>
+
+            <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="edit-user-railnet">RailNet access</Label>
+                  <p className="text-sm text-muted-foreground">
+                    User can view RailNet dashboards for this organization only.
+                  </p>
+                </div>
+                <Switch
+                  id="edit-user-railnet"
+                  checked={railnetEnabled}
+                  disabled={!hiveOrgId?.trim()}
+                  onCheckedChange={setRailnetEnabled}
+                />
+              </div>
+              {!hiveOrgId?.trim() && (
+                <p className="text-sm text-muted-foreground">
+                  Set the RailNet AWS org id in organization settings before granting access.
+                </p>
+              )}
+              {hiveOrgId?.trim() && (
+                <p className="text-xs text-muted-foreground">
+                  The user may need to sign out and back in for the RailNet tab to appear.
+                </p>
+              )}
+            </div>
 
             <div className="rounded-lg border bg-muted/20 p-3 space-y-3">
               <p className="text-sm font-medium">Account access</p>

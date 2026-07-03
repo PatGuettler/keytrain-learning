@@ -31,8 +31,10 @@ export function OrganizationDetailPage() {
   const { org, orgId, orgs, isLoading: orgsLoading } = useOrgRoute()
   const queryClient = useQueryClient()
   const [orgName, setOrgName] = useState('')
+  const [hiveOrgId, setHiveOrgId] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
   const [savedTagIds, setSavedTagIds] = useState<string[]>([])
+  const [savedHiveOrgId, setSavedHiveOrgId] = useState('')
   const [renameError, setRenameError] = useState('')
   const [renameSuccess, setRenameSuccess] = useState('')
 
@@ -53,8 +55,11 @@ export function OrganizationDetailPage() {
   useEffect(() => {
     if (org) {
       setOrgName(org.name)
+      const awsOrg = org.hive_org_id ?? ''
+      setHiveOrgId(awsOrg)
+      setSavedHiveOrgId(awsOrg)
     }
-  }, [org?.name, org])
+  }, [org?.name, org?.hive_org_id, org])
 
   useEffect(() => {
     setSelectedTagIds(orgTagIds)
@@ -62,8 +67,11 @@ export function OrganizationDetailPage() {
   }, [orgTagIds])
 
   const settingsMutation = useMutation({
-    mutationFn: async (payload: { name: string; tagIds: string[] }) => {
-      const updated = await updateOrganization(orgId!, { name: payload.name })
+    mutationFn: async (payload: { name: string; tagIds: string[]; hiveOrgId: string }) => {
+      const updated = await updateOrganization(orgId!, {
+        name: payload.name,
+        hive_org_id: payload.hiveOrgId.trim() || null,
+      })
       await setOrgTags(orgId!, payload.tagIds)
       return updated
     },
@@ -71,8 +79,10 @@ export function OrganizationDetailPage() {
       setRenameError('')
       setRenameSuccess('Organization settings saved.')
       setSavedTagIds(selectedTagIds)
+      setSavedHiveOrgId(hiveOrgId.trim())
       void queryClient.invalidateQueries({ queryKey: ['organizations'] })
       void queryClient.invalidateQueries({ queryKey: ['org-tags', orgId] })
+      void queryClient.invalidateQueries({ queryKey: ['organization', orgId] })
       const nextOrgs = orgs.map((o) => (o.id === updated.id ? updated : o))
       navigate(adminOrganizationPath(getOrgSlug(updated, nextOrgs)), { replace: true })
     },
@@ -83,7 +93,10 @@ export function OrganizationDetailPage() {
   })
 
   const settingsChanged =
-    org && (orgName.trim() !== org.name || !tagIdsEqual(selectedTagIds, savedTagIds))
+    org &&
+    (orgName.trim() !== org.name ||
+      !tagIdsEqual(selectedTagIds, savedTagIds) ||
+      hiveOrgId.trim() !== savedHiveOrgId)
 
   if (!orgsLoading && !org) {
     return (
@@ -112,7 +125,7 @@ export function OrganizationDetailPage() {
 
       <PageHeader
         title={org?.name ?? 'Organization'}
-        description="Manage hospital staff, roles, and invites"
+        description="Manage organization staff, roles, and invites"
       />
 
       {orgId && org && (
@@ -127,7 +140,11 @@ export function OrganizationDetailPage() {
                 e.preventDefault()
                 const trimmed = orgName.trim()
                 if (!trimmed || !settingsChanged) return
-                settingsMutation.mutate({ name: trimmed, tagIds: selectedTagIds })
+                settingsMutation.mutate({
+                  name: trimmed,
+                  tagIds: selectedTagIds,
+                  hiveOrgId,
+                })
               }}
             >
               <div className="space-y-2">
@@ -143,6 +160,26 @@ export function OrganizationDetailPage() {
                   required
                 />
               </div>
+              {org.id !== PLATFORM_ORG_ID && (
+                <div className="space-y-2">
+                  <Label htmlFor="org-hive-id">RailNet AWS org id</Label>
+                  <Input
+                    id="org-hive-id"
+                    value={hiveOrgId}
+                    onChange={(e) => {
+                      setHiveOrgId(e.target.value)
+                      setRenameSuccess('')
+                      setRenameError('')
+                    }}
+                    placeholder="hive-test-alpha"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Maps this organization to AWS data (e.g.{' '}
+                    <code className="text-xs">hive-test-alpha</code>). Required before granting
+                    users RailNet access on their profile.
+                  </p>
+                </div>
+              )}
               <TagMultiSelect
                 id="org-tags"
                 label="Industry tags"
@@ -174,7 +211,12 @@ export function OrganizationDetailPage() {
         {(isLoading || orgsLoading) ? (
           <p className="text-sm text-muted-foreground">Loading users…</p>
         ) : orgId ? (
-          <OrgUsersTable orgId={orgId} users={users} managers={managers} />
+          <OrgUsersTable
+            orgId={orgId}
+            users={users}
+            managers={managers}
+            hiveOrgId={org?.hive_org_id ?? null}
+          />
         ) : null}
       </section>
 

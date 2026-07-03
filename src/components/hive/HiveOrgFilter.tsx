@@ -6,6 +6,8 @@ type HiveOrgFilterProps = {
   selectedOrgIds: string[]
   onToggleOrg: (orgId: string) => void
   onClear: () => void
+  /** When set, user is scoped to a single org (no multi-org picker). */
+  lockedOrgId?: string | null
 }
 
 export function HiveOrgFilter({
@@ -13,7 +15,23 @@ export function HiveOrgFilter({
   selectedOrgIds,
   onToggleOrg,
   onClear,
+  lockedOrgId,
 }: HiveOrgFilterProps) {
+  if (lockedOrgId) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Organization</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Showing RailNet data for <code className="text-xs">{lockedOrgId}</code> only.
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -49,7 +67,8 @@ export function HiveOrgFilter({
           </div>
         )}
         <p className="text-xs text-muted-foreground">
-          All platform admins see all AWS orgs. Select one or more to narrow dashboards below.
+          Platform admins can filter across all AWS orgs. Select one or more to narrow dashboards
+          below.
         </p>
       </CardContent>
     </Card>

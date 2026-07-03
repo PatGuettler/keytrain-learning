@@ -745,6 +745,7 @@ Deno.serve(async (req) => {
       if (typeof body.role === 'string' && VALID_ROLES.has(body.role)) patch.role = body.role
       if (typeof body.full_name === 'string') patch.full_name = body.full_name.trim()
       if (typeof body.is_active === 'boolean') patch.is_active = body.is_active
+      if (typeof body.railnet_enabled === 'boolean') patch.railnet_enabled = body.railnet_enabled
       if (body.manager_id === null) patch.manager_id = null
       if (typeof body.manager_id === 'string') patch.manager_id = body.manager_id
 

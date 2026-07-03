@@ -66,16 +66,17 @@ export function OrganizationsPage() {
               className="flex flex-col sm:flex-row gap-3"
               onSubmit={(e) => {
                 e.preventDefault()
-                if (newOrgName.trim()) createMutation.mutate(newOrgName.trim())
+                const name = newOrgName.trim()
+                if (name) createMutation.mutate(name)
               }}
             >
               <div className="flex-1 space-y-2">
-                <Label htmlFor="org-name">Hospital name</Label>
+                <Label htmlFor="org-name">Organization name</Label>
                 <Input
                   id="org-name"
                   value={newOrgName}
                   onChange={(e) => setNewOrgName(e.target.value)}
-                  placeholder="Metro General Hospital"
+                  placeholder="Acme Community Services"
                   required
                 />
               </div>
@@ -93,7 +94,7 @@ export function OrganizationsPage() {
       ) : orgs.length === 0 ? (
         <Card className="bg-muted/50">
           <CardContent className="p-6 text-sm text-muted-foreground">
-            No organizations yet. Create a hospital organization to add users and courses.
+            No organizations yet. Create an organization to add users and courses.
           </CardContent>
         </Card>
       ) : (

@@ -166,6 +166,7 @@ export async function updateOrgUser(
     full_name?: string
     manager_id?: string | null
     is_active?: boolean
+    railnet_enabled?: boolean
   }
 ): Promise<Profile> {
   if (patch.role === 'admin') {

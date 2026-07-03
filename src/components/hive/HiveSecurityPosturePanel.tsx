@@ -16,13 +16,17 @@ import { ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react'
 
 type HiveSecurityPosturePanelProps = {
   signatures: HiveRecord[]
+  canManageSignatures?: boolean
 }
 
 function signatureRowKey(record: HiveRecord, index: number): string {
   return `${record.pk ?? ''}|${record.sk ?? ''}|${index}`
 }
 
-export function HiveSecurityPosturePanel({ signatures }: HiveSecurityPosturePanelProps) {
+export function HiveSecurityPosturePanel({
+  signatures,
+  canManageSignatures = false,
+}: HiveSecurityPosturePanelProps) {
   const queryClient = useQueryClient()
   const [actionError, setActionError] = useState('')
   const [pendingKey, setPendingKey] = useState<string | null>(null)
@@ -90,7 +94,9 @@ export function HiveSecurityPosturePanel({ signatures }: HiveSecurityPosturePane
                     <th className="px-3 py-2 font-medium">Type</th>
                     <th className="px-3 py-2 font-medium">Status</th>
                     <th className="px-3 py-2 font-medium">Severity</th>
-                    <th className="px-3 py-2 font-medium">Actions</th>
+                    {canManageSignatures && (
+                      <th className="px-3 py-2 font-medium">Actions</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -120,8 +126,9 @@ export function HiveSecurityPosturePanel({ signatures }: HiveSecurityPosturePane
                         <td className="px-3 py-2 whitespace-nowrap">
                           {record.severity ? String(record.severity) : '—'}
                         </td>
-                        <td className="px-3 py-2 whitespace-nowrap">
-                          {pending && pk && sk ? (
+                        {canManageSignatures && (
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {pending && pk && sk ? (
                             <div className="flex flex-wrap gap-1">
                               <Button
                                 type="button"
@@ -144,10 +151,11 @@ export function HiveSecurityPosturePanel({ signatures }: HiveSecurityPosturePane
                                 Reject
                               </Button>
                             </div>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </td>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     )
                   })}

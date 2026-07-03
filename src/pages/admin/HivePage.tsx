@@ -15,6 +15,7 @@ import { HiveCourseStagingPanel } from '@/components/hive/HiveCourseStagingPanel
 import { HiveCompliancePanel } from '@/components/hive/HiveCompliancePanel'
 import { fetchHiveData } from '@/services/hive.service'
 import { exportHiveReportPdf } from '@/lib/pdf/hive-reports'
+import { useRailnetAccess, useRailnetOrgScope } from '@/hooks/useRailnetAccess'
 
 type HiveView =
   | 'overview'
@@ -47,12 +48,30 @@ const VIEW_OPTIONS: { id: HiveView; label: string }[] = [
 ]
 
 export function HivePage() {
+  const { isPlatformAdmin } = useRailnetAccess()
+  const { platformAdmin, hiveOrgId, isConfigured, isLoading: scopeLoading } = useRailnetOrgScope()
   const [selectedOrgIds, setSelectedOrgIds] = useState<string[]>([])
   const [view, setView] = useState<HiveView>('overview')
 
+  const queryOrgIds = useMemo(() => {
+    if (platformAdmin) {
+      return selectedOrgIds.length > 0 ? selectedOrgIds : undefined
+    }
+    return hiveOrgId ? [hiveOrgId] : []
+  }, [platformAdmin, selectedOrgIds, hiveOrgId])
+
+  const visibleViews = useMemo(
+    () =>
+      platformAdmin
+        ? VIEW_OPTIONS
+        : VIEW_OPTIONS.filter((v) => v.id !== 'staging' && v.id !== 'compliance'),
+    [platformAdmin]
+  )
+
   const { data, error, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ['hive-data', selectedOrgIds],
-    queryFn: () => fetchHiveData(selectedOrgIds.length > 0 ? selectedOrgIds : undefined),
+    queryKey: ['hive-data', queryOrgIds ?? 'all'],
+    queryFn: () => fetchHiveData(queryOrgIds),
+    enabled: platformAdmin || Boolean(hiveOrgId),
     staleTime: 30_000,
   })
 
@@ -88,7 +107,7 @@ export function HivePage() {
               label="Export PDF"
               onExport={() => {
                 if (!data) return
-                exportHiveReportPdf(data, selectedOrgIds)
+                exportHiveReportPdf(data, platformAdmin ? selectedOrgIds : hiveOrgId ? [hiveOrgId] : [])
               }}
             />
             <Button type="button" variant="outline" onClick={() => refetch()} disabled={isFetching}>
@@ -99,6 +118,23 @@ export function HivePage() {
         }
       />
 
+      {scopeLoading && (
+        <Card>
+          <CardContent className="pt-6 text-sm text-muted-foreground">
+            Loading organization settings…
+          </CardContent>
+        </Card>
+      )}
+
+      {!scopeLoading && !isConfigured && (
+        <Card className="border-amber-500/40 bg-amber-500/5">
+          <CardContent className="pt-6 text-sm text-muted-foreground">
+            RailNet is not configured for your organization yet. Ask a platform administrator to
+            set the AWS org id in organization settings, then enable RailNet on your user profile.
+          </CardContent>
+        </Card>
+      )}
+
       {error && (
         <Card className="border-destructive/40">
           <CardContent className="pt-6 text-sm text-destructive">
@@ -107,7 +143,7 @@ export function HivePage() {
         </Card>
       )}
 
-      {isLoading && (
+      {isLoading && isConfigured && (
         <Card>
           <CardContent className="pt-6 text-sm text-muted-foreground">
             Loading RailNet data from AWS…
@@ -129,10 +165,11 @@ export function HivePage() {
             selectedOrgIds={selectedOrgIds}
             onToggleOrg={toggleOrg}
             onClear={() => setSelectedOrgIds([])}
+            lockedOrgId={platformAdmin ? null : hiveOrgId}
           />
 
           <div className="flex flex-wrap gap-2">
-            {VIEW_OPTIONS.map((option) => (
+            {visibleViews.map((option) => (
               <Button
                 key={option.id}
                 type="button"
@@ -168,7 +205,12 @@ export function HivePage() {
             </div>
           )}
 
-          {view === 'security' && <HiveSecurityPosturePanel signatures={data.signatures} />}
+          {view === 'security' && (
+            <HiveSecurityPosturePanel
+              signatures={data.signatures}
+              canManageSignatures={isPlatformAdmin}
+            />
+          )}
           {view === 'reporting' && (
             <HiveReportingPanel
               trendReports={data.trend_reports}
@@ -184,10 +226,10 @@ export function HivePage() {
           {view === 'training' && (
             <HiveTrainingPanel trainingAssignments={data.training_assignments} />
           )}
-          {view === 'staging' && (
+          {view === 'staging' && platformAdmin && (
             <HiveCourseStagingPanel trainingAssignments={data.training_assignments} />
           )}
-          {view === 'compliance' && (
+          {view === 'compliance' && platformAdmin && (
             <HiveCompliancePanel
               trendReports={data.trend_reports}
               signatures={data.signatures}
