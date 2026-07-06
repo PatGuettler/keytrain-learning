@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deploy aws-railnet-signatures Edge Function (verify_jwt=false in supabase/config.toml).
 #
-# Requires Supabase secrets (same as aws-hive-bridge):
+# Requires Supabase secrets (same as aws-railnet-bridge):
 #   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION=us-east-2
 #
 # Non-interactive:

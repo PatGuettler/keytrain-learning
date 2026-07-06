@@ -15,7 +15,7 @@ export function exportComplianceDocumentPdf(
   version: ComplianceDocumentVersion
 ) {
   const subtitle = [
-    document.hive_org_id ? `Org: ${document.hive_org_id}` : null,
+    document.railnet_org_id ? `Org: ${document.railnet_org_id}` : null,
     `Status: ${COMPLIANCE_STATUS_LABELS[document.status]}`,
     `Version ${version.version_number}`,
   ]
@@ -60,6 +60,6 @@ export function exportComplianceDocumentPdf(
     COMPLIANCE_DOC_TYPE_LABELS[document.doc_type] ?? document.doc_type
   saveDashboardPdf(
     doc,
-    `${typeLabel}-${document.hive_org_id ?? 'org'}-v${version.version_number}`
+    `${typeLabel}-${document.railnet_org_id ?? 'org'}-v${version.version_number}`
   )
 }

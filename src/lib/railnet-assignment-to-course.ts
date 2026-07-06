@@ -1,8 +1,8 @@
 import type { CourseExportBundle } from '@/lib/course-export'
 import { COURSE_EXPORT_VERSION } from '@/lib/course-export'
 import { newQuestionId } from '@/lib/module-defaults'
-import { getTrendReportingPeriod } from '@/lib/hive-records'
-import type { HiveRecord } from '@/types/hive.types'
+import { getTrendReportingPeriod } from '@/lib/railnet-records'
+import type { RailNetRecord } from '@/types/railnet.types'
 
 type AwsQuestion = {
   id?: string
@@ -33,8 +33,8 @@ function mapAwsQuestion(raw: AwsQuestion, index: number) {
   }
 }
 
-export function hiveAssignmentToCourseBundle(assignment: HiveRecord): CourseExportBundle {
-  const orgId = String(assignment.hive_org_id ?? assignment.org_id ?? 'org')
+export function railnetAssignmentToCourseBundle(assignment: RailNetRecord): CourseExportBundle {
+  const orgId = String(assignment.railnet_org_id ?? assignment.org_id ?? 'org')
   const period =
     typeof assignment.reporting_period === 'string'
       ? assignment.reporting_period

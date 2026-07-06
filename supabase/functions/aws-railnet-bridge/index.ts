@@ -2,14 +2,14 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
 import {
   collectOrgIds,
-  configuredHiveOrgIds,
-  createHiveDynamoClient,
-  fetchHiveTable,
+  configuredRailNetOrgIds,
+  createRailNetDynamoClient,
+  fetchRailNetTable,
   filterByOrgIds,
   formatAwsError,
-  HIVE_TABLES,
+  RAILNET_AWS_TABLES,
   resolveRailnetBridgeAccess,
-} from '../_shared/hive-aws.ts'
+} from '../_shared/railnet-aws.ts'
 
 let requestCors: Record<string, string> = corsHeaders
 
@@ -21,8 +21,8 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 function parseOrgFilter(body: Record<string, unknown>): string[] | undefined {
-  if (!Array.isArray(body.hive_org_ids)) return undefined
-  const ids = body.hive_org_ids
+  if (!Array.isArray(body.railnet_org_ids)) return undefined
+  const ids = body.railnet_org_ids
     .filter((value): value is string => typeof value === 'string')
     .map((value) => value.trim())
     .filter(Boolean)
@@ -91,18 +91,18 @@ Deno.serve(async (req) => {
     const requestedFilter = parseOrgFilter(body)
     const orgFilter = access.isKtlAdmin
       ? requestedFilter
-      : access.hiveOrgId
-        ? [access.hiveOrgId]
+      : access.railnetOrgId
+        ? [access.railnetOrgId]
         : undefined
 
-    const queryOrgIds = configuredHiveOrgIds()
-    const dynamo = createHiveDynamoClient()
+    const queryOrgIds = configuredRailNetOrgIds()
+    const dynamo = createRailNetDynamoClient()
 
     const [indicators, trendReports, trainingAssignments, signatures] = await Promise.all([
-      fetchHiveTable(dynamo, HIVE_TABLES.indicators, queryOrgIds),
-      fetchHiveTable(dynamo, HIVE_TABLES.trendReports, queryOrgIds),
-      fetchHiveTable(dynamo, HIVE_TABLES.trainingAssignments, queryOrgIds),
-      fetchHiveTable(dynamo, HIVE_TABLES.signatures, queryOrgIds),
+      fetchRailNetTable(dynamo, RAILNET_AWS_TABLES.indicators, queryOrgIds),
+      fetchRailNetTable(dynamo, RAILNET_AWS_TABLES.trendReports, queryOrgIds),
+      fetchRailNetTable(dynamo, RAILNET_AWS_TABLES.trainingAssignments, queryOrgIds),
+      fetchRailNetTable(dynamo, RAILNET_AWS_TABLES.signatures, queryOrgIds),
     ])
 
     const filteredIndicators = filterByOrgIds(indicators, orgFilter)
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
     })
   } catch (error) {
     const message = formatAwsError(error)
-    console.error('aws-hive-bridge error:', message)
+    console.error('aws-railnet-bridge error:', message)
     return jsonResponse({ error: message }, errorStatus(message))
   }
 })

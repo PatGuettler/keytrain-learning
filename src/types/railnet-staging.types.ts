@@ -2,7 +2,7 @@ export type CourseStagingStatus = 'pending_review' | 'published' | 'rejected'
 
 export type CourseStagingRow = {
   id: string
-  hive_org_id: string
+  railnet_org_id: string
   source_assignment_sk: string | null
   source_trend_report_sk: string | null
   title: string

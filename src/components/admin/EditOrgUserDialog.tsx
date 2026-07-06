@@ -23,7 +23,7 @@ export function EditOrgUserDialog({
   orgId,
   user,
   managers,
-  hiveOrgId,
+  railnetOrgId,
   onSaved,
 }: {
   open: boolean
@@ -31,7 +31,7 @@ export function EditOrgUserDialog({
   orgId: string
   user: Profile | null
   managers: Profile[]
-  hiveOrgId: string | null
+  railnetOrgId: string | null
   onSaved: () => void
 }) {
   const [fullName, setFullName] = useState('')
@@ -206,22 +206,22 @@ export function EditOrgUserDialog({
                 <div className="space-y-0.5">
                   <Label htmlFor="edit-user-railnet">RailNet access</Label>
                   <p className="text-sm text-muted-foreground">
-                    User can view RailNet dashboards for this organization only.
+                    User can view RailNet reports for this organization only.
                   </p>
                 </div>
                 <Switch
                   id="edit-user-railnet"
                   checked={railnetEnabled}
-                  disabled={!hiveOrgId?.trim()}
+                  disabled={!railnetOrgId?.trim()}
                   onCheckedChange={setRailnetEnabled}
                 />
               </div>
-              {!hiveOrgId?.trim() && (
+              {!railnetOrgId?.trim() && (
                 <p className="text-sm text-muted-foreground">
                   Set the RailNet AWS org id in organization settings before granting access.
                 </p>
               )}
-              {hiveOrgId?.trim() && (
+              {railnetOrgId?.trim() && (
                 <p className="text-xs text-muted-foreground">
                   The user may need to sign out and back in for the RailNet tab to appear.
                 </p>

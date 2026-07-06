@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-type HiveOrgFilterProps = {
+type RailNetOrgFilterProps = {
   orgIds: string[]
   selectedOrgIds: string[]
   onToggleOrg: (orgId: string) => void
@@ -10,13 +10,13 @@ type HiveOrgFilterProps = {
   lockedOrgId?: string | null
 }
 
-export function HiveOrgFilter({
+export function RailNetOrgFilter({
   orgIds,
   selectedOrgIds,
   onToggleOrg,
   onClear,
   lockedOrgId,
-}: HiveOrgFilterProps) {
+}: RailNetOrgFilterProps) {
   if (lockedOrgId) {
     return (
       <Card>

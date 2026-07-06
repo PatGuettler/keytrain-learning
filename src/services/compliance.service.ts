@@ -48,7 +48,7 @@ export async function fetchComplianceDocumentVersion(
 export async function createComplianceDocument(input: {
   doc_type: ComplianceDocumentType
   title: string
-  hive_org_id?: string
+  railnet_org_id?: string
   content: Record<string, string>
   aws_data_snapshot?: Record<string, unknown>
   created_by: string
@@ -60,7 +60,7 @@ export async function createComplianceDocument(input: {
     .insert({
       doc_type: input.doc_type,
       title: input.title,
-      hive_org_id: input.hive_org_id ?? null,
+      railnet_org_id: input.railnet_org_id ?? null,
       status: 'draft',
       created_by: input.created_by,
     } as never)

@@ -54,7 +54,7 @@ function ghPagesSpaFallback(): Plugin {
           'reset-password',
           'accept-invite',
           'forgot-password',
-          'admin/hive',
+          'admin/railnet',
           'admin/dashboard',
           'admin/courses',
           'admin/organizations',

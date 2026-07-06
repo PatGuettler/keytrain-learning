@@ -36,7 +36,7 @@ verify_jwt = false
 [functions.record-failed-login]
 verify_jwt = false
 
-[functions.aws-hive-bridge]
+[functions.aws-railnet-bridge]
 verify_jwt = false
 
 [functions.aws-railnet-signatures]

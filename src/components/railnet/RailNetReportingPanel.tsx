@@ -29,16 +29,16 @@ import {
   trendReportKey,
   trendReportLabel,
   getHostAlertMetrics,
-} from '@/lib/hive-records'
-import type { HiveRecord } from '@/types/hive.types'
+} from '@/lib/railnet-records'
+import type { RailNetRecord } from '@/types/railnet.types'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { chartTheme } from '@/lib/chart-theme'
 import { CheckCircle2, AlertTriangle, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type HiveReportingPanelProps = {
-  trendReports: HiveRecord[]
-  hostBatches: HiveRecord[]
+type RailNetReportingPanelProps = {
+  trendReports: RailNetRecord[]
+  hostBatches: RailNetRecord[]
 }
 
 const ALERT_COLORS: Record<string, string> = {
@@ -52,7 +52,7 @@ function AlertCountsChart({
   record,
   onBarClick,
 }: {
-  record: HiveRecord
+  record: RailNetRecord
   onBarClick?: (severity: string) => void
 }) {
   const alertCounts = getAlertCounts(record)
@@ -104,7 +104,7 @@ function AlertCountsChart({
   )
 }
 
-export function HiveReportingPanel({ trendReports, hostBatches }: HiveReportingPanelProps) {
+export function RailNetReportingPanel({ trendReports, hostBatches }: RailNetReportingPanelProps) {
   const sortedReports = useMemo(() => sortTrendReports(trendReports), [trendReports])
   const [selectedKey, setSelectedKey] = useState<string>('')
   const [highlightSeverity, setHighlightSeverity] = useState<string | null>(null)
@@ -150,7 +150,7 @@ export function HiveReportingPanel({ trendReports, hostBatches }: HiveReportingP
               key={key}
               title={`Risk: ${key.replace(/_/g, ' ')}`}
               value={value}
-              subtitle={`${String(selectedReport.hive_org_id)} · ${getTrendReportingPeriod(selectedReport)}`}
+              subtitle={`${String(selectedReport.railnet_org_id)} · ${getTrendReportingPeriod(selectedReport)}`}
             />
           ))}
       </div>
@@ -159,7 +159,7 @@ export function HiveReportingPanel({ trendReports, hostBatches }: HiveReportingP
         <Card>
           <CardContent className="pt-6 text-sm text-muted-foreground">
             No trend reports for the selected org filter. Monthly AI reports appear in{' '}
-            <code className="text-xs">KeyTrainHiveTrendReports</code>.
+            <code className="text-xs">RailNet trend reports</code>.
           </CardContent>
         </Card>
       ) : (
@@ -188,7 +188,7 @@ export function HiveReportingPanel({ trendReports, hostBatches }: HiveReportingP
               </select>
               {selectedReport && (
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <Badge variant="outline">{String(selectedReport.hive_org_id ?? '—')}</Badge>
+                  <Badge variant="outline">{String(selectedReport.railnet_org_id ?? '—')}</Badge>
                   <span>Period {getTrendReportingPeriod(selectedReport)}</span>
                   <span className="font-mono truncate max-w-full">{String(selectedReport.sk ?? '')}</span>
                   <Button
@@ -513,7 +513,7 @@ export function HiveReportingPanel({ trendReports, hostBatches }: HiveReportingP
                           className={cn('border-t', key === selectedKey && 'bg-primary/5')}
                         >
                           <td className="px-3 py-2 whitespace-nowrap">
-                            <Badge variant="outline">{String(record.hive_org_id ?? '—')}</Badge>
+                            <Badge variant="outline">{String(record.railnet_org_id ?? '—')}</Badge>
                           </td>
                           <td className="px-3 py-2 whitespace-nowrap">
                             {getTrendReportingPeriod(record)}

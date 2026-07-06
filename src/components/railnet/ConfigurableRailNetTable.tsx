@@ -3,10 +3,10 @@ import { useRailnetTableColumns, type VisibleRailnetColumn } from '@/hooks/useRa
 import {
   RailnetColumnSettingsDialog,
   RailnetColumnsButton,
-} from '@/components/hive/RailnetColumnSettingsDialog'
+} from '@/components/railnet/RailnetColumnSettingsDialog'
 import type { RailnetTableViewId } from '@/types/table-column-prefs.types'
 
-type ConfigurableHiveTableProps<T> = {
+type ConfigurableRailNetTableProps<T> = {
   viewId: RailnetTableViewId
   rows: T[]
   rowKey: (row: T, index: number) => string
@@ -69,7 +69,7 @@ function ResizableHeader({
   )
 }
 
-export function ConfigurableHiveTable<T>({
+export function ConfigurableRailNetTable<T>({
   viewId,
   rows,
   rowKey,
@@ -77,7 +77,7 @@ export function ConfigurableHiveTable<T>({
   emptyMessage,
   showColumnControls = true,
   columnFilter,
-}: ConfigurableHiveTableProps<T>) {
+}: ConfigurableRailNetTableProps<T>) {
   const {
     definitions,
     columnPrefs,

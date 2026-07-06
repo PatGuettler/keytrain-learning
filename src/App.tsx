@@ -33,7 +33,7 @@ import { PhishingCampaignsPage } from '@/pages/admin/PhishingCampaignsPage'
 import { PhishingCampaignEditPage } from '@/pages/admin/PhishingCampaignEditPage'
 import { PhishingCampaignDetailPage } from '@/pages/admin/PhishingCampaignDetailPage'
 import { PhishingDashboardPage } from '@/pages/admin/PhishingDashboardPage'
-import { HivePage } from '@/pages/admin/HivePage'
+import { RailNetPage } from '@/pages/admin/RailNetPage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { useAuthStore } from '@/store/authStore'
 import { ROLE_DASHBOARD } from '@/lib/constants'
@@ -122,10 +122,14 @@ export default function App() {
             />
             <Route
               path="/admin/hive"
+              element={<Navigate to="/admin/railnet" replace />}
+            />
+            <Route
+              path="/admin/railnet"
               element={
                 <RoleGuard roles={['admin']}>
                   <RailNetGuard>
-                    <HivePage />
+                    <RailNetPage />
                   </RailNetGuard>
                 </RoleGuard>
               }
@@ -191,7 +195,7 @@ export default function App() {
               element={
                 <RoleGuard roles={['manager']}>
                   <RailNetGuard>
-                    <HivePage />
+                    <RailNetPage />
                   </RailNetGuard>
                 </RoleGuard>
               }
@@ -215,7 +219,7 @@ export default function App() {
               element={
                 <RoleGuard roles={['employee']}>
                   <RailNetGuard>
-                    <HivePage />
+                    <RailNetPage />
                   </RailNetGuard>
                 </RoleGuard>
               }

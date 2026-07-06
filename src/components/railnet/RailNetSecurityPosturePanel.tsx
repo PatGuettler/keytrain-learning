@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { StatCard } from '@/components/dashboard/StatCard'
-import { ConfigurableHiveTable } from '@/components/hive/ConfigurableHiveTable'
+import { ConfigurableRailNetTable } from '@/components/railnet/ConfigurableRailNetTable'
 import {
   countSignaturesByStatus,
   filterAndSortSignatures,
@@ -18,13 +18,13 @@ import {
   signatureSummary,
   type SignatureSort,
   type SignatureStatusFilter,
-} from '@/lib/hive-records'
-import { approveSignature, rejectSignature } from '@/services/hive.service'
-import type { HiveRecord } from '@/types/hive.types'
+} from '@/lib/railnet-records'
+import { approveSignature, rejectSignature } from '@/services/railnet-data.service'
+import type { RailNetRecord } from '@/types/railnet.types'
 import { ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react'
 
-type HiveSecurityPosturePanelProps = {
-  signatures: HiveRecord[]
+type RailNetSecurityPosturePanelProps = {
+  signatures: RailNetRecord[]
   canManageSignatures?: boolean
 }
 
@@ -44,7 +44,7 @@ const SIGNATURE_SORT_OPTIONS: { value: SignatureSort; label: string }[] = [
   { value: 'rule_id', label: 'Rule id (A–Z)' },
 ]
 
-function signatureRowKey(record: HiveRecord, index: number): string {
+function signatureRowKey(record: RailNetRecord, index: number): string {
   return `${record.pk ?? ''}|${record.sk ?? ''}|${index}`
 }
 
@@ -57,10 +57,10 @@ function statusBadgeVariant(
   return 'outline'
 }
 
-export function HiveSecurityPosturePanel({
+export function RailNetSecurityPosturePanel({
   signatures,
   canManageSignatures = false,
-}: HiveSecurityPosturePanelProps) {
+}: RailNetSecurityPosturePanelProps) {
   const queryClient = useQueryClient()
   const [actionError, setActionError] = useState('')
   const [pendingKey, setPendingKey] = useState<string | null>(null)
@@ -75,14 +75,14 @@ export function HiveSecurityPosturePanel({
     [signatures, search, statusFilter, sort]
   )
 
-  const invalidateHive = () => queryClient.invalidateQueries({ queryKey: ['hive-data'] })
+  const invalidateRailNet = () => queryClient.invalidateQueries({ queryKey: ['railnet-data'] })
 
   const approveMutation = useMutation({
     mutationFn: ({ pk, sk }: { pk: string; sk: string }) => approveSignature(pk, sk),
     onMutate: ({ pk, sk }) => setPendingKey(`${pk}|${sk}`),
     onSuccess: () => {
       setActionError('')
-      void invalidateHive()
+      void invalidateRailNet()
     },
     onError: (e: Error) => setActionError(e.message),
     onSettled: () => setPendingKey(null),
@@ -93,16 +93,16 @@ export function HiveSecurityPosturePanel({
     onMutate: ({ pk, sk }) => setPendingKey(`${pk}|${sk}`),
     onSuccess: () => {
       setActionError('')
-      void invalidateHive()
+      void invalidateRailNet()
     },
     onError: (e: Error) => setActionError(e.message),
     onSettled: () => setPendingKey(null),
   })
 
-  const isRowBusy = (record: HiveRecord) =>
+  const isRowBusy = (record: RailNetRecord) =>
     pendingKey === `${String(record.pk ?? '')}|${String(record.sk ?? '')}`
 
-  const renderSignatureCell = (columnId: string, record: HiveRecord) => {
+  const renderSignatureCell = (columnId: string, record: RailNetRecord) => {
     const pk = String(record.pk ?? '')
     const sk = String(record.sk ?? '')
     const status = getSignatureStatus(record)
@@ -111,7 +111,7 @@ export function HiveSecurityPosturePanel({
 
     switch (columnId) {
       case 'org':
-        return <Badge variant="outline">{String(record.hive_org_id ?? '—')}</Badge>
+        return <Badge variant="outline">{String(record.railnet_org_id ?? '—')}</Badge>
       case 'rule_id':
         return (
           <span className="block truncate font-mono text-xs" title={getSignatureRuleId(record)}>
@@ -221,7 +221,7 @@ export function HiveSecurityPosturePanel({
           {signatures.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No signatures in AWS for the selected org filter. Approved rules and candidates live
-              in <code className="text-xs">KeyTrainHiveSignatures</code>.
+              in <code className="text-xs">RailNet signatures</code>.
             </p>
           ) : (
             <>
@@ -280,7 +280,7 @@ export function HiveSecurityPosturePanel({
                 </p>
               </div>
 
-              <ConfigurableHiveTable
+              <ConfigurableRailNetTable
                 viewId="security_posture"
                 rows={filteredSignatures}
                 rowKey={(record, index) => signatureRowKey(record, index)}

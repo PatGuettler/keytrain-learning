@@ -1,11 +1,11 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
 import {
-  createHiveDynamoClient,
+  createRailNetDynamoClient,
   formatAwsError,
-  HIVE_TABLES,
+  RAILNET_AWS_TABLES,
   updateSignatureApproval,
-} from '../_shared/hive-aws.ts'
+} from '../_shared/railnet-aws.ts'
 
 let requestCors: Record<string, string> = corsHeaders
 
@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
     const { email } = await assertAdmin(adminClient, user.id)
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
     const input = parseBody(body)
-    const dynamo = createHiveDynamoClient()
+    const dynamo = createRailNetDynamoClient()
 
     const updated = await updateSignatureApproval(dynamo, {
       pk: input.pk,
@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
 
     return jsonResponse({
       ok: true,
-      table: HIVE_TABLES.signatures,
+      table: RAILNET_AWS_TABLES.signatures,
       signature: updated,
     })
   } catch (error) {

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { buildComplianceDraftContent, COMPLIANCE_DISCLAIMER } from '@/lib/compliance-generator'
 import { exportComplianceDocumentPdf } from '@/lib/pdf/compliance-reports'
-import { sortTrendReports, trendReportKey, trendReportLabel } from '@/lib/hive-records'
+import { sortTrendReports, trendReportKey, trendReportLabel } from '@/lib/railnet-records'
 import {
   createComplianceDocument,
   fetchComplianceDocumentVersion,
@@ -22,22 +22,22 @@ import {
   type ComplianceDocument,
   type ComplianceDocumentType,
 } from '@/types/compliance.types'
-import type { HiveRecord } from '@/types/hive.types'
+import type { RailNetRecord } from '@/types/railnet.types'
 
 const textareaClass =
   'flex min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
-type HiveCompliancePanelProps = {
-  trendReports: HiveRecord[]
-  signatures: HiveRecord[]
+type RailNetCompliancePanelProps = {
+  trendReports: RailNetRecord[]
+  signatures: RailNetRecord[]
 }
 
-export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliancePanelProps) {
+export function RailNetCompliancePanel({ trendReports, signatures }: RailNetCompliancePanelProps) {
   const userId = useAuthStore((s) => s.userId)!
   const queryClient = useQueryClient()
 
   const [docType, setDocType] = useState<ComplianceDocumentType>('security_awareness')
-  const [hiveOrgId, setHiveOrgId] = useState('')
+  const [railnetOrgId, setRailNetOrgId] = useState('')
   const [selectedTrendKey, setSelectedTrendKey] = useState('')
   const [editingDocId, setEditingDocId] = useState<string | null>(null)
   const [formContent, setFormContent] = useState<Record<string, string>>({})
@@ -46,7 +46,7 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
 
   const sortedTrends = useMemo(() => sortTrendReports(trendReports), [trendReports])
   const orgIds = useMemo(
-    () => [...new Set(sortedTrends.map((r) => String(r.hive_org_id ?? '')).filter(Boolean))].sort(),
+    () => [...new Set(sortedTrends.map((r) => String(r.railnet_org_id ?? '')).filter(Boolean))].sort(),
     [sortedTrends]
   )
 
@@ -63,7 +63,7 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
   const activeTemplate = templates.find((t) => t.doc_type === docType) ?? null
   const selectedTrend =
     sortedTrends.find((r) => trendReportKey(r) === selectedTrendKey) ??
-    sortedTrends.find((r) => String(r.hive_org_id) === hiveOrgId) ??
+    sortedTrends.find((r) => String(r.railnet_org_id) === railnetOrgId) ??
     null
 
   const invalidate = () => {
@@ -73,17 +73,17 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!activeTemplate) throw new Error('Template not found. Apply migration 035.')
-      const org = hiveOrgId || String(selectedTrend?.hive_org_id ?? '')
+      const org = railnetOrgId || String(selectedTrend?.railnet_org_id ?? '')
       const content = buildComplianceDraftContent(
         docType,
         org,
         selectedTrend,
-        signatures.filter((s) => !org || String(s.hive_org_id) === org)
+        signatures.filter((s) => !org || String(s.railnet_org_id) === org)
       )
       return createComplianceDocument({
         doc_type: docType,
         title: activeTemplate.title,
-        hive_org_id: org || undefined,
+        railnet_org_id: org || undefined,
         content,
         aws_data_snapshot: selectedTrend
           ? { trend_report_sk: selectedTrend.sk, raw_metrics: selectedTrend.raw_metrics }
@@ -120,7 +120,7 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
     setEditingDocId(doc.id)
     setFormStatus(doc.status)
     setDocType(doc.doc_type)
-    if (doc.hive_org_id) setHiveOrgId(doc.hive_org_id)
+    if (doc.railnet_org_id) setRailNetOrgId(doc.railnet_org_id)
     if (!doc.current_version_id) {
       setFormContent({})
       return
@@ -176,8 +176,8 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
               <Label>RailNet org</Label>
               <select
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={hiveOrgId}
-                onChange={(e) => setHiveOrgId(e.target.value)}
+                value={railnetOrgId}
+                onChange={(e) => setRailNetOrgId(e.target.value)}
               >
                 <option value="">Select org…</option>
                 {orgIds.map((id) => (
@@ -286,8 +286,8 @@ export function HiveCompliancePanel({ trendReports, signatures }: HiveCompliance
                       <td className="px-3 py-2">{doc.title}</td>
                       <td className="px-3 py-2">{COMPLIANCE_DOC_TYPE_LABELS[doc.doc_type]}</td>
                       <td className="px-3 py-2">
-                        {doc.hive_org_id ? (
-                          <Badge variant="outline">{doc.hive_org_id}</Badge>
+                        {doc.railnet_org_id ? (
+                          <Badge variant="outline">{doc.railnet_org_id}</Badge>
                         ) : (
                           '—'
                         )}

@@ -5,8 +5,8 @@ import { GraduationCap, ExternalLink, CheckCircle, XCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { hiveAssignmentToCourseBundle } from '@/lib/hive-assignment-to-course'
-import { trainingSummary } from '@/lib/hive-records'
+import { railnetAssignmentToCourseBundle } from '@/lib/railnet-assignment-to-course'
+import { trainingSummary } from '@/lib/railnet-records'
 import {
   createCourseStagingRow,
   fetchCourseStagingRows,
@@ -14,18 +14,18 @@ import {
   rejectStagedCourse,
 } from '@/services/course-staging.service'
 import { useAuthStore } from '@/store/authStore'
-import type { HiveRecord } from '@/types/hive.types'
-import type { CourseStagingRow } from '@/types/hive-staging.types'
+import type { RailNetRecord } from '@/types/railnet.types'
+import type { CourseStagingRow } from '@/types/railnet-staging.types'
 
-type HiveCourseStagingPanelProps = {
-  trainingAssignments: HiveRecord[]
+type RailNetCourseStagingPanelProps = {
+  trainingAssignments: RailNetRecord[]
 }
 
-function assignmentKey(record: HiveRecord): string {
+function assignmentKey(record: RailNetRecord): string {
   return `${record.pk ?? ''}|${record.sk ?? ''}`
 }
 
-export function HiveCourseStagingPanel({ trainingAssignments }: HiveCourseStagingPanelProps) {
+export function RailNetCourseStagingPanel({ trainingAssignments }: RailNetCourseStagingPanelProps) {
   const userId = useAuthStore((s) => s.userId)!
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -40,10 +40,10 @@ export function HiveCourseStagingPanel({ trainingAssignments }: HiveCourseStagin
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['course-staging'] })
 
   const stageMutation = useMutation({
-    mutationFn: async (assignment: HiveRecord) => {
-      const bundle = hiveAssignmentToCourseBundle(assignment)
+    mutationFn: async (assignment: RailNetRecord) => {
+      const bundle = railnetAssignmentToCourseBundle(assignment)
       return createCourseStagingRow({
-        hive_org_id: String(assignment.hive_org_id ?? ''),
+        railnet_org_id: String(assignment.railnet_org_id ?? ''),
         source_assignment_sk: assignment.sk ? String(assignment.sk) : undefined,
         source_trend_report_sk: assignment.trend_report_sk
           ? String(assignment.trend_report_sk)
@@ -86,8 +86,8 @@ export function HiveCourseStagingPanel({ trainingAssignments }: HiveCourseStagin
   const openInBuilder = (row: CourseStagingRow) => {
     navigate('/admin/courses/create', {
       state: {
-        hiveImportBundle: row.proposed_content,
-        hiveStagingId: row.id,
+        railnetImportBundle: row.proposed_content,
+        railnetStagingId: row.id,
       },
     })
   }
@@ -120,7 +120,7 @@ export function HiveCourseStagingPanel({ trainingAssignments }: HiveCourseStagin
                 <option value="">Select assignment…</option>
                 {trainingAssignments.map((record) => (
                   <option key={assignmentKey(record)} value={assignmentKey(record)}>
-                    {String(record.hive_org_id)} · {trainingSummary(record)}
+                    {String(record.railnet_org_id)} · {trainingSummary(record)}
                   </option>
                 ))}
               </select>
@@ -165,7 +165,7 @@ export function HiveCourseStagingPanel({ trainingAssignments }: HiveCourseStagin
                     <tr key={row.id} className="border-t">
                       <td className="px-3 py-2 max-w-xs truncate">{row.title}</td>
                       <td className="px-3 py-2">
-                        <Badge variant="outline">{row.hive_org_id}</Badge>
+                        <Badge variant="outline">{row.railnet_org_id}</Badge>
                       </td>
                       <td className="px-3 py-2 capitalize">{row.status.replace('_', ' ')}</td>
                       <td className="px-3 py-2 font-mono text-xs text-muted-foreground max-w-[10rem] truncate">

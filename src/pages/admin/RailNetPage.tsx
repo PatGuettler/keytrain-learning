@@ -6,18 +6,18 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
-import { HiveOrgFilter } from '@/components/hive/HiveOrgFilter'
-import { HiveSecurityPosturePanel } from '@/components/hive/HiveSecurityPosturePanel'
-import { HiveReportingPanel } from '@/components/hive/HiveReportingPanel'
-import { HiveHostUploadsPanel } from '@/components/hive/HiveHostUploadsPanel'
-import { HiveTrainingPanel } from '@/components/hive/HiveTrainingPanel'
-import { HiveCourseStagingPanel } from '@/components/hive/HiveCourseStagingPanel'
-import { HiveCompliancePanel } from '@/components/hive/HiveCompliancePanel'
-import { fetchHiveData } from '@/services/hive.service'
-import { exportHiveReportPdf } from '@/lib/pdf/hive-reports'
+import { RailNetOrgFilter } from '@/components/railnet/RailNetOrgFilter'
+import { RailNetSecurityPosturePanel } from '@/components/railnet/RailNetSecurityPosturePanel'
+import { RailNetReportingPanel } from '@/components/railnet/RailNetReportingPanel'
+import { RailNetHostUploadsPanel } from '@/components/railnet/RailNetHostUploadsPanel'
+import { RailNetTrainingPanel } from '@/components/railnet/RailNetTrainingPanel'
+import { RailNetCourseStagingPanel } from '@/components/railnet/RailNetCourseStagingPanel'
+import { RailNetCompliancePanel } from '@/components/railnet/RailNetCompliancePanel'
+import { fetchRailNetData } from '@/services/railnet-data.service'
+import { exportRailNetReportPdf } from '@/lib/pdf/railnet-reports'
 import { useRailnetAccess, useRailnetOrgScope } from '@/hooks/useRailnetAccess'
 
-type HiveView =
+type RailNetView =
   | 'overview'
   | 'security'
   | 'reporting'
@@ -37,7 +37,7 @@ function formatFetchedAt(value: string): string {
   }).format(new Date(value))
 }
 
-const VIEW_OPTIONS: { id: HiveView; label: string }[] = [
+const VIEW_OPTIONS: { id: RailNetView; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'security', label: 'Security Posture' },
   { id: 'reporting', label: 'Reporting' },
@@ -47,31 +47,34 @@ const VIEW_OPTIONS: { id: HiveView; label: string }[] = [
   { id: 'compliance', label: 'Compliance' },
 ]
 
-export function HivePage() {
-  const { isPlatformAdmin } = useRailnetAccess()
-  const { platformAdmin, hiveOrgId, isConfigured, isLoading: scopeLoading } = useRailnetOrgScope()
+export function RailNetPage() {
+  const { isKtlAdmin } = useRailnetAccess()
+  const { platformAdmin, railnetOrgId, isConfigured, isLoading: scopeLoading } = useRailnetOrgScope()
+  const reportsOnly = !isKtlAdmin
   const [selectedOrgIds, setSelectedOrgIds] = useState<string[]>([])
-  const [view, setView] = useState<HiveView>('overview')
+  const [view, setView] = useState<RailNetView>(() => (reportsOnly ? 'reporting' : 'overview'))
 
   const queryOrgIds = useMemo(() => {
     if (platformAdmin) {
       return selectedOrgIds.length > 0 ? selectedOrgIds : undefined
     }
-    return hiveOrgId ? [hiveOrgId] : []
-  }, [platformAdmin, selectedOrgIds, hiveOrgId])
+    return railnetOrgId ? [railnetOrgId] : []
+  }, [platformAdmin, selectedOrgIds, railnetOrgId])
 
-  const visibleViews = useMemo(
-    () =>
-      platformAdmin
-        ? VIEW_OPTIONS
-        : VIEW_OPTIONS.filter((v) => v.id !== 'staging' && v.id !== 'compliance'),
-    [platformAdmin]
-  )
+  const visibleViews = useMemo(() => {
+    if (reportsOnly) {
+      return VIEW_OPTIONS.filter((v) => v.id === 'reporting')
+    }
+    if (platformAdmin) {
+      return VIEW_OPTIONS
+    }
+    return VIEW_OPTIONS.filter((v) => v.id !== 'staging' && v.id !== 'compliance')
+  }, [platformAdmin, reportsOnly])
 
   const { data, error, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ['hive-data', queryOrgIds ?? 'all'],
-    queryFn: () => fetchHiveData(queryOrgIds),
-    enabled: platformAdmin || Boolean(hiveOrgId),
+    queryKey: ['railnet-data', queryOrgIds ?? 'all'],
+    queryFn: () => fetchRailNetData(queryOrgIds),
+    enabled: platformAdmin || Boolean(railnetOrgId),
     staleTime: 30_000,
   })
 
@@ -98,8 +101,12 @@ export function HivePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="RailNet"
-        description="Shared intelligence network — host uploads, signatures, trend reports, and training assignments."
+        title={reportsOnly ? 'Reports' : 'RailNet'}
+        description={
+          reportsOnly
+            ? 'Trend reports and leadership insights for your organization.'
+            : 'Shared intelligence network — host uploads, signatures, trend reports, and training assignments.'
+        }
         action={
           <div className="flex flex-wrap gap-2">
             <ExportPdfButton
@@ -107,7 +114,7 @@ export function HivePage() {
               label="Export PDF"
               onExport={() => {
                 if (!data) return
-                exportHiveReportPdf(data, platformAdmin ? selectedOrgIds : hiveOrgId ? [hiveOrgId] : [])
+                exportRailNetReportPdf(data, platformAdmin ? selectedOrgIds : railnetOrgId ? [railnetOrgId] : [])
               }}
             />
             <Button type="button" variant="outline" onClick={() => refetch()} disabled={isFetching}>
@@ -160,29 +167,30 @@ export function HivePage() {
             </span>
           </div>
 
-          <HiveOrgFilter
+          <RailNetOrgFilter
             orgIds={data.org_ids}
             selectedOrgIds={selectedOrgIds}
             onToggleOrg={toggleOrg}
             onClear={() => setSelectedOrgIds([])}
-            lockedOrgId={platformAdmin ? null : hiveOrgId}
+            lockedOrgId={platformAdmin ? null : railnetOrgId}
           />
 
           <div className="flex flex-wrap gap-2">
-            {visibleViews.map((option) => (
-              <Button
-                key={option.id}
-                type="button"
-                size="sm"
-                variant={view === option.id ? 'default' : 'outline'}
-                onClick={() => setView(option.id)}
-              >
-                {option.label}
-              </Button>
-            ))}
+            {visibleViews.length > 1 &&
+              visibleViews.map((option) => (
+                <Button
+                  key={option.id}
+                  type="button"
+                  size="sm"
+                  variant={view === option.id ? 'default' : 'outline'}
+                  onClick={() => setView(option.id)}
+                >
+                  {option.label}
+                </Button>
+              ))}
           </div>
 
-          {view === 'overview' && (
+          {view === 'overview' && !reportsOnly && (
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {summaryCards.map((card) => (
@@ -205,32 +213,32 @@ export function HivePage() {
             </div>
           )}
 
-          {view === 'security' && (
-            <HiveSecurityPosturePanel
+          {view === 'security' && !reportsOnly && (
+            <RailNetSecurityPosturePanel
               signatures={data.signatures}
-              canManageSignatures={isPlatformAdmin}
+              canManageSignatures={isKtlAdmin}
             />
           )}
-          {view === 'reporting' && (
-            <HiveReportingPanel
+          {(view === 'reporting' || reportsOnly) && (
+            <RailNetReportingPanel
               trendReports={data.trend_reports}
               hostBatches={data.indicators}
             />
           )}
-          {view === 'host-uploads' && (
-            <HiveHostUploadsPanel
+          {view === 'host-uploads' && !reportsOnly && (
+            <RailNetHostUploadsPanel
               indicators={data.indicators}
               legacyIocCount={data.counts.legacy_iocs}
             />
           )}
-          {view === 'training' && (
-            <HiveTrainingPanel trainingAssignments={data.training_assignments} />
+          {view === 'training' && !reportsOnly && (
+            <RailNetTrainingPanel trainingAssignments={data.training_assignments} />
           )}
           {view === 'staging' && platformAdmin && (
-            <HiveCourseStagingPanel trainingAssignments={data.training_assignments} />
+            <RailNetCourseStagingPanel trainingAssignments={data.training_assignments} />
           )}
           {view === 'compliance' && platformAdmin && (
-            <HiveCompliancePanel
+            <RailNetCompliancePanel
               trendReports={data.trend_reports}
               signatures={data.signatures}
             />

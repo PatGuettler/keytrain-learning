@@ -6,8 +6,8 @@ Also deletes by org prefix for the three default test orgs if --by-org is passed
 (useful if seed_tag was missing on older runs).
 
 Usage:
-  python aws_hive_seed_cleanup.py --dry-run
-  python aws_hive_seed_cleanup.py --confirm
+  python aws_railnet_seed_cleanup.py --dry-run
+  python aws_railnet_seed_cleanup.py --confirm
 """
 
 from __future__ import annotations

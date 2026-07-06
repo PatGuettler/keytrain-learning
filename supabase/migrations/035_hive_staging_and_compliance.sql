@@ -1,4 +1,4 @@
-  -- Hive course staging + compliance documents (admin-only, additive)
+  -- RailNet course staging + compliance documents (admin-only, additive)
 
   CREATE TYPE compliance_document_type AS ENUM (
     'disaster_recovery',
@@ -34,7 +34,7 @@
     doc_type compliance_document_type NOT NULL,
     title TEXT NOT NULL,
     status compliance_document_status NOT NULL DEFAULT 'draft',
-    hive_org_id TEXT,
+    railnet_org_id TEXT,
     current_version_id UUID,
     created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -58,7 +58,7 @@
 
   CREATE TABLE course_staging (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    hive_org_id TEXT NOT NULL,
+    railnet_org_id TEXT NOT NULL,
     source_assignment_sk TEXT,
     source_trend_report_sk TEXT,
     title TEXT NOT NULL,
@@ -72,7 +72,7 @@
 
   CREATE INDEX course_staging_status_idx ON course_staging (status);
   CREATE INDEX compliance_documents_status_idx ON compliance_documents (status);
-  CREATE INDEX compliance_documents_hive_org_idx ON compliance_documents (hive_org_id);
+  CREATE INDEX compliance_documents_railnet_org_idx ON compliance_documents (railnet_org_id);
 
   ALTER TABLE compliance_document_templates ENABLE ROW LEVEL SECURITY;
   ALTER TABLE compliance_documents ENABLE ROW LEVEL SECURITY;

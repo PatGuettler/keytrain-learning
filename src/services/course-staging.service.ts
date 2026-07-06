@@ -3,7 +3,7 @@ import type { CourseExportBundle } from '@/lib/course-export'
 import { parseCourseImport } from '@/lib/course-export'
 import { PLATFORM_ORG_ID } from '@/lib/constants'
 import { upsertCourse, upsertModule } from '@/services/courses.service'
-import type { CourseStagingRow } from '@/types/hive-staging.types'
+import type { CourseStagingRow } from '@/types/railnet-staging.types'
 
 function requireSupabase() {
   const supabase = getSupabase()
@@ -22,7 +22,7 @@ export async function fetchCourseStagingRows(): Promise<CourseStagingRow[]> {
 }
 
 export async function createCourseStagingRow(input: {
-  hive_org_id: string
+  railnet_org_id: string
   source_assignment_sk?: string
   source_trend_report_sk?: string
   title: string
@@ -33,7 +33,7 @@ export async function createCourseStagingRow(input: {
   const { data, error } = await supabase
     .from('course_staging' as 'courses')
     .insert({
-      hive_org_id: input.hive_org_id,
+      railnet_org_id: input.railnet_org_id,
       source_assignment_sk: input.source_assignment_sk ?? null,
       source_trend_report_sk: input.source_trend_report_sk ?? null,
       title: input.title,

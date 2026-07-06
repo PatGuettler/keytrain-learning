@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Seed KeyTrain Hive DynamoDB tables with test data for KTL dashboard QA.
+Seed KeyTrain RailNet DynamoDB tables with test data for KTL dashboard QA.
 
 Writes comprehensive sample data (default: 5 orgs × 10 users × 3 months):
   - KeyTrainHiveIndicators:  BATCH# monthly host uploads + legacy TS# rows
@@ -12,15 +12,15 @@ Requires AWS credentials with dynamodb:PutItem (and BatchWriteItem) on us-east-2
 Do NOT use ktl-hive-readonly — create a separate seed IAM user or use your admin profile.
 
 Usage:
-  cd scripts/hive-seed
+  cd scripts/railnet-seed
   python3 -m venv venv && source venv/bin/activate
   pip install -r requirements.txt
   export AWS_REGION=us-east-2
   export AWS_ACCESS_KEY_ID=...
   export AWS_SECRET_ACCESS_KEY=...
-  python aws_hive_seed.py
-  python aws_hive_seed.py --dry-run
-  python aws_hive_seed.py --orgs hive-test-alpha hive-test-beta
+  python aws_railnet_seed.py
+  python aws_railnet_seed.py --dry-run
+  python aws_railnet_seed.py --orgs hive-test-alpha hive-test-beta
 """
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ def write_table(dynamo: Any, table_name: str, items: list[dict[str, Any]], dry_r
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Seed KeyTrain Hive DynamoDB test data")
+    parser = argparse.ArgumentParser(description="Seed KeyTrain RailNet DynamoDB test data")
     parser.add_argument("--dry-run", action="store_true", help="Print plan only; do not write")
     parser.add_argument("--region", default=REGION, help=f"AWS region (default: {REGION})")
     parser.add_argument(
@@ -127,8 +127,8 @@ def main() -> int:
         )
         return 1
 
-    print("\nDone. In KTL Hive tab you should see orgs:", ", ".join(org_ids))
-    print("Optional Supabase secret: HIVE_ORG_IDS=" + ",".join(org_ids))
+    print("\nDone. In KTL RailNet tab you should see orgs:", ", ".join(org_ids))
+    print("Optional Supabase secret: RAILNET_ORG_IDS=" + ",".join(org_ids))
     return 0
 
 

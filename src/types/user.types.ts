@@ -46,6 +46,6 @@ export type AdminProfileUpdate = Partial<
 export interface Organization {
   id: string
   name: string
-  hive_org_id?: string | null
+  railnet_org_id?: string | null
   created_at: string
 }

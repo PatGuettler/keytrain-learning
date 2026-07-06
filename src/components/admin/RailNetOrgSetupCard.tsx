@@ -9,37 +9,37 @@ import { Label } from '@/components/ui/label'
 
 type RailNetOrgSetupCardProps = {
   orgId: string
-  initialHiveOrgId: string
+  initialRailNetOrgId: string
   usersWithRailnet: number
   totalUsers: number
 }
 
 export function RailNetOrgSetupCard({
   orgId,
-  initialHiveOrgId,
+  initialRailNetOrgId,
   usersWithRailnet,
   totalUsers,
 }: RailNetOrgSetupCardProps) {
   const queryClient = useQueryClient()
-  const [hiveOrgId, setHiveOrgId] = useState(initialHiveOrgId)
-  const [savedHiveOrgId, setSavedHiveOrgId] = useState(initialHiveOrgId)
+  const [railnetOrgId, setRailNetOrgId] = useState(initialRailNetOrgId)
+  const [savedRailNetOrgId, setSavedRailNetOrgId] = useState(initialRailNetOrgId)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
   useEffect(() => {
-    setHiveOrgId(initialHiveOrgId)
-    setSavedHiveOrgId(initialHiveOrgId)
-  }, [initialHiveOrgId, orgId])
+    setRailNetOrgId(initialRailNetOrgId)
+    setSavedRailNetOrgId(initialRailNetOrgId)
+  }, [initialRailNetOrgId, orgId])
 
-  const configured = Boolean(savedHiveOrgId.trim())
-  const changed = hiveOrgId.trim() !== savedHiveOrgId
+  const configured = Boolean(savedRailNetOrgId.trim())
+  const changed = railnetOrgId.trim() !== savedRailNetOrgId
 
   const saveMutation = useMutation({
     mutationFn: (value: string) =>
-      updateOrganization(orgId, { hive_org_id: value.trim() || null }),
+      updateOrganization(orgId, { railnet_org_id: value.trim() || null }),
     onSuccess: () => {
-      const trimmed = hiveOrgId.trim()
-      setSavedHiveOrgId(trimmed)
+      const trimmed = railnetOrgId.trim()
+      setSavedRailNetOrgId(trimmed)
       setError('')
       setSuccess('RailNet AWS org id saved.')
       void queryClient.invalidateQueries({ queryKey: ['organizations'] })
@@ -69,7 +69,7 @@ export function RailNetOrgSetupCard({
             <span className="font-medium">Status:</span>{' '}
             {configured ? (
               <>
-                Linked to <code className="text-xs">{savedHiveOrgId}</code>
+                Linked to <code className="text-xs">{savedRailNetOrgId}</code>
               </>
             ) : (
               'Not linked — enter an AWS org id and save.'
@@ -86,16 +86,16 @@ export function RailNetOrgSetupCard({
           onSubmit={(e) => {
             e.preventDefault()
             if (!changed) return
-            saveMutation.mutate(hiveOrgId)
+            saveMutation.mutate(railnetOrgId)
           }}
         >
           <div className="space-y-2">
             <Label htmlFor="railnet-aws-org-id">Step 1 — AWS org id</Label>
             <Input
               id="railnet-aws-org-id"
-              value={hiveOrgId}
+              value={railnetOrgId}
               onChange={(e) => {
-                setHiveOrgId(e.target.value)
+                setRailNetOrgId(e.target.value)
                 setSuccess('')
                 setError('')
               }}

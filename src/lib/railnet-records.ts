@@ -1,15 +1,15 @@
-import type { HiveRecord } from '@/types/hive.types'
+import type { RailNetRecord } from '@/types/railnet.types'
 
 export type HostUploadKind = 'batch' | 'legacy_ioc' | 'other'
 
-export function classifyHostUpload(record: HiveRecord): HostUploadKind {
+export function classifyHostUpload(record: RailNetRecord): HostUploadKind {
   const sk = String(record.sk ?? '')
   if (sk.startsWith('BATCH#')) return 'batch'
   if (sk.startsWith('TS#')) return 'legacy_ioc'
   return 'other'
 }
 
-export function getTrendReportingPeriod(record: HiveRecord): string {
+export function getTrendReportingPeriod(record: RailNetRecord): string {
   if (typeof record.reporting_period === 'string' && record.reporting_period.trim()) {
     return record.reporting_period.trim()
   }
@@ -25,11 +25,11 @@ export function getRecordObject(value: unknown): Record<string, unknown> | null 
   return null
 }
 
-export function getTrendRawMetrics(record: HiveRecord): Record<string, unknown> | null {
+export function getTrendRawMetrics(record: RailNetRecord): Record<string, unknown> | null {
   return getRecordObject(record.raw_metrics)
 }
 
-export function getAlertCounts(record: HiveRecord): Record<string, number> {
+export function getAlertCounts(record: RailNetRecord): Record<string, number> {
   const metrics = getTrendRawMetrics(record)
   const alertCounts = getRecordObject(metrics?.alert_counts)
   if (!alertCounts) return {}
@@ -41,7 +41,7 @@ export function getAlertCounts(record: HiveRecord): Record<string, number> {
   return result
 }
 
-export function getRiskScores(record: HiveRecord): Record<string, number> {
+export function getRiskScores(record: RailNetRecord): Record<string, number> {
   const metrics = getTrendRawMetrics(record)
   const riskScores = getRecordObject(metrics?.risk_scores)
   if (!riskScores) return {}
@@ -53,10 +53,10 @@ export function getRiskScores(record: HiveRecord): Record<string, number> {
   return result
 }
 
-export function splitHostUploads(records: HiveRecord[]) {
-  const batches: HiveRecord[] = []
-  const legacyIocs: HiveRecord[] = []
-  const other: HiveRecord[] = []
+export function splitHostUploads(records: RailNetRecord[]) {
+  const batches: RailNetRecord[] = []
+  const legacyIocs: RailNetRecord[] = []
+  const other: RailNetRecord[] = []
 
   for (const record of records) {
     const kind = classifyHostUpload(record)
@@ -68,7 +68,7 @@ export function splitHostUploads(records: HiveRecord[]) {
   return { batches, legacyIocs, other }
 }
 
-export function countSignaturesByStatus(records: HiveRecord[]) {
+export function countSignaturesByStatus(records: RailNetRecord[]) {
   const counts = { approved: 0, pending: 0, other: 0 }
   for (const record of records) {
     const status = String(record.approval_status ?? '').toLowerCase()
@@ -79,11 +79,11 @@ export function countSignaturesByStatus(records: HiveRecord[]) {
   return counts
 }
 
-export function isPendingSignature(record: HiveRecord): boolean {
+export function isPendingSignature(record: RailNetRecord): boolean {
   return String(record.approval_status ?? '').toLowerCase() === 'pending'
 }
 
-export function hostUploadSummary(record: HiveRecord): string {
+export function hostUploadSummary(record: RailNetRecord): string {
   const hostId = record.host_id ? String(record.host_id) : 'Unknown host'
   const sk = String(record.sk ?? '')
   if (sk.startsWith('BATCH#')) return `${hostId} · batch ${sk.replace('BATCH#', '')}`
@@ -93,7 +93,7 @@ export function hostUploadSummary(record: HiveRecord): string {
 
 export type HostBatchSort = 'newest' | 'oldest' | 'org' | 'host' | 'period'
 
-export function getBatchEpoch(record: HiveRecord): number {
+export function getBatchEpoch(record: RailNetRecord): number {
   const sk = String(record.sk ?? '')
   const match = sk.match(/^BATCH#(\d+)/)
   if (match) return Number(match[1])
@@ -105,14 +105,14 @@ export function getBatchEpoch(record: HiveRecord): number {
   return 0
 }
 
-export function getBatchReportingPeriod(record: HiveRecord): string {
+export function getBatchReportingPeriod(record: RailNetRecord): string {
   if (typeof record.reporting_period === 'string' && record.reporting_period.trim()) {
     return record.reporting_period.trim()
   }
   return '—'
 }
 
-export function formatBatchUploadedAt(record: HiveRecord): string {
+export function formatBatchUploadedAt(record: RailNetRecord): string {
   if (typeof record.uploaded_at === 'string' && record.uploaded_at.trim()) {
     const ms = Date.parse(record.uploaded_at)
     if (!Number.isNaN(ms)) {
@@ -139,18 +139,18 @@ export function formatBatchUploadedAt(record: HiveRecord): string {
   return '—'
 }
 
-export function formatAlertMetricsSummary(record: HiveRecord): string {
+export function formatAlertMetricsSummary(record: RailNetRecord): string {
   const metrics = getHostAlertMetrics(record)
   const entries = Object.entries(metrics)
   if (entries.length === 0) return '—'
   return entries.map(([key, value]) => `${key}: ${value}`).join(', ')
 }
 
-export function hostBatchMatchesQuery(record: HiveRecord, query: string): boolean {
+export function hostBatchMatchesQuery(record: RailNetRecord, query: string): boolean {
   const q = query.trim().toLowerCase()
   if (!q) return true
   const haystack = [
-    record.hive_org_id,
+    record.railnet_org_id,
     record.org_id,
     record.host_id,
     record.sk,
@@ -167,7 +167,7 @@ export function hostBatchMatchesQuery(record: HiveRecord, query: string): boolea
   return haystack.includes(q)
 }
 
-export function sortHostBatches(records: HiveRecord[], sort: HostBatchSort): HiveRecord[] {
+export function sortHostBatches(records: RailNetRecord[], sort: HostBatchSort): RailNetRecord[] {
   const sorted = [...records]
   sorted.sort((a, b) => {
     switch (sort) {
@@ -175,7 +175,7 @@ export function sortHostBatches(records: HiveRecord[], sort: HostBatchSort): Hiv
         return getBatchEpoch(a) - getBatchEpoch(b)
       case 'org':
         return (
-          String(a.hive_org_id ?? '').localeCompare(String(b.hive_org_id ?? '')) ||
+          String(a.railnet_org_id ?? '').localeCompare(String(b.railnet_org_id ?? '')) ||
           getBatchEpoch(b) - getBatchEpoch(a)
         )
       case 'host':
@@ -197,15 +197,15 @@ export function sortHostBatches(records: HiveRecord[], sort: HostBatchSort): Hiv
 }
 
 export function filterAndSortHostBatches(
-  records: HiveRecord[],
+  records: RailNetRecord[],
   options: { query?: string; sort?: HostBatchSort }
-): HiveRecord[] {
+): RailNetRecord[] {
   const query = options.query ?? ''
   const filtered = records.filter((record) => hostBatchMatchesQuery(record, query))
   return sortHostBatches(filtered, options.sort ?? 'newest')
 }
 
-export function signatureSummary(record: HiveRecord): string {
+export function signatureSummary(record: RailNetRecord): string {
   return String(record.phrase ?? record.signature_id ?? record.sk ?? '—')
 }
 
@@ -218,11 +218,11 @@ export type SignatureSort =
   | 'approved_newest'
   | 'rule_id'
 
-export function getSignatureStatus(record: HiveRecord): string {
+export function getSignatureStatus(record: RailNetRecord): string {
   return String(record.approval_status ?? '').toLowerCase().trim() || 'unknown'
 }
 
-export function getSignatureRuleId(record: HiveRecord): string {
+export function getSignatureRuleId(record: RailNetRecord): string {
   if (typeof record.signature_id === 'string' && record.signature_id.trim()) {
     return record.signature_id.trim()
   }
@@ -231,12 +231,12 @@ export function getSignatureRuleId(record: HiveRecord): string {
   return sk || '—'
 }
 
-export function getSignatureApprovedBy(record: HiveRecord): string {
+export function getSignatureApprovedBy(record: RailNetRecord): string {
   const by = record.approved_by
   return typeof by === 'string' && by.trim() ? by.trim() : '—'
 }
 
-export function getSignatureApprovedEpoch(record: HiveRecord): number {
+export function getSignatureApprovedEpoch(record: RailNetRecord): number {
   const raw = record.approved_utc
   if (typeof raw === 'number') {
     return raw > 1e12 ? Math.floor(raw / 1000) : raw
@@ -253,7 +253,7 @@ export function getSignatureApprovedEpoch(record: HiveRecord): number {
   return 0
 }
 
-export function formatSignatureApprovedAt(record: HiveRecord): string {
+export function formatSignatureApprovedAt(record: RailNetRecord): string {
   const epoch = getSignatureApprovedEpoch(record)
   if (epoch > 0) {
     return new Intl.DateTimeFormat('en-US', {
@@ -270,11 +270,11 @@ export function formatSignatureApprovedAt(record: HiveRecord): string {
   return '—'
 }
 
-export function signatureMatchesQuery(record: HiveRecord, query: string): boolean {
+export function signatureMatchesQuery(record: RailNetRecord, query: string): boolean {
   const q = query.trim().toLowerCase()
   if (!q) return true
   const haystack = [
-    record.hive_org_id,
+    record.railnet_org_id,
     record.org_id,
     record.pk,
     record.sk,
@@ -297,7 +297,7 @@ export function signatureMatchesQuery(record: HiveRecord, query: string): boolea
 }
 
 export function signatureMatchesStatusFilter(
-  record: HiveRecord,
+  record: RailNetRecord,
   filter: SignatureStatusFilter
 ): boolean {
   if (filter === 'all') return true
@@ -308,13 +308,13 @@ export function signatureMatchesStatusFilter(
   return status !== 'approved' && status !== 'pending' && status !== 'rejected'
 }
 
-export function sortSignatures(records: HiveRecord[], sort: SignatureSort): HiveRecord[] {
+export function sortSignatures(records: RailNetRecord[], sort: SignatureSort): RailNetRecord[] {
   const sorted = [...records]
   sorted.sort((a, b) => {
     switch (sort) {
       case 'org':
         return (
-          String(a.hive_org_id ?? '').localeCompare(String(b.hive_org_id ?? '')) ||
+          String(a.railnet_org_id ?? '').localeCompare(String(b.railnet_org_id ?? '')) ||
           getSignatureRuleId(a).localeCompare(getSignatureRuleId(b))
         )
       case 'phrase':
@@ -327,7 +327,7 @@ export function sortSignatures(records: HiveRecord[], sort: SignatureSort): Hive
       default:
         return (
           getSignatureStatus(a).localeCompare(getSignatureStatus(b)) ||
-          String(a.hive_org_id ?? '').localeCompare(String(b.hive_org_id ?? ''))
+          String(a.railnet_org_id ?? '').localeCompare(String(b.railnet_org_id ?? ''))
         )
     }
   })
@@ -335,13 +335,13 @@ export function sortSignatures(records: HiveRecord[], sort: SignatureSort): Hive
 }
 
 export function filterAndSortSignatures(
-  records: HiveRecord[],
+  records: RailNetRecord[],
   options: {
     query?: string
     status?: SignatureStatusFilter
     sort?: SignatureSort
   }
-): HiveRecord[] {
+): RailNetRecord[] {
   const status = options.status ?? 'all'
   const query = options.query ?? ''
   const filtered = records.filter(
@@ -350,7 +350,7 @@ export function filterAndSortSignatures(
   return sortSignatures(filtered, options.sort ?? 'status')
 }
 
-export function trainingSummary(record: HiveRecord): string {
+export function trainingSummary(record: RailNetRecord): string {
   const period = record.reporting_period ?? getTrendReportingPeriod(record)
   const count = record.total_question_count ?? (Array.isArray(record.questions) ? record.questions.length : null)
   const parts = [String(period)]
@@ -359,22 +359,22 @@ export function trainingSummary(record: HiveRecord): string {
   return parts.join(' · ')
 }
 
-export function trendReportKey(record: HiveRecord): string {
+export function trendReportKey(record: RailNetRecord): string {
   return `${String(record.pk ?? '')}|${String(record.sk ?? '')}`
 }
 
-export function trendReportLabel(record: HiveRecord): string {
-  const org = String(record.hive_org_id ?? '—')
+export function trendReportLabel(record: RailNetRecord): string {
+  const org = String(record.railnet_org_id ?? '—')
   const period = getTrendReportingPeriod(record)
   const sk = String(record.sk ?? '')
   return `${org} · ${period}${sk ? ` · ${sk}` : ''}`
 }
 
-export function sortTrendReports(reports: HiveRecord[]): HiveRecord[] {
+export function sortTrendReports(reports: RailNetRecord[]): RailNetRecord[] {
   return [...reports].sort((a, b) => {
     const byPeriod = getTrendReportingPeriod(b).localeCompare(getTrendReportingPeriod(a))
     if (byPeriod !== 0) return byPeriod
-    return String(a.hive_org_id ?? '').localeCompare(String(b.hive_org_id ?? ''))
+    return String(a.railnet_org_id ?? '').localeCompare(String(b.railnet_org_id ?? ''))
   })
 }
 
@@ -388,11 +388,11 @@ export function getNumericRecordMap(value: unknown): Record<string, number> {
   return result
 }
 
-export function getHostAlertMetrics(record: HiveRecord): Record<string, number> {
+export function getHostAlertMetrics(record: RailNetRecord): Record<string, number> {
   return getNumericRecordMap(record.alert_metrics)
 }
 
-export function sumHostAlertMetrics(batches: HiveRecord[]): Record<string, number> {
+export function sumHostAlertMetrics(batches: RailNetRecord[]): Record<string, number> {
   const totals: Record<string, number> = {}
   for (const batch of batches) {
     for (const [key, value] of Object.entries(getHostAlertMetrics(batch))) {
@@ -403,13 +403,13 @@ export function sumHostAlertMetrics(batches: HiveRecord[]): Record<string, numbe
 }
 
 export function getBatchesForTrendReport(
-  batches: HiveRecord[],
-  report: HiveRecord
-): HiveRecord[] {
-  const orgId = String(report.hive_org_id ?? '')
+  batches: RailNetRecord[],
+  report: RailNetRecord
+): RailNetRecord[] {
+  const orgId = String(report.railnet_org_id ?? '')
   const period = getTrendReportingPeriod(report)
   return batches.filter((batch) => {
-    if (String(batch.hive_org_id ?? '') !== orgId) return false
+    if (String(batch.railnet_org_id ?? '') !== orgId) return false
     if (classifyHostUpload(batch) !== 'batch') return false
     const batchPeriod =
       typeof batch.reporting_period === 'string' ? batch.reporting_period.trim() : ''
@@ -446,46 +446,46 @@ export function reconcileAlertCounts(
     })
 }
 
-export function getDomainCounts(record: HiveRecord): Record<string, number> {
+export function getDomainCounts(record: RailNetRecord): Record<string, number> {
   const metrics = getTrendRawMetrics(record)
   return getNumericRecordMap(metrics?.domain_counts)
 }
 
-export function getTrainingSummaryMetrics(record: HiveRecord): Record<string, unknown> | null {
+export function getTrainingSummaryMetrics(record: RailNetRecord): Record<string, unknown> | null {
   const metrics = getTrendRawMetrics(record)
   return getRecordObject(metrics?.training_summary)
 }
 
-export function getSoftwareFindingsFromTrend(record: HiveRecord): unknown[] {
+export function getSoftwareFindingsFromTrend(record: RailNetRecord): unknown[] {
   const metrics = getTrendRawMetrics(record)
   const findings = metrics?.software_findings
   return Array.isArray(findings) ? findings : []
 }
 
-export function getIocSummary(record: HiveRecord): Record<string, unknown> | null {
+export function getIocSummary(record: RailNetRecord): Record<string, unknown> | null {
   const metrics = getTrendRawMetrics(record)
   return getRecordObject(metrics?.ioc_summary)
 }
 
-export function getAiReportOutput(record: HiveRecord): Record<string, unknown> | null {
+export function getAiReportOutput(record: RailNetRecord): Record<string, unknown> | null {
   const aiReport = getRecordObject(record.ai_report)
   if (!aiReport) return null
   return getRecordObject(aiReport.raw_ai_output) ?? aiReport
 }
 
-export function getLeadershipBrief(record: HiveRecord): string | null {
+export function getLeadershipBrief(record: RailNetRecord): string | null {
   const output = getAiReportOutput(record)
   const brief = output?.leadership_brief
   return typeof brief === 'string' && brief.trim() ? brief.trim() : null
 }
 
-export function getAiRecommendations(record: HiveRecord): string[] {
+export function getAiRecommendations(record: RailNetRecord): string[] {
   const output = getAiReportOutput(record)
   if (!Array.isArray(output?.recommendations)) return []
   return output!.recommendations.filter((entry): entry is string => typeof entry === 'string')
 }
 
-export function getCandidateSignaturesFromAi(record: HiveRecord): Record<string, unknown>[] {
+export function getCandidateSignaturesFromAi(record: RailNetRecord): Record<string, unknown>[] {
   const output = getAiReportOutput(record)
   if (!Array.isArray(output?.candidate_signatures)) return []
   return output!.candidate_signatures.filter(

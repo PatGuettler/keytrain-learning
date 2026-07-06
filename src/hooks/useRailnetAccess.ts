@@ -25,13 +25,13 @@ export function useRailnetOrgScope() {
     staleTime: 5 * 60_000,
   })
 
-  const hiveOrgId = organization?.hive_org_id?.trim() || null
+  const railnetOrgId = organization?.railnet_org_id?.trim() || null
 
   return {
     ktlAdmin,
     platformAdmin: ktlAdmin,
-    hiveOrgId,
-    isConfigured: ktlAdmin || Boolean(hiveOrgId),
+    railnetOrgId,
+    isConfigured: ktlAdmin || Boolean(railnetOrgId),
     isLoading: !ktlAdmin && Boolean(profile?.org_id) && isLoading,
   }
 }

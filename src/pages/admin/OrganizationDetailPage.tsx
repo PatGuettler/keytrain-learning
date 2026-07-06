@@ -86,7 +86,7 @@ export function OrganizationDetailPage() {
   const settingsChanged =
     org && (orgName.trim() !== org.name || !tagIdsEqual(selectedTagIds, savedTagIds))
 
-  const configuredHiveOrgId = org?.hive_org_id?.trim() || null
+  const configuredRailNetOrgId = org?.railnet_org_id?.trim() || null
   const usersWithRailnet = users.filter((u) => u.railnet_enabled === true).length
 
   if (!orgsLoading && !org) {
@@ -122,7 +122,7 @@ export function OrganizationDetailPage() {
       {orgId && org && org.id !== PLATFORM_ORG_ID && (
         <RailNetOrgSetupCard
           orgId={orgId}
-          initialHiveOrgId={org.hive_org_id ?? ''}
+          initialRailNetOrgId={org.railnet_org_id ?? ''}
           usersWithRailnet={usersWithRailnet}
           totalUsers={users.length}
         />
@@ -201,7 +201,7 @@ export function OrganizationDetailPage() {
             orgId={orgId}
             users={users}
             managers={managers}
-            hiveOrgId={configuredHiveOrgId}
+            railnetOrgId={configuredRailNetOrgId}
           />
         ) : null}
       </section>

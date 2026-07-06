@@ -6,9 +6,9 @@ import {
   getSoftwareFindingsFromTrend,
   getTrainingSummaryMetrics,
   getTrendReportingPeriod,
-} from '@/lib/hive-records'
+} from '@/lib/railnet-records'
 import type { ComplianceDocumentType } from '@/types/compliance.types'
-import type { HiveRecord } from '@/types/hive.types'
+import type { RailNetRecord } from '@/types/railnet.types'
 
 export type ComplianceTemplateSection = {
   id: string
@@ -28,11 +28,11 @@ export const COMPLIANCE_DISCLAIMER =
 /** @deprecated Use COMPLIANCE_DISCLAIMER */
 export const COMPLIANCE_DRAFT_DISCLAIMER = COMPLIANCE_DISCLAIMER
 
-export function isTestHiveOrg(orgId: string): boolean {
+export function isTestRailnetOrg(orgId: string): boolean {
   return orgId.startsWith('hive-test-') || orgId.startsWith('testorg')
 }
 
-function approvedSignaturesText(signatures: HiveRecord[]): string {
+function approvedSignaturesText(signatures: RailNetRecord[]): string {
   const approved = signatures.filter(
     (s) => String(s.approval_status ?? '').toLowerCase() === 'approved'
   )
@@ -45,7 +45,7 @@ function approvedSignaturesText(signatures: HiveRecord[]): string {
     .join('\n')
 }
 
-function softwareFindingsText(trendReport: HiveRecord | null): string {
+function softwareFindingsText(trendReport: RailNetRecord | null): string {
   const findings = trendReport ? getSoftwareFindingsFromTrend(trendReport) : []
   if (findings.length === 0) return 'No outdated software findings in the latest trend report.'
   return findings
@@ -62,8 +62,8 @@ function softwareFindingsText(trendReport: HiveRecord | null): string {
 export function buildComplianceDraftContent(
   docType: ComplianceDocumentType,
   orgId: string,
-  trendReport: HiveRecord | null,
-  signatures: HiveRecord[]
+  trendReport: RailNetRecord | null,
+  signatures: RailNetRecord[]
 ): ComplianceDraftContent {
   const period = trendReport ? getTrendReportingPeriod(trendReport) : '—'
   const risks = trendReport ? getRiskScores(trendReport) : {}
@@ -89,7 +89,7 @@ export function buildComplianceDraftContent(
     COMPLIANCE_DISCLAIMER,
     '',
     `Organization: ${orgId}`,
-    isTestHiveOrg(orgId) ? 'Environment: test/demo (not production PHI)' : '',
+    isTestRailnetOrg(orgId) ? 'Environment: test/demo (not production PHI)' : '',
     `Reporting period: ${period}`,
     riskSummary ? `Risk scores — ${riskSummary}` : '',
     alertSummary ? `Alert counts — ${alertSummary}` : '',
@@ -131,13 +131,13 @@ export function buildComplianceDraftContent(
     case 'hipaa_risk_analysis':
       return {
         ...base,
-        scope: isTestHiveOrg(orgId)
+        scope: isTestRailnetOrg(orgId)
           ? `Scope for ${orgId} (test org). Replace with your organization's actual systems and whether you handle ePHI before compliance use.`
           : `Risk analysis for ${orgId} workforce endpoints and cloud services. [Confirm whether your organization handles ePHI and edit this section.]`,
         threat_landscape: alertSummary
           ? `Security telemetry (not PHI): ${alertSummary}.`
           : 'Phishing, ransomware, and insider threat scenarios.',
-        safeguards: approvedSignaturesText(signatures.filter((s) => s.hive_org_id === orgId || !orgId)),
+        safeguards: approvedSignaturesText(signatures.filter((s) => s.railnet_org_id === orgId || !orgId)),
         residual_risk: riskSummary
           ? `Residual risk after controls: ${riskSummary}. Review quarterly.`
           : 'Residual risk to be scored after control review.',
@@ -149,7 +149,7 @@ export function buildComplianceDraftContent(
         acceptable_use:
           'Business email, approved SaaS, and authorized systems per policy; security training required.',
         prohibited_use:
-          isTestHiveOrg(orgId)
+          isTestRailnetOrg(orgId)
             ? 'Unauthorized software, credential sharing, unapproved USB devices. [Edit for your policy.]'
             : 'Unauthorized software, credential sharing, unapproved storage of sensitive data, unapproved USB devices.',
         security_awareness: `Average training score: ${avgScore}. Weak domains: ${weakDomains}.`,
@@ -168,7 +168,7 @@ export function buildComplianceDraftContent(
         training_program: `Monthly targeted assignments based on RailNet trend analysis (${period}).`,
         weak_domains: weakDomains,
         approved_controls: approvedSignaturesText(
-          signatures.filter((s) => String(s.hive_org_id) === orgId)
+          signatures.filter((s) => String(s.railnet_org_id) === orgId)
         ),
       }
     default:

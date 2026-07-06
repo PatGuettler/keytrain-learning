@@ -14,10 +14,10 @@
     "deploy:manage-users": "bash scripts/deploy-manage-users.sh",
     "deploy:phishing": "bash scripts/deploy-phishing.sh",
     "deploy:spiritual": "bash scripts/deploy-spiritual.sh",
-    "deploy:hive-bridge": "bash scripts/deploy-hive-bridge.sh",
+    "deploy:railnet-bridge": "bash scripts/deploy-railnet-bridge.sh",
     "deploy:railnet-signatures": "bash scripts/deploy-railnet-signatures.sh",
-    "seed:hive": "bash scripts/hive-seed.sh",
-    "seed:hive:dry-run": "bash scripts/hive-seed.sh --dry-run",
+    "seed:railnet": "bash scripts/railnet-seed.sh",
+    "seed:railnet:dry-run": "bash scripts/railnet-seed.sh --dry-run",
     "test:resend-support": "bash scripts/test-resend-support.sh",
     "set-test-passwords": "bash scripts/set-test-passwords.sh"
   },

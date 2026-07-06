@@ -1,5 +1,5 @@
 """
-Hive DynamoDB seed catalog — realistic multi-org test data for KTL dashboards.
+RailNet DynamoDB seed catalog — realistic multi-org test data for KTL dashboards.
 
 5 orgs × 10 workstation users × 3 reporting months, plus signatures, trends,
 training assignments, and legacy TS# IOC rows.

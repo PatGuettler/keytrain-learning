@@ -18,12 +18,12 @@ export function OrgUsersTable({
   orgId,
   users,
   managers,
-  hiveOrgId,
+  railnetOrgId,
 }: {
   orgId: string
   users: Profile[]
   managers: Profile[]
-  hiveOrgId: string | null
+  railnetOrgId: string | null
 }) {
   const queryClient = useQueryClient()
   const [editUser, setEditUser] = useState<Profile | null>(null)
@@ -132,7 +132,7 @@ export function OrgUsersTable({
         orgId={orgId}
         user={editUser}
         managers={managers}
-        hiveOrgId={hiveOrgId}
+        railnetOrgId={railnetOrgId}
         onSaved={refreshUsers}
       />
 

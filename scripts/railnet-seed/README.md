@@ -1,6 +1,6 @@
-# Hive DynamoDB test data seed
+# RailNet DynamoDB test data seed
 
-Seeds **5 test orgs × 10 workstation users × 3 reporting months** into the KeyTrain Hive tables in `us-east-2` for KTL dashboard, reporting drill-down, and PDF testing.
+Seeds **5 test orgs × 10 workstation users × 3 reporting months** into the KeyTrain RailNet tables in `us-east-2` for KTL dashboard, reporting drill-down, and PDF testing.
 
 ## What gets seeded
 
@@ -34,12 +34,12 @@ Host batch fields mirror KT uploads: `performance_metrics`, `alert_metrics`, `do
 ## Prerequisites
 
 1. **AWS account** `607292335442`, region **`us-east-2`**
-2. **IAM credentials with write access** to the four Hive tables (not `ktl-hive-readonly`)
+2. **IAM credentials with write access** to the four RailNet tables (not `ktl-hive-readonly`)
 
 ## Run the seed
 
 ```bash
-cd scripts/hive-seed
+cd scripts/railnet-seed
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -49,21 +49,21 @@ export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 
 # Preview counts + sample JSON (no writes)
-python aws_hive_seed.py --dry-run
+python aws_railnet_seed.py --dry-run
 
 # Write all 5 orgs (~255 items)
-python aws_hive_seed.py
+python aws_railnet_seed.py
 
 # Subset of orgs
-python aws_hive_seed.py --orgs hive-test-alpha hive-test-delta
+python aws_railnet_seed.py --orgs hive-test-alpha hive-test-delta
 ```
 
-Or from repo root: `npm run seed:hive:dry-run` / `npm run seed:hive`
+Or from repo root: `npm run seed:railnet:dry-run` / `npm run seed:railnet`
 
 ## Verify in KTL
 
-1. Deploy `aws-hive-bridge` if not already live
-2. Log in as platform **admin** → **Hive** tab → **Refresh Data**
+1. Deploy `aws-railnet-bridge` if not already live
+2. Log in as platform **admin** → **RailNet** tab → **Refresh Data**
 3. Org filter should list all five `hive-test-*` orgs
 4. **Reporting** — pick different months; alert reconciliation should match host batch sums
 5. **Host uploads** — legacy `TS#` warning should appear (15 rows total)
@@ -73,20 +73,20 @@ Or from repo root: `npm run seed:hive:dry-run` / `npm run seed:hive`
 Optional Supabase secret for faster bridge queries:
 
 ```
-HIVE_ORG_IDS=hive-test-alpha,hive-test-beta,hive-test-church,hive-test-delta,hive-test-epsilon
+RAILNET_ORG_IDS=hive-test-alpha,hive-test-beta,hive-test-church,hive-test-delta,hive-test-epsilon
 ```
 
 ## Clean up test data
 
 ```bash
-python aws_hive_seed_cleanup.py --dry-run
-python aws_hive_seed_cleanup.py --confirm
+python aws_railnet_seed_cleanup.py --dry-run
+python aws_railnet_seed_cleanup.py --confirm
 ```
 
 Remove everything under all five test org partition keys:
 
 ```bash
-python aws_hive_seed_cleanup.py --by-org --confirm
+python aws_railnet_seed_cleanup.py --by-org --confirm
 ```
 
 ## Customize

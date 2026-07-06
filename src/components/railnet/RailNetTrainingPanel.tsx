@@ -1,15 +1,15 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatCard } from '@/components/dashboard/StatCard'
-import { trainingSummary } from '@/lib/hive-records'
-import type { HiveRecord } from '@/types/hive.types'
+import { trainingSummary } from '@/lib/railnet-records'
+import type { RailNetRecord } from '@/types/railnet.types'
 import { GraduationCap } from 'lucide-react'
 
-type HiveTrainingPanelProps = {
-  trainingAssignments: HiveRecord[]
+type RailNetTrainingPanelProps = {
+  trainingAssignments: RailNetRecord[]
 }
 
-export function HiveTrainingPanel({ trainingAssignments }: HiveTrainingPanelProps) {
+export function RailNetTrainingPanel({ trainingAssignments }: RailNetTrainingPanelProps) {
   const totalQuestions = trainingAssignments.reduce((sum, record) => {
     if (typeof record.total_question_count === 'number') return sum + record.total_question_count
     if (Array.isArray(record.questions)) return sum + record.questions.length
@@ -48,7 +48,7 @@ export function HiveTrainingPanel({ trainingAssignments }: HiveTrainingPanelProp
                   {trainingAssignments.map((record, index) => (
                     <tr key={`${record.pk}-${record.sk}-${index}`} className="border-t">
                       <td className="px-3 py-2 whitespace-nowrap">
-                        <Badge variant="outline">{String(record.hive_org_id ?? '—')}</Badge>
+                        <Badge variant="outline">{String(record.railnet_org_id ?? '—')}</Badge>
                       </td>
                       <td className="px-3 py-2 max-w-md truncate" title={trainingSummary(record)}>
                         {trainingSummary(record)}

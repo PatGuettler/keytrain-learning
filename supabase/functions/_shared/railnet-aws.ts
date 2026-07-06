@@ -7,7 +7,8 @@ import {
 } from 'npm:@aws-sdk/lib-dynamodb@3'
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2'
 
-export const HIVE_TABLES = {
+export const RAILNET_AWS_TABLES = {
+  /** Legacy AWS DynamoDB table names (infrastructure not yet renamed in AWS). */
   indicators: 'KeyTrainHiveIndicators',
   trendReports: 'KeyTrainHiveTrendReports',
   trainingAssignments: 'KeyTrainTrainingAssignments',
@@ -20,7 +21,7 @@ export const PLATFORM_ORG_ID = '00000000-0000-0000-0000-000000000099'
 export type RailnetBridgeAccess = {
   isKtlAdmin: boolean
   /** When set, responses are limited to this AWS org id. */
-  hiveOrgId: string | null
+  railnetOrgId: string | null
 }
 
 export async function resolveRailnetBridgeAccess(
@@ -40,7 +41,7 @@ export async function resolveRailnetBridgeAccess(
   const isKtlAdmin = profile.role === 'admin'
 
   if (isKtlAdmin) {
-    return { isKtlAdmin: true, hiveOrgId: null }
+    return { isKtlAdmin: true, railnetOrgId: null }
   }
 
   if (profile.railnet_enabled !== true) {
@@ -49,7 +50,7 @@ export async function resolveRailnetBridgeAccess(
 
   const { data: org, error: orgError } = await adminClient
     .from('organizations')
-    .select('hive_org_id')
+    .select('railnet_org_id')
     .eq('id', profile.org_id)
     .single()
 
@@ -57,26 +58,26 @@ export async function resolveRailnetBridgeAccess(
     throw new Error('Organization not found.')
   }
 
-  const hiveOrgId = String(org.hive_org_id ?? '').trim()
-  if (!hiveOrgId) {
+  const railnetOrgId = String(org.railnet_org_id ?? '').trim()
+  if (!railnetOrgId) {
     throw new Error('RailNet is not configured for your organization.')
   }
 
-  return { isKtlAdmin: false, hiveOrgId }
+  return { isKtlAdmin: false, railnetOrgId }
 }
 
-export type HiveTableKey = keyof typeof HIVE_TABLES
+export type RailNetTableKey = keyof typeof RAILNET_AWS_TABLES
 
-export function hiveOrgPk(orgId: string): string {
+export function railnetOrgPk(orgId: string): string {
   return orgId.startsWith('ORG#') ? orgId : `ORG#${orgId}`
 }
 
-export function parseHiveOrgId(pk: unknown): string {
+export function parseRailnetOrgId(pk: unknown): string {
   const value = String(pk ?? '')
   return value.startsWith('ORG#') ? value.slice(4) : value
 }
 
-export function createHiveDynamoClient(): DynamoDBDocumentClient {
+export function createRailNetDynamoClient(): DynamoDBDocumentClient {
   const region = Deno.env.get('AWS_REGION')?.trim() ?? 'us-east-2'
   const accessKeyId = Deno.env.get('AWS_ACCESS_KEY_ID')?.trim()
   const secretAccessKey = Deno.env.get('AWS_SECRET_ACCESS_KEY')?.trim()
@@ -118,7 +119,7 @@ export function formatAwsError(error: unknown): string {
   if (name === 'AccessDeniedException' || message.includes('not authorized')) {
     return (
       `AWS denied DynamoDB access: ${message} ` +
-      'The IAM user needs dynamodb:Query and dynamodb:Scan on Hive tables for reads, ' +
+      'The IAM user needs dynamodb:Query and dynamodb:Scan on RailNet tables for reads, ' +
       'and dynamodb:UpdateItem on KeyTrainHiveSignatures for signature approve.'
     )
   }
@@ -126,8 +127,8 @@ export function formatAwsError(error: unknown): string {
   return message || 'AWS request failed.'
 }
 
-export function configuredHiveOrgIds(): string[] {
-  const raw = Deno.env.get('HIVE_ORG_IDS')?.trim()
+export function configuredRailNetOrgIds(): string[] {
+  const raw = Deno.env.get('RAILNET_ORG_IDS')?.trim()
   if (!raw) return []
   return [...new Set(raw.split(',').map((id) => id.trim()).filter(Boolean))]
 }
@@ -136,7 +137,7 @@ function normalizeItem(item: Record<string, unknown>): Record<string, unknown> {
   const sk = String(item.sk ?? '')
   const record: Record<string, unknown> = {
     ...item,
-    hive_org_id: parseHiveOrgId(item.pk),
+    railnet_org_id: parseRailnetOrgId(item.pk),
   }
 
   if (sk.startsWith('BATCH#')) record.record_kind = 'batch'
@@ -162,7 +163,7 @@ async function queryOrgItems(
         TableName: tableName,
         KeyConditionExpression: '#pk = :pk',
         ExpressionAttributeNames: { '#pk': 'pk' },
-        ExpressionAttributeValues: { ':pk': hiveOrgPk(orgId) },
+        ExpressionAttributeValues: { ':pk': railnetOrgPk(orgId) },
         ExclusiveStartKey: lastKey,
       })
     )
@@ -203,7 +204,7 @@ async function scanOrgItems(
   return items
 }
 
-export async function fetchHiveTable(
+export async function fetchRailNetTable(
   client: DynamoDBDocumentClient,
   tableName: string,
   orgIds: string[]
@@ -223,14 +224,14 @@ export function filterByOrgIds(
 ): Record<string, unknown>[] {
   if (!orgIds || orgIds.length === 0) return items
   const allowed = new Set(orgIds)
-  return items.filter((item) => allowed.has(String(item.hive_org_id ?? '')))
+  return items.filter((item) => allowed.has(String(item.railnet_org_id ?? '')))
 }
 
 export function collectOrgIds(...itemGroups: Record<string, unknown>[][]): string[] {
   const ids = new Set<string>()
   for (const group of itemGroups) {
     for (const item of group) {
-      const orgId = String(item.hive_org_id ?? '').trim()
+      const orgId = String(item.railnet_org_id ?? '').trim()
       if (orgId) ids.add(orgId)
     }
   }
@@ -251,7 +252,7 @@ export async function updateSignatureApproval(
   if (input.action === 'approve') {
     const result = await client.send(
       new UpdateCommand({
-        TableName: HIVE_TABLES.signatures,
+        TableName: RAILNET_AWS_TABLES.signatures,
         Key: { pk: input.pk, sk: input.sk },
         UpdateExpression:
           'SET approval_status = :status, approved_by = :by, approved_utc = :utc',
@@ -268,7 +269,7 @@ export async function updateSignatureApproval(
 
   const result = await client.send(
     new UpdateCommand({
-      TableName: HIVE_TABLES.signatures,
+      TableName: RAILNET_AWS_TABLES.signatures,
       Key: { pk: input.pk, sk: input.sk },
       UpdateExpression: 'SET approval_status = :status, rejected_utc = :utc',
       ExpressionAttributeValues: {

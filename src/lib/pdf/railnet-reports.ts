@@ -1,4 +1,4 @@
-import type { HiveDataResponse } from '@/types/hive.types'
+import type { RailNetDataResponse } from '@/types/railnet.types'
 import {
   countSignaturesByStatus,
   getAlertCounts,
@@ -11,7 +11,7 @@ import {
   splitHostUploads,
   sumHostAlertMetrics,
   trainingSummary,
-} from '@/lib/hive-records'
+} from '@/lib/railnet-records'
 import {
   addDataTable,
   addMetricsSection,
@@ -38,7 +38,7 @@ function formatFetchedAt(value: string): string {
   })
 }
 
-export function exportHiveReportPdf(data: HiveDataResponse, selectedOrgIds: string[]) {
+export function exportRailNetReportPdf(data: RailNetDataResponse, selectedOrgIds: string[]) {
   const subtitle = orgFilterLabel(selectedOrgIds, data.org_ids)
   const doc = createDashboardPdf('RailNet Security Report', subtitle)
   let y = pdfStartY(subtitle)
@@ -65,7 +65,7 @@ export function exportHiveReportPdf(data: HiveDataResponse, selectedOrgIds: stri
     doc.setFontSize(9)
     doc.setTextColor(140, 90, 0)
     doc.text(
-      `Note: ${legacyIocs.length} legacy TS# row(s) remain in KeyTrainHiveIndicators pending AWS migration.`,
+      `Note: ${legacyIocs.length} legacy TS# row(s) remain in RailNet indicators pending AWS migration.`,
       14,
       y
     )
@@ -83,7 +83,7 @@ export function exportHiveReportPdf(data: HiveDataResponse, selectedOrgIds: stri
       doc,
       ['Org', 'Phrase / rule', 'Domain', 'Type', 'Status', 'Severity'],
       data.signatures.map((record) => [
-        String(record.hive_org_id ?? '—'),
+        String(record.railnet_org_id ?? '—'),
         signatureSummary(record),
         record.domain ? String(record.domain) : '—',
         record.signature_type ? String(record.signature_type) : '—',
@@ -140,7 +140,7 @@ export function exportHiveReportPdf(data: HiveDataResponse, selectedOrgIds: stri
               : 'host sum differs'
             : 'no host batches'
         return [
-          String(record.hive_org_id ?? '—'),
+          String(record.railnet_org_id ?? '—'),
           getTrendReportingPeriod(record),
           String(alertTotal || '—'),
           riskText,
@@ -173,7 +173,7 @@ export function exportHiveReportPdf(data: HiveDataResponse, selectedOrgIds: stri
       doc,
       ['Org', 'Summary', 'Host', 'Sort key'],
       batches.map((record) => [
-        String(record.hive_org_id ?? '—'),
+        String(record.railnet_org_id ?? '—'),
         hostUploadSummary(record),
         record.host_id ? String(record.host_id) : '—',
         record.sk ? String(record.sk) : '—',
@@ -194,7 +194,7 @@ export function exportHiveReportPdf(data: HiveDataResponse, selectedOrgIds: stri
       doc,
       ['Org', 'Summary', 'Indicator', 'Severity', 'Sort key'],
       legacyIocs.map((record) => [
-        String(record.hive_org_id ?? '—'),
+        String(record.railnet_org_id ?? '—'),
         hostUploadSummary(record),
         record.indicator ? String(record.indicator) : '—',
         record.severity ? String(record.severity) : '—',
@@ -218,7 +218,7 @@ export function exportHiveReportPdf(data: HiveDataResponse, selectedOrgIds: stri
     data.training_assignments.length === 0
       ? [['—', 'No training assignments for the selected org filter.', '—', '—', '—']]
       : data.training_assignments.map((record) => [
-          String(record.hive_org_id ?? '—'),
+          String(record.railnet_org_id ?? '—'),
           trainingSummary(record),
           record.total_question_count != null
             ? String(record.total_question_count)
@@ -245,5 +245,5 @@ export function exportHiveReportPdf(data: HiveDataResponse, selectedOrgIds: stri
         ? `${selectedOrgIds.length}-orgs`
         : 'all-orgs'
 
-  saveDashboardPdf(doc, `hive-report-${orgSlug}-${new Date().toISOString().slice(0, 10)}`)
+  saveDashboardPdf(doc, `railnet-report-${orgSlug}-${new Date().toISOString().slice(0, 10)}`)
 }

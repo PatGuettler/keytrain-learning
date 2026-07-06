@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # Deploy RailNet Edge Functions (verify_jwt=false in supabase/config.toml):
-#   aws-hive-bridge (read) + aws-railnet-signatures (approve/reject write)
+#   aws-railnet-bridge (read) + aws-railnet-signatures (approve/reject write)
 #
 # Requires Supabase secrets (set once in dashboard or via CLI):
 #   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION=us-east-2
 #
-# IAM (one user for both edge functions, e.g. ktl-hive-write):
-#   Read:  dynamodb:Query, dynamodb:Scan, dynamodb:GetItem on Hive tables
+# IAM (one user for both edge functions, e.g. ktl-railnet-write):
+#   Read:  dynamodb:Query, dynamodb:Scan, dynamodb:GetItem on RailNet tables
 #   Write: dynamodb:PutItem, dynamodb:UpdateItem on Indicators + Signatures
 #   "Invalid security token" = wrong key pair in Supabase secrets, not missing Query.
-# Optional: HIVE_ORG_IDS=church001,KeyTrainAdmins (comma-separated; omit to scan all ORG# rows)
+# Optional: RAILNET_ORG_IDS=church001,KeyTrainAdmins (comma-separated; omit to scan all ORG# rows)
 #
 # Non-interactive:
 #   export SUPABASE_ACCESS_TOKEN='sbp_...'
 #   export SUPABASE_PROJECT_REF=rzrsudrdpnabpseatclm
-#   bash scripts/deploy-hive-bridge.sh
+#   bash scripts/deploy-railnet-bridge.sh
 set -euo pipefail
 
 PROJECT_REF="${SUPABASE_PROJECT_REF:-${PROJECT_REF:-}}"
@@ -42,7 +42,7 @@ Error: not authenticated with Supabase.
 
   export SUPABASE_ACCESS_TOKEN='sbp_...'
   export SUPABASE_PROJECT_REF=rzrsudrdpnabpseatclm
-  npm run deploy:hive-bridge
+  npm run deploy:railnet-bridge
 EOF
     exit 1
   fi
@@ -52,8 +52,8 @@ echo "Linking project and pushing config…"
 "${SUPABASE_CMD[@]}" link --project-ref "$PROJECT_REF" --yes || true
 "${SUPABASE_CMD[@]}" config push --yes || true
 
-echo "Deploying aws-hive-bridge…"
-"${SUPABASE_CMD[@]}" functions deploy aws-hive-bridge --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
+echo "Deploying aws-railnet-bridge…"
+"${SUPABASE_CMD[@]}" functions deploy aws-railnet-bridge --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
 
 echo "Deploying aws-railnet-signatures…"
 "${SUPABASE_CMD[@]}" functions deploy aws-railnet-signatures --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
@@ -63,7 +63,7 @@ echo "Verify AWS secrets are set in Supabase Dashboard → Edge Functions → Se
 echo "  AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION=us-east-2"
 echo "  (signatures write needs DynamoDB UpdateItem on KeyTrainHiveSignatures)"
 echo ""
-for fn in aws-hive-bridge aws-railnet-signatures; do
+for fn in aws-railnet-bridge aws-railnet-signatures; do
   echo "OPTIONS check $fn…"
   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X OPTIONS \
     "https://${PROJECT_REF}.supabase.co/functions/v1/${fn}" \

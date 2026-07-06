@@ -26,8 +26,8 @@ export function CourseEditPage() {
   const isNew = Boolean(isCreateRoute) || courseId === 'new'
   const navigate = useNavigate()
   const location = useLocation()
-  const hiveStagingIdRef = useRef(
-    (location.state as { hiveStagingId?: string } | null)?.hiveStagingId
+  const railnetStagingIdRef = useRef(
+    (location.state as { railnetStagingId?: string } | null)?.railnetStagingId
   )
   const queryClient = useQueryClient()
   const orgId = useAuthStore((s) => s.profile?.org_id)!
@@ -72,8 +72,8 @@ export function CourseEditPage() {
 
   useEffect(() => {
     if (!isNew) return
-    const bundle = (location.state as { hiveImportBundle?: CourseExportBundle } | null)
-      ?.hiveImportBundle
+    const bundle = (location.state as { railnetImportBundle?: CourseExportBundle } | null)
+      ?.railnetImportBundle
     if (!bundle) return
 
     const draft = parseCourseImport(bundle)
@@ -89,7 +89,7 @@ export function CourseEditPage() {
     setShowResultsAfterCompletion(draft.show_results_after_completion)
     setModules(
       draft.modules.map((m, i) => ({
-        id: `temp-hive-${i}`,
+        id: `temp-railnet-${i}`,
         course_id: 'new',
         title: m.title,
         type: m.type,
@@ -100,7 +100,7 @@ export function CourseEditPage() {
     )
     navigate(location.pathname, {
       replace: true,
-      state: hiveStagingIdRef.current ? { hiveStagingId: hiveStagingIdRef.current } : {},
+      state: railnetStagingIdRef.current ? { railnetStagingId: railnetStagingIdRef.current } : {},
     })
   }, [isNew, location.pathname, location.state, navigate])
 
@@ -183,9 +183,9 @@ export function CourseEditPage() {
       }
       await syncCourseModules(saved.id, savedModuleIds)
 
-      if (hiveStagingIdRef.current) {
+      if (railnetStagingIdRef.current) {
         const bundle = exportCourseBundle(saved, savedModules)
-        await updateCourseStagingContent(hiveStagingIdRef.current, bundle)
+        await updateCourseStagingContent(railnetStagingIdRef.current, bundle)
         await queryClient.invalidateQueries({ queryKey: ['course-staging'] })
       }
 

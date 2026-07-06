@@ -1,10 +1,10 @@
-export type HiveRecord = Record<string, unknown> & {
+export type RailNetRecord = Record<string, unknown> & {
   pk?: string
   sk?: string
-  hive_org_id?: string
+  railnet_org_id?: string
 }
 
-export type HiveDataResponse = {
+export type RailNetDataResponse = {
   fetched_at: string
   region: string
   org_ids: string[]
@@ -16,9 +16,9 @@ export type HiveDataResponse = {
     training_assignments: number
     signatures: number
   }
-  indicators: HiveRecord[]
-  trend_reports: HiveRecord[]
-  training_assignments: HiveRecord[]
-  signatures: HiveRecord[]
+  indicators: RailNetRecord[]
+  trend_reports: RailNetRecord[]
+  training_assignments: RailNetRecord[]
+  signatures: RailNetRecord[]
   error?: string
 }

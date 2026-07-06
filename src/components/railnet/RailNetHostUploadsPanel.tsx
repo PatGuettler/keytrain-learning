@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { StatCard } from '@/components/dashboard/StatCard'
-import { ConfigurableHiveTable } from '@/components/hive/ConfigurableHiveTable'
+import { ConfigurableRailNetTable } from '@/components/railnet/ConfigurableRailNetTable'
 import {
   filterAndSortHostBatches,
   formatAlertMetricsSummary,
@@ -13,12 +13,12 @@ import {
   hostUploadSummary,
   splitHostUploads,
   type HostBatchSort,
-} from '@/lib/hive-records'
-import type { HiveRecord } from '@/types/hive.types'
+} from '@/lib/railnet-records'
+import type { RailNetRecord } from '@/types/railnet.types'
 import { AlertTriangle, Server } from 'lucide-react'
 
-type HiveHostUploadsPanelProps = {
-  indicators: HiveRecord[]
+type RailNetHostUploadsPanelProps = {
+  indicators: RailNetRecord[]
   legacyIocCount?: number
 }
 
@@ -30,10 +30,10 @@ const BATCH_SORT_OPTIONS: { value: HostBatchSort; label: string }[] = [
   { value: 'period', label: 'Reporting period' },
 ]
 
-function renderBatchCell(columnId: string, record: HiveRecord): ReactNode {
+function renderBatchCell(columnId: string, record: RailNetRecord): ReactNode {
   switch (columnId) {
     case 'org':
-      return <Badge variant="outline">{String(record.hive_org_id ?? '—')}</Badge>
+      return <Badge variant="outline">{String(record.railnet_org_id ?? '—')}</Badge>
     case 'host':
       return (
         <span
@@ -71,10 +71,10 @@ function renderBatchCell(columnId: string, record: HiveRecord): ReactNode {
   }
 }
 
-function renderLegacyCell(columnId: string, record: HiveRecord): ReactNode {
+function renderLegacyCell(columnId: string, record: RailNetRecord): ReactNode {
   switch (columnId) {
     case 'org':
-      return <Badge variant="outline">{String(record.hive_org_id ?? '—')}</Badge>
+      return <Badge variant="outline">{String(record.railnet_org_id ?? '—')}</Badge>
     case 'summary':
       return (
         <span className="block truncate" title={hostUploadSummary(record)}>
@@ -161,7 +161,7 @@ function BatchUploadToolbar({
   )
 }
 
-export function HiveHostUploadsPanel({ indicators, legacyIocCount = 0 }: HiveHostUploadsPanelProps) {
+export function RailNetHostUploadsPanel({ indicators, legacyIocCount = 0 }: RailNetHostUploadsPanelProps) {
   const { batches, legacyIocs, other } = splitHostUploads(indicators)
   const [batchSearch, setBatchSearch] = useState('')
   const [batchSort, setBatchSort] = useState<HostBatchSort>('newest')
@@ -187,8 +187,8 @@ export function HiveHostUploadsPanel({ indicators, legacyIocCount = 0 }: HiveHos
             </p>
             <p className="mt-1 text-muted-foreground">
               {legacyIocs.length} row(s) use the old <code className="text-xs">TS#…</code> pattern in{' '}
-              <code className="text-xs">KeyTrainHiveIndicators</code>. AWS should migrate these to{' '}
-              <code className="text-xs">KeyTrainHiveSignatures</code> and write only{' '}
+              <code className="text-xs">RailNet indicators</code>. AWS should migrate these to{' '}
+              <code className="text-xs">RailNet signatures</code> and write only{' '}
               <code className="text-xs">BATCH#…</code> host uploads going forward (see plan § AWS
               prerequisites).
             </p>
@@ -209,7 +209,7 @@ export function HiveHostUploadsPanel({ indicators, legacyIocCount = 0 }: HiveHos
             shown={filteredBatches.length}
             total={batches.length}
           />
-          <ConfigurableHiveTable
+          <ConfigurableRailNetTable
             viewId="host_uploads_batch"
             rows={filteredBatches}
             rowKey={(record, index) => `${record.pk}-${record.sk}-${index}`}
@@ -229,7 +229,7 @@ export function HiveHostUploadsPanel({ indicators, legacyIocCount = 0 }: HiveHos
             <CardTitle className="text-base">Legacy IOC rows (TS# — pending AWS migration)</CardTitle>
           </CardHeader>
           <CardContent>
-            <ConfigurableHiveTable
+            <ConfigurableRailNetTable
               viewId="host_uploads_legacy"
               rows={legacyIocs}
               rowKey={(record, index) => `${record.pk}-${record.sk}-${index}`}

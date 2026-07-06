@@ -38,7 +38,7 @@ export type ComplianceDocument = {
   doc_type: ComplianceDocumentType
   title: string
   status: ComplianceDocumentStatus
-  hive_org_id: string | null
+  railnet_org_id: string | null
   current_version_id: string | null
   created_by: string | null
   created_at: string
