@@ -41,11 +41,11 @@ export const navByRole: Record<UserRole, NavItem[]> = {
   manager: [
     { to: '/manager/training', label: 'Required Training', icon: GraduationCap },
     { to: '/manager/team', label: 'My Team', icon: Users },
-    { to: '/manager/railnet', label: 'Reports', icon: Hexagon, requiresRailnet: true },
+    { to: '/manager/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
   ],
   employee: [
     { to: '/employee/training', label: 'Required Training', icon: GraduationCap },
-    { to: '/employee/railnet', label: 'Reports', icon: Hexagon, requiresRailnet: true },
+    { to: '/employee/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
   ],
 }
 
@@ -59,10 +59,10 @@ export const mobileTabNavByRole: Record<UserRole, NavItem[]> = {
   manager: [
     { to: '/manager/training', label: 'Training', icon: GraduationCap },
     { to: '/manager/team', label: 'Team', icon: Users },
-    { to: '/manager/railnet', label: 'Reports', icon: Hexagon, requiresRailnet: true },
+    { to: '/manager/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
   ],
   employee: [
     { to: '/employee/training', label: 'Training', icon: GraduationCap },
-    { to: '/employee/railnet', label: 'Reports', icon: Hexagon, requiresRailnet: true },
+    { to: '/employee/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
   ],
 }

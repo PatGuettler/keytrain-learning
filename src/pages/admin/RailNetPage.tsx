@@ -63,7 +63,7 @@ export function RailNetPage() {
 
   const visibleViews = useMemo(() => {
     if (reportsOnly) {
-      return VIEW_OPTIONS.filter((v) => v.id === 'reporting')
+      return [{ id: 'reporting' as const, label: 'Reports' }]
     }
     if (platformAdmin) {
       return VIEW_OPTIONS
@@ -101,7 +101,7 @@ export function RailNetPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={reportsOnly ? 'Reports' : 'RailNet'}
+        title="RailNet"
         description={
           reportsOnly
             ? 'Trend reports and leadership insights for your organization.'
@@ -176,7 +176,7 @@ export function RailNetPage() {
           />
 
           <div className="flex flex-wrap gap-2">
-            {visibleViews.length > 1 &&
+            {(reportsOnly || visibleViews.length > 1) &&
               visibleViews.map((option) => (
                 <Button
                   key={option.id}

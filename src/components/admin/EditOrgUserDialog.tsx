@@ -206,7 +206,7 @@ export function EditOrgUserDialog({
                 <div className="space-y-0.5">
                   <Label htmlFor="edit-user-railnet">RailNet access</Label>
                   <p className="text-sm text-muted-foreground">
-                    User can view RailNet reports for this organization only.
+                    User can open the RailNet tab and view reports for this organization only.
                   </p>
                 </div>
                 <Switch
