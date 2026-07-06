@@ -56,20 +56,44 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment_retry.outputs.page_url || steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment_retry2.outputs.page_url || steps.deployment_retry.outputs.page_url || steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Deploy to GitHub Pages (attempt 1)
         id: deployment
         uses: actions/deploy-pages@v5
         continue-on-error: true
 
-      - name: Retry Pages deploy (transient GitHub failures)
+      - name: Wait before retry
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 90
+
+      - name: Deploy to GitHub Pages (attempt 2)
         if: steps.deployment.outcome == 'failure'
         id: deployment_retry
         uses: actions/deploy-pages@v5
+        continue-on-error: true
+
+      - name: Wait before final retry
+        if: steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure'
+        run: sleep 120
+
+      - name: Deploy to GitHub Pages (attempt 3)
+        if: steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure'
+        id: deployment_retry2
+        uses: actions/deploy-pages@v5
 
       - name: Require successful deploy
-        if: steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure'
+        if: >-
+          steps.deployment.outcome == 'failure' &&
+          steps.deployment_retry.outcome == 'failure' &&
+          steps.deployment_retry2.outcome == 'failure'
         run: |
-          echo "::error::Pages deploy failed twice. Re-run this workflow or check Settings → Pages."
+          echo "::error::Pages deploy failed after 3 attempts."
+          echo "1. Re-run this workflow (Actions → Deploy to GitHub Pages → Re-run all jobs)."
+          echo "2. Settings → Pages → Source must be GitHub Actions (not a branch)."
+          echo "3. Settings → Environments → github-pages — cancel any stuck deployment."
+          echo "4. Check https://www.githubstatus.com for Pages incidents."
           exit 1
