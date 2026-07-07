@@ -37,6 +37,7 @@ import { RailNetPage } from '@/pages/admin/RailNetPage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { MarketingLayout } from '@/components/marketing/MarketingLayout'
 import { HomePage } from '@/pages/marketing/HomePage'
+import { HowItWorksPage } from '@/pages/marketing/HowItWorksPage'
 import { PricingPage } from '@/pages/marketing/PricingPage'
 import { ContactPage } from '@/pages/marketing/ContactPage'
 import { SignupPage } from '@/pages/marketing/SignupPage'
@@ -65,6 +66,7 @@ export default function App() {
         <Routes>
           <Route element={<MarketingLayout />}>
             <Route path="/" element={<RootRoute />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/signup" element={<SignupPage />} />

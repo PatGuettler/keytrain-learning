@@ -35,24 +35,6 @@ const FEATURES = [
   },
 ] as const
 
-const STEPS = [
-  {
-    step: '1',
-    title: 'Provision your organization',
-    body: 'KeyTrain sets up your org, courses, and optional RailNet AWS linkage.',
-  },
-  {
-    step: '2',
-    title: 'Invite staff & managers',
-    body: 'Admins invite users by email. New hires accept their invite and set a password.',
-  },
-  {
-    step: '3',
-    title: 'Train, simulate, improve',
-    body: 'Staff complete assigned training. Phishing sims and RailNet insights drive what to teach next.',
-  },
-] as const
-
 export function HomePage() {
   return (
     <>
@@ -83,7 +65,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section id="product" className="mx-auto max-w-6xl px-4 sm:px-6 py-20 scroll-mt-20">
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-20 scroll-mt-20">
         <div className="max-w-2xl mb-12">
           <h2 className="text-3xl font-bold tracking-tight">Everything in one portal</h2>
           <p className="mt-3 text-muted-foreground">
@@ -98,20 +80,15 @@ export function HomePage() {
         </div>
       </section>
 
-      <section id="how-it-works" className="border-y bg-muted/20 scroll-mt-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20">
-          <h2 className="text-3xl font-bold tracking-tight mb-12">How it works</h2>
-          <div className="grid gap-8 md:grid-cols-3">
-            {STEPS.map(({ step, title, body }) => (
-              <div key={step} className="space-y-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold">
-                  {step}
-                </span>
-                <h3 className="font-semibold text-xl">{title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
-              </div>
-            ))}
-          </div>
+      <section className="border-y bg-muted/20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 text-center">
+          <h2 className="text-3xl font-bold tracking-tight">See how KeyTrain works</h2>
+          <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+            Watch sample walkthroughs for admins, managers, and security leads.
+          </p>
+          <Button size="lg" className="mt-8" asChild>
+            <Link to="/how-it-works">How it works</Link>
+          </Button>
         </div>
       </section>
 

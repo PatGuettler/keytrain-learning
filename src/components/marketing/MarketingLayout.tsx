@@ -5,8 +5,7 @@ import { APP_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 const NAV_LINKS = [
-  { to: '/#product', label: 'Product' },
-  { to: '/#how-it-works', label: 'How it works' },
+  { to: '/how-it-works', label: 'How it works' },
   { to: '/pricing', label: 'Pricing' },
   { to: '/contact', label: 'Contact' },
 ] as const
@@ -57,9 +56,9 @@ export function MarketingLayout() {
             </div>
             <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-3">
               <div className="space-y-2">
-                <p className="font-medium">Product</p>
+                <p className="font-medium">Learn</p>
                 <ul className="space-y-1 text-muted-foreground">
-                  <li><Link to="/#product" className="hover:text-foreground">Features</Link></li>
+                  <li><Link to="/how-it-works" className="hover:text-foreground">How it works</Link></li>
                   <li><Link to="/pricing" className="hover:text-foreground">Pricing</Link></li>
                 </ul>
               </div>

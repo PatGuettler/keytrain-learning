@@ -55,6 +55,7 @@ function ghPagesSpaFallback(): Plugin {
           'accept-invite',
           'forgot-password',
           'pricing',
+          'how-it-works',
           'contact',
           'signup',
           'join',
