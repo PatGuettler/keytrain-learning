@@ -144,6 +144,16 @@ export async function inviteOrgUser(
   return data.row
 }
 
+export async function regenerateOrgJoinCode(orgId: string): Promise<{
+  join_code: string
+  organization_name: string
+}> {
+  return invokeManageUsers({
+    action: 'regenerate_org_join_code',
+    org_id: orgId,
+  })
+}
+
 export async function invitePlatformAdmin(payload: {
   email: string
   full_name?: string

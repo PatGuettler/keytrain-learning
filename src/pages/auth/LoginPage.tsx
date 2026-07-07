@@ -115,9 +115,17 @@ export function LoginPage() {
               Sign in
             </Button>
           </form>
-          <p className="text-center text-sm mt-4">
+          <p className="text-center text-sm mt-4 space-x-3">
             <Link to="/forgot-password" className="text-primary hover:underline">
               Forgot password?
+            </Link>
+            <span className="text-muted-foreground">·</span>
+            <Link to="/signup" className="text-primary hover:underline">
+              Get started
+            </Link>
+            <span className="text-muted-foreground">·</span>
+            <Link to="/" className="text-muted-foreground hover:text-foreground hover:underline">
+              Home
             </Link>
           </p>
         </CardContent>

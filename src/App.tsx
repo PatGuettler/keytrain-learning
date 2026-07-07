@@ -35,6 +35,12 @@ import { PhishingCampaignDetailPage } from '@/pages/admin/PhishingCampaignDetail
 import { PhishingDashboardPage } from '@/pages/admin/PhishingDashboardPage'
 import { RailNetPage } from '@/pages/admin/RailNetPage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
+import { MarketingLayout } from '@/components/marketing/MarketingLayout'
+import { HomePage } from '@/pages/marketing/HomePage'
+import { PricingPage } from '@/pages/marketing/PricingPage'
+import { ContactPage } from '@/pages/marketing/ContactPage'
+import { SignupPage } from '@/pages/marketing/SignupPage'
+import { JoinOrgPage } from '@/pages/marketing/JoinOrgPage'
 import { useAuthStore } from '@/store/authStore'
 import { ROLE_DASHBOARD } from '@/lib/constants'
 import { getRouterBasename } from '@/lib/paths'
@@ -45,12 +51,11 @@ const queryClient = new QueryClient({
   },
 })
 
-function HomeRedirect() {
+function RootRoute() {
   const role = useAuthStore((s) => s.profile?.role)
   const userId = useAuthStore((s) => s.userId)
-  if (!userId) return <Navigate to="/login" replace />
-  if (role) return <Navigate to={ROLE_DASHBOARD[role]} replace />
-  return <Navigate to="/login" replace />
+  if (userId && role) return <Navigate to={ROLE_DASHBOARD[role]} replace />
+  return <HomePage />
 }
 
 export default function App() {
@@ -58,12 +63,19 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter basename={getRouterBasename()}>
         <Routes>
+          <Route element={<MarketingLayout />}>
+            <Route path="/" element={<RootRoute />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/join" element={<JoinOrgPage />} />
+          </Route>
+
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/accept-invite" element={<AcceptInvitePage />} />
           <Route path="/phishing-training" element={<PhishingTrainingPage />} />
-          <Route path="/" element={<HomeRedirect />} />
 
           <Route element={<AuthGuard><Outlet /></AuthGuard>}>
             <Route path="/update-password-required" element={<UpdatePasswordRequiredPage />} />

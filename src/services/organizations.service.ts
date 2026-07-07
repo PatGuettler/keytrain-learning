@@ -18,7 +18,7 @@ export async function createOrganization(name: string) {
 
 export async function updateOrganization(
   id: string,
-  patch: { name?: string; railnet_org_id?: string | null }
+  patch: { name?: string; railnet_org_id?: string | null; join_code?: string | null }
 ) {
   return backend.organizations.updateOrganization(id, patch)
 }

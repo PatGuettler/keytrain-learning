@@ -8,6 +8,8 @@ additional_redirect_urls = [
   "https://keytrainlearning.com/accept-invite",
   "https://keytrainlearning.com/reset-password",
   "https://keytrainlearning.com/login",
+  "https://keytrainlearning.com/join",
+  "https://keytrainlearning.com/signup",
   "https://keytrainlearning.com/phishing-training",
   "http://localhost:5173/**",
   "http://localhost:3000/**",
@@ -40,4 +42,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.aws-railnet-signatures]
+verify_jwt = false
+
+[functions.join-organization]
 verify_jwt = false

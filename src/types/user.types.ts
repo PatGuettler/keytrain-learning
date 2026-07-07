@@ -47,5 +47,6 @@ export interface Organization {
   id: string
   name: string
   railnet_org_id?: string | null
+  join_code?: string | null
   created_at: string
 }

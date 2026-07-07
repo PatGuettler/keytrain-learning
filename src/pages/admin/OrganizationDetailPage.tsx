@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { AddOrgUserForm } from '@/components/admin/AddOrgUserForm'
 import { OrgUserImportPanel } from '@/components/admin/OrgUserImportPanel'
 import { OrgUsersTable } from '@/components/admin/OrgUsersTable'
+import { OrgJoinCodeCard } from '@/components/admin/OrgJoinCodeCard'
 import { RailNetOrgSetupCard } from '@/components/admin/RailNetOrgSetupCard'
 import { DeleteHospitalCard } from '@/components/admin/DeleteHospitalCard'
 import { useOrgRoute } from '@/hooks/useOrgRoute'
@@ -120,12 +121,15 @@ export function OrganizationDetailPage() {
       />
 
       {orgId && org && org.id !== PLATFORM_ORG_ID && (
-        <RailNetOrgSetupCard
-          orgId={orgId}
-          initialRailNetOrgId={org.railnet_org_id ?? ''}
-          usersWithRailnet={usersWithRailnet}
-          totalUsers={users.length}
-        />
+        <>
+          <RailNetOrgSetupCard
+            orgId={orgId}
+            initialRailNetOrgId={org.railnet_org_id ?? ''}
+            usersWithRailnet={usersWithRailnet}
+            totalUsers={users.length}
+          />
+          <OrgJoinCodeCard org={org} memberCount={users.length} />
+        </>
       )}
 
       {orgId && org && (

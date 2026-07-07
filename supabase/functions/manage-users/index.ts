@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
 import { getEmailValidationError, isValidEmail } from '../_shared/email-validation.ts'
+import { generateJoinCode } from '../_shared/join-code.ts'
 
 const MAX_ROWS = 500
 const ROLE_ORDER: Record<string, number> = { admin: 0, manager: 1, employee: 2 }
@@ -570,6 +571,18 @@ Deno.serve(async (req) => {
     const orgId = typeof body.org_id === 'string' ? body.org_id : ''
     if (!orgId) return jsonResponse({ error: 'org_id is required.' }, 400)
     await assertOrg(adminClient, orgId)
+
+    if (action === 'regenerate_org_join_code') {
+      const code = generateJoinCode()
+      const { data, error } = await adminClient
+        .from('organizations')
+        .update({ join_code: code })
+        .eq('id', orgId)
+        .select('id, name, join_code')
+        .single()
+      if (error) throw error
+      return jsonResponse({ join_code: data.join_code, organization_name: data.name })
+    }
 
     if (action === 'invite_one') {
       const email = typeof body.email === 'string' ? body.email : ''
