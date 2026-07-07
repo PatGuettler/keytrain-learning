@@ -41,8 +41,17 @@ export async function updatePassword(password: string) {
   if (isPasswordLongEnough(password)) {
     const supabase = getSupabase()
     if (supabase) {
-      const { error } = await supabase.rpc('complete_password_upgrade')
-      if (error) throw error
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('password_upgrade_required')
+        .eq('id', userId)
+        .maybeSingle()
+      if (profileError) throw profileError
+
+      if (profile?.password_upgrade_required) {
+        const { error } = await supabase.rpc('complete_password_upgrade')
+        if (error) throw error
+      }
     }
   }
 }
