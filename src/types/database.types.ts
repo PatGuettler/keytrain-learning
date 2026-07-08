@@ -77,6 +77,8 @@ export interface Database {
           is_published: boolean
           max_attempts: number
           show_results_after_completion: boolean
+          certificate_enabled: boolean
+          certificate_expires_days: number | null
           created_by: string | null
           created_at: string
           updated_at: string
@@ -91,6 +93,8 @@ export interface Database {
           is_published?: boolean
           max_attempts?: number
           show_results_after_completion?: boolean
+          certificate_enabled?: boolean
+          certificate_expires_days?: number | null
           created_by?: string | null
           created_at?: string
           updated_at?: string
@@ -104,7 +108,35 @@ export interface Database {
           is_published: boolean
           max_attempts: number
           show_results_after_completion: boolean
+          certificate_enabled: boolean
+          certificate_expires_days: number | null
           created_by: string | null
+        }>
+        Relationships: []
+      }
+      certificates: {
+        Row: {
+          id: string
+          user_id: string
+          course_id: string
+          assignment_id: string | null
+          issued_at: string
+          expires_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          course_id: string
+          assignment_id?: string | null
+          issued_at?: string
+          expires_at?: string | null
+        }
+        Update: Partial<{
+          user_id: string
+          course_id: string
+          assignment_id: string | null
+          issued_at: string
+          expires_at: string | null
         }>
         Relationships: []
       }
@@ -797,6 +829,13 @@ export interface Database {
           p_admin_id: string
         }
         Returns: undefined
+      }
+      issue_course_certificate: {
+        Args: {
+          p_assignment_id: string
+          p_user_id: string
+        }
+        Returns: string | null
       }
     }
     Enums: {

@@ -14,12 +14,26 @@ export interface Course {
   max_attempts: number
   /** When true, learners can view pass/fail results after finishing an attempt. */
   show_results_after_completion: boolean
+  /** When true, issue a certificate when the learner passes. */
+  certificate_enabled: boolean
+  /** Days after issuance until expiry; null = never expires. */
+  certificate_expires_days: number | null
   tags?: TrainingTag[]
   created_by: string | null
   created_at: string
   updated_at: string
   /** Active publication for the viewer's org, when loaded via publish flow */
   publication?: CoursePublication | null
+}
+
+export interface Certificate {
+  id: string
+  user_id: string
+  course_id: string
+  assignment_id: string | null
+  issued_at: string
+  expires_at: string | null
+  course?: Pick<Course, 'id' | 'title'>
 }
 
 export interface CoursePublication {
@@ -120,6 +134,11 @@ export type LessonSlideVideo =
   | { provider: 'loom'; loomId: string }
   | { provider: 'direct'; url: string }
 
+export interface LessonSlidePdf {
+  url: string
+  fileName?: string
+}
+
 export interface LessonSlide {
   id: string
   heading: string
@@ -135,6 +154,8 @@ export interface LessonSlide {
   }
   /** Video on this slide; learner must watch before advancing when set. */
   video?: LessonSlideVideo
+  /** Optional PDF document attached to the slide (viewer + download). */
+  pdf?: LessonSlidePdf
   /** @deprecated Use `video` instead. Kept for legacy course JSON. */
   youtube?: {
     videoId: string

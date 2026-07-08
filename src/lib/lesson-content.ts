@@ -46,6 +46,16 @@ export function coerceRecord(value: unknown): Record<string, unknown> {
   return {}
 }
 
+function normalizePdf(raw: unknown): LessonSlide['pdf'] | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const p = raw as Record<string, unknown>
+  if (typeof p.url !== 'string' || p.url.length === 0) return undefined
+  return {
+    url: p.url,
+    fileName: typeof p.fileName === 'string' ? p.fileName : undefined,
+  }
+}
+
 function normalizeSlide(raw: unknown, index: number): LessonSlide | null {
   if (!raw || typeof raw !== 'object') return null
   const s = raw as Record<string, unknown>
@@ -72,6 +82,7 @@ function normalizeSlide(raw: unknown, index: number): LessonSlide | null {
         ? (s.illustration as LessonSlide['illustration'])
         : undefined,
     video,
+    pdf: normalizePdf(s.pdf),
     youtube,
   }
 }

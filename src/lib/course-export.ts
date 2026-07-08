@@ -11,6 +11,9 @@ export interface CourseExportBundle {
     estimated_minutes: number
     max_attempts: number
     show_results_after_completion?: boolean
+    certificate_enabled?: boolean
+    certificate_expires_days?: number | null
+    thumbnail_url?: string | null
   }
   modules: Array<{
     title: string
@@ -30,6 +33,9 @@ export function exportCourseBundle(course: Course, modules: Module[]): CourseExp
       estimated_minutes: course.estimated_minutes,
       max_attempts: course.max_attempts,
       show_results_after_completion: course.show_results_after_completion,
+      certificate_enabled: course.certificate_enabled,
+      certificate_expires_days: course.certificate_expires_days,
+      thumbnail_url: course.thumbnail_url,
     },
     modules: [...modules]
       .sort((a, b) => a.order_index - b.order_index)
@@ -66,6 +72,9 @@ export interface ImportedCourseDraft {
   estimated_minutes: number
   max_attempts: number
   show_results_after_completion: boolean
+  certificate_enabled: boolean
+  certificate_expires_days: number | null
+  thumbnail_url: string | null
   modules: Array<{
     title: string
     type: Module['type']
@@ -88,6 +97,9 @@ export function parseCourseImport(raw: unknown): ImportedCourseDraft {
       estimated_minutes: 30,
       max_attempts: 3,
       show_results_after_completion: false,
+      certificate_enabled: false,
+      certificate_expires_days: null,
+      thumbnail_url: null,
       modules: [],
       warnings: ['File was not a JSON object — using empty defaults.'],
     }
@@ -125,6 +137,18 @@ export function parseCourseImport(raw: unknown): ImportedCourseDraft {
   }
 
   const show_results_after_completion = Boolean(courseBlock.show_results_after_completion)
+  const certificate_enabled = Boolean(courseBlock.certificate_enabled)
+  let certificate_expires_days: number | null = null
+  if (
+    typeof courseBlock.certificate_expires_days === 'number' &&
+    courseBlock.certificate_expires_days > 0
+  ) {
+    certificate_expires_days = Math.round(courseBlock.certificate_expires_days)
+  }
+  const thumbnail_url =
+    typeof courseBlock.thumbnail_url === 'string' && courseBlock.thumbnail_url.trim()
+      ? courseBlock.thumbnail_url.trim()
+      : null
 
   const rawModules = Array.isArray(root.modules) ? root.modules : []
   if (!Array.isArray(root.modules)) warnings.push('Modules list was missing — add modules manually.')
@@ -154,5 +178,16 @@ export function parseCourseImport(raw: unknown): ImportedCourseDraft {
     .sort((a, b) => a.order_index - b.order_index)
     .map((m, i) => ({ ...m, order_index: i }))
 
-  return { title, description, estimated_minutes, max_attempts, show_results_after_completion, modules, warnings }
+  return {
+    title,
+    description,
+    estimated_minutes,
+    max_attempts,
+    show_results_after_completion,
+    certificate_enabled,
+    certificate_expires_days,
+    thumbnail_url,
+    modules,
+    warnings,
+  }
 }

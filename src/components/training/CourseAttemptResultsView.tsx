@@ -4,9 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { ClipboardX, PartyPopper } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { downloadCertificatePdf } from '@/lib/pdf/certificates'
 import { fetchUserModuleAttempts, fetchSessions } from '@/services/sessions.service'
 import { useModules } from '@/hooks/useCourses'
-import type { TrainingSession } from '@/types/course.types'
+import type { Certificate, TrainingSession } from '@/types/course.types'
 
 function latestCompletedSession(
   sessions: TrainingSession[],
@@ -32,12 +33,16 @@ export function CourseAttemptResultsView({
   assignmentId,
   userId,
   trainingPath,
+  certificate,
+  learnerName,
 }: {
   courseId: string
   courseTitle: string
   assignmentId: string
   userId: string
   trainingPath: string
+  certificate?: Certificate | null
+  learnerName?: string
 }) {
   const navigate = useNavigate()
   const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
@@ -126,6 +131,22 @@ export function CourseAttemptResultsView({
             ))}
           </ul>
         </div>
+      )}
+      {passed && certificate && (
+        <Button
+          variant="outline"
+          size="lg"
+          className="w-full max-w-xs min-h-12"
+          onClick={() =>
+            downloadCertificatePdf({
+              certificate,
+              courseTitle,
+              learnerName: learnerName ?? 'Learner',
+            })
+          }
+        >
+          Download certificate
+        </Button>
       )}
       <Button size="lg" className="w-full max-w-xs min-h-12" onClick={() => navigate(trainingPath)}>
         Back to training

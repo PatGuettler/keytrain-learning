@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { BookOpen } from 'lucide-react'
 import { CourseBuilder } from '@/components/admin/CourseBuilder'
 import { CoursePublishPanel } from '@/components/admin/CoursePublishPanel'
+import { CourseThumbnailInput } from '@/components/admin/CourseThumbnailInput'
 import { DeleteCourseCard } from '@/components/admin/DeleteCourseCard'
 import { useCourse, useModules } from '@/hooks/useCourses'
 import { getIncidentAwarenessTemplate } from '@/lib/course-templates'
@@ -42,6 +43,9 @@ export function CourseEditPage() {
   const [maxAttemptsInput, setMaxAttemptsInput] = useState('3')
   const [unlimitedAttempts, setUnlimitedAttempts] = useState(false)
   const [showResultsAfterCompletion, setShowResultsAfterCompletion] = useState(false)
+  const [certificateEnabled, setCertificateEnabled] = useState(false)
+  const [certificateExpiresDays, setCertificateExpiresDays] = useState('')
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
   const [savedCourseId, setSavedCourseId] = useState(isNew ? '' : courseId!)
   const [saveError, setSaveError] = useState('')
@@ -52,6 +56,7 @@ export function CourseEditPage() {
       setTitle(course.title)
       setDescription(course.description)
       setEstimatedMinutes(course.estimated_minutes)
+      setThumbnailUrl(course.thumbnail_url)
       if (course.max_attempts === 0) {
         setUnlimitedAttempts(true)
         setMaxAttemptsInput('3')
@@ -60,6 +65,10 @@ export function CourseEditPage() {
         setUnlimitedAttempts(false)
       }
       setShowResultsAfterCompletion(Boolean(course.show_results_after_completion))
+      setCertificateEnabled(Boolean(course.certificate_enabled))
+      setCertificateExpiresDays(
+        course.certificate_expires_days != null ? String(course.certificate_expires_days) : ''
+      )
       if (course.tags?.length) {
         setSelectedTagIds(course.tags.map((t) => t.id))
       }
@@ -87,6 +96,11 @@ export function CourseEditPage() {
       setMaxAttemptsInput(String(draft.max_attempts))
     }
     setShowResultsAfterCompletion(draft.show_results_after_completion)
+    setCertificateEnabled(draft.certificate_enabled)
+    setCertificateExpiresDays(
+      draft.certificate_expires_days != null ? String(draft.certificate_expires_days) : ''
+    )
+    setThumbnailUrl(draft.thumbnail_url)
     setModules(
       draft.modules.map((m, i) => ({
         id: `temp-railnet-${i}`,
@@ -161,14 +175,28 @@ export function CourseEditPage() {
     }
 
     try {
+      let resolvedExpiresDays: number | null = null
+      if (certificateEnabled && certificateExpiresDays.trim() !== '') {
+        const parsedExpires = Number.parseInt(certificateExpiresDays.trim(), 10)
+        if (!Number.isFinite(parsedExpires) || parsedExpires < 1) {
+          setSaveError('Certificate expiration must be blank (never) or 1 or more days.')
+          setSaving(false)
+          return
+        }
+        resolvedExpiresDays = parsedExpires
+      }
+
       const saved = await upsertCourse({
         id: isNew ? undefined : courseId,
         org_id: orgId,
         title: title.trim() || 'Untitled course',
         description,
+        thumbnail_url: thumbnailUrl,
         is_published: course?.is_published ?? false,
         max_attempts: resolvedMaxAttempts,
         show_results_after_completion: showResultsAfterCompletion,
+        certificate_enabled: certificateEnabled,
+        certificate_expires_days: certificateEnabled ? resolvedExpiresDays : null,
         estimated_minutes: Math.max(1, estimatedMinutes),
         created_by: userId,
       })
@@ -282,6 +310,37 @@ export function CourseEditPage() {
         </p>
       </div>
 
+      <div className="max-w-md space-y-3">
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={certificateEnabled}
+            onChange={(e) => setCertificateEnabled(e.target.checked)}
+            className="rounded border-input"
+          />
+          Issue completion certificate when the learner passes
+        </label>
+        {certificateEnabled && (
+          <div className="space-y-2 pl-6">
+            <Label htmlFor="cert-expires">Expires after (days, optional)</Label>
+            <Input
+              id="cert-expires"
+              type="number"
+              min={1}
+              inputMode="numeric"
+              placeholder="Never expires"
+              value={certificateExpiresDays}
+              onChange={(e) => setCertificateExpiresDays(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave blank for no expiration. Recertification can be handled with admin retakes.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <CourseThumbnailInput url={thumbnailUrl} onChange={setThumbnailUrl} />
+
       <div className="flex flex-wrap gap-3 items-center">
         <Label className="sr-only">Import course JSON</Label>
         <Input
@@ -304,6 +363,13 @@ export function CourseEditPage() {
                   setMaxAttemptsInput(String(draft.max_attempts))
                 }
                 setShowResultsAfterCompletion(draft.show_results_after_completion)
+                setCertificateEnabled(draft.certificate_enabled)
+                setCertificateExpiresDays(
+                  draft.certificate_expires_days != null
+                    ? String(draft.certificate_expires_days)
+                    : ''
+                )
+                setThumbnailUrl(draft.thumbnail_url)
                 setModules(
                   draft.modules.map((m, i) => ({
                     ...createEmptyModule(m.type, i, courseId ?? 'new'),

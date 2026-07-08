@@ -16,13 +16,19 @@ import {
   recordCourseAttemptResult,
   syncRequiredAssignmentsForUser,
 } from '@/services/assignments.service'
+import {
+  fetchCertificateForCourse,
+  issueCertificateForAssignment,
+} from '@/services/certificates.service'
 import { saveModuleAttempt } from '@/services/sessions.service'
 import { fetchPendingUnlockForAssignment } from '@/services/unlock-requests.service'
+import { downloadCertificatePdf } from '@/lib/pdf/certificates'
 import { Skeleton } from '@/components/ui/skeleton'
 import { resolveAttemptsUsed } from '@/lib/dashboard-stats'
 import { formatDuration } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { SAVE_COURSE_RESULT_ERROR, toServiceErrorMessage } from '@/lib/service-errors'
+import type { Certificate } from '@/types/course.types'
 import type { CourseAttemptResult } from '@/types/training.types'
 import type { ModuleCompletePayload } from '@/types/training.types'
 
@@ -62,11 +68,13 @@ export function CoursePlayerPage({
   const [elapsed, setElapsed] = useState(0)
   const [finishError, setFinishError] = useState('')
   const [finishing, setFinishing] = useState(false)
+  const [issuedCertificate, setIssuedCertificate] = useState<Certificate | null>(null)
   const moduleScoresRef = useRef<ModuleScoreRecord[]>([])
 
   const maxAttempts = course?.max_attempts ?? 3
   const unlimitedAttempts = maxAttempts === 0
   const isLocked = !unlimitedAttempts && Boolean(assignment?.locked_at)
+  const learnerName = useAuthStore((s) => s.profile?.full_name) ?? 'Learner'
 
   const showUnlockQuery = Boolean(assignment?.id && (isLocked || (finished && outcome === 'locked')))
 
@@ -75,6 +83,21 @@ export function CoursePlayerPage({
     queryFn: () => fetchPendingUnlockForAssignment(assignment!.id, userId),
     enabled: showUnlockQuery,
   })
+
+  const { data: existingCertificate } = useQuery({
+    queryKey: ['certificate', userId, courseId],
+    queryFn: () => fetchCertificateForCourse(userId, courseId!),
+    enabled: Boolean(
+      userId &&
+        courseId &&
+        assignment?.status === 'completed' &&
+        course?.certificate_enabled
+    ),
+  })
+
+  useEffect(() => {
+    if (existingCertificate) setIssuedCertificate(existingCertificate)
+  }, [existingCertificate])
 
   useEffect(() => {
     if (!assignment?.locked_at && finished && outcome === 'locked') {
@@ -173,6 +196,16 @@ export function CoursePlayerPage({
         setAttemptInfo(result)
         setOutcome(allPassed ? 'passed' : result.locked ? 'locked' : 'failed')
         setFinished(true)
+        if (allPassed && course?.certificate_enabled) {
+          try {
+            await issueCertificateForAssignment(assignment.id, userId)
+            const cert = await fetchCertificateForCourse(userId, courseId!)
+            setIssuedCertificate(cert)
+            void queryClient.invalidateQueries({ queryKey: ['certificate', userId, courseId] })
+          } catch (certErr) {
+            console.error('Certificate issue failed:', certErr)
+          }
+        }
         void queryClient.invalidateQueries({ queryKey: ['assignments', userId] })
         void queryClient.invalidateQueries({ queryKey: ['training-sessions', userId] })
         void queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
@@ -212,6 +245,8 @@ export function CoursePlayerPage({
         assignmentId={assignment.id}
         userId={userId}
         trainingPath={trainingPath}
+        certificate={issuedCertificate}
+        learnerName={learnerName}
       />
     )
   }
@@ -241,6 +276,8 @@ export function CoursePlayerPage({
           assignmentId={assignment.id}
           userId={userId}
           trainingPath={trainingPath}
+          certificate={issuedCertificate}
+          learnerName={learnerName}
         />
       )
     }
@@ -249,6 +286,20 @@ export function CoursePlayerPage({
         <PartyPopper className="h-12 w-12 text-primary mx-auto" />
         <h2 className="text-xl font-semibold">Already completed</h2>
         <p className="text-sm text-muted-foreground">You have passed {course.title}.</p>
+        {issuedCertificate && (
+          <Button
+            variant="outline"
+            onClick={() =>
+              downloadCertificatePdf({
+                certificate: issuedCertificate,
+                courseTitle: course.title,
+                learnerName,
+              })
+            }
+          >
+            Download certificate
+          </Button>
+        )}
         <Button onClick={() => navigate(trainingPath)}>Back to Required Training</Button>
       </div>
     )
@@ -283,6 +334,22 @@ export function CoursePlayerPage({
                 ))}
               </ul>
             </div>
+          )}
+          {issuedCertificate && (
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full max-w-xs min-h-12"
+              onClick={() =>
+                downloadCertificatePdf({
+                  certificate: issuedCertificate,
+                  courseTitle: course.title,
+                  learnerName,
+                })
+              }
+            >
+              Download certificate
+            </Button>
           )}
           <Button size="lg" className="w-full max-w-xs min-h-12" onClick={() => navigate(trainingPath)}>
             Back to training

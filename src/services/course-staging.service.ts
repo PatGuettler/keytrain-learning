@@ -84,6 +84,9 @@ export async function publishStagedCourse(
     estimated_minutes: draft.estimated_minutes,
     max_attempts: draft.max_attempts,
     show_results_after_completion: draft.show_results_after_completion,
+    certificate_enabled: draft.certificate_enabled,
+    certificate_expires_days: draft.certificate_expires_days,
+    thumbnail_url: draft.thumbnail_url,
     is_published: false,
     created_by: userId,
   })

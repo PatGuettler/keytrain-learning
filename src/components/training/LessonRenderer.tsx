@@ -1,3 +1,4 @@
+import { FileText } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
@@ -181,10 +182,35 @@ function SlideView({
     <SlideVideoPlayer video={slideVideo} onWatched={onVideoWatched} />
   ) : null
 
+  const pdfBlock = slide.pdf?.url ? (
+    <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <FileText className="h-4 w-4 text-primary shrink-0" />
+        <span className="truncate">{slide.pdf.fileName || 'PDF document'}</span>
+      </div>
+      <div className="w-full overflow-hidden rounded-md border bg-background">
+        <iframe
+          title={slide.pdf.fileName || 'PDF document'}
+          src={slide.pdf.url}
+          className="w-full h-[min(70vh,32rem)]"
+        />
+      </div>
+      <a
+        href={slide.pdf.url}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex text-sm text-primary hover:underline"
+      >
+        Open / download PDF
+      </a>
+    </div>
+  ) : null
+
   if (imageOnly) {
     return (
       <div className="space-y-4 min-w-0">
         {showVisual && visualBlock}
+        {pdfBlock}
       </div>
     )
   }
@@ -194,6 +220,7 @@ function SlideView({
       <div className="space-y-4 sm:space-y-6 min-w-0">
         {textBlock}
         {videoBlock}
+        {pdfBlock}
         {showVisual && visualBlock}
       </div>
     )
@@ -210,6 +237,7 @@ function SlideView({
       <div className="min-w-0 space-y-4">
         {textBlock}
         {videoBlock}
+        {pdfBlock}
       </div>
       {showVisual && <div className="min-w-0">{visualBlock}</div>}
     </div>

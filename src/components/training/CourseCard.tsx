@@ -30,8 +30,14 @@ export function CourseCard({
 
   return (
     <Card className="flex flex-col h-full hover:shadow-md transition-shadow overflow-hidden">
-      <div className="h-28 sm:h-32 bg-gradient-to-br from-primary/20 to-accent rounded-t-lg flex items-center justify-center shrink-0">
-        {isLocked ? (
+      <div className="h-28 sm:h-32 bg-gradient-to-br from-primary/20 to-accent rounded-t-lg flex items-center justify-center shrink-0 overflow-hidden">
+        {course.thumbnail_url ? (
+          <img
+            src={course.thumbnail_url}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        ) : isLocked ? (
           <Lock className="h-10 w-10 text-destructive opacity-80" />
         ) : (
           <Play className="h-10 w-10 text-primary opacity-60" />

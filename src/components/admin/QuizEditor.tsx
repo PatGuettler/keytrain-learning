@@ -64,6 +64,33 @@ export function QuizEditor({
     })
   }
 
+  const toggleCorrectOption = (questionIndex: number, optionId: string) => {
+    const q = questions[questionIndex]
+    if (!q) return
+    updateQuestion(questionIndex, {
+      options: q.options.map((o) =>
+        o.id === optionId ? { ...o, correct: !o.correct } : o
+      ),
+    })
+  }
+
+  const changeQuestionType = (
+    questionIndex: number,
+    type: QuizQuestion['type']
+  ) => {
+    const q = questions[questionIndex]
+    if (!q) return
+    let options = q.options
+    if (type === 'single_select') {
+      const firstCorrect = options.find((o) => o.correct) ?? options[0]
+      options = options.map((o) => ({
+        ...o,
+        correct: firstCorrect ? o.id === firstCorrect.id : false,
+      }))
+    }
+    updateQuestion(questionIndex, { type, options })
+  }
+
   const updateOption = (questionIndex: number, optionIndex: number, text: string) => {
     const q = questions[questionIndex]
     if (!q) return
@@ -86,7 +113,14 @@ export function QuizEditor({
     if (!q || q.options.length <= 2) return
     const removed = q.options[optionIndex]
     const nextOptions = q.options.filter((_, i) => i !== optionIndex)
-    if (removed.correct && nextOptions.length > 0) nextOptions[0].correct = true
+    if (
+      q.type === 'single_select' &&
+      removed.correct &&
+      nextOptions.length > 0 &&
+      !nextOptions.some((o) => o.correct)
+    ) {
+      nextOptions[0].correct = true
+    }
     updateQuestion(questionIndex, { options: nextOptions })
   }
 
@@ -174,14 +208,36 @@ export function QuizEditor({
           </div>
 
           <div className="space-y-2">
-            <Label>Answer options (select the correct one)</Label>
+            <Label>Answer type</Label>
+            <select
+              className="flex h-10 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={question.type}
+              onChange={(e) =>
+                changeQuestionType(qIndex, e.target.value as QuizQuestion['type'])
+              }
+            >
+              <option value="single_select">Single select (one correct)</option>
+              <option value="multi_select">Multi select (select all that apply)</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              {question.type === 'multi_select'
+                ? 'Answer options (check all correct answers)'
+                : 'Answer options (select the correct one)'}
+            </Label>
             {question.options.map((option, oIndex) => (
               <div key={option.id} className="flex items-center gap-2">
                 <input
-                  type="radio"
+                  type={question.type === 'multi_select' ? 'checkbox' : 'radio'}
                   name={`correct-${question.id}`}
                   checked={option.correct}
-                  onChange={() => setCorrectOption(qIndex, option.id)}
+                  onChange={() =>
+                    question.type === 'multi_select'
+                      ? toggleCorrectOption(qIndex, option.id)
+                      : setCorrectOption(qIndex, option.id)
+                  }
                 />
                 <Input
                   value={option.text}

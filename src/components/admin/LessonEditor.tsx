@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LessonImageInput } from '@/components/admin/LessonImageInput'
+import { LessonPdfInput } from '@/components/admin/LessonPdfInput'
 import { LessonVideoInput } from '@/components/admin/LessonVideoInput'
+import { MarkdownBodyField } from '@/components/admin/MarkdownBodyField'
 import { SlideBodyContent } from '@/components/training/SlideBodyContent'
 import { LESSON_ILLUSTRATION_KEYS } from '@/components/training/lesson-illustrations'
 import { LESSON_LAYOUTS, LESSON_LAYOUT_LABELS, newSlideId } from '@/lib/module-defaults'
@@ -12,9 +14,6 @@ import type { LessonContent, LessonSlide } from '@/types/course.types'
 
 const selectClass =
   'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-
-const textareaClass =
-  'flex min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
 export function LessonEditor({
   content,
@@ -216,11 +215,9 @@ export function LessonEditor({
                   </div>
                 ) : (
                   <>
-                    <textarea
-                      className={textareaClass}
+                    <MarkdownBodyField
                       value={slide.body}
-                      onChange={(e) => updateSlide(index, { body: e.target.value })}
-                      placeholder="Supports Markdown and HTML: **bold**, lists, links, etc."
+                      onChange={(body) => updateSlide(index, { body })}
                     />
                     <p className="text-xs text-muted-foreground">
                       Markdown and HTML supported. Use Preview to see how learners will view this slide.
@@ -277,6 +274,11 @@ export function LessonEditor({
               onVideoChange={(video) => updateVideo(index, video)}
             />
           )}
+
+          <LessonPdfInput
+            pdf={slide.pdf}
+            onChange={(pdf) => updateSlide(index, { pdf })}
+          />
 
           <LessonImageInput
             url={slide.illustration?.url ?? ''}
