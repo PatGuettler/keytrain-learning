@@ -14,6 +14,7 @@ import { AppLogo } from '@/components/brand/AppLogo'
 import { useAuth } from '@/hooks/useAuth'
 import { useUiStore } from '@/store/uiStore'
 import { APP_NAME, ROLE_PROFILE, ROLE_PRAYER } from '@/lib/constants'
+import { SPIRITUAL_FEATURES_ENABLED } from '@/lib/spiritual-features'
 
 export function Topbar() {
   const navigate = useNavigate()
@@ -75,9 +76,11 @@ export function Topbar() {
             <DropdownMenuItem onSelect={() => navigate(profilePath)}>
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => navigate(prayerPath)}>
-              Prayer
-            </DropdownMenuItem>
+            {SPIRITUAL_FEATURES_ENABLED && (
+              <DropdownMenuItem onSelect={() => navigate(prayerPath)}>
+                Prayer
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
               Theme

@@ -12,6 +12,7 @@ import {
   Hexagon,
 } from 'lucide-react'
 import type { UserRole } from '@/types/user.types'
+import { SPIRITUAL_FEATURES_ENABLED } from '@/lib/spiritual-features'
 
 export type NavItem = {
   to: string
@@ -27,17 +28,21 @@ export const RAILNET_PATH_BY_ROLE: Record<UserRole, string> = {
   employee: '/employee/railnet',
 }
 
+const adminNav: NavItem[] = [
+  { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
+  { to: '/admin/organizations', label: 'Organizations', icon: Building2 },
+  { to: '/admin/courses', label: 'Courses', icon: BookOpen },
+  { to: '/admin/railnet', label: 'RailNet', icon: Hexagon },
+  { to: '/admin/phishing/campaigns', label: 'Phishing sims', icon: Fish },
+  { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
+  ...(SPIRITUAL_FEATURES_ENABLED
+    ? [{ to: '/admin/prayer-requests', label: 'Prayer requests', icon: HeartHandshake } satisfies NavItem]
+    : []),
+]
+
 export const navByRole: Record<UserRole, NavItem[]> = {
-  admin: [
-    { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/admin/admins', label: 'Admins', icon: ShieldCheck },
-    { to: '/admin/organizations', label: 'Organizations', icon: Building2 },
-    { to: '/admin/courses', label: 'Courses', icon: BookOpen },
-    { to: '/admin/railnet', label: 'RailNet', icon: Hexagon },
-    { to: '/admin/phishing/campaigns', label: 'Phishing sims', icon: Fish },
-    { to: '/admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
-    { to: '/admin/prayer-requests', label: 'Prayer requests', icon: HeartHandshake },
-  ],
+  admin: adminNav,
   manager: [
     { to: '/manager/training', label: 'Required Training', icon: GraduationCap },
     { to: '/manager/team', label: 'My Team', icon: Users },

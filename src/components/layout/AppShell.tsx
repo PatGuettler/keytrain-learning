@@ -7,6 +7,7 @@ import { useNewCourseNotices } from '@/hooks/useNewCourseNotices'
 import { useDailyVerse } from '@/hooks/useDailyVerse'
 import { useRequiredAssignmentSync } from '@/hooks/useRequiredAssignmentSync'
 import { useAuthStore } from '@/store/authStore'
+import { SPIRITUAL_FEATURES_ENABLED } from '@/lib/spiritual-features'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { MobileNav } from './MobileNav'
@@ -29,7 +30,7 @@ export function AppShell() {
       <MobileSidebar />
       <div className={cn('flex min-w-0 flex-1 flex-col lg:pb-0', !inTrainingPlayer && 'pb-mobile-nav')}>
         <Topbar />
-        {showBanner && verse && (
+        {SPIRITUAL_FEATURES_ENABLED && showBanner && verse && (
           <DailyVerseBanner reference={verse.reference} text={verse.text} onDismiss={dismiss} />
         )}
         <main

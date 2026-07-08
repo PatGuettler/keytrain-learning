@@ -14,6 +14,7 @@ import { submitSupportRequest } from '@/services/support.service'
 import { updateDailyVerseEnabled } from '@/services/daily-verse.service'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLE_PRAYER } from '@/lib/constants'
+import { SPIRITUAL_FEATURES_ENABLED } from '@/lib/spiritual-features'
 import {
   SUPPORT_CATEGORIES,
   TRAINING_REQUEST_GUIDANCE,
@@ -144,42 +145,46 @@ export function ProfilePage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Daily Bible Verse</CardTitle>
-          <CardDescription>
-            Show a Bible verse once per day when you sign in. You can dismiss it each day.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-center justify-between gap-4">
-            <Label htmlFor="daily-verse-toggle" className="text-sm font-normal">
-              {profile.daily_verse_enabled !== false ? 'Enabled' : 'Disabled'}
-            </Label>
-            <Switch
-              id="daily-verse-toggle"
-              checked={profile.daily_verse_enabled !== false}
-              disabled={verseToggleLoading}
-              onCheckedChange={handleDailyVerseToggle}
-            />
-          </div>
-          {verseToggleError && <p className="text-sm text-destructive">{verseToggleError}</p>}
-        </CardContent>
-      </Card>
+      {SPIRITUAL_FEATURES_ENABLED && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Daily Bible Verse</CardTitle>
+              <CardDescription>
+                Show a Bible verse once per day when you sign in. You can dismiss it each day.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-center justify-between gap-4">
+                <Label htmlFor="daily-verse-toggle" className="text-sm font-normal">
+                  {profile.daily_verse_enabled !== false ? 'Enabled' : 'Disabled'}
+                </Label>
+                <Switch
+                  id="daily-verse-toggle"
+                  checked={profile.daily_verse_enabled !== false}
+                  disabled={verseToggleLoading}
+                  onCheckedChange={handleDailyVerseToggle}
+                />
+              </div>
+              {verseToggleError && <p className="text-sm text-destructive">{verseToggleError}</p>}
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Prayer</CardTitle>
-          <CardDescription>
-            Submit an anonymous prayer request for our team to lift up in prayer.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild variant="outline">
-            <Link to={prayerPath}>Go to Prayer</Link>
-          </Button>
-        </CardContent>
-      </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Prayer</CardTitle>
+              <CardDescription>
+                Submit an anonymous prayer request for our team to lift up in prayer.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild variant="outline">
+                <Link to={prayerPath}>Go to Prayer</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       <Card>
         <CardHeader>

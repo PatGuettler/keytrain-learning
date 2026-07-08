@@ -45,6 +45,7 @@ import { JoinOrgPage } from '@/pages/marketing/JoinOrgPage'
 import { useAuthStore } from '@/store/authStore'
 import { ROLE_DASHBOARD } from '@/lib/constants'
 import { getRouterBasename } from '@/lib/paths'
+import { SPIRITUAL_FEATURES_ENABLED } from '@/lib/spiritual-features'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -132,7 +133,13 @@ export default function App() {
             />
             <Route
               path="/admin/prayer-requests"
-              element={<RoleGuard roles={['admin']}><PrayerRequestsPage /></RoleGuard>}
+              element={
+                SPIRITUAL_FEATURES_ENABLED ? (
+                  <RoleGuard roles={['admin']}><PrayerRequestsPage /></RoleGuard>
+                ) : (
+                  <Navigate to="/admin/dashboard" replace />
+                )
+              }
             />
             <Route
               path="/admin/hive"
@@ -241,9 +248,36 @@ export default function App() {
             <Route path="/employee/profile" element={<RoleGuard roles={['employee', 'manager', 'admin']}><ProfilePage /></RoleGuard>} />
             <Route path="/manager/profile" element={<RoleGuard roles={['manager']}><ProfilePage /></RoleGuard>} />
             <Route path="/admin/profile" element={<RoleGuard roles={['admin']}><ProfilePage /></RoleGuard>} />
-            <Route path="/employee/prayer" element={<RoleGuard roles={['employee', 'manager', 'admin']}><PrayerPage /></RoleGuard>} />
-            <Route path="/manager/prayer" element={<RoleGuard roles={['manager']}><PrayerPage /></RoleGuard>} />
-            <Route path="/admin/prayer" element={<RoleGuard roles={['admin']}><PrayerPage /></RoleGuard>} />
+            <Route
+              path="/employee/prayer"
+              element={
+                SPIRITUAL_FEATURES_ENABLED ? (
+                  <RoleGuard roles={['employee', 'manager', 'admin']}><PrayerPage /></RoleGuard>
+                ) : (
+                  <Navigate to="/employee/training" replace />
+                )
+              }
+            />
+            <Route
+              path="/manager/prayer"
+              element={
+                SPIRITUAL_FEATURES_ENABLED ? (
+                  <RoleGuard roles={['manager']}><PrayerPage /></RoleGuard>
+                ) : (
+                  <Navigate to="/manager/training" replace />
+                )
+              }
+            />
+            <Route
+              path="/admin/prayer"
+              element={
+                SPIRITUAL_FEATURES_ENABLED ? (
+                  <RoleGuard roles={['admin']}><PrayerPage /></RoleGuard>
+                ) : (
+                  <Navigate to="/admin/dashboard" replace />
+                )
+              }
+            />
             </Route>
           </Route>
 

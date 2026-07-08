@@ -6,6 +6,7 @@ import {
   getLocalDateString,
   isDailyVerseDismissed,
 } from '@/services/daily-verse.service'
+import { SPIRITUAL_FEATURES_ENABLED } from '@/lib/spiritual-features'
 import { useAuthStore } from '@/store/authStore'
 
 export function useDailyVerse() {
@@ -15,12 +16,13 @@ export function useDailyVerse() {
   const localDate = useMemo(() => getLocalDateString(), [])
   const [dismissedLocally, setDismissedLocally] = useState(false)
 
-  const enabled = Boolean(userId && dailyVerseEnabled && !dismissedLocally)
+  const featuresOn = SPIRITUAL_FEATURES_ENABLED
+  const enabled = Boolean(featuresOn && userId && dailyVerseEnabled && !dismissedLocally)
 
   const { data: alreadyDismissed = false, isLoading: checkingDismissal } = useQuery({
     queryKey: ['daily-verse-dismissed', userId, localDate],
     queryFn: () => isDailyVerseDismissed(userId!, localDate),
-    enabled: Boolean(userId && dailyVerseEnabled),
+    enabled: Boolean(featuresOn && userId && dailyVerseEnabled),
   })
 
   const shouldFetchVerse = enabled && !alreadyDismissed && !checkingDismissal
@@ -38,7 +40,7 @@ export function useDailyVerse() {
   })
 
   const dismiss = useCallback(async () => {
-    if (!userId) return
+    if (!featuresOn || !userId) return
     setDismissedLocally(true)
     try {
       await dismissDailyVerse(userId, localDate)
@@ -46,7 +48,7 @@ export function useDailyVerse() {
     } catch (err) {
       console.error('Failed to dismiss daily verse:', err)
     }
-  }, [userId, localDate, queryClient])
+  }, [featuresOn, userId, localDate, queryClient])
 
   const showBanner = shouldFetchVerse && !loadingVerse && !isError && Boolean(verse)
 
