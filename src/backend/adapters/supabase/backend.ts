@@ -201,17 +201,17 @@ export function createSupabaseBackend(): Backend {
         if (publishedOnly) {
           const { data, error } = await supabase
             .from('course_publications')
-            .select('*, course:courses(*)')
+            .select('*, course:courses!inner(*)')
             .eq('org_id', orgId)
             .is('unpublished_at', null)
           if (error) throw error
-          return (data ?? [])
-            .filter((row) => isPublicationActive(row as CoursePublication))
-            .map((row) => {
-              const pub = row as CoursePublication & { course: Course }
-              return { ...pub.course, publication: pub }
-            })
-            .sort((a, b) => a.title.localeCompare(b.title))
+          const courses: Course[] = []
+          for (const row of data ?? []) {
+            const pub = row as CoursePublication & { course: Course | null }
+            if (!isPublicationActive(pub) || !pub.course?.title) continue
+            courses.push({ ...pub.course, publication: pub })
+          }
+          return courses.sort((a, b) => a.title.localeCompare(b.title))
         }
 
         const { data, error } = await supabase.from('courses').select('*').eq('org_id', orgId).order('title')
@@ -242,14 +242,14 @@ export function createSupabaseBackend(): Backend {
       async fetchLearnerCourse(courseId, orgId) {
         const { data, error } = await supabase
           .from('course_publications')
-          .select('*, course:courses(*)')
+          .select('*, course:courses!inner(*)')
           .eq('course_id', courseId)
           .eq('org_id', orgId)
           .is('unpublished_at', null)
           .maybeSingle()
         if (error) throw error
         if (!data) return null
-        const pub = data as CoursePublication & { course: Course }
+        const pub = data as CoursePublication & { course: Course | null }
         if (!isPublicationActive(pub) || !pub.course) return null
         return { ...pub.course, publication: pub }
       },
@@ -452,7 +452,7 @@ export function createSupabaseBackend(): Backend {
       async fetchUnacknowledgedNotices(userId, orgId) {
         const { data: publications, error } = await supabase
           .from('course_publications')
-          .select('*, course:courses(*)')
+          .select('*, course:courses!inner(*)')
           .eq('org_id', orgId)
           .is('unpublished_at', null)
         if (error) throw error
@@ -465,13 +465,13 @@ export function createSupabaseBackend(): Backend {
 
         const acknowledged = new Set((acks ?? []).map((a) => a.publication_id))
 
-        return (publications ?? [])
-          .filter((row) => isPublicationActive(row as CoursePublication))
-          .filter((row) => !acknowledged.has(row.id))
-          .map((row) => {
-            const pub = row as CoursePublication & { course: Course }
-            return { publication: pub, course: pub.course }
-          }) as CoursePublicationNotice[]
+        const notices: CoursePublicationNotice[] = []
+        for (const row of publications ?? []) {
+          const pub = row as CoursePublication & { course: Course | null }
+          if (!isPublicationActive(pub) || acknowledged.has(pub.id) || !pub.course?.title) continue
+          notices.push({ publication: pub, course: pub.course })
+        }
+        return notices
       },
       async acknowledgeCourseNotice(publicationId, userId) {
         const { error } = await supabase.from('course_publication_acknowledgments').upsert(

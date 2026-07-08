@@ -20,6 +20,9 @@ export function NewCourseNoticeModal({
 
   if (notices.length === 0) return null
 
+  const visibleNotices = notices.filter((n) => n.course?.title)
+  if (visibleNotices.length === 0) return null
+
   const trainingBase = role === 'manager' ? '/manager/training' : '/employee/training'
 
   const handleDismiss = async (publicationId: string) => {
@@ -42,12 +45,12 @@ export function NewCourseNoticeModal({
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {notices.length === 1
+            {visibleNotices.length === 1
               ? 'A new course has been published for your organization.'
-              : `${notices.length} new courses have been published for your organization.`}
+              : `${visibleNotices.length} new courses have been published for your organization.`}
           </p>
           <ul className="space-y-3">
-            {notices.map(({ publication, course }) => (
+            {visibleNotices.map(({ publication, course }) => (
               <li key={publication.id} className="rounded-lg border p-4 space-y-3">
                 <div>
                   <p className="font-medium">{course.title}</p>
@@ -88,7 +91,7 @@ export function NewCourseNoticeModal({
             size="sm"
             className="w-full"
             disabled={Boolean(dismissing)}
-            onClick={() => void Promise.all(notices.map((n) => handleDismiss(n.publication.id)))}
+            onClick={() => void Promise.all(visibleNotices.map((n) => handleDismiss(n.publication.id)))}
           >
             <X className="h-4 w-4 mr-1" />
             Dismiss all
