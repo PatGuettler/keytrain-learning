@@ -7,7 +7,7 @@ import { CoursePublishPanel } from '@/components/admin/CoursePublishPanel'
 import { CourseThumbnailInput } from '@/components/admin/CourseThumbnailInput'
 import { DeleteCourseCard } from '@/components/admin/DeleteCourseCard'
 import { useCourse, useModules } from '@/hooks/useCourses'
-import { getIncidentAwarenessTemplate } from '@/lib/course-templates'
+import { getIncidentAwarenessTemplate, getServerRoomSecurityTemplate } from '@/lib/course-templates'
 import { createEmptyModule } from '@/lib/module-defaults'
 import { parseCourseImport, downloadCourseExport, exportCourseBundle } from '@/lib/course-export'
 import type { CourseExportBundle } from '@/lib/course-export'
@@ -141,8 +141,9 @@ export function CourseEditPage() {
     setModules((prev) => [...prev, createEmptyModule(type, prev.length, courseId ?? 'new')])
   }
 
-  const loadTemplate = () => {
-    const template = getIncidentAwarenessTemplate()
+  const loadTemplate = (which: 'incident' | 'server_room') => {
+    const template =
+      which === 'server_room' ? getServerRoomSecurityTemplate() : getIncidentAwarenessTemplate()
     setTitle(template.title)
     setDescription(template.description)
     setEstimatedMinutes(template.estimated_minutes)
@@ -240,14 +241,30 @@ export function CourseEditPage() {
           <p className="text-sm text-muted-foreground max-w-2xl mt-1">
             Build lessons with slides and illustrations, quizzes with scored questions, and
             interactive workshops (floor plan hotspots, sorting challenges). Save when ready, then
-            publish to hospitals.
+            publish to organizations.
           </p>
         </div>
         {isNew && (
-          <Button type="button" variant="outline" size="sm" onClick={loadTemplate}>
-            <BookOpen className="h-4 w-4 mr-1" />
-            Load Incident Awareness example
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => loadTemplate('server_room')}
+            >
+              <BookOpen className="h-4 w-4 mr-1" />
+              Load Server Room Security
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => loadTemplate('incident')}
+            >
+              <BookOpen className="h-4 w-4 mr-1" />
+              Load Incident Awareness
+            </Button>
+          </div>
         )}
       </div>
 

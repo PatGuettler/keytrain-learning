@@ -63,7 +63,7 @@ export function DeleteHospitalCard({
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2 text-destructive">
           <AlertTriangle className="h-4 w-4" />
-          Delete hospital
+          Delete organization
         </CardTitle>
         <CardDescription>
           Permanently removes this organization, all staff accounts, courses, assignments, and training
@@ -73,7 +73,7 @@ export function DeleteHospitalCard({
       <CardContent className="space-y-4">
         {step === 'idle' && (
           <Button type="button" variant="destructive" onClick={() => setStep('confirm')}>
-            Delete this hospital
+            Delete this organization
           </Button>
         )}
 
@@ -83,7 +83,7 @@ export function DeleteHospitalCard({
               First confirmation: Are you sure you want to delete <strong>{hospitalName}</strong>?
             </p>
             <p className="text-sm text-muted-foreground">
-              All users, courses, and training data for this hospital will be permanently deleted.
+              All users, courses, and training data for this organization will be permanently deleted.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" onClick={reset}>
@@ -99,13 +99,13 @@ export function DeleteHospitalCard({
         {step === 'type-name' && (
           <div className="space-y-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
             <p className="text-sm font-medium">
-              Second confirmation: Type the hospital name exactly to confirm deletion.
+              Second confirmation: Type the organization name exactly to confirm deletion.
             </p>
             <p className="text-sm text-muted-foreground">
               Type <strong className="text-foreground">{hospitalName}</strong> below (pasting is disabled).
             </p>
             <div className="space-y-2">
-              <Label htmlFor="delete-confirm-name">Hospital name</Label>
+              <Label htmlFor="delete-confirm-name">Organization name</Label>
               <Input
                 id="delete-confirm-name"
                 value={typedName}
@@ -118,7 +118,7 @@ export function DeleteHospitalCard({
                 onDrop={blockDrop}
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="Type the hospital name"
+                placeholder="Type the organization name"
                 className="font-mono"
               />
             </div>
@@ -133,7 +133,7 @@ export function DeleteHospitalCard({
                 disabled={!nameMatches || loading}
                 onClick={handleDelete}
               >
-                {loading ? 'Deleting…' : 'Permanently delete hospital'}
+                {loading ? 'Deleting…' : 'Permanently delete organization'}
               </Button>
             </div>
           </div>

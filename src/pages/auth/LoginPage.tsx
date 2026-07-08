@@ -98,7 +98,7 @@ export function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" {...register('email')} placeholder="you@hospital.org" />
+              <Input id="email" type="email" {...register('email')} placeholder="you@company.com" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>

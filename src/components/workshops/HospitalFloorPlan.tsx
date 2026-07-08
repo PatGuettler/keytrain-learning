@@ -7,7 +7,7 @@ export function HospitalFloorPlan(props: SVGProps<SVGSVGElement>) {
       viewBox="0 0 800 520"
       preserveAspectRatio="xMidYMid meet"
       role="img"
-      aria-label="Hospital ward floor plan"
+      aria-label="Facility floor plan"
       {...props}
     >
       <defs>
@@ -26,7 +26,7 @@ export function HospitalFloorPlan(props: SVGProps<SVGSVGElement>) {
 
       {/* North wing label */}
       <text x="400" y="48" textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="13" fontWeight="600" letterSpacing="0.08em">
-        MEDICAL SURGICAL WARD — 2ND FLOOR
+        OFFICE BUILDING — 2ND FLOOR
       </text>
 
       {/* Main corridor */}
@@ -39,10 +39,10 @@ export function HospitalFloorPlan(props: SVGProps<SVGSVGElement>) {
       <rect x="320" y="155" width="160" height="100" rx="8" fill="hsl(var(--primary) / 0.12)" stroke="hsl(var(--primary))" strokeWidth="2" />
       <rect x="360" y="185" width="80" height="40" rx="4" fill="hsl(var(--card))" stroke="hsl(var(--primary) / 0.5)" strokeWidth="1" />
       <text x="400" y="212" textAnchor="middle" fill="hsl(var(--primary))" fontSize="12" fontWeight="700">
-        NURSES
+        FRONT
       </text>
       <text x="400" y="228" textAnchor="middle" fill="hsl(var(--primary))" fontSize="12" fontWeight="700">
-        STATION
+        DESK
       </text>
 
       {/* Patient rooms — north row */}
@@ -54,7 +54,7 @@ export function HospitalFloorPlan(props: SVGProps<SVGSVGElement>) {
       </g>
 
       {/* South wing rooms */}
-      <Room x={60} y={310} w={100} h={100} label="Pharmacy" subLabel="MEDS" />
+      <Room x={60} y={310} w={100} h={100} label="Storage" subLabel="SUP" />
       <Room x={640} y={310} w={100} h={100} label="Supply" subLabel="CLSET" />
 
       {/* Waiting / reception */}

@@ -75,11 +75,11 @@ function defaultNodeMapConfig(): NodeMapConfig {
         label: 'Location 1',
         scenario: 'Describe what staff observe at this location.',
         question: {
-          text: 'What type of incident is this?',
+          text: 'What type of issue is this?',
           options: [
-            { id: 'a', text: 'Clinical' },
-            { id: 'b', text: 'Cybersecurity / Privacy' },
-            { id: 'c', text: 'Physical / Facilities' },
+            { id: 'a', text: 'Operations / safety' },
+            { id: 'b', text: 'Cybersecurity / privacy' },
+            { id: 'c', text: 'Physical / facilities' },
           ],
           correct_id: 'a',
         },
@@ -91,12 +91,12 @@ function defaultNodeMapConfig(): NodeMapConfig {
 function defaultSortingConfig(): SortingConfig {
   return {
     categories: [
-      { id: 'clinical', label: 'Clinical' },
+      { id: 'operations', label: 'Operations' },
       { id: 'cyber', label: 'Cybersecurity' },
       { id: 'physical', label: 'Physical' },
       { id: 'admin', label: 'Administrative' },
     ],
-    cards: [{ id: 'c1', text: 'Example incident — edit or add more cards', category_id: 'clinical' }],
+    cards: [{ id: 'c1', text: 'Example scenario — edit or add more cards', category_id: 'operations' }],
     passing_score: 80,
   }
 }
@@ -145,7 +145,7 @@ export function defaultWorkshopContent(type: WorkshopType = 'node_map'): Worksho
       return {
         workshop_type: 'sorting',
         title: 'Sorting challenge',
-        instructions: 'Drag each incident card into the correct category.',
+        instructions: 'Drag each scenario card into the correct category.',
         config: defaultSortingConfig(),
       }
     case 'decision_tree':
@@ -168,7 +168,7 @@ export function defaultWorkshopContent(type: WorkshopType = 'node_map'): Worksho
         workshop_type: 'node_map',
         title: 'Interactive workshop',
         instructions:
-          'Explore the floor plan and tap each alert pin. Read the scenario and classify the incident.',
+          'Explore the floor plan and tap each alert pin. Read the scenario and choose the best response.',
         config: defaultNodeMapConfig(),
       }
   }

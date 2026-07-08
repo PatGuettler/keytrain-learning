@@ -11,9 +11,9 @@ import type { CsvUserImportRow } from '@/lib/csv-user-import'
 import { importUsersFromCsv, type ImportUserRowResult } from '@/services/user-management.service'
 
 const SAMPLE_CSV = `email,full_name,role,manager_email
-employee1@hospital.org,Sam Taylor,,manager@hospital.org
-employee2@hospital.org,,employee,
-manager@hospital.org,Jordan Chen,manager,`
+employee1@company.com,Sam Taylor,,manager@company.com
+employee2@company.com,,employee,
+manager@company.com,Jordan Chen,manager,`
 
 function downloadSampleCsv() {
   const blob = new Blob([SAMPLE_CSV], { type: 'text/csv' })

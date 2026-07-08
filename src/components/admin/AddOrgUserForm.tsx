@@ -78,7 +78,7 @@ export function AddOrgUserForm({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="staff@hospital.org"
+              placeholder="staff@company.com"
             />
           </div>
           <div className="space-y-2">

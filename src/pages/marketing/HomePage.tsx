@@ -6,7 +6,7 @@ const FEATURES = [
   {
     title: 'Required training',
     description:
-      'Assign courses, track completion, and give managers visibility into team progress — built for busy clinical and admin staff.',
+      'Assign courses, track completion, and give managers visibility into team progress — built for busy teams across your organization.',
   },
   {
     title: 'Phishing simulations',
@@ -21,12 +21,12 @@ const FEATURES = [
   {
     title: 'Compliance workflows',
     description:
-      'Generate and maintain security documentation — incident response, acceptable use, HIPAA risk analysis, and more.',
+      'Generate and maintain security documentation — incident response, acceptable use, risk analysis, and more.',
   },
   {
     title: 'Multi-tenant organizations',
     description:
-      'Hospitals, clinics, and enterprise teams each get their own org, roles, and training assignments.',
+      'Each business unit or location gets its own org, roles, and training assignments.',
   },
   {
     title: 'Reporting & dashboards',
@@ -44,7 +44,7 @@ export function HomePage() {
           className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/40"
         />
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-28">
-          <p className="text-sm font-medium text-primary mb-4">Healthcare security awareness</p>
+          <p className="text-sm font-medium text-primary mb-4">Security awareness for every organization</p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight max-w-3xl">
             Train your team. Simulate threats. See the bigger picture.
           </h1>

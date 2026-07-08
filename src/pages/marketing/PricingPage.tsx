@@ -19,7 +19,7 @@ const TIERS: Tier[] = [
     name: 'Team',
     price: 'Contact us',
     period: 'per organization',
-    description: 'For a single hospital, clinic, or department getting started with awareness training.',
+    description: 'For a single team, location, or department getting started with awareness training.',
     features: [
       'Unlimited learners within your org',
       'Course library & assignments',

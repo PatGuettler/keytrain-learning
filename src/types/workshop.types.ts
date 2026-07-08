@@ -9,6 +9,8 @@ export interface WorkshopContent {
 
 export interface NodeMapConfig {
   background_image: string
+  /** Built-in floor plan when background_image is empty. Defaults to ward layout. */
+  floor_plan?: 'ward' | 'server_room'
   /** Minimum score (0–100) to mark module as passed. Default 60. */
   passing_score?: number
   nodes: {

@@ -61,9 +61,9 @@ function NodeMapEditor({
           label: 'New location',
           scenario: '',
           question: {
-            text: 'What type of incident is this?',
+            text: 'What type of issue is this?',
             options: [
-              { id: 'a', text: 'Clinical' },
+              { id: 'a', text: 'Operations / safety' },
               { id: 'b', text: 'Cybersecurity' },
               { id: 'c', text: 'Physical' },
             ],
@@ -99,10 +99,29 @@ function NodeMapEditor({
           <Input
             value={config.background_image ?? ''}
             onChange={(e) => onChange({ ...config, background_image: e.target.value })}
-            placeholder="Leave blank for built-in hospital floor plan"
+            placeholder="Leave blank for built-in floor plan"
           />
         </div>
       </div>
+
+      {!config.background_image?.trim() && (
+        <div className="max-w-sm space-y-2">
+          <Label>Built-in floor plan</Label>
+          <select
+            className={selectClass}
+            value={config.floor_plan ?? 'ward'}
+            onChange={(e) =>
+              onChange({
+                ...config,
+                floor_plan: e.target.value as NodeMapConfig['floor_plan'],
+              })
+            }
+          >
+            <option value="ward">General facility layout</option>
+            <option value="server_room">Server room / data center</option>
+          </select>
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-medium">Hotspot nodes ({nodes.length})</p>
@@ -233,7 +252,7 @@ function SortingEditor({
       ...config,
       cards: [
         ...cards,
-        { id, text: 'New incident card', category_id: categories[0]?.id ?? 'clinical' },
+        { id, text: 'New scenario card', category_id: categories[0]?.id ?? 'operations' },
       ],
     })
   }

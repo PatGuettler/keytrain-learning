@@ -74,7 +74,7 @@ export function AdminStaffTrainingPage() {
         <Button variant="ghost" size="sm" asChild>
           <Link to={adminOrgDashboardPath(orgSlug!)}>
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to hospital dashboard
+            Back to organization dashboard
           </Link>
         </Button>
         {summary && (

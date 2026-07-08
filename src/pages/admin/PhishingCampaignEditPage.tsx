@@ -542,7 +542,7 @@ export function PhishingCampaignEditPage() {
                 }
               }}
             >
-              <option value="all">All hospital staff</option>
+              <option value="all">All organization staff</option>
               <option value="org">One organization</option>
               <option value="custom">Hand-picked users</option>
             </select>
@@ -670,7 +670,7 @@ export function PhishingCampaignEditPage() {
                     {userSearch.trim()
                       ? 'No matching users.'
                       : otherAdmins.length > 0
-                        ? 'No hospital users yet — use platform admins above for testing.'
+                        ? 'No organization users yet — use platform admins above for testing.'
                         : selectableUsers.length <= 1
                           ? 'No other users found in the app.'
                           : 'No users on this page.'}
@@ -774,7 +774,7 @@ export function PhishingCampaignEditPage() {
               placeholder="{{COMPANY_SLUG}}-hr-benefits@{{EMAIL_DOMAIN}}"
             />
             <p className="text-xs text-muted-foreground">
-              Resolved per recipient, e.g. memorial-hospital-hr-benefits@keytrainlearning.com. Use{' '}
+              Resolved per recipient, e.g. acme-corp-hr-benefits@keytrainlearning.com. Use{' '}
               {'{{COMPANY_NAME}}'}, {'{{COMPANY_SLUG}}'}, {'{{SENDER_EMAIL}}'}, {'{{EMAIL_DOMAIN}}'}.
             </p>
           </div>

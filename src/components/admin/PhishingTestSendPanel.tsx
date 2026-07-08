@@ -119,7 +119,7 @@ export function PhishingTestSendPanel({
             <Input
               id="test-email-input"
               type="email"
-              placeholder="you@hospital.org"
+              placeholder="you@company.com"
               value={emailInput}
               disabled={disabled || sending}
               onChange={(e) => setEmailInput(e.target.value)}

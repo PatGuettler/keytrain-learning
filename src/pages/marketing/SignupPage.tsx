@@ -54,7 +54,7 @@ export function SignupPage() {
         <SignupOptionCard
           icon={UserPlus}
           title="New organization"
-          description="Your hospital or clinic isn't on KeyTrain yet."
+          description="Your organization isn't on KeyTrain yet."
           action={
             <Button className="w-full" asChild>
               <Link to="/contact">Request access</Link>

@@ -51,7 +51,7 @@ export function MarketingLayout() {
             <div className="space-y-2">
               <AppLogo className="h-8 w-auto" />
               <p className="text-sm text-muted-foreground max-w-xs">
-                Security awareness training, phishing simulations, and RailNet intelligence for healthcare teams.
+                Security awareness training, phishing simulations, and RailNet intelligence for modern teams.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-3">

@@ -100,7 +100,7 @@ export function ContactPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@hospital.org"
+                    placeholder="you@company.com"
                     required
                   />
                 </div>
@@ -110,7 +110,7 @@ export function ContactPage() {
                     id="contact-org"
                     value={organization}
                     onChange={(e) => setOrganization(e.target.value)}
-                    placeholder="Memorial Hospital"
+                    placeholder="Acme Corporation"
                   />
                 </div>
                 <div className="space-y-2">

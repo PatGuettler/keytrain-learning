@@ -54,7 +54,7 @@ export function AdminOrgCourseDetailPage() {
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Course not found.</p>
         <Button variant="outline" size="sm" asChild>
-          <Link to={adminOrgDashboardPath(orgSlug!)}>Back to hospital dashboard</Link>
+          <Link to={adminOrgDashboardPath(orgSlug!)}>Back to organization dashboard</Link>
         </Button>
       </div>
     )

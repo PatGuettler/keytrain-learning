@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { HospitalFloorPlan } from './HospitalFloorPlan'
+import { ServerRoomFloorPlan } from './ServerRoomFloorPlan'
 import type { ModuleCompletePayload } from '@/types/training.types'
 import type { WorkshopContent, NodeMapConfig } from '@/types/workshop.types'
 
@@ -25,6 +26,9 @@ export function NodeMapWorkshop({
 
   const node = config.nodes.find((n) => n.id === activeNode)
   const useBuiltInFloor = !config.background_image?.trim()
+  const floorPlan = config.floor_plan ?? 'ward'
+  const BuiltInFloorPlan = floorPlan === 'server_room' ? ServerRoomFloorPlan : HospitalFloorPlan
+  const floorPlanLabel = floorPlan === 'server_room' ? 'Server room floor plan' : 'Facility floor plan'
 
   const { correctCount, attemptedCount, score, passed, allAttempted } = useMemo(() => {
     const correct = config.nodes.filter((n) => completed[n.id] === 'correct').length
@@ -84,7 +88,7 @@ export function NodeMapWorkshop({
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <p>
-              <strong>{correctCount}</strong> of <strong>{config.nodes.length}</strong> incidents
+              <strong>{correctCount}</strong> of <strong>{config.nodes.length}</strong> scenarios
               classified correctly. Your score is saved to your training record.
             </p>
             {!passed && (
@@ -146,11 +150,11 @@ export function NodeMapWorkshop({
         <div className="overflow-x-auto overflow-y-hidden scrollbar-thin">
           <div className="relative min-w-[min(100%,640px)] sm:min-w-0 w-full aspect-[800/520] sm:aspect-[16/10]">
             {useBuiltInFloor ? (
-              <HospitalFloorPlan className="absolute inset-0 w-full h-full text-foreground" />
+              <BuiltInFloorPlan className="absolute inset-0 w-full h-full text-foreground" />
             ) : (
               <img
                 src={config.background_image}
-                alt="Hospital floor plan"
+                alt={floorPlanLabel}
                 className="absolute inset-0 w-full h-full object-contain"
               />
             )}
@@ -186,7 +190,7 @@ export function NodeMapWorkshop({
                       setActiveNode(n.id)
                       setSelected(null)
                     }}
-                    aria-label={`Investigate incident at ${n.label}`}
+                    aria-label={`Investigate scenario at ${n.label}`}
                   >
                     {status === 'correct' ? (
                       <Check className="h-6 w-6" />
@@ -243,7 +247,7 @@ export function NodeMapWorkshop({
                 </div>
                 <div>
                   <h3 className="font-bold text-lg">{node.label}</h3>
-                  <p className="text-xs text-muted-foreground">Incident scenario</p>
+                  <p className="text-xs text-muted-foreground">Scenario</p>
                 </div>
               </div>
               <p className="text-sm leading-relaxed mb-4 rounded-lg bg-muted/50 p-3 border-l-4 border-amber-500">
@@ -310,7 +314,7 @@ export function NodeMapWorkshop({
 
       {!activeNode && (
         <p className="text-center text-xs text-muted-foreground">
-          Tap each pulsing alert on the map to read the scenario and classify the incident type.
+          Tap each pulsing alert on the map to read the scenario and choose the best response.
         </p>
       )}
 

@@ -141,7 +141,7 @@ export function CoursePublishPanel({
   const handleUnpublishAll = () => {
     if (activePublications.length === 0) return
     const confirmed = window.confirm(
-      `Unpublish this course from all ${activePublications.length} hospital(s)? No staff will be able to take it until you publish again.`
+      `Unpublish this course from all ${activePublications.length} organization(s)? No staff will be able to take it until you publish again.`
     )
     if (!confirmed) return
     void run(async () => {
@@ -168,7 +168,7 @@ export function CoursePublishPanel({
         <CardTitle className="text-base">Publish &amp; unpublish</CardTitle>
         <CardDescription>
           Publishing makes this course required for every manager and employee in the selected
-          hospitals. Unpublishing removes it from their training catalog immediately — they cannot
+          organizations. Unpublishing removes it from their training catalog immediately — they cannot
           start or continue it (completed records are kept).
         </CardDescription>
       </CardHeader>
@@ -185,7 +185,7 @@ export function CoursePublishPanel({
                   disabled={loading}
                   onClick={handleUnpublishAll}
                 >
-                  Unpublish from all hospitals
+                  Unpublish from all organizations
                 </Button>
               )}
             </div>
@@ -212,7 +212,7 @@ export function CoursePublishPanel({
                       size="sm"
                       className="text-destructive border-destructive/40 hover:bg-destructive/10"
                       disabled={loading}
-                      onClick={() => handleUnpublishOrg(pub.org_id, org?.name ?? 'this hospital')}
+                      onClick={() => handleUnpublishOrg(pub.org_id, org?.name ?? 'this organization')}
                     >
                       Unpublish
                     </Button>
@@ -224,7 +224,7 @@ export function CoursePublishPanel({
         )}
 
         <div className="space-y-3">
-          <Label>Publish to hospitals</Label>
+          <Label>Publish to organizations</Label>
           <label className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm font-medium cursor-pointer">
             <input
               type="checkbox"

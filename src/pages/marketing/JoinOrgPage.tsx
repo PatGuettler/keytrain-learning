@@ -109,7 +109,7 @@ export function JoinOrgPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@hospital.org"
+                placeholder="you@company.com"
                 required
                 disabled={loading}
               />

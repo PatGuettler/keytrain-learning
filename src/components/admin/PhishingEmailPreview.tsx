@@ -72,7 +72,7 @@ export function PhishingEmailPreview({
         />
       </div>
       <p className="px-3 pb-3 text-xs text-muted-foreground">
-        Preview uses sample names (e.g. Memorial Hospital). Placeholders resolve per recipient when sent.
+        Preview uses sample names (e.g. Acme Corporation). Placeholders resolve per recipient when sent.
       </p>
     </div>
   )

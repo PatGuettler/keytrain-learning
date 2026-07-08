@@ -110,7 +110,7 @@ export function ManageTagsDialog({ open, onOpenChange, onTagDeleted }: ManageTag
               setNewTagName(e.target.value)
               setCreateError('')
             }}
-            placeholder="e.g. Healthcare — press Enter to save"
+            placeholder="e.g. General — press Enter to save"
             disabled={createMutation.isPending}
           />
           {createError && <p className="text-sm text-destructive">{createError}</p>}

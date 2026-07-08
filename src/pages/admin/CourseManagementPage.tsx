@@ -70,7 +70,7 @@ function CourseRowActions({
 
   const handleUnpublish = () => {
     const names = active
-      .map((p) => hospitals.find((h) => h.id === p.org_id)?.name ?? 'hospital')
+      .map((p) => hospitals.find((h) => h.id === p.org_id)?.name ?? 'organization')
       .join(', ')
     const confirmed = window.confirm(
       `Unpublish from ${names}? Staff will no longer be able to take this course.`
@@ -89,7 +89,7 @@ function CourseRowActions({
         ) : (
           <>
             <Badge variant="success" className="shrink-0">
-              Live in {active.length} hospital{active.length === 1 ? '' : 's'}
+              Live in {active.length} organization{active.length === 1 ? '' : 's'}
             </Badge>
             <Button
               type="button"
@@ -153,7 +153,7 @@ export function CourseManagementPage() {
         <div>
           <h2 className="text-2xl font-bold">Course Management</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Use Publish for a quick publish to all hospitals, or Edit for per-hospital settings.
+            Use Publish for a quick publish to all organizations, or Edit for per-organization settings.
           </p>
         </div>
         <Button asChild>

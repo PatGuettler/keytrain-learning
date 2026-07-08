@@ -179,7 +179,7 @@ export function PlatformUsersPage() {
 
       <PageHeader
         title="Users"
-        description="Hospital staff across all organizations — filter, sort, review, and export."
+        description="Staff across all organizations — filter, sort, review, and export."
         action={
           <Button
             variant="outline"

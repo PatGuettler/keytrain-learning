@@ -56,7 +56,7 @@ export function PlatformAdminsPage() {
     <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title="Platform Admins"
-        description={`Create and manage ${APP_NAME} administrators. Hospital staff are managed under Organizations.`}
+        description={`Create and manage ${APP_NAME} administrators. Organization staff are managed under Organizations.`}
       />
 
       <Card>
@@ -87,7 +87,7 @@ export function PlatformAdminsPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@yourhospital.org"
+                placeholder="admin@yourcompany.com"
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
