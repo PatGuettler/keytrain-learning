@@ -18,6 +18,7 @@
     "deploy:railnet-signatures": "bash scripts/deploy-railnet-signatures.sh",
     "seed:railnet": "bash scripts/railnet-seed.sh",
     "seed:railnet:dry-run": "bash scripts/railnet-seed.sh --dry-run",
+    "backup:supabase": "bash scripts/backup-supabase.sh",
     "test:resend-support": "bash scripts/test-resend-support.sh",
     "set-test-passwords": "bash scripts/set-test-passwords.sh"
   },

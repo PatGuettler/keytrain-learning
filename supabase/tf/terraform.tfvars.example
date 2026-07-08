@@ -1,0 +1,13 @@
+# Copy to terraform.tfvars (gitignored) and fill in real values.
+#
+#   cp terraform.tfvars.example terraform.tfvars
+
+organization_id = "YOUR_ORG_SLUG" # Dashboard → Organization Settings → General
+project_ref     = "rzrsudrdpnabpseatclm"
+project_name    = "KeyTrainLearning"
+project_region  = "us-east-1" # Confirm in Project Settings → General
+
+# Placeholder only — ignored after import (lifecycle.ignore_changes).
+database_password = "unused-on-import-do-not-change"
+
+auth_site_url = "https://keytrainlearning.com"

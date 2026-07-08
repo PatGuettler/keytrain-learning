@@ -36,6 +36,18 @@ supabase/.temp
 supabase/.env
 supabase/.env.local
 
+# Local / CI Supabase disaster-recovery dumps (PII) — keep docs only
+supabase/backups/**
+!supabase/backups/.gitkeep
+!supabase/backups/RESTORE.md
+
+# Terraform local state / secrets (see supabase/tf/.gitignore too)
+supabase/tf/.terraform/
+supabase/tf/*.tfstate
+supabase/tf/*.tfstate.*
+supabase/tf/terraform.tfvars
+supabase/tf/access-token
+
 # Python venvs under scripts
 scripts/**/venv/
 scripts/railnet-seed/venv/
