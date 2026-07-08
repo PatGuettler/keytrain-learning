@@ -30,3 +30,4 @@ INSERT INTO courses (id, org_id, title, description, estimated_minutes, is_publi
 ON CONFLICT (id) DO NOTHING;
 
 -- Full module content for course 10000000-...001: run seed-incident-awareness-course.sql
+-- Server room security course 10000000-...003: run seed-server-room-security-course.sql

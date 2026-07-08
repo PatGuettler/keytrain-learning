@@ -1,6 +1,5 @@
 // Supabase adapter — all SQL/PostgREST logic lives here.
 
-import { PLATFORM_ORG_ID } from '@/lib/constants'
 import { attachTagsToCourses } from '@/lib/course-tags'
 import { isPublicationActive } from '@/lib/course-publications'
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
@@ -219,11 +218,7 @@ export function createSupabaseBackend(): Backend {
         return data as Course[]
       },
       async fetchHospitalCourses() {
-        const { data, error } = await supabase
-          .from('courses')
-          .select('*')
-          .neq('org_id', PLATFORM_ORG_ID)
-          .order('title')
+        const { data, error } = await supabase.from('courses').select('*').order('title')
         if (error) throw error
         const courses = (data ?? []) as Course[]
         const { links, tags } = await loadTagsForCourses(
