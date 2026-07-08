@@ -37,7 +37,7 @@ export function LessonRenderer({
 
   const safeIndex = slides.length > 0 ? Math.min(index, slides.length - 1) : 0
   const slide: LessonSlide | undefined = slides[safeIndex]
-  const layout = slide?.layout ?? 'image-right'
+  const layout = slide?.layout ?? 'content-only'
   const isLast = slides.length === 0 || safeIndex >= slides.length - 1
   const requiresVideo = slide ? slideRequiresVideo(slide) : false
   const canAdvance = !requiresVideo || videoWatched
@@ -134,47 +134,52 @@ function SlideView({
 }) {
   const illustration = slide.illustration
   const imageUrl = illustration?.url?.trim()
-  const illustrationKey = resolveIllustrationKey(illustration?.key, slide.heading)
-  const alt = illustration?.alt ?? slide.heading
-  const layout = slide.layout ?? 'image-right'
-  const hasIllustration = Boolean(imageUrl) || Boolean(illustration?.key)
-  const showVisual =
-    hasIllustration ||
-    layout === 'image-top' ||
-    layout === 'image-only' ||
-    (layout === 'full-bleed' && illustration !== undefined)
+  const illustrationKey = resolveIllustrationKey(illustration?.key)
+  const alt = illustration?.alt?.trim() || slide.heading?.trim() || 'Slide image'
+  const layout = slide.layout ?? 'content-only'
+  const hasIllustration = Boolean(imageUrl) || Boolean(illustrationKey)
+  const headingText = slide.heading?.trim() ?? ''
+  const bodyText = slide.body?.trim() ?? ''
+  const hasText = Boolean(headingText || bodyText)
 
-  const prose = 'min-w-0'
+  // Only show an image column when the author actually attached imagery.
+  // Never invent a default illustration or empty "No image" placeholder.
+  const showVisual =
+    hasIllustration &&
+    layout !== 'content-only' &&
+    (layout === 'image-right' ||
+      layout === 'image-left' ||
+      layout === 'image-top' ||
+      layout === 'full-bleed' ||
+      layout === 'image-only')
 
   const imageOnly = layout === 'image-only'
 
-  const visualBlock = (
+  const visualBlock = showVisual ? (
     <figure className="rounded-lg border bg-muted/50 min-w-0 w-full">
       {imageUrl ? (
         <ZoomableSlideImage src={imageUrl} alt={alt} imageOnly={imageOnly} />
-      ) : hasIllustration ? (
+      ) : illustrationKey ? (
         <LessonIllustration illustrationKey={illustrationKey} alt={alt} className="w-full" />
-      ) : (
-        <div className="flex items-center justify-center min-h-[12rem] px-4 py-8 text-sm text-muted-foreground">
-          No image on this slide
-        </div>
-      )}
-      {illustration?.caption && (
+      ) : null}
+      {illustration?.caption?.trim() && (
         <figcaption className="text-xs text-muted-foreground px-3 py-2 border-t bg-card text-center">
           {illustration.caption}
         </figcaption>
       )}
     </figure>
-  )
+  ) : null
 
-  const heading = 'text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 break-anywhere leading-snug'
-
-  const textBlock = (
+  const textBlock = hasText ? (
     <div className="min-w-0">
-      <h2 className={heading}>{slide.heading}</h2>
-      <SlideBodyContent body={slide.body} className={prose} />
+      {headingText ? (
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 break-anywhere leading-snug">
+          {headingText}
+        </h2>
+      ) : null}
+      {bodyText ? <SlideBodyContent body={slide.body} className="min-w-0" /> : null}
     </div>
-  )
+  ) : null
 
   const slideVideo = resolveSlideVideo(slide)
 
@@ -209,7 +214,17 @@ function SlideView({
   if (imageOnly) {
     return (
       <div className="space-y-4 min-w-0">
-        {showVisual && visualBlock}
+        {visualBlock}
+        {pdfBlock}
+      </div>
+    )
+  }
+
+  if (layout === 'content-only' || (!showVisual && (videoBlock || pdfBlock || hasText))) {
+    return (
+      <div className="space-y-4 sm:space-y-6 min-w-0">
+        {textBlock}
+        {videoBlock}
         {pdfBlock}
       </div>
     )
@@ -221,7 +236,7 @@ function SlideView({
         {textBlock}
         {videoBlock}
         {pdfBlock}
-        {showVisual && visualBlock}
+        {visualBlock}
       </div>
     )
   }
@@ -239,7 +254,7 @@ function SlideView({
         {videoBlock}
         {pdfBlock}
       </div>
-      {showVisual && <div className="min-w-0">{visualBlock}</div>}
+      {visualBlock && <div className="min-w-0">{visualBlock}</div>}
     </div>
   )
 }

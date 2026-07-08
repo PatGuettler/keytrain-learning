@@ -112,17 +112,9 @@ const ILLUSTRATION_MAP: Record<LessonIllustrationKey, FC<IllustrationProps>> = {
   team_safety: TeamSafetyIllustration,
 }
 
-export function resolveIllustrationKey(
-  key?: string,
-  heading?: string
-): LessonIllustrationKey {
+export function resolveIllustrationKey(key?: string): LessonIllustrationKey | null {
   if (key && key in ILLUSTRATION_MAP) return key as LessonIllustrationKey
-  const h = (heading ?? '').toLowerCase()
-  if (h.includes('cyber') || h.includes('phishing')) return 'cybersecurity'
-  if (h.includes('report') && h.includes('why')) return 'reporting'
-  if (h.includes('clinical') || h.includes('incident')) return 'clinical_incident'
-  if (h.includes('report')) return 'stop_report'
-  return 'clinical_incident'
+  return null
 }
 
 export function LessonIllustration({

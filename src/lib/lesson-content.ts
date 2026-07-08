@@ -62,7 +62,14 @@ function normalizeSlide(raw: unknown, index: number): LessonSlide | null {
   const heading = typeof s.heading === 'string' ? s.heading : `Slide ${index + 1}`
   const body = typeof s.body === 'string' ? s.body : ''
   const layout = s.layout as LessonSlide['layout'] | undefined
-  const validLayouts = new Set(['image-right', 'image-left', 'image-top', 'full-bleed', 'image-only'])
+  const validLayouts = new Set([
+    'content-only',
+    'image-right',
+    'image-left',
+    'image-top',
+    'full-bleed',
+    'image-only',
+  ])
   const rawYoutube = s.youtube
   const video = normalizeVideo(s.video, rawYoutube)
   let youtube: LessonSlide['youtube'] | undefined
@@ -76,7 +83,7 @@ function normalizeSlide(raw: unknown, index: number): LessonSlide | null {
     id: typeof s.id === 'string' ? s.id : `slide_${index}`,
     heading,
     body,
-    layout: layout && validLayouts.has(layout) ? layout : 'image-right',
+    layout: layout && validLayouts.has(layout) ? layout : 'content-only',
     illustration:
       s.illustration && typeof s.illustration === 'object'
         ? (s.illustration as LessonSlide['illustration'])

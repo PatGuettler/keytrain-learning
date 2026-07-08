@@ -143,7 +143,8 @@ export interface LessonSlide {
   id: string
   heading: string
   body: string
-  layout?: 'image-right' | 'image-left' | 'image-top' | 'full-bleed' | 'image-only'
+  /** content-only = no image column (video / text / PDF alone). */
+  layout?: 'image-right' | 'image-left' | 'image-top' | 'full-bleed' | 'image-only' | 'content-only'
   illustration?: {
     /** Remote image URL (Supabase Storage, etc.) */
     url?: string
