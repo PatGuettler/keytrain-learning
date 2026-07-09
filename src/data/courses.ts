@@ -27,9 +27,10 @@ export const seedCourses: Course[] = [
     id: '10000000-0000-0000-0000-000000000002',
     org_id: DEFAULT_ORG_ID,
     title: 'Cybersecurity Awareness',
-    description: 'Protect patient data and hospital systems from phishing and social engineering.',
+    description:
+      'Learn how to spot phishing, protect credentials, handle data safely, and respond to common cyber threats across your organization.',
     thumbnail_url: null,
-    estimated_minutes: 30,
+    estimated_minutes: 50,
     max_attempts: 3,
     show_results_after_completion: false,
     certificate_enabled: false,

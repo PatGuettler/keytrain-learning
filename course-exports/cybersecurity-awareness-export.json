@@ -1,0 +1,666 @@
+{
+  "version": 1,
+  "exported_at": "2026-07-08T15:42:47.000Z",
+  "course": {
+    "title": "Cybersecurity Awareness",
+    "description": "Learn how to spot phishing, protect credentials, handle data safely, and respond to common cyber threats across your organization.",
+    "estimated_minutes": 50,
+    "max_attempts": 3,
+    "show_results_after_completion": true,
+    "certificate_enabled": true,
+    "certificate_expires_days": 365,
+    "thumbnail_url": null
+  },
+  "modules": [
+    {
+      "title": "Why Cybersecurity Matters",
+      "type": "lesson",
+      "order_index": 0,
+      "content": {
+        "slides": [
+          {
+            "id": "cyber_intro_1",
+            "heading": "Everyone is a target",
+            "body": "Attackers do not only go after IT teams. Email phishing, weak passwords, and misplaced devices affect **every role**\u2014sales, finance, HR, operations, and leadership.\n\nOne careful click (or one avoided click) can protect customer data, payroll systems, and day-to-day business continuity.",
+            "layout": "image-right",
+            "illustration": {
+              "key": "cybersecurity",
+              "alt": "Shield protecting data systems",
+              "caption": "Security is everyone's job"
+            }
+          },
+          {
+            "id": "cyber_intro_2",
+            "heading": "What is at stake?",
+            "body": "- **Confidential data** \u2014 customer records, contracts, employee information\n- **Financial loss** \u2014 invoice fraud, ransomware, account takeover\n- **Operations** \u2014 downtime that stops work across teams\n- **Trust & reputation** \u2014 partners and clients expect you to protect their information",
+            "layout": "image-left",
+            "illustration": {
+              "key": "reporting",
+              "alt": "Security checklist",
+              "caption": ""
+            }
+          },
+          {
+            "id": "cyber_intro_3",
+            "heading": "Your three habits",
+            "body": "1. **Pause** before clicking links or opening unexpected attachments\n2. **Protect** passwords, badges, and devices\n3. **Report** suspicious email, strange login prompts, or lost devices immediately\n\nWhen in doubt, use your organization's official IT / security channel\u2014not a reply to the suspicious message.",
+            "layout": "image-top",
+            "illustration": {
+              "key": "stop_report",
+              "alt": "Stop and report warning",
+              "caption": "Pause. Protect. Report."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "title": "Phishing & Social Engineering",
+      "type": "lesson",
+      "order_index": 1,
+      "content": {
+        "slides": [
+          {
+            "id": "phish_1",
+            "heading": "What phishing looks like",
+            "body": "Phishing is fraud that tricks people into revealing credentials, sending money, or installing malware. Common delivery methods:\n\n- Email and fake \u201cIT support\u201d messages\n- Text / SMS (smishing)\n- Phone calls (vishing)\n- Fake login pages after a malicious link",
+            "layout": "image-right",
+            "illustration": {
+              "key": "cybersecurity",
+              "alt": "Phishing awareness",
+              "caption": ""
+            }
+          },
+          {
+            "id": "phish_2",
+            "heading": "Red flags to watch for",
+            "body": "- **Urgency or threats** \u2014 \u201cAccount locked in 1 hour\u201d\n- **Unexpected requests** \u2014 gift cards, wire transfers, password resets you did not start\n- **Odd sender details** \u2014 lookalike domains, display-name spoofs\n- **Generic greetings** with high-pressure asks\n- **Links / attachments** you were not expecting\n\nHover (or long-press) links on approved devices to preview destinations\u2014never assume the visible text is the real URL.",
+            "layout": "image-left",
+            "illustration": {
+              "key": "stop_report",
+              "alt": "Stop before clicking",
+              "caption": ""
+            }
+          },
+          {
+            "id": "phish_3",
+            "heading": "Social engineering in person",
+            "body": "Attackers may also try **tailgating**, **impersonating vendors**, or asking coworkers for access \u201cjust this once.\u201d\n\nNever share passwords. Verify unusual requests through a known channel (call a published help-desk number, or ask your manager in person / via approved chat).",
+            "layout": "full-bleed",
+            "illustration": {
+              "key": "team_safety",
+              "alt": "Team verifying access requests",
+              "caption": "Verify before you trust"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "title": "Phishing Knowledge Check",
+      "type": "quiz",
+      "order_index": 2,
+      "content": {
+        "passing_score": 80,
+        "randomize_questions": true,
+        "questions": [
+          {
+            "id": "pq1",
+            "text": "You receive an urgent email claiming your account will be deleted unless you click a link and enter your password. What should you do?",
+            "type": "single_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "Click the link immediately so you do not lose access",
+                "correct": false
+              },
+              {
+                "id": "b",
+                "text": "Report it using your org security process and do not enter credentials",
+                "correct": true
+              },
+              {
+                "id": "c",
+                "text": "Forward it to friends so they can check if it looks real",
+                "correct": false
+              }
+            ],
+            "explanation": "Urgent credential requests are a classic phishing tactic. Report without clicking or entering passwords."
+          },
+          {
+            "id": "pq2",
+            "text": "Which of the following are common phishing red flags? (Select all that apply.)",
+            "type": "multi_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "Lookalike domains and mismatched display names",
+                "correct": true
+              },
+              {
+                "id": "b",
+                "text": "Unexpected attachments or links",
+                "correct": true
+              },
+              {
+                "id": "c",
+                "text": "Routine calendar invites from a known teammate",
+                "correct": false
+              },
+              {
+                "id": "d",
+                "text": "Threats or extreme urgency to act now",
+                "correct": true
+              }
+            ],
+            "explanation": "Urgency, spoofed senders, and unexpected links/attachments are classic indicators."
+          },
+          {
+            "id": "pq3",
+            "text": "A caller says they are from IT and need your password to \u201cfix your email.\u201d What is the best response?",
+            "type": "single_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "Give the password\u2014IT already has access anyway",
+                "correct": false
+              },
+              {
+                "id": "b",
+                "text": "Refuse, hang up, and verify through official IT channels",
+                "correct": true
+              },
+              {
+                "id": "c",
+                "text": "Share a temporary password you plan to change later",
+                "correct": false
+              }
+            ],
+            "explanation": "Legitimate IT never needs you to recite your password over the phone."
+          },
+          {
+            "id": "pq4",
+            "text": "Hovering a link before clicking can help you see the real destination URL.",
+            "type": "single_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "True",
+                "correct": true
+              },
+              {
+                "id": "b",
+                "text": "False",
+                "correct": false
+              }
+            ],
+            "explanation": "Previewing the destination can reveal spoofed links\u2014still report suspicious mail rather than trusting and clicking."
+          }
+        ]
+      }
+    },
+    {
+      "title": "Passwords, MFA & Access",
+      "type": "lesson",
+      "order_index": 3,
+      "content": {
+        "slides": [
+          {
+            "id": "pwd_1",
+            "heading": "Strong credentials",
+            "body": "Use **unique passwords** for work accounts (a password manager helps). Prefer longer passphrases over short complex strings you reuse everywhere.\n\nNever share passwords in chat, email, sticky notes on monitors, or with vendors.",
+            "layout": "image-right",
+            "illustration": {
+              "key": "cybersecurity",
+              "alt": "Secure access controls",
+              "caption": ""
+            }
+          },
+          {
+            "id": "pwd_2",
+            "heading": "Multi-factor authentication (MFA)",
+            "body": "MFA adds a second proof of identity (app approval, hardware key, or one-time code). Even if a password is stolen, MFA often blocks account takeover.\n\nTreat unexpected MFA prompts as a warning\u2014deny them and report possible compromise.",
+            "layout": "image-left",
+            "illustration": {
+              "key": "stop_report",
+              "alt": "Unexpected MFA prompt warning",
+              "caption": ""
+            }
+          },
+          {
+            "id": "pwd_3",
+            "heading": "Least privilege & clean desks",
+            "body": "- Lock your workstation when you step away (**Win+L** / lock shortcut)\n- Do not leave badges or unlocked laptops unattended\n- Only access systems and data you need for your role\n- Escort visitors; do not hold secure doors open for strangers",
+            "layout": "image-top",
+            "illustration": {
+              "key": "team_safety",
+              "alt": "Secure workplace habits",
+              "caption": ""
+            }
+          }
+        ]
+      }
+    },
+    {
+      "title": "Safe Computing Everyday",
+      "type": "lesson",
+      "order_index": 4,
+      "content": {
+        "slides": [
+          {
+            "id": "safe_1",
+            "heading": "Devices and software",
+            "body": "- Install updates promptly\u2014unpatched systems are easy targets\n- Use only **approved software** and app stores\n- Avoid personal USBs and unknown chargers on work machines\n- Report lost / stolen devices immediately so accounts can be revoked",
+            "layout": "image-right",
+            "illustration": {
+              "key": "cybersecurity",
+              "alt": "Device and software hygiene",
+              "caption": ""
+            }
+          },
+          {
+            "id": "safe_2",
+            "heading": "Data handling",
+            "body": "- Share files through approved company tools\u2014not personal email or consumer cloud links\n- Watch for **wrong-recipient** risks when forwarding or attaching files\n- Classify and store sensitive data per policy\n- Shred or securely dispose of printed confidential materials",
+            "layout": "image-left",
+            "illustration": {
+              "key": "reporting",
+              "alt": "Responsible data handling",
+              "caption": ""
+            }
+          },
+          {
+            "id": "safe_3",
+            "heading": "When something goes wrong",
+            "body": "If you clicked a bad link, entered credentials on a fake site, or notice odd account activity:\n\n1. **Disconnect** from the network if instructed by IT\n2. **Report** immediately (do not hide the mistake)\n3. **Change passwords** / follow IT guidance\n4. Watch for follow-up fraud attempts\n\nFast reporting limits damage. Mistakes happen\u2014silence makes them worse.",
+            "layout": "full-bleed",
+            "illustration": {
+              "key": "stop_report",
+              "alt": "Report incidents quickly",
+              "caption": "Report fast. Limit damage."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "title": "Workplace Cyber Threat Map",
+      "type": "workshop",
+      "order_index": 5,
+      "content": {
+        "workshop_type": "node_map",
+        "title": "Identify the Threat",
+        "instructions": "Explore the facility floor plan and tap each alert pin. Read the scenario and choose the best security response.",
+        "config": {
+          "background_image": "",
+          "floor_plan": "ward",
+          "passing_score": 70,
+          "nodes": [
+            {
+              "id": "map_1",
+              "x_percent": 50,
+              "y_percent": 38,
+              "icon": "alert",
+              "label": "Front desk",
+              "scenario": "A visitor asks an employee to badge them through a locked side door because they \u201cforgot\u201d their temporary badge and are late for a meeting.",
+              "question": {
+                "text": "What should the employee do?",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "Badge them in to be helpful"
+                  },
+                  {
+                    "id": "b",
+                    "text": "Direct them to reception / their escort and do not allow tailgating"
+                  },
+                  {
+                    "id": "c",
+                    "text": "Give them your badge for the afternoon"
+                  }
+                ],
+                "correct_id": "b"
+              }
+            },
+            {
+              "id": "map_2",
+              "x_percent": 20,
+              "y_percent": 22,
+              "icon": "alert",
+              "label": "Conference room",
+              "scenario": "During a break, a laptop is left unlocked with a customer pricing spreadsheet open on the projector cable.",
+              "question": {
+                "text": "What is the best immediate action?",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "Lock the laptop and remind the owner; report if needed"
+                  },
+                  {
+                    "id": "b",
+                    "text": "Email a copy of the spreadsheet to yourself for backup"
+                  },
+                  {
+                    "id": "c",
+                    "text": "Ignore it\u2014the room is inside the building"
+                  }
+                ],
+                "correct_id": "a"
+              }
+            },
+            {
+              "id": "map_3",
+              "x_percent": 81,
+              "y_percent": 22,
+              "icon": "alert",
+              "label": "Workstations",
+              "scenario": "A coworker receives an email with an urgent invoice PDF from a lookalike vendor domain and is about to open it.",
+              "question": {
+                "text": "What should you advise?",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "Open it carefully in a sandbox if they feel confident"
+                  },
+                  {
+                    "id": "b",
+                    "text": "Do not open the attachment; verify the vendor through a known channel and report the email"
+                  },
+                  {
+                    "id": "c",
+                    "text": "Forward to accounting ASAP so payment is not delayed"
+                  }
+                ],
+                "correct_id": "b"
+              }
+            },
+            {
+              "id": "map_4",
+              "x_percent": 12,
+              "y_percent": 72,
+              "icon": "alert",
+              "label": "Storage area",
+              "scenario": "Someone left a personal USB flash drive labeled \u201cPayroll Q2\u201d plugged into a shared printer PC.",
+              "question": {
+                "text": "What is the safest response?",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "Plug it into your laptop to see whose it is"
+                  },
+                  {
+                    "id": "b",
+                    "text": "Leave it alone\u2014it might be a joke"
+                  },
+                  {
+                    "id": "c",
+                    "text": "Do not use the USB; report found media to IT/security per policy"
+                  }
+                ],
+                "correct_id": "c"
+              }
+            },
+            {
+              "id": "map_5",
+              "x_percent": 73,
+              "y_percent": 88,
+              "icon": "alert",
+              "label": "IT / network closet",
+              "scenario": "You notice an unfamiliar small device plugged into a network jack behind a quiet cubicle wall.",
+              "question": {
+                "text": "What should you do?",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "Unplug it and throw it away"
+                  },
+                  {
+                    "id": "b",
+                    "text": "Report it to IT/security and leave it undisturbed if told to"
+                  },
+                  {
+                    "id": "c",
+                    "text": "Take it home to inspect later"
+                  }
+                ],
+                "correct_id": "b"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Sort the Threats",
+      "type": "workshop",
+      "order_index": 6,
+      "content": {
+        "workshop_type": "sorting",
+        "title": "Classify Cybersecurity Scenarios",
+        "instructions": "Drag each scenario into the correct category.",
+        "config": {
+          "passing_score": 80,
+          "categories": [
+            {
+              "id": "phishing",
+              "label": "Phishing / social engineering"
+            },
+            {
+              "id": "access",
+              "label": "Access & credentials"
+            },
+            {
+              "id": "physical",
+              "label": "Physical / device"
+            },
+            {
+              "id": "data",
+              "label": "Data handling"
+            }
+          ],
+          "cards": [
+            {
+              "id": "c1",
+              "text": "Urgent email with a fake password-reset link",
+              "category_id": "phishing",
+              "hint": "Credential theft via deceptive message"
+            },
+            {
+              "id": "c2",
+              "text": "Reusing the same password for work and personal email",
+              "category_id": "access",
+              "hint": "Credential hygiene failure"
+            },
+            {
+              "id": "c3",
+              "text": "Unlocked laptop left in a conference room",
+              "category_id": "physical",
+              "hint": "Device left unattended"
+            },
+            {
+              "id": "c4",
+              "text": "Sending a customer list to a personal Gmail",
+              "category_id": "data",
+              "hint": "Unauthorised data transfer"
+            },
+            {
+              "id": "c5",
+              "text": "Caller pretending to be IT asking for MFA codes",
+              "category_id": "phishing",
+              "hint": "Voice phishing"
+            },
+            {
+              "id": "c6",
+              "text": "Unknown USB found on a desk",
+              "category_id": "physical",
+              "hint": "Unknown removable media"
+            }
+          ],
+          "category_guides": {
+            "phishing": {
+              "summary": "Deceptive messages or calls meant to steal secrets or money."
+            },
+            "access": {
+              "summary": "Passwords, MFA, and account control practices."
+            },
+            "physical": {
+              "summary": "Devices, badges, cables, and spaces in the building."
+            },
+            "data": {
+              "summary": "How information is shared, stored, and disposed of."
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Cybersecurity Final Quiz",
+      "type": "quiz",
+      "order_index": 7,
+      "content": {
+        "passing_score": 80,
+        "randomize_questions": true,
+        "questions": [
+          {
+            "id": "fq1",
+            "text": "Which actions help protect against phishing? (Select all that apply.)",
+            "type": "multi_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "Pause and inspect unexpected links",
+                "correct": true
+              },
+              {
+                "id": "b",
+                "text": "Report suspicious messages through official channels",
+                "correct": true
+              },
+              {
+                "id": "c",
+                "text": "Enter passwords on any site that looks branded correctly",
+                "correct": false
+              },
+              {
+                "id": "d",
+                "text": "Verify unusual payment requests via a known contact method",
+                "correct": true
+              }
+            ],
+            "explanation": "Pause, verify independently, and report\u2014never trust branding alone."
+          },
+          {
+            "id": "fq2",
+            "text": "You get an MFA prompt you did not initiate. What should you do?",
+            "type": "single_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "Approve it in case it is a delayed legitimate login",
+                "correct": false
+              },
+              {
+                "id": "b",
+                "text": "Deny it and report possible account compromise",
+                "correct": true
+              },
+              {
+                "id": "c",
+                "text": "Ignore it and keep working",
+                "correct": false
+              }
+            ],
+            "explanation": "Unexpected MFA is a strong sign someone else has your password."
+          },
+          {
+            "id": "fq3",
+            "text": "Sharing your password with a trusted coworker is acceptable if you are on vacation.",
+            "type": "single_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "True",
+                "correct": false
+              },
+              {
+                "id": "b",
+                "text": "False",
+                "correct": true
+              }
+            ],
+            "explanation": "Never share passwords. Use delegated access / manager cover processes instead."
+          },
+          {
+            "id": "fq4",
+            "text": "What is the best first step after you accidentally click a suspicious link?",
+            "type": "single_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "Hope nothing happens and stay quiet",
+                "correct": false
+              },
+              {
+                "id": "b",
+                "text": "Report it immediately and follow IT guidance",
+                "correct": true
+              },
+              {
+                "id": "c",
+                "text": "Restart your computer once and continue as normal",
+                "correct": false
+              }
+            ],
+            "explanation": "Fast reporting helps contain malware, credential theft, and lateral movement."
+          },
+          {
+            "id": "fq5",
+            "text": "Which practices support everyday cyber hygiene? (Select all that apply.)",
+            "type": "multi_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "Install security updates promptly",
+                "correct": true
+              },
+              {
+                "id": "b",
+                "text": "Use personal USB drives freely on work PCs",
+                "correct": false
+              },
+              {
+                "id": "c",
+                "text": "Lock your workstation when you step away",
+                "correct": true
+              },
+              {
+                "id": "d",
+                "text": "Share files only through approved company tools",
+                "correct": true
+              }
+            ],
+            "explanation": "Updates, screen locks, and approved tools reduce common risk."
+          },
+          {
+            "id": "fq6",
+            "text": "Tailgating into a secured area is OK if you recognize the person by face.",
+            "type": "single_select",
+            "options": [
+              {
+                "id": "a",
+                "text": "True",
+                "correct": false
+              },
+              {
+                "id": "b",
+                "text": "False",
+                "correct": true
+              }
+            ],
+            "explanation": "Everyone must use their own badge/credential so access is logged and authorized."
+          }
+        ]
+      }
+    }
+  ]
+}

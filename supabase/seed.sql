@@ -22,7 +22,7 @@ INSERT INTO courses (id, org_id, title, description, estimated_minutes, is_publi
     '10000000-0000-0000-0000-000000000002',
     '00000000-0000-0000-0000-000000000001',
     'Cybersecurity Awareness',
-    'Protect patient data and hospital systems from phishing and social engineering.',
+    'Learn how to spot phishing, protect credentials, handle data safely, and respond to common cyber threats across your organization.',
     30,
     true,
     null
