@@ -75,6 +75,12 @@ export function OrgAdminDashboardPage() {
           <Link to="/org-admin/billing">View billing</Link>
         </Button>
         <Button asChild variant="outline">
+          <Link to="/org-admin/training-reports">Training reports</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link to="/org-admin/catalog">Security catalog</Link>
+        </Button>
+        <Button asChild variant="outline">
           <Link to="/org-admin/railnet">RailNet</Link>
         </Button>
       </div>

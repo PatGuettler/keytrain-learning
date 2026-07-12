@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { AssignCourseToUserCard } from '@/components/manager/AssignCourseToUserCard'
-import { AssignCourseRetakeButton } from '@/components/admin/AssignCourseRetakeButton'
 import { fetchAssignments } from '@/services/assignments.service'
 import { fetchProfiles } from '@/services/users.service'
 import { useAuthStore } from '@/store/authStore'
@@ -101,7 +100,6 @@ export function ManagerEmployeeDetailPage() {
                     </Badge>
                   )}
                   {row.locked && <Badge variant="destructive">Locked</Badge>}
-                  <AssignCourseRetakeButton courseRow={row} userId={employee.id} />
                 </div>
               </CardContent>
             </Card>
