@@ -44,8 +44,20 @@ export async function resolveRailnetBridgeAccess(
     return { isKtlAdmin: true, railnetOrgId: null }
   }
 
-  if (profile.railnet_enabled !== true) {
+  const isOrgAdmin = profile.role === 'org_admin'
+  if (!isOrgAdmin && profile.railnet_enabled !== true) {
     throw new Error('You do not have RailNet access.')
+  }
+
+  // Org must have RailNet product enabled (except we still allow if railnet_org_id is set)
+  const { data: license } = await adminClient
+    .from('org_license')
+    .select('railnet_enabled')
+    .eq('org_id', profile.org_id)
+    .maybeSingle()
+
+  if (license && license.railnet_enabled === false) {
+    throw new Error('RailNet is not enabled for your organization.')
   }
 
   const { data: org, error: orgError } = await adminClient

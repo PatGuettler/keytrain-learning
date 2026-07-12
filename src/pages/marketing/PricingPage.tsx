@@ -3,60 +3,57 @@ import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import {
+  CATALOG_PLAN_BASE_CENTS,
+  CATALOG_SEAT_CENTS,
+  PAYMENT_STRUCTURE_COPY,
+  PLAN_LABELS,
+  formatUsdFromCents,
+  type OrgPlan,
+} from '@/lib/seat-pricing'
 
 type Tier = {
+  plan: OrgPlan
   name: string
-  price: string
-  period: string
   description: string
   features: string[]
   highlighted?: boolean
-  cta: string
 }
 
 const TIERS: Tier[] = [
   {
-    name: 'Team',
-    price: 'Contact us',
-    period: 'per organization',
-    description: 'For a single team, location, or department getting started with awareness training.',
+    plan: 'lms',
+    name: PLAN_LABELS.lms,
+    description: 'Courses, assignments, and org training dashboards.',
     features: [
-      'Unlimited learners within your org',
-      'Course library & assignments',
-      'Manager team dashboard',
-      'Phishing simulation campaigns',
-      'Email support',
+      `Base ${formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.lms)}/mo`,
+      'Per-seat fees by role',
+      'Required training & progress',
+      'Org admin user management',
     ],
-    cta: 'Request a quote',
   },
   {
-    name: 'Organization',
-    price: 'Contact us',
-    period: 'per organization',
-    description: 'Full program for growing health systems that need RailNet and compliance tooling.',
+    plan: 'railnet',
+    name: PLAN_LABELS.railnet,
+    description: 'Host intelligence, compliance docs, and phishing — no LMS.',
     features: [
-      'Everything in Team',
-      'RailNet reports for authorized leaders',
-      'Compliance document generation',
-      'Custom course staging from RailNet insights',
-      'Priority onboarding',
+      `Base ${formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.railnet)}/mo`,
+      'RailNet reports & compliance',
+      'Phishing campaigns',
+      'Per-seat fees by role',
+    ],
+  },
+  {
+    plan: 'both',
+    name: PLAN_LABELS.both,
+    description: 'Full stack: LMS plus RailNet preparedness loop.',
+    features: [
+      `Base ${formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.both)}/mo`,
+      'Everything in LMS and RailNet',
+      'Course staging from trends (roadmap)',
+      'Per-seat fees by role',
     ],
     highlighted: true,
-    cta: 'Talk to sales',
-  },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: 'multi-site',
-    description: 'Multiple organizations, custom integrations, and dedicated success planning.',
-    features: [
-      'Everything in Organization',
-      'Multi-org admin console',
-      'KeyTrain desktop + RailNet at scale',
-      'Custom training content',
-      'Dedicated support channel',
-    ],
-    cta: 'Contact enterprise',
   },
 ]
 
@@ -64,58 +61,56 @@ export function PricingPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
       <div className="text-center max-w-2xl mx-auto mb-14">
-        <h1 className="text-4xl font-bold tracking-tight">Simple, organization-based pricing</h1>
+        <h1 className="text-4xl font-bold tracking-tight">Plans built for LMS, RailNet, or both</h1>
         <p className="mt-4 text-muted-foreground">
-          KeyTrain Learning is sold per organization — not per seat. We&apos;ll size a plan around your
-          staff count, RailNet needs, and compliance goals.
+          Monthly total = plan base + seats. Org admin {formatUsdFromCents(CATALOG_SEAT_CENTS.org_admin)}
+          , manager {formatUsdFromCents(CATALOG_SEAT_CENTS.manager)}, employee{' '}
+          {formatUsdFromCents(CATALOG_SEAT_CENTS.employee)}. Rates lock at signup.
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {TIERS.map((tier) => (
           <Card
-            key={tier.name}
+            key={tier.plan}
             className={cn(
               'flex flex-col',
               tier.highlighted && 'border-primary shadow-md ring-1 ring-primary/20'
             )}
           >
             <CardHeader>
-              {tier.highlighted && (
-                <p className="text-xs font-medium text-primary uppercase tracking-wide mb-1">
-                  Most popular
-                </p>
-              )}
-              <CardTitle className="text-xl">{tier.name}</CardTitle>
+              <CardTitle>{tier.name}</CardTitle>
               <CardDescription>{tier.description}</CardDescription>
-              <div className="pt-4">
-                <span className="text-3xl font-bold">{tier.price}</span>
-                <span className="text-sm text-muted-foreground ml-2">{tier.period}</span>
-              </div>
+              <p className="pt-2 text-3xl font-bold tracking-tight">
+                {formatUsdFromCents(CATALOG_PLAN_BASE_CENTS[tier.plan])}
+                <span className="text-base font-normal text-muted-foreground">/mo base</span>
+              </p>
             </CardHeader>
-            <CardContent className="flex-1 space-y-6">
-              <ul className="space-y-3 text-sm">
-                {tier.features.map((feature) => (
-                  <li key={feature} className="flex gap-2">
-                    <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <span>{feature}</span>
+            <CardContent className="flex flex-1 flex-col gap-4">
+              <ul className="space-y-2 text-sm flex-1">
+                {tier.features.map((f) => (
+                  <li key={f} className="flex gap-2">
+                    <Check className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                    <span>{f}</span>
                   </li>
                 ))}
               </ul>
-              <Button className="w-full" variant={tier.highlighted ? 'default' : 'outline'} asChild>
-                <Link to="/contact">{tier.cta}</Link>
+              <Button asChild className="w-full">
+                <Link to="/signup">Get started</Link>
               </Button>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <p className="text-center text-sm text-muted-foreground mt-12">
-        Already a customer?{' '}
-        <Link to="/login" className="text-primary hover:underline">
-          Sign in to your portal
-        </Link>
-      </p>
+      <Card className="mt-10 border-muted">
+        <CardContent className="space-y-2 pt-6 text-sm text-muted-foreground">
+          <p>{PAYMENT_STRUCTURE_COPY.billingCycle}</p>
+          <p>{PAYMENT_STRUCTURE_COPY.proration}</p>
+          <p>{PAYMENT_STRUCTURE_COPY.grandfathering}</p>
+          <p>{PAYMENT_STRUCTURE_COPY.estimatedBanner}</p>
+        </CardContent>
+      </Card>
     </div>
   )
 }

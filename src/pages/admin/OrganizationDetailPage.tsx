@@ -16,7 +16,7 @@ import { OrgUserImportPanel } from '@/components/admin/OrgUserImportPanel'
 import { OrgUsersTable } from '@/components/admin/OrgUsersTable'
 import { OrgJoinCodeCard } from '@/components/admin/OrgJoinCodeCard'
 import { RailNetOrgSetupCard } from '@/components/admin/RailNetOrgSetupCard'
-import { DeleteHospitalCard } from '@/components/admin/DeleteHospitalCard'
+import { OrgBillingPanel } from '@/components/billing/OrgBillingPanel'
 import { useOrgRoute } from '@/hooks/useOrgRoute'
 import { adminOrganizationPath, getOrgSlug } from '@/lib/org-slugs'
 import { PLATFORM_ORG_ID } from '@/lib/constants'
@@ -50,7 +50,7 @@ export function OrganizationDetailPage() {
     enabled: Boolean(orgId),
   })
 
-  const managers = users.filter((u) => u.role === 'manager')
+  const managers = users.filter((u) => u.role === 'manager' || u.role === 'org_admin')
 
   useEffect(() => {
     if (org) {
@@ -194,7 +194,8 @@ export function OrganizationDetailPage() {
           <h3 className="text-lg font-semibold">Users</h3>
           {org?.id !== PLATFORM_ORG_ID && (
             <p className="text-sm text-muted-foreground">
-              Edit a user to turn on RailNet access (step 2).
+              Edit a user to turn on RailNet access (step 2). Role changes require billing
+              confirmation.
             </p>
           )}
         </div>
@@ -209,6 +210,12 @@ export function OrganizationDetailPage() {
           />
         ) : null}
       </section>
+
+      {orgId && org && org.id !== PLATFORM_ORG_ID && (
+        <section id="org-billing" className="space-y-3">
+          <OrgBillingPanel orgId={orgId} orgName={org.name} />
+        </section>
+      )}
 
       {orgId && org && org.id !== PLATFORM_ORG_ID && (
         <DeleteHospitalCard orgId={org.id} hospitalName={org.name} />

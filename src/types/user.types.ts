@@ -1,6 +1,6 @@
 import type { RailnetTablePrefs } from '@/types/table-column-prefs.types'
 
-export type UserRole = 'admin' | 'manager' | 'employee'
+export type UserRole = 'admin' | 'org_admin' | 'manager' | 'employee'
 
 export interface Profile {
   id: string

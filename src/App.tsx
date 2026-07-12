@@ -34,6 +34,9 @@ import { PhishingCampaignEditPage } from '@/pages/admin/PhishingCampaignEditPage
 import { PhishingCampaignDetailPage } from '@/pages/admin/PhishingCampaignDetailPage'
 import { PhishingDashboardPage } from '@/pages/admin/PhishingDashboardPage'
 import { RailNetPage } from '@/pages/admin/RailNetPage'
+import { OrgAdminDashboardPage } from '@/pages/org-admin/OrgAdminDashboardPage'
+import { OrgAdminUsersPage } from '@/pages/org-admin/OrgAdminUsersPage'
+import { OrgAdminBillingPage } from '@/pages/org-admin/OrgAdminBillingPage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { MarketingLayout } from '@/components/marketing/MarketingLayout'
 import { HomePage } from '@/pages/marketing/HomePage'
@@ -190,6 +193,52 @@ export default function App() {
             <Route path="/admin/users" element={<Navigate to="/admin/organizations" replace />} />
 
             <Route path="/manager/dashboard" element={<Navigate to="/manager/training" replace />} />
+            <Route
+              path="/org-admin/dashboard"
+              element={<RoleGuard roles={['org_admin']}><OrgAdminDashboardPage /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/users"
+              element={<RoleGuard roles={['org_admin']}><OrgAdminUsersPage /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/billing"
+              element={<RoleGuard roles={['org_admin']}><OrgAdminBillingPage /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/training"
+              element={<RoleGuard roles={['org_admin']}><MyTrainingPage basePath="/org-admin/training" /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/training/play/:courseId"
+              element={
+                <RoleGuard roles={['org_admin']}>
+                  <CoursePlayerPage trainingPath="/org-admin/training" />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="/org-admin/railnet"
+              element={
+                <RoleGuard roles={['org_admin']}>
+                  <RailNetGuard>
+                    <RailNetPage />
+                  </RailNetGuard>
+                </RoleGuard>
+              }
+            />
+            <Route path="/org-admin/profile" element={<RoleGuard roles={['org_admin']}><ProfilePage /></RoleGuard>} />
+            <Route
+              path="/org-admin/prayer"
+              element={
+                SPIRITUAL_FEATURES_ENABLED ? (
+                  <RoleGuard roles={['org_admin']}><PrayerPage /></RoleGuard>
+                ) : (
+                  <Navigate to="/org-admin/dashboard" replace />
+                )
+              }
+            />
+
             <Route
               path="/manager/team"
               element={<RoleGuard roles={['manager']}><EmployeeListPage /></RoleGuard>}

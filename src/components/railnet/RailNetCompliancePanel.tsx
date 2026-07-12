@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileText, FileDown } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -30,14 +30,20 @@ const textareaClass =
 type RailNetCompliancePanelProps = {
   trendReports: RailNetRecord[]
   signatures: RailNetRecord[]
+  /** When set, org picker is locked (org leaders). */
+  lockedOrgId?: string | null
 }
 
-export function RailNetCompliancePanel({ trendReports, signatures }: RailNetCompliancePanelProps) {
+export function RailNetCompliancePanel({
+  trendReports,
+  signatures,
+  lockedOrgId = null,
+}: RailNetCompliancePanelProps) {
   const userId = useAuthStore((s) => s.userId)!
   const queryClient = useQueryClient()
 
   const [docType, setDocType] = useState<ComplianceDocumentType>('security_awareness')
-  const [railnetOrgId, setRailNetOrgId] = useState('')
+  const [railnetOrgId, setRailNetOrgId] = useState(lockedOrgId ?? '')
   const [selectedTrendKey, setSelectedTrendKey] = useState('')
   const [editingDocId, setEditingDocId] = useState<string | null>(null)
   const [formContent, setFormContent] = useState<Record<string, string>>({})
@@ -45,10 +51,15 @@ export function RailNetCompliancePanel({ trendReports, signatures }: RailNetComp
   const [actionError, setActionError] = useState('')
 
   const sortedTrends = useMemo(() => sortTrendReports(trendReports), [trendReports])
-  const orgIds = useMemo(
-    () => [...new Set(sortedTrends.map((r) => String(r.railnet_org_id ?? '')).filter(Boolean))].sort(),
-    [sortedTrends]
-  )
+  const orgIds = useMemo(() => {
+    const fromData = [...new Set(sortedTrends.map((r) => String(r.railnet_org_id ?? '')).filter(Boolean))].sort()
+    if (lockedOrgId) return fromData.includes(lockedOrgId) ? [lockedOrgId] : [lockedOrgId]
+    return fromData
+  }, [sortedTrends, lockedOrgId])
+
+  useEffect(() => {
+    if (lockedOrgId) setRailNetOrgId(lockedOrgId)
+  }, [lockedOrgId])
 
   const { data: templates = [] } = useQuery({
     queryKey: ['compliance-templates'],
@@ -177,9 +188,10 @@ export function RailNetCompliancePanel({ trendReports, signatures }: RailNetComp
               <select
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={railnetOrgId}
+                disabled={Boolean(lockedOrgId)}
                 onChange={(e) => setRailNetOrgId(e.target.value)}
               >
-                <option value="">Select org…</option>
+                {!lockedOrgId && <option value="">Select org…</option>}
                 {orgIds.map((id) => (
                   <option key={id} value={id}>
                     {id}

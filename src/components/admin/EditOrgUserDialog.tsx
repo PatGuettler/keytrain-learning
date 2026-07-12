@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,6 +11,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { BillingImpactConfirmDialog } from '@/components/billing/BillingImpactConfirmDialog'
+import { previewSeatDelta } from '@/lib/org-billing'
+import { isBillableRole } from '@/lib/org-billing'
+import type { OrgBillingTerms } from '@/lib/seat-pricing'
+import { formatUsdFromCents } from '@/lib/seat-pricing'
 import { updateOrgUser, sendUserPasswordReset, unlockUserLogin } from '@/services/user-management.service'
 import type { Profile, UserRole } from '@/types/user.types'
 
@@ -23,6 +28,9 @@ export function EditOrgUserDialog({
   orgId,
   user,
   managers,
+  orgUsers,
+  billingTerms,
+  allowOrgAdminRole = false,
   railnetOrgId,
   onSaved,
 }: {
@@ -31,6 +39,10 @@ export function EditOrgUserDialog({
   orgId: string
   user: Profile | null
   managers: Profile[]
+  orgUsers: Profile[]
+  billingTerms: OrgBillingTerms | null
+  /** KTL platform admins can assign org_admin */
+  allowOrgAdminRole?: boolean
   railnetOrgId: string | null
   onSaved: () => void
 }) {
@@ -43,19 +55,36 @@ export function EditOrgUserDialog({
   const [securityLoading, setSecurityLoading] = useState<'unlock' | 'reset' | null>(null)
   const [securityMessage, setSecurityMessage] = useState('')
   const [error, setError] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   useEffect(() => {
     if (!user) return
     setFullName(user.full_name)
-    setRole(user.role === 'manager' ? 'manager' : 'employee')
+    setRole(
+      user.role === 'org_admin' || user.role === 'manager' || user.role === 'employee'
+        ? user.role
+        : 'employee'
+    )
     setManagerId(user.manager_id ?? '')
     setIsActive(user.is_active)
     setRailnetEnabled(user.railnet_enabled === true)
     setError('')
     setSecurityMessage('')
+    setConfirmOpen(false)
   }, [user, open])
 
   const managerOptions = managers.filter((m) => m.id !== user?.id)
+
+  const seatImpact = useMemo(() => {
+    if (!user || !billingTerms) return null
+    const roleChanged = role !== user.role
+    const activeChanged = isActive !== user.is_active
+    if (!roleChanged && !activeChanged) return null
+    if (!isBillableRole(role) && role !== user.role) return null
+    return previewSeatDelta(billingTerms, orgUsers, {
+      replaceUser: { id: user.id, role, is_active: isActive },
+    })
+  }, [user, billingTerms, orgUsers, role, isActive])
 
   const handleUnlockLogin = async () => {
     if (!user) return
@@ -89,7 +118,7 @@ export function EditOrgUserDialog({
     }
   }
 
-  const handleSave = async () => {
+  const applySave = async () => {
     if (!user) return
     const trimmedName = fullName.trim()
     if (!trimmedName) {
@@ -113,7 +142,9 @@ export function EditOrgUserDialog({
       if (role === 'employee' && (managerId || null) !== (user.manager_id ?? null)) {
         patch.manager_id = managerId || null
       }
-      if (role === 'manager' && user.role === 'employee') patch.manager_id = null
+      if ((role === 'manager' || role === 'org_admin') && user.role === 'employee') {
+        patch.manager_id = null
+      }
       if (isActive !== user.is_active) patch.is_active = isActive
       if (railnetEnabled !== user.railnet_enabled) patch.railnet_enabled = railnetEnabled
 
@@ -124,6 +155,7 @@ export function EditOrgUserDialog({
 
       await updateOrgUser(orgId, user.id, patch)
       onSaved()
+      setConfirmOpen(false)
       onOpenChange(false)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Update failed')
@@ -132,147 +164,196 @@ export function EditOrgUserDialog({
     }
   }
 
+  const handleSaveClick = () => {
+    if (!user) return
+    const trimmedName = fullName.trim()
+    if (!trimmedName) {
+      setError('Full name is required.')
+      return
+    }
+    if (seatImpact && seatImpact.deltaCents !== 0) {
+      setConfirmOpen(true)
+      return
+    }
+    if (seatImpact && (role !== user.role || isActive !== user.is_active)) {
+      // Still confirm zero-delta role swaps for clarity when billable seats change composition
+      setConfirmOpen(true)
+      return
+    }
+    void applySave()
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit user</DialogTitle>
-          <DialogDescription>
-            Update {user?.full_name ?? 'this user'}&apos;s profile for this organization.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit user</DialogTitle>
+            <DialogDescription>
+              Update {user?.full_name ?? 'this user'}&apos;s profile for this organization.
+            </DialogDescription>
+          </DialogHeader>
 
-        {user && (
-          <div className="grid gap-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="edit-user-name">Full name</Label>
-              <Input
-                id="edit-user-name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-user-email">Email</Label>
-              <Input id="edit-user-email" value={user.email ?? ''} disabled />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-user-role">Role</Label>
-              <select
-                id="edit-user-role"
-                className={selectClass}
-                value={role}
-                onChange={(e) => {
-                  const nextRole = e.target.value as UserRole
-                  setRole(nextRole)
-                  if (nextRole === 'manager') setManagerId('')
-                }}
-              >
-                <option value="employee">Employee</option>
-                <option value="manager">Manager</option>
-              </select>
-            </div>
-            {role === 'employee' && (
+          {user && (
+            <div className="grid gap-4 py-2">
               <div className="space-y-2">
-                <Label htmlFor="edit-user-manager">Manager</Label>
-                <select
-                  id="edit-user-manager"
-                  className={selectClass}
-                  value={managerId}
-                  onChange={(e) => setManagerId(e.target.value)}
-                >
-                  <option value="">No manager assigned</option>
-                  {managerOptions.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.full_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="rounded border-input"
-              />
-              Active account (can sign in and take training)
-            </label>
-
-            <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
-              <div className="flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <Label htmlFor="edit-user-railnet">RailNet access</Label>
-                  <p className="text-sm text-muted-foreground">
-                    User can open the RailNet tab and view reports for this organization only.
-                  </p>
-                </div>
-                <Switch
-                  id="edit-user-railnet"
-                  checked={railnetEnabled}
-                  disabled={!railnetOrgId?.trim()}
-                  onCheckedChange={setRailnetEnabled}
+                <Label htmlFor="edit-user-name">Full name</Label>
+                <Input
+                  id="edit-user-name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
                 />
               </div>
-              {!railnetOrgId?.trim() && (
-                <p className="text-sm text-muted-foreground">
-                  Set the RailNet AWS org id in organization settings before granting access.
-                </p>
-              )}
-              {railnetOrgId?.trim() && (
-                <p className="text-xs text-muted-foreground">
-                  The user may need to sign out and back in for the RailNet tab to appear.
-                </p>
-              )}
-            </div>
-
-            <div className="rounded-lg border bg-muted/20 p-3 space-y-3">
-              <p className="text-sm font-medium">Account access</p>
-              {user.login_locked_at && (
-                <p className="text-sm text-destructive">
-                  Login locked after too many failed sign-in attempts.
-                </p>
-              )}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={securityLoading !== null}
-                  onClick={() => void handleUnlockLogin()}
-                >
-                  {securityLoading === 'unlock' ? 'Unlocking…' : 'Unlock login'}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={securityLoading !== null}
-                  onClick={() => void handleSendPasswordReset()}
-                >
-                  {securityLoading === 'reset' ? 'Sending…' : 'Send password reset'}
-                </Button>
+              <div className="space-y-2">
+                <Label htmlFor="edit-user-email">Email</Label>
+                <Input id="edit-user-email" value={user.email ?? ''} disabled />
               </div>
-              {securityMessage && (
-                <p className="text-sm text-emerald-600 dark:text-emerald-400">{securityMessage}</p>
+              <div className="space-y-2">
+                <Label htmlFor="edit-user-role">Role</Label>
+                <select
+                  id="edit-user-role"
+                  className={selectClass}
+                  value={role}
+                  onChange={(e) => {
+                    const nextRole = e.target.value as UserRole
+                    setRole(nextRole)
+                    if (nextRole !== 'employee') setManagerId('')
+                  }}
+                >
+                  <option value="employee">Employee</option>
+                  <option value="manager">Manager</option>
+                  {allowOrgAdminRole && <option value="org_admin">Org admin</option>}
+                </select>
+                {billingTerms && isBillableRole(role) && (
+                  <p className="text-xs text-muted-foreground">
+                    Seat rate:{' '}
+                    {formatUsdFromCents(
+                      role === 'org_admin'
+                        ? billingTerms.org_admin_cents
+                        : role === 'manager'
+                          ? billingTerms.manager_cents
+                          : billingTerms.employee_cents
+                    )}
+                    /mo
+                  </p>
+                )}
+              </div>
+              {role === 'employee' && (
+                <div className="space-y-2">
+                  <Label htmlFor="edit-user-manager">Manager</Label>
+                  <select
+                    id="edit-user-manager"
+                    className={selectClass}
+                    value={managerId}
+                    onChange={(e) => setManagerId(e.target.value)}
+                  >
+                    <option value="">No manager assigned</option>
+                    {managerOptions.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.full_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               )}
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="rounded border-input"
+                />
+                Active account (can sign in and take training)
+              </label>
+
+              <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="edit-user-railnet">RailNet access</Label>
+                    <p className="text-sm text-muted-foreground">
+                      User can open the RailNet tab and view reports for this organization only.
+                    </p>
+                  </div>
+                  <Switch
+                    id="edit-user-railnet"
+                    checked={railnetEnabled}
+                    disabled={!railnetOrgId?.trim()}
+                    onCheckedChange={setRailnetEnabled}
+                  />
+                </div>
+                {!railnetOrgId?.trim() && (
+                  <p className="text-sm text-muted-foreground">
+                    Set the RailNet AWS org id in organization settings before granting access.
+                  </p>
+                )}
+              </div>
+
+              <div className="rounded-lg border bg-muted/20 p-3 space-y-3">
+                <p className="text-sm font-medium">Account access</p>
+                {user.login_locked_at && (
+                  <p className="text-sm text-destructive">
+                    Login locked after too many failed sign-in attempts.
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={securityLoading !== null}
+                    onClick={() => void handleUnlockLogin()}
+                  >
+                    {securityLoading === 'unlock' ? 'Unlocking…' : 'Unlock login'}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={securityLoading !== null}
+                    onClick={() => void handleSendPasswordReset()}
+                  >
+                    {securityLoading === 'reset' ? 'Sending…' : 'Send password reset'}
+                  </Button>
+                </div>
+                {securityMessage && (
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400">{securityMessage}</p>
+                )}
+              </div>
+
+              {error && <p className="text-sm text-destructive">{error}</p>}
             </div>
+          )}
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
-          </div>
-        )}
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={loading} onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="button" disabled={loading || !user} onClick={handleSaveClick}>
+              {loading ? 'Saving…' : 'Save changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" disabled={loading} onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="button" disabled={loading || !user} onClick={() => void handleSave()}>
-            {loading ? 'Saving…' : 'Save changes'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      {seatImpact && (
+        <BillingImpactConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Confirm billing change"
+          description={
+            user
+              ? `${user.full_name}: ${user.role} → ${role}${isActive !== user.is_active ? `, active ${user.is_active} → ${isActive}` : ''}`
+              : 'Confirm seat change'
+          }
+          current={seatImpact.current}
+          next={seatImpact.next}
+          deltaCents={seatImpact.deltaCents}
+          confirmLabel="Confirm and update role"
+          loading={loading}
+          onConfirm={() => void applySave()}
+        />
+      )}
+    </>
   )
 }

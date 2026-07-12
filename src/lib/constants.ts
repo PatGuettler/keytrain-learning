@@ -24,18 +24,21 @@ export const STATUS_LABELS: Record<string, string> = {
 /** Default landing route after login (admin-only analytics live under /admin/dashboard). */
 export const ROLE_DASHBOARD: Record<string, string> = {
   admin: '/admin/dashboard',
+  org_admin: '/org-admin/dashboard',
   manager: '/manager/training',
   employee: '/employee/training',
 }
 
 export const ROLE_PROFILE: Record<string, string> = {
   admin: '/admin/profile',
+  org_admin: '/org-admin/profile',
   manager: '/manager/profile',
   employee: '/employee/profile',
 }
 
 export const ROLE_PRAYER: Record<string, string> = {
   admin: '/admin/prayer',
+  org_admin: '/org-admin/prayer',
   manager: '/manager/prayer',
   employee: '/employee/prayer',
 }

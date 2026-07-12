@@ -5,7 +5,9 @@ import { generateJoinCode } from '../_shared/join-code.ts'
 
 const MAX_ROWS = 500
 const ROLE_ORDER: Record<string, number> = { admin: 0, manager: 1, employee: 2 }
-const VALID_ROLES = new Set(['admin', 'manager', 'employee'])
+const VALID_ROLES = new Set(['admin', 'org_admin', 'manager', 'employee'])
+const ORG_ASSIGNABLE_ROLES = new Set(['org_admin', 'manager', 'employee'])
+const ORG_ADMIN_ASSIGNABLE_ROLES = new Set(['manager', 'employee'])
 const DEFAULT_ROLE = 'employee'
 const PLATFORM_ORG_ID = '00000000-0000-0000-0000-000000000099'
 const PLATFORM_ORG_NAME = 'Platform Administration'
@@ -132,8 +134,8 @@ function validateRows(rows: CsvRow[]): string | null {
   const emails = new Set<string>()
 
   for (const row of rows) {
-    if (!VALID_ROLES.has(row.role)) {
-      return `Line ${row.line}: role must be manager or employee (defaults to employee if omitted).`
+    if (!ORG_ASSIGNABLE_ROLES.has(row.role) && row.role !== 'admin') {
+      return `Line ${row.line}: role must be org_admin, manager, or employee (defaults to employee if omitted).`
     }
     if (row.role === 'admin') {
       return `Line ${row.line}: platform admins cannot be added to an organization via CSV.`
@@ -206,6 +208,43 @@ async function assertAdmin(adminClient: SupabaseClient, userId: string) {
 
   if (error || !callerProfile) throw new Error('Caller profile not found.')
   if (callerProfile.role !== 'admin') throw new Error('Only admins can manage users.')
+}
+
+type CallerContext = {
+  role: string
+  org_id: string
+}
+
+async function getCaller(adminClient: SupabaseClient, userId: string): Promise<CallerContext> {
+  const { data: callerProfile, error } = await adminClient
+    .from('profiles')
+    .select('role, org_id')
+    .eq('id', userId)
+    .single()
+
+  if (error || !callerProfile) throw new Error('Caller profile not found.')
+  return { role: callerProfile.role, org_id: callerProfile.org_id }
+}
+
+/** Platform admin: any org. Org admin: own org only; cannot assign org_admin. */
+function assertCanManageOrgUsers(caller: CallerContext, orgId: string, roleBeingAssigned?: string) {
+  if (caller.role === 'admin') {
+    if (roleBeingAssigned && roleBeingAssigned !== 'admin' && !ORG_ASSIGNABLE_ROLES.has(roleBeingAssigned)) {
+      throw new Error('Invalid role.')
+    }
+    return
+  }
+  if (caller.role === 'org_admin') {
+    if (caller.org_id !== orgId) throw new Error('You can only manage users in your organization.')
+    if (roleBeingAssigned === 'org_admin' || roleBeingAssigned === 'admin') {
+      throw new Error('Only KeyTrain Learning admins can assign org admin.')
+    }
+    if (roleBeingAssigned && !ORG_ADMIN_ASSIGNABLE_ROLES.has(roleBeingAssigned)) {
+      throw new Error('Invalid role.')
+    }
+    return
+  }
+  throw new Error('Only admins can manage users.')
 }
 
 async function assertOrg(adminClient: SupabaseClient, orgId: string) {
@@ -332,7 +371,7 @@ async function inviteOneUser(
     line: 0,
   }
 
-  if (!VALID_ROLES.has(row.role)) {
+  if (!ORG_ASSIGNABLE_ROLES.has(row.role)) {
     return { email: row.email, status: 'error', message: 'Invalid role.' }
   }
   if (row.role === 'admin') {
@@ -514,7 +553,7 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     })
 
-    await assertAdmin(adminClient, user.id)
+    const caller = await getCaller(adminClient, user.id)
 
     const body = await req.json()
     const action = typeof body.action === 'string' ? body.action : 'import_csv'
@@ -524,6 +563,7 @@ Deno.serve(async (req) => {
     const redirectTo = Deno.env.get('INVITE_REDIRECT_URL') ?? PRODUCTION_INVITE_REDIRECT
 
     if (action === 'invite_platform_admin') {
+      if (caller.role !== 'admin') throw new Error('Only admins can manage users.')
       const email = typeof body.email === 'string' ? body.email : ''
       if (!email) return jsonResponse({ error: 'email is required.' }, 400)
 
@@ -538,6 +578,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'delete_platform_admin') {
+      if (caller.role !== 'admin') throw new Error('Only admins can manage users.')
       const userId = typeof body.user_id === 'string' ? body.user_id : ''
       if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)
       if (userId === user.id) {
@@ -572,6 +613,20 @@ Deno.serve(async (req) => {
     if (!orgId) return jsonResponse({ error: 'org_id is required.' }, 400)
     await assertOrg(adminClient, orgId)
 
+    if (action === 'delete_organization') {
+      if (caller.role !== 'admin') throw new Error('Only admins can manage users.')
+    } else if (action === 'regenerate_org_join_code') {
+      assertCanManageOrgUsers(caller, orgId)
+    } else {
+      const roleHint =
+        typeof body.role === 'string'
+          ? body.role
+          : action === 'import_csv'
+            ? undefined
+            : undefined
+      assertCanManageOrgUsers(caller, orgId, roleHint)
+    }
+
     if (action === 'regenerate_org_join_code') {
       const code = generateJoinCode()
       const { data, error } = await adminClient
@@ -587,6 +642,8 @@ Deno.serve(async (req) => {
     if (action === 'invite_one') {
       const email = typeof body.email === 'string' ? body.email : ''
       if (!email) return jsonResponse({ error: 'email is required.' }, 400)
+      const inviteRole = typeof body.role === 'string' ? body.role : DEFAULT_ROLE
+      assertCanManageOrgUsers(caller, orgId, inviteRole)
 
       const result = await inviteOneUser(
         adminClient,
@@ -754,8 +811,12 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: 'Cannot assign platform admin role from an organization.' }, 400)
       }
 
+      if (typeof body.role === 'string') {
+        assertCanManageOrgUsers(caller, orgId, body.role)
+      }
+
       const patch: Record<string, unknown> = {}
-      if (typeof body.role === 'string' && VALID_ROLES.has(body.role)) patch.role = body.role
+      if (typeof body.role === 'string' && ORG_ASSIGNABLE_ROLES.has(body.role)) patch.role = body.role
       if (typeof body.full_name === 'string') patch.full_name = body.full_name.trim()
       if (typeof body.is_active === 'boolean') patch.is_active = body.is_active
       if (typeof body.railnet_enabled === 'boolean') patch.railnet_enabled = body.railnet_enabled
@@ -781,6 +842,17 @@ Deno.serve(async (req) => {
     if (action === 'import_csv') {
       const csv = typeof body.csv === 'string' ? body.csv : ''
       if (!csv) return jsonResponse({ error: 'csv is required.' }, 400)
+      if (caller.role === 'org_admin') {
+        const parsed = parseCsv(csv)
+        for (const row of parsed.rows) {
+          if (row.role === 'org_admin') {
+            return jsonResponse(
+              { error: 'Only KeyTrain Learning admins can assign org admin via CSV.' },
+              400
+            )
+          }
+        }
+      }
       return await handleImportCsv(adminClient, orgId, csv, sendInvites, redirectTo)
     }
 

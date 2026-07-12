@@ -16,6 +16,8 @@ import { RailNetCompliancePanel } from '@/components/railnet/RailNetCompliancePa
 import { fetchRailNetData } from '@/services/railnet-data.service'
 import { exportRailNetReportPdf } from '@/lib/pdf/railnet-reports'
 import { useRailnetAccess, useRailnetOrgScope } from '@/hooks/useRailnetAccess'
+import { canAccessCompliance, fetchOrgLicense } from '@/services/org-license.service'
+import { useAuthStore } from '@/store/authStore'
 
 type RailNetView =
   | 'overview'
@@ -48,11 +50,24 @@ const VIEW_OPTIONS: { id: RailNetView; label: string }[] = [
 ]
 
 export function RailNetPage() {
+  const profile = useAuthStore((s) => s.profile)
   const { isKtlAdmin } = useRailnetAccess()
   const { platformAdmin, railnetOrgId, isConfigured, isLoading: scopeLoading } = useRailnetOrgScope()
-  const reportsOnly = !isKtlAdmin
+
+  const { data: license } = useQuery({
+    queryKey: ['org-license', profile?.org_id],
+    queryFn: () => fetchOrgLicense(profile!.org_id),
+    enabled: Boolean(profile?.org_id && !isKtlAdmin),
+  })
+
+  const showCompliance = isKtlAdmin || canAccessCompliance(profile, license)
+  const reportsOnly = !isKtlAdmin && !showCompliance
+  const leaderViews = !isKtlAdmin && showCompliance
+
   const [selectedOrgIds, setSelectedOrgIds] = useState<string[]>([])
-  const [view, setView] = useState<RailNetView>(() => (reportsOnly ? 'reporting' : 'overview'))
+  const [view, setView] = useState<RailNetView>(() =>
+    isKtlAdmin ? 'overview' : showCompliance ? 'reporting' : 'reporting'
+  )
 
   const queryOrgIds = useMemo(() => {
     if (platformAdmin) {
@@ -62,14 +77,15 @@ export function RailNetPage() {
   }, [platformAdmin, selectedOrgIds, railnetOrgId])
 
   const visibleViews = useMemo(() => {
-    if (reportsOnly) {
-      return [{ id: 'reporting' as const, label: 'Reports' }]
+    if (isKtlAdmin) return VIEW_OPTIONS
+    if (leaderViews) {
+      return [
+        { id: 'reporting' as const, label: 'Reports' },
+        { id: 'compliance' as const, label: 'Compliance' },
+      ]
     }
-    if (platformAdmin) {
-      return VIEW_OPTIONS
-    }
-    return VIEW_OPTIONS.filter((v) => v.id !== 'staging' && v.id !== 'compliance')
-  }, [platformAdmin, reportsOnly])
+    return [{ id: 'reporting' as const, label: 'Reports' }]
+  }, [isKtlAdmin, leaderViews])
 
   const { data, error, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['railnet-data', queryOrgIds ?? 'all'],
@@ -103,15 +119,18 @@ export function RailNetPage() {
       <PageHeader
         title="RailNet"
         description={
-          reportsOnly
-            ? 'Trend reports and leadership insights for your organization.'
-            : 'Shared intelligence network — host uploads, signatures, trend reports, and training assignments.'
+          isKtlAdmin
+            ? 'Shared intelligence network — host uploads, signatures, trend reports, and training assignments.'
+            : showCompliance
+              ? 'Trend reports, leadership insights, and compliance documents for your organization.'
+              : 'Trend reports and leadership insights for your organization.'
         }
         action={
           <div className="flex flex-wrap gap-2">
             <ExportPdfButton
               disabled={!data || isLoading}
               label="Export PDF"
+              allowNonAdmin
               onExport={() => {
                 if (!data) return
                 exportRailNetReportPdf(data, platformAdmin ? selectedOrgIds : railnetOrgId ? [railnetOrgId] : [])
@@ -176,21 +195,20 @@ export function RailNetPage() {
           />
 
           <div className="flex flex-wrap gap-2">
-            {(reportsOnly || visibleViews.length > 1) &&
-              visibleViews.map((option) => (
-                <Button
-                  key={option.id}
-                  type="button"
-                  size="sm"
-                  variant={view === option.id ? 'default' : 'outline'}
-                  onClick={() => setView(option.id)}
-                >
-                  {option.label}
-                </Button>
-              ))}
+            {visibleViews.map((option) => (
+              <Button
+                key={option.id}
+                type="button"
+                size="sm"
+                variant={view === option.id ? 'default' : 'outline'}
+                onClick={() => setView(option.id)}
+              >
+                {option.label}
+              </Button>
+            ))}
           </div>
 
-          {view === 'overview' && !reportsOnly && (
+          {view === 'overview' && isKtlAdmin && (
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {summaryCards.map((card) => (
@@ -213,34 +231,35 @@ export function RailNetPage() {
             </div>
           )}
 
-          {view === 'security' && !reportsOnly && (
+          {view === 'security' && isKtlAdmin && (
             <RailNetSecurityPosturePanel
               signatures={data.signatures}
               canManageSignatures={isKtlAdmin}
             />
           )}
-          {(view === 'reporting' || reportsOnly) && (
+          {(view === 'reporting' || (reportsOnly && view !== 'compliance')) && (
             <RailNetReportingPanel
               trendReports={data.trend_reports}
               hostBatches={data.indicators}
             />
           )}
-          {view === 'host-uploads' && !reportsOnly && (
+          {view === 'host-uploads' && isKtlAdmin && (
             <RailNetHostUploadsPanel
               indicators={data.indicators}
               legacyIocCount={data.counts.legacy_iocs}
             />
           )}
-          {view === 'training' && !reportsOnly && (
+          {view === 'training' && isKtlAdmin && (
             <RailNetTrainingPanel trainingAssignments={data.training_assignments} />
           )}
-          {view === 'staging' && platformAdmin && (
+          {view === 'staging' && isKtlAdmin && (
             <RailNetCourseStagingPanel trainingAssignments={data.training_assignments} />
           )}
-          {view === 'compliance' && platformAdmin && (
+          {view === 'compliance' && showCompliance && (
             <RailNetCompliancePanel
               trendReports={data.trend_reports}
               signatures={data.signatures}
+              lockedOrgId={platformAdmin ? null : railnetOrgId}
             />
           )}
         </>

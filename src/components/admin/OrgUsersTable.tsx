@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -7,6 +7,8 @@ import { DeleteOrgUserDialog } from '@/components/admin/DeleteOrgUserDialog'
 import { EditOrgUserDialog } from '@/components/admin/EditOrgUserDialog'
 import { SendPasswordResetButton } from '@/components/admin/SendPasswordResetButton'
 import { getProfileStatusBadge } from '@/lib/user-status'
+import { fetchOrgBillingTerms, isKtlAdmin } from '@/services/org-license.service'
+import { useAuthStore } from '@/store/authStore'
 import type { Profile } from '@/types/user.types'
 
 function managerName(managers: Profile[], managerId: string | null): string {
@@ -26,15 +28,24 @@ export function OrgUsersTable({
   railnetOrgId: string | null
 }) {
   const queryClient = useQueryClient()
+  const profile = useAuthStore((s) => s.profile)
+  const allowOrgAdminRole = isKtlAdmin(profile)
   const [editUser, setEditUser] = useState<Profile | null>(null)
   const [deleteUser, setDeleteUser] = useState<Profile | null>(null)
   const [actionMessage, setActionMessage] = useState('')
   const [actionError, setActionError] = useState('')
 
+  const { data: billingTerms = null } = useQuery({
+    queryKey: ['org-billing-terms', orgId],
+    queryFn: () => fetchOrgBillingTerms(orgId),
+    enabled: Boolean(orgId),
+  })
+
   const refreshUsers = () => {
     void queryClient.invalidateQueries({ queryKey: ['org-users', orgId] })
     void queryClient.invalidateQueries({ queryKey: ['organizations'] })
     void queryClient.invalidateQueries({ queryKey: ['all-org-users'] })
+    void queryClient.invalidateQueries({ queryKey: ['org-billing-terms', orgId] })
   }
 
   if (users.length === 0) {
@@ -65,7 +76,7 @@ export function OrgUsersTable({
               <tr key={u.id} className="border-b last:border-0">
                 <td className="p-3 pr-4 font-medium">{u.full_name}</td>
                 <td className="p-3 pr-4 text-muted-foreground">{u.email ?? '—'}</td>
-                <td className="p-3 pr-4 capitalize">{u.role}</td>
+                <td className="p-3 pr-4 capitalize">{u.role.replace('_', ' ')}</td>
                 <td className="p-3 pr-4 text-muted-foreground">
                   {u.role === 'employee' ? managerName(managers, u.manager_id) : '—'}
                 </td>
@@ -132,6 +143,9 @@ export function OrgUsersTable({
         orgId={orgId}
         user={editUser}
         managers={managers}
+        orgUsers={users}
+        billingTerms={billingTerms}
+        allowOrgAdminRole={allowOrgAdminRole}
         railnetOrgId={railnetOrgId}
         onSaved={refreshUsers}
       />

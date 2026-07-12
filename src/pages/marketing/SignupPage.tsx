@@ -3,6 +3,12 @@ import { Link } from 'react-router-dom'
 import { KeyRound, Mail, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  CATALOG_PLAN_BASE_CENTS,
+  CATALOG_SEAT_CENTS,
+  PAYMENT_STRUCTURE_COPY,
+  formatUsdFromCents,
+} from '@/lib/seat-pricing'
 
 function SignupOptionCard({
   icon: Icon,
@@ -102,6 +108,57 @@ export function SignupPage() {
           </p>
         </SignupOptionCard>
       </div>
+
+      <Card className="mt-12 border-muted">
+        <CardHeader>
+          <CardTitle className="text-lg">Payment structure</CardTitle>
+          <CardDescription>
+            Shown upfront so org admins know how monthly billing works (card checkout coming soon).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm text-muted-foreground">
+          <ul className="grid gap-2 sm:grid-cols-3">
+            <li>
+              <span className="font-medium text-foreground">LMS</span> base{' '}
+              {formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.lms)}/mo
+            </li>
+            <li>
+              <span className="font-medium text-foreground">RailNet (Pro)</span> base{' '}
+              {formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.railnet)}/mo
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Both</span> base{' '}
+              {formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.both)}/mo
+            </li>
+          </ul>
+          <p>
+            Seats: org admin {formatUsdFromCents(CATALOG_SEAT_CENTS.org_admin)}, manager{' '}
+            {formatUsdFromCents(CATALOG_SEAT_CENTS.manager)}, employee{' '}
+            {formatUsdFromCents(CATALOG_SEAT_CENTS.employee)} — added on top of the plan base.
+          </p>
+          <p>
+            Example: Both ({formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.both)}) + 1 org admin + 2
+            managers + 10 employees ={' '}
+            {formatUsdFromCents(
+              CATALOG_PLAN_BASE_CENTS.both +
+                CATALOG_SEAT_CENTS.org_admin +
+                2 * CATALOG_SEAT_CENTS.manager +
+                10 * CATALOG_SEAT_CENTS.employee
+            )}
+            /month.
+          </p>
+          <p>{PAYMENT_STRUCTURE_COPY.billingCycle}</p>
+          <p>{PAYMENT_STRUCTURE_COPY.proration}</p>
+          <p>{PAYMENT_STRUCTURE_COPY.grandfathering}</p>
+          <p>
+            See{' '}
+            <Link to="/pricing" className="font-medium text-primary hover:underline">
+              pricing
+            </Link>{' '}
+            for plan details.
+          </p>
+        </CardContent>
+      </Card>
 
       <p className="mt-10 text-center text-sm text-muted-foreground">
         Already have an account?{' '}

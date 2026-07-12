@@ -7,15 +7,21 @@ export function ExportPdfButton({
   onExport,
   disabled,
   label = 'Export PDF',
+  allowNonAdmin = false,
 }: {
   onExport: () => void | Promise<void>
   disabled?: boolean
   label?: string
+  /** When true, managers / org admins with RailNet can export too */
+  allowNonAdmin?: boolean
 }) {
-  const { isAdmin } = useRole()
+  const { isAdmin, isOrgAdmin, isManager, isEmployee } = useRole()
   const [exporting, setExporting] = useState(false)
 
-  if (!isAdmin) return null
+  const canExport =
+    isAdmin || (allowNonAdmin && (isOrgAdmin || isManager || isEmployee))
+
+  if (!canExport) return null
 
   const handleClick = async () => {
     if (exporting || disabled) return
