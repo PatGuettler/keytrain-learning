@@ -41,6 +41,10 @@ export function getAlertCounts(record: RailNetRecord): Record<string, number> {
   return result
 }
 
+export function alertCountsTotal(counts: Record<string, number>): number {
+  return Object.values(counts).reduce((sum, n) => sum + (Number.isFinite(n) ? n : 0), 0)
+}
+
 export function getRiskScores(record: RailNetRecord): Record<string, number> {
   const metrics = getTrendRawMetrics(record)
   const riskScores = getRecordObject(metrics?.risk_scores)
@@ -494,6 +498,23 @@ export function getCandidateSignaturesFromAi(record: RailNetRecord): Record<stri
   )
 }
 
-export function alertCountsTotal(counts: Record<string, number>): number {
-  return Object.values(counts).reduce((sum, value) => sum + value, 0)
+export function getWeakDomainsFromTrend(record: RailNetRecord): string[] {
+  const summary = getTrainingSummaryMetrics(record)
+  const weak = summary?.weak_domains
+  if (Array.isArray(weak)) {
+    return weak.filter((d): d is string => typeof d === 'string' && d.trim().length > 0)
+  }
+  if (typeof weak === 'string' && weak.trim()) return [weak.trim()]
+  return []
+}
+
+export function getSuggestedTrainingTopics(trendReports: RailNetRecord[]): string[] {
+  const topics = new Set<string>()
+  for (const report of sortTrendReports(trendReports).slice(0, 3)) {
+    for (const domain of getWeakDomainsFromTrend(report)) topics.add(domain)
+    const brief = getLeadershipBrief(report)
+    if (brief) topics.add(brief.slice(0, 120) + (brief.length > 120 ? '…' : ''))
+    for (const rec of getAiRecommendations(report).slice(0, 3)) topics.add(rec)
+  }
+  return [...topics].slice(0, 8)
 }

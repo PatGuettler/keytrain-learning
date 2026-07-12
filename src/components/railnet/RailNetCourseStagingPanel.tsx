@@ -1,41 +1,68 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { GraduationCap, ExternalLink, CheckCircle, XCircle } from 'lucide-react'
+import { GraduationCap, ExternalLink, CheckCircle, XCircle, Lightbulb } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { railnetAssignmentToCourseBundle } from '@/lib/railnet-assignment-to-course'
-import { trainingSummary } from '@/lib/railnet-records'
+import { getSuggestedTrainingTopics, trainingSummary } from '@/lib/railnet-records'
 import {
   createCourseStagingRow,
   fetchCourseStagingRows,
   publishStagedCourse,
   rejectStagedCourse,
 } from '@/services/course-staging.service'
+import { isKtlAdmin } from '@/services/org-license.service'
 import { useAuthStore } from '@/store/authStore'
 import type { RailNetRecord } from '@/types/railnet.types'
 import type { CourseStagingRow } from '@/types/railnet-staging.types'
 
 type RailNetCourseStagingPanelProps = {
   trainingAssignments: RailNetRecord[]
+  trendReports?: RailNetRecord[]
+  lockedOrgId?: string | null
+  /** Where to send KTL admins after publish; org admins go to catalog */
+  courseEditBasePath?: string
 }
 
 function assignmentKey(record: RailNetRecord): string {
   return `${record.pk ?? ''}|${record.sk ?? ''}`
 }
 
-export function RailNetCourseStagingPanel({ trainingAssignments }: RailNetCourseStagingPanelProps) {
+export function RailNetCourseStagingPanel({
+  trainingAssignments,
+  trendReports = [],
+  lockedOrgId = null,
+  courseEditBasePath = '/admin/courses',
+}: RailNetCourseStagingPanelProps) {
+  const profile = useAuthStore((s) => s.profile)
   const userId = useAuthStore((s) => s.userId)!
+  const ktlAdmin = isKtlAdmin(profile)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [selectedAssignmentKey, setSelectedAssignmentKey] = useState('')
   const [actionError, setActionError] = useState('')
 
+  const assignments = useMemo(() => {
+    if (!lockedOrgId) return trainingAssignments
+    return trainingAssignments.filter((a) => String(a.railnet_org_id ?? '') === lockedOrgId)
+  }, [trainingAssignments, lockedOrgId])
+
+  const suggestedTopics = useMemo(
+    () => getSuggestedTrainingTopics(trendReports),
+    [trendReports]
+  )
+
   const { data: stagingRows = [], isLoading } = useQuery({
-    queryKey: ['course-staging'],
+    queryKey: ['course-staging', lockedOrgId ?? 'all'],
     queryFn: fetchCourseStagingRows,
   })
+
+  const visibleRows = useMemo(() => {
+    if (!lockedOrgId) return stagingRows
+    return stagingRows.filter((r) => r.railnet_org_id === lockedOrgId)
+  }, [stagingRows, lockedOrgId])
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['course-staging'] })
 
@@ -61,11 +88,25 @@ export function RailNetCourseStagingPanel({ trainingAssignments }: RailNetCourse
   })
 
   const publishMutation = useMutation({
-    mutationFn: (stagingId: string) => publishStagedCourse(stagingId, userId),
+    mutationFn: (stagingId: string) =>
+      publishStagedCourse(
+        stagingId,
+        userId,
+        ktlAdmin
+          ? undefined
+          : {
+              orgId: profile!.org_id,
+              assignToOrg: true,
+            }
+      ),
     onSuccess: (result) => {
       setActionError('')
       void invalidate()
-      navigate(`/admin/courses/${result.courseId}/edit`)
+      if (ktlAdmin) {
+        navigate(`${courseEditBasePath}/${result.courseId}/edit`)
+      } else {
+        navigate('/org-admin/training-reports')
+      }
     },
     onError: (e: Error) => setActionError(e.message),
   })
@@ -79,12 +120,14 @@ export function RailNetCourseStagingPanel({ trainingAssignments }: RailNetCourse
     onError: (e: Error) => setActionError(e.message),
   })
 
-  const selectedAssignment = trainingAssignments.find(
-    (a) => assignmentKey(a) === selectedAssignmentKey
-  )
+  const selectedAssignment = assignments.find((a) => assignmentKey(a) === selectedAssignmentKey)
 
   const openInBuilder = (row: CourseStagingRow) => {
-    navigate('/admin/courses/create', {
+    if (!ktlAdmin) {
+      setActionError('Publishing assigns the staged course to your organization. Use Publish to apply.')
+      return
+    }
+    navigate(`${courseEditBasePath}/create`, {
       state: {
         railnetImportBundle: row.proposed_content,
         railnetStagingId: row.id,
@@ -92,10 +135,32 @@ export function RailNetCourseStagingPanel({ trainingAssignments }: RailNetCourse
     })
   }
 
-  const pendingRows = stagingRows.filter((r) => r.status === 'pending_review')
+  const pendingRows = visibleRows.filter((r) => r.status === 'pending_review')
 
   return (
     <div className="space-y-4">
+      {suggestedTopics.length > 0 && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Lightbulb className="h-4 w-4" />
+              Suggested training topics from recent trends
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+              {suggestedTopics.map((topic) => (
+                <li key={topic}>{topic}</li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Use these weak domains and leadership recommendations when staging or choosing catalog
+              courses.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
@@ -105,10 +170,10 @@ export function RailNetCourseStagingPanel({ trainingAssignments }: RailNetCourse
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Transform a RailNet monthly assignment into a{' '}
-            <code className="text-xs">CourseExportBundle</code> for review in Course Builder.
+            Stage a RailNet monthly assignment as a course draft
+            {ktlAdmin ? ' for Course Builder review.' : ', then publish it to your organization.'}
           </p>
-          {trainingAssignments.length === 0 ? (
+          {assignments.length === 0 ? (
             <p className="text-sm text-muted-foreground">No training assignments in the current filter.</p>
           ) : (
             <>
@@ -118,7 +183,7 @@ export function RailNetCourseStagingPanel({ trainingAssignments }: RailNetCourse
                 onChange={(e) => setSelectedAssignmentKey(e.target.value)}
               >
                 <option value="">Select assignment…</option>
-                {trainingAssignments.map((record) => (
+                {assignments.map((record) => (
                   <option key={assignmentKey(record)} value={assignmentKey(record)}>
                     {String(record.railnet_org_id)} · {trainingSummary(record)}
                   </option>
@@ -143,10 +208,9 @@ export function RailNetCourseStagingPanel({ trainingAssignments }: RailNetCourse
         <CardContent>
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Loading staging queue…</p>
-          ) : stagingRows.length === 0 ? (
+          ) : visibleRows.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No staged courses yet. Apply migration 035 if tables are missing, then import an assignment
-              above.
+              No staged courses yet. Import an assignment above to start.
             </p>
           ) : (
             <div className="overflow-x-auto rounded-md border">
@@ -156,34 +220,32 @@ export function RailNetCourseStagingPanel({ trainingAssignments }: RailNetCourse
                     <th className="px-3 py-2 font-medium">Title</th>
                     <th className="px-3 py-2 font-medium">Org</th>
                     <th className="px-3 py-2 font-medium">Status</th>
-                    <th className="px-3 py-2 font-medium">Source</th>
                     <th className="px-3 py-2 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {stagingRows.map((row) => (
+                  {visibleRows.map((row) => (
                     <tr key={row.id} className="border-t">
                       <td className="px-3 py-2 max-w-xs truncate">{row.title}</td>
                       <td className="px-3 py-2">
                         <Badge variant="outline">{row.railnet_org_id}</Badge>
                       </td>
                       <td className="px-3 py-2 capitalize">{row.status.replace('_', ' ')}</td>
-                      <td className="px-3 py-2 font-mono text-xs text-muted-foreground max-w-[10rem] truncate">
-                        {row.source_assignment_sk ?? '—'}
-                      </td>
                       <td className="px-3 py-2">
                         <div className="flex flex-wrap gap-1">
                           {row.status === 'pending_review' && (
                             <>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openInBuilder(row)}
-                              >
-                                <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                                Edit
-                              </Button>
+                              {ktlAdmin && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openInBuilder(row)}
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                                  Edit
+                                </Button>
+                              )}
                               <Button
                                 type="button"
                                 size="sm"
@@ -191,7 +253,7 @@ export function RailNetCourseStagingPanel({ trainingAssignments }: RailNetCourse
                                 onClick={() => publishMutation.mutate(row.id)}
                               >
                                 <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                                Publish
+                                {ktlAdmin ? 'Publish' : 'Publish to my org'}
                               </Button>
                               <Button
                                 type="button"
@@ -205,12 +267,14 @@ export function RailNetCourseStagingPanel({ trainingAssignments }: RailNetCourse
                               </Button>
                             </>
                           )}
-                          {row.published_course_id && (
+                          {row.published_course_id && ktlAdmin && (
                             <Button
                               type="button"
                               size="sm"
                               variant="outline"
-                              onClick={() => navigate(`/admin/courses/${row.published_course_id}/edit`)}
+                              onClick={() =>
+                                navigate(`${courseEditBasePath}/${row.published_course_id}/edit`)
+                              }
                             >
                               Open course
                             </Button>

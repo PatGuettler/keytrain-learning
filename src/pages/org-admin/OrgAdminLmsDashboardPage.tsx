@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Award, BookOpen, Building2, TrendingUp, Users, AlertTriangle } from 'lucide-react'
+import { Award, BookOpen, TrendingUp, Users, AlertTriangle } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { CompletionChart } from '@/components/dashboard/CompletionChart'
 import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { OrgCourseTable } from '@/components/dashboard/OrgCourseTable'
@@ -10,14 +11,28 @@ import { exportOrgDashboardPdf } from '@/lib/pdf/dashboard-reports'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { useOrgDashboard } from '@/hooks/useAdminDashboard'
-import { useOrgRoute } from '@/hooks/useOrgRoute'
-import { adminOrgDashboardPath, adminOrganizationPath } from '@/lib/org-slugs'
 import { buildStaffSummaryRows, computeAvgScore, computeTrainingNeeds } from '@/lib/dashboard-stats'
+import { useAuthStore } from '@/store/authStore'
+import { fetchOrganizationById } from '@/services/organizations.service'
+import { getOrgSlug } from '@/lib/org-slugs'
 
-export function HospitalDashboardPage() {
-  const { orgId, orgSlug } = useOrgRoute()
-  const { org, users, courses, assignments, moduleAttempts, metrics, isLoading } = useOrgDashboard(orgId)
+/** LMS training reports for the signed-in org admin's organization. */
+export function OrgAdminLmsDashboardPage() {
+  const profile = useAuthStore((s) => s.profile)
+  const orgId = profile?.org_id
 
+  const { data: orgMeta } = useQuery({
+    queryKey: ['organization', orgId],
+    queryFn: () => fetchOrganizationById(orgId!),
+    enabled: Boolean(orgId),
+  })
+
+  const { org, users, courses, assignments, moduleAttempts, metrics, isLoading } = useOrgDashboard(
+    orgId
+  )
+
+  const displayOrg = org ?? orgMeta
+  const orgSlug = displayOrg ? getOrgSlug(displayOrg, [displayOrg]) : 'org'
   const staffSummaries = buildStaffSummaryRows(users, assignments)
   const trainingNeeds = computeTrainingNeeds(moduleAttempts, courses)
   const avgScore = computeAvgScore(assignments)
@@ -26,12 +41,12 @@ export function HospitalDashboardPage() {
     return <p className="text-sm text-muted-foreground">Loading organization dashboard…</p>
   }
 
-  if (!org || !metrics) {
+  if (!displayOrg || !metrics) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Organization not found.</p>
+        <p className="text-sm text-muted-foreground">Organization training data is not available yet.</p>
         <Button variant="outline" asChild>
-          <Link to="/admin/dashboard">Back to dashboard</Link>
+          <Link to="/org-admin/dashboard">Back</Link>
         </Button>
       </div>
     )
@@ -40,24 +55,14 @@ export function HospitalDashboardPage() {
   return (
     <div className="space-y-5 sm:space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/admin/dashboard">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              All organizations
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link to={adminOrganizationPath(orgSlug!)}>
-              <Building2 className="h-4 w-4 mr-1" />
-              Settings &amp; users
-            </Link>
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/org-admin/users">Manage users</Link>
+        </Button>
         <ExportPdfButton
+          allowNonAdmin
           onExport={() =>
             exportOrgDashboardPdf(
-              org.name,
+              displayOrg.name,
               metrics,
               avgScore,
               staffSummaries,
@@ -69,7 +74,10 @@ export function HospitalDashboardPage() {
         />
       </div>
 
-      <PageHeader title={org.name} description="Course and training overview for this organization" />
+      <PageHeader
+        title={`${displayOrg.name} — Training`}
+        description="Completion rates, staff progress, and training needs for your organization."
+      />
 
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-5">
         <StatCard title="Staff" value={metrics.userCount} icon={Users} />
@@ -90,21 +98,16 @@ export function HospitalDashboardPage() {
           remaining={100 - metrics.completionRate}
           title="Organization completion"
         />
-        <OrgTrainingNeedsPanel needs={trainingNeeds} orgSlug={orgSlug!} />
+        <OrgTrainingNeedsPanel needs={trainingNeeds} orgSlug={orgSlug} />
       </div>
 
       <OrgStaffDirectory
         rows={staffSummaries}
-        getStaffDetailPath={(userId) => adminOrgDashboardPath(orgSlug!, 'staff', userId)}
+        getStaffDetailPath={() => '/org-admin/users'}
         title="Staff training"
       />
 
-      <OrgCourseTable
-        orgSlug={orgSlug!}
-        courses={courses}
-        assignments={assignments}
-        courseDetailBasePath="/admin/dashboard"
-      />
+      <OrgCourseTable orgSlug={orgSlug} courses={courses} assignments={assignments} />
     </div>
   )
 }

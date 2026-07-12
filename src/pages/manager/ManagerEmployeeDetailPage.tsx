@@ -6,6 +6,8 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { AssignCourseToUserCard } from '@/components/manager/AssignCourseToUserCard'
+import { AssignCourseRetakeButton } from '@/components/admin/AssignCourseRetakeButton'
 import { fetchAssignments } from '@/services/assignments.service'
 import { fetchProfiles } from '@/services/users.service'
 import { useAuthStore } from '@/store/authStore'
@@ -71,6 +73,10 @@ export function ManagerEmployeeDetailPage() {
         description={employee.email ?? 'Team member training overview'}
       />
 
+      {employee.org_id && (
+        <AssignCourseToUserCard userId={employee.id} orgId={employee.org_id} />
+      )}
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading courses…</p>
       ) : courseRows.length === 0 ? (
@@ -87,7 +93,7 @@ export function ManagerEmployeeDetailPage() {
                     {row.score != null && ` · Score: ${row.score}%`}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   <Badge variant={statusVariant[row.status]}>{STATUS_LABELS[row.status]}</Badge>
                   {row.status === 'completed' && row.score != null && (
                     <Badge variant={row.score >= 80 ? 'success' : 'warning'}>
@@ -95,6 +101,7 @@ export function ManagerEmployeeDetailPage() {
                     </Badge>
                   )}
                   {row.locked && <Badge variant="destructive">Locked</Badge>}
+                  <AssignCourseRetakeButton courseRow={row} userId={employee.id} />
                 </div>
               </CardContent>
             </Card>

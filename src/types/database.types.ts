@@ -2,7 +2,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type AssignmentStatus = 'pending' | 'in_progress' | 'completed' | 'overdue'
 export type ModuleType = 'lesson' | 'quiz' | 'workshop'
-export type UserRole = 'admin' | 'manager' | 'employee'
+export type UserRole = 'admin' | 'org_admin' | 'manager' | 'employee'
 
 export interface Database {
   public: {
@@ -29,6 +29,8 @@ export interface Database {
           login_locked_at: string | null
           last_login_at: string | null
           daily_verse_enabled: boolean
+          railnet_enabled: boolean
+          railnet_table_prefs: Json
           created_at: string
           updated_at: string
         }
@@ -47,6 +49,8 @@ export interface Database {
           login_locked_at?: string | null
           last_login_at?: string | null
           daily_verse_enabled?: boolean
+          railnet_enabled?: boolean
+          railnet_table_prefs?: Json
           created_at?: string
           updated_at?: string
         }
@@ -63,6 +67,69 @@ export interface Database {
           failed_login_attempts: number
           login_locked_at: string | null
           daily_verse_enabled: boolean
+          railnet_enabled: boolean
+          railnet_table_prefs: Json
+        }>
+        Relationships: []
+      }
+      org_license: {
+        Row: {
+          org_id: string
+          railnet_enabled: boolean
+          compliance_enabled: boolean
+          lms_enabled: boolean
+          plan: string
+          max_seats: number | null
+          updated_at: string
+        }
+        Insert: {
+          org_id: string
+          railnet_enabled?: boolean
+          compliance_enabled?: boolean
+          lms_enabled?: boolean
+          plan?: string
+          max_seats?: number | null
+          updated_at?: string
+        }
+        Update: Partial<{
+          railnet_enabled: boolean
+          compliance_enabled: boolean
+          lms_enabled: boolean
+          plan: string
+          max_seats: number | null
+          updated_at: string
+        }>
+        Relationships: []
+      }
+      org_billing_terms: {
+        Row: {
+          org_id: string
+          plan: string
+          plan_base_cents: number
+          org_admin_cents: number
+          manager_cents: number
+          employee_cents: number
+          locked_at: string
+          updated_at: string
+        }
+        Insert: {
+          org_id: string
+          plan: string
+          plan_base_cents: number
+          org_admin_cents: number
+          manager_cents: number
+          employee_cents: number
+          locked_at?: string
+          updated_at?: string
+        }
+        Update: Partial<{
+          plan: string
+          plan_base_cents: number
+          org_admin_cents: number
+          manager_cents: number
+          employee_cents: number
+          locked_at: string
+          updated_at: string
         }>
         Relationships: []
       }
@@ -79,6 +146,7 @@ export interface Database {
           show_results_after_completion: boolean
           certificate_enabled: boolean
           certificate_expires_days: number | null
+          is_monthly_catalog: boolean
           created_by: string | null
           created_at: string
           updated_at: string
@@ -95,6 +163,7 @@ export interface Database {
           show_results_after_completion?: boolean
           certificate_enabled?: boolean
           certificate_expires_days?: number | null
+          is_monthly_catalog?: boolean
           created_by?: string | null
           created_at?: string
           updated_at?: string
@@ -110,6 +179,7 @@ export interface Database {
           show_results_after_completion: boolean
           certificate_enabled: boolean
           certificate_expires_days: number | null
+          is_monthly_catalog: boolean
           created_by: string | null
         }>
         Relationships: []

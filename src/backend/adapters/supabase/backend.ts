@@ -360,7 +360,7 @@ export function createSupabaseBackend(): Backend {
           .select('id')
           .eq('org_id', orgId)
           .eq('is_active', true)
-          .in('role', ['employee', 'manager'])
+          .in('role', ['employee', 'manager', 'org_admin'])
         if (membersError) throw membersError
 
         const dueDate = toDueDate(availableUntil)
@@ -427,7 +427,7 @@ export function createSupabaseBackend(): Backend {
             .select('id')
             .eq('org_id', orgId)
             .eq('is_active', true)
-            .in('role', ['employee', 'manager'])
+            .in('role', ['employee', 'manager', 'org_admin'])
 
           for (const member of members ?? []) {
             const { data: assignment } = await supabase
@@ -653,7 +653,9 @@ export function createSupabaseBackend(): Backend {
         const { data, error } = await q.order('assigned_at', { ascending: false })
         if (error) throw error
 
-        let rows = (data ?? []) as (Assignment & { training_sessions?: TrainingSession[] })[]
+        let rows = (data ?? []) as unknown as (Assignment & {
+          training_sessions?: TrainingSession[]
+        })[]
 
         const filterByActivePublications = async (orgId: string) => {
           const { data: publications } = await supabase

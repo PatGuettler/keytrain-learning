@@ -14,10 +14,12 @@ import {
   deletePhishingCampaign,
 } from '@/services/phishing.service'
 import { buildRecipientOutcomes, computeCampaignMetrics } from '@/lib/phishing-stats'
+import { usePhishingBasePath } from '@/lib/phishing-paths'
 import { formatDate } from '@/lib/utils'
 
 export function PhishingCampaignDetailPage() {
   const { campaignId } = useParams<{ campaignId: string }>()
+  const base = usePhishingBasePath()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [sending, setSending] = useState(false)
@@ -96,7 +98,7 @@ export function PhishingCampaignDetailPage() {
     try {
       await deletePhishingCampaign(campaignId)
       await queryClient.invalidateQueries({ queryKey: ['phishing-campaigns'] })
-      navigate('/admin/phishing/campaigns')
+      navigate(`${base}/campaigns`)
     } catch (e) {
       setSendError(e instanceof Error ? e.message : 'Could not delete campaign.')
     } finally {
@@ -111,7 +113,7 @@ export function PhishingCampaignDetailPage() {
   return (
     <div className="space-y-5 sm:space-y-6">
       <Button variant="ghost" size="sm" asChild>
-        <Link to="/admin/phishing/campaigns">
+        <Link to={`${base}/campaigns`}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Campaigns
         </Link>
@@ -125,7 +127,7 @@ export function PhishingCampaignDetailPage() {
             {isDraft ? (
               <>
                 <Button variant="outline" size="sm" asChild>
-                  <Link to={`/admin/phishing/campaigns/${campaign.id}/edit`}>Edit</Link>
+                  <Link to={`${base}/campaigns/${campaign.id}/edit`}>Edit</Link>
                 </Button>
                 <Button size="sm" onClick={handleSend} disabled={sending || recipients.length === 0}>
                   <Send className="h-4 w-4 mr-1" />

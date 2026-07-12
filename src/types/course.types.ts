@@ -19,6 +19,8 @@ export interface Course {
   /** Days after issuance until expiry; null = never expires. */
   certificate_expires_days: number | null
   tags?: TrainingTag[]
+  /** When true, listed in org_admin monthly security catalog. */
+  is_monthly_catalog?: boolean
   created_by: string | null
   created_at: string
   updated_at: string

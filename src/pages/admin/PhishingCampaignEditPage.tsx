@@ -26,8 +26,10 @@ import {
 } from '@/services/phishing.service'
 import { fetchProfile } from '@/services/auth.service'
 import { previewPhishingText } from '@/lib/phishing-preview'
+import { usePhishingBasePath } from '@/lib/phishing-paths'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
+import { isOrgAdmin } from '@/services/org-license.service'
 import { PHISHING_PRETEXT_LABELS, type PhishingPretext, type PhishingTargetScope } from '@/types/phishing.types'
 import type { Profile } from '@/types/user.types'
 
@@ -36,11 +38,13 @@ const RECIPIENTS_PER_PAGE = 8
 export function PhishingCampaignEditPage() {
   const { campaignId } = useParams<{ campaignId: string }>()
   const isNew = !campaignId || campaignId === 'new'
+  const base = usePhishingBasePath()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const userId = useAuthStore((s) => s.userId)!
   const authEmail = useAuthStore((s) => s.email)
   const authProfile = useAuthStore((s) => s.profile)
+  const orgAdminMode = isOrgAdmin(authProfile)
 
   const { data: existing } = useQuery({
     queryKey: ['phishing-campaign', campaignId],
@@ -108,17 +112,21 @@ export function PhishingCampaignEditPage() {
   }, [authProfile, authEmail, loadedSelfProfile, userId])
 
   const selectableUsers = useMemo(() => {
-    if (!selfProfile) return allUsers
-    const existing = allUsers.find((user) => user.id === selfProfile.id)
+    const scoped =
+      orgAdminMode && authProfile?.org_id
+        ? allUsers.filter((user) => user.org_id === authProfile.org_id || user.id === userId)
+        : allUsers
+    if (!selfProfile) return scoped
+    const existing = scoped.find((user) => user.id === selfProfile.id)
     if (existing) {
-      return allUsers.map((user) =>
+      return scoped.map((user) =>
         user.id === selfProfile.id
           ? { ...user, email: user.email?.trim() || selfProfile.email }
           : user
       )
     }
-    return [selfProfile, ...allUsers]
-  }, [allUsers, selfProfile])
+    return [selfProfile, ...scoped]
+  }, [allUsers, selfProfile, orgAdminMode, authProfile?.org_id, userId])
 
   const resolveRecipientEmail = (user: Profile) =>
     user.email?.trim() || (user.id === userId ? authEmail?.trim() : '') || ''
@@ -189,6 +197,12 @@ export function PhishingCampaignEditPage() {
     setTrackOpens(existing.track_opens)
     setExcludeAdmins(existing.exclude_admins)
   }, [existing])
+
+  useEffect(() => {
+    if (!orgAdminMode || !authProfile?.org_id) return
+    setOrgId(authProfile.org_id)
+    if (targetScope === 'all') setTargetScope('org')
+  }, [orgAdminMode, authProfile?.org_id, targetScope])
 
   useEffect(() => {
     if (!existing?.template_id || !templates.length) return
@@ -357,7 +371,11 @@ export function PhishingCampaignEditPage() {
         pretext: pretext || selectedTemplate?.pretext || null,
         fake_login_url: fakeLoginUrl.trim() || getDefaultFakeLoginUrl(),
         track_opens: trackOpens,
-        org_id: targetScope === 'org' ? orgId || null : null,
+        org_id: orgAdminMode
+          ? authProfile?.org_id ?? null
+          : targetScope === 'org'
+            ? orgId || null
+            : null,
         template_id: templateId || null,
         target_scope: targetScope,
         target_user_ids: targetScope === 'custom' ? selectedUserIds : [],
@@ -372,7 +390,7 @@ export function PhishingCampaignEditPage() {
       await syncPhishingRecipients(campaign)
       await queryClient.invalidateQueries({ queryKey: ['phishing-campaigns'] })
       await queryClient.invalidateQueries({ queryKey: ['phishing-campaign', campaign.id] })
-      navigate(`/admin/phishing/campaigns/${campaign.id}`)
+      navigate(`${base}/campaigns/${campaign.id}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save campaign.')
     } finally {
@@ -383,7 +401,7 @@ export function PhishingCampaignEditPage() {
   return (
     <div className="space-y-5 sm:space-y-6 max-w-3xl">
       <Button variant="ghost" size="sm" asChild>
-        <Link to="/admin/phishing/campaigns">
+        <Link to={`${base}/campaigns`}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Campaigns
         </Link>
@@ -537,32 +555,41 @@ export function PhishingCampaignEditPage() {
                   setSelectedUserIds([])
                 } else if (scope === 'org') {
                   setSelectedUserIds([])
+                  if (orgAdminMode && authProfile?.org_id) setOrgId(authProfile.org_id)
                 } else {
                   setOrgId('')
                 }
               }}
             >
-              <option value="all">All organization staff</option>
-              <option value="org">One organization</option>
+              {!orgAdminMode && <option value="all">All organization staff</option>}
+              <option value="org">{orgAdminMode ? 'My organization' : 'One organization'}</option>
               <option value="custom">Hand-picked users</option>
             </select>
           </div>
           {targetScope === 'org' && (
             <div className="space-y-2">
               <Label htmlFor="org">Organization</Label>
-              <select
-                id="org"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={orgId}
-                onChange={(e) => setOrgId(e.target.value)}
-              >
-                <option value="">Select…</option>
-                {hospitals.map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.name}
-                  </option>
-                ))}
-              </select>
+              {orgAdminMode ? (
+                <Input
+                  id="org"
+                  value={hospitals.find((h) => h.id === orgId)?.name ?? 'Your organization'}
+                  disabled
+                />
+              ) : (
+                <select
+                  id="org"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={orgId}
+                  onChange={(e) => setOrgId(e.target.value)}
+                >
+                  <option value="">Select…</option>
+                  {hospitals.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           )}
         </div>

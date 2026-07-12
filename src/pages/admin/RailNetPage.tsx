@@ -16,7 +16,7 @@ import { RailNetCompliancePanel } from '@/components/railnet/RailNetCompliancePa
 import { fetchRailNetData } from '@/services/railnet-data.service'
 import { exportRailNetReportPdf } from '@/lib/pdf/railnet-reports'
 import { useRailnetAccess, useRailnetOrgScope } from '@/hooks/useRailnetAccess'
-import { canAccessCompliance, fetchOrgLicense } from '@/services/org-license.service'
+import { canAccessCompliance, canAccessCourseStaging, fetchOrgLicense } from '@/services/org-license.service'
 import { useAuthStore } from '@/store/authStore'
 
 type RailNetView =
@@ -61,12 +61,11 @@ export function RailNetPage() {
   })
 
   const showCompliance = isKtlAdmin || canAccessCompliance(profile, license)
-  const reportsOnly = !isKtlAdmin && !showCompliance
-  const leaderViews = !isKtlAdmin && showCompliance
+  const showStaging = isKtlAdmin || canAccessCourseStaging(profile, license)
 
   const [selectedOrgIds, setSelectedOrgIds] = useState<string[]>([])
   const [view, setView] = useState<RailNetView>(() =>
-    isKtlAdmin ? 'overview' : showCompliance ? 'reporting' : 'reporting'
+    isKtlAdmin ? 'overview' : 'reporting'
   )
 
   const queryOrgIds = useMemo(() => {
@@ -78,14 +77,16 @@ export function RailNetPage() {
 
   const visibleViews = useMemo(() => {
     if (isKtlAdmin) return VIEW_OPTIONS
-    if (leaderViews) {
-      return [
-        { id: 'reporting' as const, label: 'Reports' },
-        { id: 'compliance' as const, label: 'Compliance' },
-      ]
+    const views: { id: RailNetView; label: string }[] = [
+      { id: 'reporting', label: 'Reports' },
+    ]
+    if (showCompliance) views.push({ id: 'compliance', label: 'Compliance' })
+    if (showStaging) {
+      views.push({ id: 'training', label: 'Training' })
+      views.push({ id: 'staging', label: 'Course staging' })
     }
-    return [{ id: 'reporting' as const, label: 'Reports' }]
-  }, [isKtlAdmin, leaderViews])
+    return views
+  }, [isKtlAdmin, showCompliance, showStaging])
 
   const { data, error, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['railnet-data', queryOrgIds ?? 'all'],
@@ -237,7 +238,7 @@ export function RailNetPage() {
               canManageSignatures={isKtlAdmin}
             />
           )}
-          {(view === 'reporting' || (reportsOnly && view !== 'compliance')) && (
+          {view === 'reporting' && (
             <RailNetReportingPanel
               trendReports={data.trend_reports}
               hostBatches={data.indicators}
@@ -249,11 +250,16 @@ export function RailNetPage() {
               legacyIocCount={data.counts.legacy_iocs}
             />
           )}
-          {view === 'training' && isKtlAdmin && (
+          {view === 'training' && (isKtlAdmin || showStaging) && (
             <RailNetTrainingPanel trainingAssignments={data.training_assignments} />
           )}
-          {view === 'staging' && isKtlAdmin && (
-            <RailNetCourseStagingPanel trainingAssignments={data.training_assignments} />
+          {view === 'staging' && (isKtlAdmin || showStaging) && (
+            <RailNetCourseStagingPanel
+              trainingAssignments={data.training_assignments}
+              trendReports={data.trend_reports}
+              lockedOrgId={platformAdmin ? null : railnetOrgId}
+              courseEditBasePath={isKtlAdmin ? '/admin/courses' : '/org-admin/catalog'}
+            />
           )}
           {view === 'compliance' && showCompliance && (
             <RailNetCompliancePanel

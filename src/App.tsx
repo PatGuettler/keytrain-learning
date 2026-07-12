@@ -37,6 +37,8 @@ import { RailNetPage } from '@/pages/admin/RailNetPage'
 import { OrgAdminDashboardPage } from '@/pages/org-admin/OrgAdminDashboardPage'
 import { OrgAdminUsersPage } from '@/pages/org-admin/OrgAdminUsersPage'
 import { OrgAdminBillingPage } from '@/pages/org-admin/OrgAdminBillingPage'
+import { OrgAdminCatalogPage } from '@/pages/org-admin/OrgAdminCatalogPage'
+import { OrgAdminLmsDashboardPage } from '@/pages/org-admin/OrgAdminLmsDashboardPage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { MarketingLayout } from '@/components/marketing/MarketingLayout'
 import { HomePage } from '@/pages/marketing/HomePage'
@@ -204,6 +206,34 @@ export default function App() {
             <Route
               path="/org-admin/billing"
               element={<RoleGuard roles={['org_admin']}><OrgAdminBillingPage /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/catalog"
+              element={<RoleGuard roles={['org_admin']}><OrgAdminCatalogPage /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/training-reports"
+              element={<RoleGuard roles={['org_admin']}><OrgAdminLmsDashboardPage /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/phishing/campaigns"
+              element={<RoleGuard roles={['org_admin']}><PhishingCampaignsPage /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/phishing/campaigns/new"
+              element={<Navigate to="/org-admin/phishing/campaigns/new/edit" replace />}
+            />
+            <Route
+              path="/org-admin/phishing/campaigns/:campaignId/edit"
+              element={<RoleGuard roles={['org_admin']}><PhishingCampaignEditPage /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/phishing/campaigns/:campaignId"
+              element={<RoleGuard roles={['org_admin']}><PhishingCampaignDetailPage /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/phishing/dashboard"
+              element={<RoleGuard roles={['org_admin']}><PhishingDashboardPage /></RoleGuard>}
             />
             <Route
               path="/org-admin/training"

@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/services/supabase'
 import type { Profile } from '@/types/user.types'
 import {
   type OrgBillingTerms,
@@ -6,6 +6,12 @@ import {
   catalogTermsForPlan,
   entitlementsForPlan,
 } from '@/lib/seat-pricing'
+
+function requireSupabase() {
+  const supabase = getSupabase()
+  if (!supabase) throw new Error('Supabase is not configured.')
+  return supabase
+}
 
 export interface OrgLicense {
   org_id: string
@@ -66,7 +72,34 @@ export function canAccessCompliance(
   return profile.railnet_enabled === true
 }
 
+export function canAccessCourseStaging(
+  profile: Profile | null | undefined,
+  license?: Pick<OrgLicense, 'plan' | 'lms_enabled' | 'railnet_enabled'> | null
+): boolean {
+  if (!profile) return false
+  if (isKtlAdmin(profile)) return true
+  if (!isOrgAdmin(profile)) return false
+  if (!license) return false
+  return (
+    license.plan === 'both' &&
+    license.lms_enabled !== false &&
+    license.railnet_enabled === true
+  )
+}
+
+export function canAccessPhishing(
+  profile: Profile | null | undefined,
+  license?: Pick<OrgLicense, 'railnet_enabled'> | null
+): boolean {
+  if (!profile) return false
+  if (isKtlAdmin(profile)) return true
+  if (!isOrgAdmin(profile)) return false
+  if (license && license.railnet_enabled === false) return false
+  return true
+}
+
 export async function fetchOrgLicense(orgId: string): Promise<OrgLicense | null> {
+  const supabase = requireSupabase()
   const { data, error } = await supabase
     .from('org_license')
     .select('org_id, railnet_enabled, compliance_enabled, lms_enabled, plan, max_seats, updated_at')
@@ -83,6 +116,7 @@ export async function fetchOrgLicense(orgId: string): Promise<OrgLicense | null>
 }
 
 export async function fetchOrgBillingTerms(orgId: string): Promise<OrgBillingTerms | null> {
+  const supabase = requireSupabase()
   const { data, error } = await supabase
     .from('org_billing_terms')
     .select(
@@ -103,6 +137,7 @@ export async function ensureOrgBillingTerms(
   const existing = await fetchOrgBillingTerms(orgId)
   if (existing) return existing
 
+  const supabase = requireSupabase()
   const catalog = catalogTermsForPlan(plan)
   const row = {
     org_id: orgId,
@@ -124,6 +159,7 @@ export async function ensureOrgBillingTerms(
 }
 
 export async function setOrgPlanAsAdmin(orgId: string, plan: OrgPlan): Promise<void> {
+  const supabase = requireSupabase()
   const entitlements = entitlementsForPlan(plan)
   const { error: licenseError } = await supabase.from('org_license').upsert(
     {

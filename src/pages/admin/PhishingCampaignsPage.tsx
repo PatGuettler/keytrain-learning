@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { fetchPhishingCampaigns, deletePhishingCampaign } from '@/services/phishing.service'
+import { usePhishingBasePath } from '@/lib/phishing-paths'
 import { formatDate } from '@/lib/utils'
 import type { PhishingCampaignStatus } from '@/types/phishing.types'
 
@@ -17,6 +18,7 @@ const statusVariant: Record<PhishingCampaignStatus, 'secondary' | 'default' | 's
 }
 
 export function PhishingCampaignsPage() {
+  const base = usePhishingBasePath()
   const queryClient = useQueryClient()
   const { data: campaigns = [], isLoading } = useQuery({
     queryKey: ['phishing-campaigns'],
@@ -39,13 +41,13 @@ export function PhishingCampaignsPage() {
         action={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
-              <Link to="/admin/phishing/dashboard">
+              <Link to={`${base}/dashboard`}>
                 <BarChart3 className="h-4 w-4 mr-1" />
                 Dashboard
               </Link>
             </Button>
             <Button size="sm" asChild>
-              <Link to="/admin/phishing/campaigns/new/edit">
+              <Link to={`${base}/campaigns/new/edit`}>
                 <Plus className="h-4 w-4 mr-1" />
                 New campaign
               </Link>
@@ -93,11 +95,11 @@ export function PhishingCampaignsPage() {
                   <td className="p-3">
                     <div className="flex flex-wrap gap-2">
                       <Button variant="outline" size="sm" asChild>
-                        <Link to={`/admin/phishing/campaigns/${campaign.id}`}>Results</Link>
+                        <Link to={`${base}/campaigns/${campaign.id}`}>Results</Link>
                       </Button>
                       {campaign.status === 'draft' && (
                         <Button variant="ghost" size="sm" asChild>
-                          <Link to={`/admin/phishing/campaigns/${campaign.id}/edit`}>Edit</Link>
+                          <Link to={`${base}/campaigns/${campaign.id}/edit`}>Edit</Link>
                         </Button>
                       )}
                       <Button

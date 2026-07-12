@@ -47,6 +47,7 @@ export function CourseEditPage() {
   const [certificateExpiresDays, setCertificateExpiresDays] = useState('')
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
+  const [isMonthlyCatalog, setIsMonthlyCatalog] = useState(false)
   const [savedCourseId, setSavedCourseId] = useState(isNew ? '' : courseId!)
   const [saveError, setSaveError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -69,6 +70,7 @@ export function CourseEditPage() {
       setCertificateExpiresDays(
         course.certificate_expires_days != null ? String(course.certificate_expires_days) : ''
       )
+      setIsMonthlyCatalog(Boolean(course.is_monthly_catalog))
       if (course.tags?.length) {
         setSelectedTagIds(course.tags.map((t) => t.id))
       }
@@ -199,6 +201,7 @@ export function CourseEditPage() {
         certificate_enabled: certificateEnabled,
         certificate_expires_days: certificateEnabled ? resolvedExpiresDays : null,
         estimated_minutes: Math.max(1, estimatedMinutes),
+        is_monthly_catalog: isMonthlyCatalog,
         created_by: userId,
       })
 
@@ -277,6 +280,22 @@ export function CourseEditPage() {
           onChange={setSelectedTagIds}
         />
       </div>
+
+      <label className="flex items-start gap-2 text-sm cursor-pointer max-w-md">
+        <input
+          type="checkbox"
+          checked={isMonthlyCatalog}
+          onChange={(e) => setIsMonthlyCatalog(e.target.checked)}
+          className="mt-0.5 rounded border-input"
+        />
+        <span>
+          <span className="font-medium">Monthly security catalog</span>
+          <span className="block text-xs text-muted-foreground mt-0.5">
+            Org admins with LMS can subscribe their organization to this course from the Security
+            catalog.
+          </span>
+        </span>
+      </label>
 
       <div className="max-w-xs space-y-3">
         <label className="flex items-center gap-2 text-sm cursor-pointer">

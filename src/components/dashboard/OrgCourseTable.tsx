@@ -9,16 +9,20 @@ export function OrgCourseTable({
   orgSlug,
   courses,
   assignments,
+  courseDetailBasePath,
 }: {
   orgSlug: string
   courses: Course[]
   assignments: Assignment[]
+  /** When omitted, rows are display-only (no deep link). */
+  courseDetailBasePath?: string
 }) {
   const navigate = useNavigate()
   const rows = computeCourseMetrics(courses, assignments)
 
   const openCourse = (courseId: string) => {
-    navigate(`/admin/dashboard/${orgSlug}/courses/${courseId}`)
+    if (!courseDetailBasePath) return
+    navigate(`${courseDetailBasePath}/${orgSlug}/courses/${courseId}`)
   }
 
   if (courses.length === 0) {
@@ -40,9 +44,11 @@ export function OrgCourseTable({
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Courses</CardTitle>
-        <p className="text-xs text-muted-foreground mt-1">
-          Open a course to view training gaps and staff progress.
-        </p>
+        {courseDetailBasePath && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Open a course to view training gaps and staff progress.
+          </p>
+        )}
       </CardHeader>
       <CardContent>
         <ul className="md:hidden space-y-3">
@@ -51,7 +57,10 @@ export function OrgCourseTable({
               <button
                 type="button"
                 onClick={() => openCourse(course.id)}
-                className="w-full rounded-lg border p-4 text-left space-y-2 hover:bg-muted/50 transition-colors"
+                disabled={!courseDetailBasePath}
+                className={`w-full rounded-lg border p-4 text-left space-y-2 ${
+                  courseDetailBasePath ? 'hover:bg-muted/50 transition-colors' : 'cursor-default'
+                }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium text-sm leading-snug text-foreground">{course.title}</p>
@@ -88,7 +97,11 @@ export function OrgCourseTable({
                 <tr
                   key={course.id}
                   onClick={() => openCourse(course.id)}
-                  className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
+                  className={`border-b last:border-0 ${
+                    courseDetailBasePath
+                      ? 'cursor-pointer hover:bg-muted/50 transition-colors'
+                      : ''
+                  }`}
                 >
                   <td className="py-3 pr-4 font-medium text-primary">{course.title}</td>
                   <td className="py-3 pr-4">
@@ -109,7 +122,9 @@ export function OrgCourseTable({
                   </td>
                   <td className="py-3 pr-4 text-foreground">{completionRate}%</td>
                   <td className="py-3">
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    {courseDetailBasePath ? (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    ) : null}
                   </td>
                 </tr>
               ))}

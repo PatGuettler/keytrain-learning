@@ -18,18 +18,36 @@ function jsonResponse(body: unknown, status = 200) {
   })
 }
 
-async function assertAdmin(
+async function assertCanSendCampaign(
   adminClient: ReturnType<typeof createClient>,
-  userId: string
+  userId: string,
+  campaignOrgId: string | null
 ) {
   const { data: profile, error } = await adminClient
     .from('profiles')
-    .select('role')
+    .select('role, org_id')
     .eq('id', userId)
     .single()
-  if (error || profile?.role !== 'admin') {
-    throw new Error('Forbidden')
+  if (error || !profile) throw new Error('Forbidden')
+
+  if (profile.role === 'admin') return
+
+  if (profile.role === 'org_admin') {
+    if (!campaignOrgId || profile.org_id !== campaignOrgId) {
+      throw new Error('Forbidden')
+    }
+    const { data: license } = await adminClient
+      .from('org_license')
+      .select('railnet_enabled')
+      .eq('org_id', profile.org_id)
+      .maybeSingle()
+    if (license && license.railnet_enabled === false) {
+      throw new Error('RailNet / phishing is not enabled for your organization.')
+    }
+    return
   }
+
+  throw new Error('Forbidden')
 }
 
 async function resolveDeliveryEmail(
@@ -103,8 +121,6 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     })
 
-    await assertAdmin(adminClient, user.id)
-
     const body = await req.json()
     const campaignId = typeof body.campaign_id === 'string' ? body.campaign_id : ''
     if (!campaignId) return jsonResponse({ error: 'campaign_id is required.' }, 400)
@@ -133,6 +149,8 @@ Deno.serve(async (req) => {
     if (campaignError || !campaign) {
       return jsonResponse({ error: 'Campaign not found.' }, 404)
     }
+
+    await assertCanSendCampaign(adminClient, user.id, campaign.org_id ?? null)
 
     let campaignOrgName: string | null = null
     if (campaign.org_id) {

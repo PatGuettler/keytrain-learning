@@ -11,9 +11,11 @@ import {
   fetchAllPhishingRecipients,
   fetchPhishingCampaigns,
 } from '@/services/phishing.service'
+import { usePhishingBasePath } from '@/lib/phishing-paths'
 import { buildOrgPhishingSummaries } from '@/lib/phishing-stats'
 
 export function PhishingDashboardPage() {
+  const base = usePhishingBasePath()
   const { data: campaigns = [] } = useQuery({
     queryKey: ['phishing-campaigns'],
     queryFn: fetchPhishingCampaigns,
@@ -69,7 +71,7 @@ export function PhishingDashboardPage() {
   return (
     <div className="space-y-5 sm:space-y-6">
       <Button variant="ghost" size="sm" asChild>
-        <Link to="/admin/phishing/campaigns">
+        <Link to={`${base}/campaigns`}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Campaigns
         </Link>
