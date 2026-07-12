@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { SUPPORT_INBOX_EMAIL } from '@/lib/support-email'
+import { SUPPORT_INBOX_EMAIL, SUPPORT_INBOX_EMAILS } from '@/lib/support-email'
 
 export function ContactPage() {
   const [name, setName] = useState('')
@@ -54,9 +54,14 @@ export function ContactPage() {
             </p>
             <p>
               <span className="font-medium text-foreground">Email:</span>{' '}
-              <a href={`mailto:${SUPPORT_INBOX_EMAIL}`} className="text-primary hover:underline">
-                {SUPPORT_INBOX_EMAIL}
-              </a>
+              {SUPPORT_INBOX_EMAILS.map((addr, i) => (
+                <span key={addr}>
+                  {i > 0 ? ', ' : ''}
+                  <a href={`mailto:${addr}`} className="text-primary hover:underline">
+                    {addr}
+                  </a>
+                </span>
+              ))}
             </p>
           </div>
         </div>
@@ -73,9 +78,14 @@ export function ContactPage() {
               <div className="space-y-4 text-sm">
                 <p className="text-emerald-600 dark:text-emerald-400">
                   If your email app opened, finish sending from there. Otherwise copy your message to{' '}
-                  <a href={`mailto:${SUPPORT_INBOX_EMAIL}`} className="text-primary hover:underline">
-                    {SUPPORT_INBOX_EMAIL}
-                  </a>
+                  {SUPPORT_INBOX_EMAILS.map((addr, i) => (
+                    <span key={addr}>
+                      {i > 0 ? ', ' : ''}
+                      <a href={`mailto:${addr}`} className="text-primary hover:underline">
+                        {addr}
+                      </a>
+                    </span>
+                  ))}
                   .
                 </p>
                 <Button type="button" variant="outline" onClick={() => setSent(false)}>
@@ -94,7 +104,7 @@ export function ContactPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="contact-email">Work email</Label>
+                  <Label htmlFor="contact-email">Email</Label>
                   <Input
                     id="contact-email"
                     type="email"
