@@ -4,6 +4,7 @@ import { KeyRound, Mail, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
+  CATALOG_PHISHING_ADDON_CENTS,
   CATALOG_PLAN_BASE_CENTS,
   CATALOG_SEAT_CENTS,
   PAYMENT_STRUCTURE_COPY,
@@ -119,16 +120,16 @@ export function SignupPage() {
         <CardContent className="space-y-4 text-sm text-muted-foreground">
           <ul className="grid gap-2 sm:grid-cols-3">
             <li>
-              <span className="font-medium text-foreground">LMS</span> base{' '}
+              <span className="font-medium text-foreground">Lite</span> base{' '}
               {formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.lms)}/mo
             </li>
             <li>
-              <span className="font-medium text-foreground">RailNet (Pro)</span> base{' '}
-              {formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.railnet)}/mo
+              <span className="font-medium text-foreground">Pro</span> base{' '}
+              {formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.both)}/mo
             </li>
             <li>
-              <span className="font-medium text-foreground">Both</span> base{' '}
-              {formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.both)}/mo
+              <span className="font-medium text-foreground">Phishing</span> add-on{' '}
+              {formatUsdFromCents(CATALOG_PHISHING_ADDON_CENTS)}/org/mo
             </li>
           </ul>
           <p>
@@ -137,10 +138,12 @@ export function SignupPage() {
             {formatUsdFromCents(CATALOG_SEAT_CENTS.employee)} — added on top of the plan base.
           </p>
           <p>
-            Example: Both ({formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.both)}) + 1 org admin + 2
-            managers + 10 employees ={' '}
+            Example: Pro ({formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.both)}) + phishing (
+            {formatUsdFromCents(CATALOG_PHISHING_ADDON_CENTS)}) + 1 org admin + 2 managers + 10
+            employees ={' '}
             {formatUsdFromCents(
               CATALOG_PLAN_BASE_CENTS.both +
+                CATALOG_PHISHING_ADDON_CENTS +
                 CATALOG_SEAT_CENTS.org_admin +
                 2 * CATALOG_SEAT_CENTS.manager +
                 10 * CATALOG_SEAT_CENTS.employee
