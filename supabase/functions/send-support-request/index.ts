@@ -5,7 +5,7 @@ const DEFAULT_TO = [
   'patguettlerkt@outlook.com',
   'austinhosekt@outlook.com',
   'austinryalskt@outlook.com',
-].join(',')
+]
 const DEFAULT_FROM = 'KeyTrain Learning <support@keytrainlearning.com>'
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -54,11 +54,10 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const resendKey = Deno.env.get('RESEND_API_KEY')
-    const toEmailRaw = Deno.env.get('SUPPORT_TO_EMAIL') ?? DEFAULT_TO
-    const toEmails = toEmailRaw
-      .split(/[,;]/)
-      .map((s) => s.trim())
-      .filter(Boolean)
+    const toEmailRaw = Deno.env.get('SUPPORT_TO_EMAIL')
+    const toEmails = (toEmailRaw?.trim()
+      ? toEmailRaw.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
+      : DEFAULT_TO)
     const fromEmail = Deno.env.get('RESEND_FROM') ?? DEFAULT_FROM
 
     if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {

@@ -53,9 +53,9 @@ Deno.serve(async (req) => {
   try {
     const resendKey = Deno.env.get('RESEND_API_KEY')
     const fromEmail = Deno.env.get('RESEND_FROM') ?? DEFAULT_FROM
-    const toEmails = parseRecipients(
-      Deno.env.get('CONTACT_TO_EMAIL') ?? Deno.env.get('SUPPORT_TO_EMAIL')
-    )
+    // Prefer CONTACT_TO_EMAIL only — do not fall back to SUPPORT_TO_EMAIL
+    // (that secret may still point at an old personal inbox).
+    const toEmails = parseRecipients(Deno.env.get('CONTACT_TO_EMAIL'))
 
     const body = await req.json()
     const name = typeof body.name === 'string' ? body.name.trim() : ''
