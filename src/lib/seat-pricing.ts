@@ -25,7 +25,7 @@ export const CATALOG_PLAN_BASE_CENTS: Record<OrgPlan, number> = {
   lms: 1199,
   /** Legacy RailNet-only SKU (not shown on marketing; grandfathered orgs) */
   railnet: 2999,
-  /** KeyTrain Pro — Lite (LMS) + RailNet / compliance / staging */
+  /** KeyTrain Pro — Lite (LMS) + KT desktop license + RailNet / compliance / staging */
   both: 2999,
 }
 

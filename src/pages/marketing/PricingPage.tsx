@@ -47,10 +47,11 @@ const PLANS: PlanCard[] = [
     name: 'Pro',
     priceLabel: formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.both),
     priceSuffix: '/ mo.',
-    description: 'Training plus RailNet intelligence and compliance.',
+    description: 'Desktop KeyTrain plus RailNet intelligence, compliance, and training.',
     includesLabel: 'Everything in Lite, plus:',
     features: [
-      'RailNet host intelligence reports',
+      'KeyTrain desktop app license (KT)',
+      'RailNet host intelligence & sync',
       'Compliance document library',
       'Trend → course staging workflow',
       'Preparedness loop for your org',
@@ -81,7 +82,11 @@ const PLANS: PlanCard[] = [
 const FAQS: { q: string; a: string }[] = [
   {
     q: 'What is the right plan for me?',
-    a: 'Choose Lite if you only need LMS training and assignments. Choose Pro if you also want RailNet intelligence, compliance docs, and trend-based course staging. Add phishing simulations as a separate org add-on on either plan.',
+    a: 'Choose Lite if you only need LMS training in the portal. Choose Pro if you need the KeyTrain desktop app (KT) on workstations, RailNet host intelligence, compliance docs, and trend-based course staging. Add phishing simulations as a separate org add-on on either plan.',
+  },
+  {
+    q: 'Does Pro include the KeyTrain desktop app?',
+    a: 'Yes. KeyTrain Pro includes a license to activate the KeyTrain desktop app (KT) on org hosts. Hosts sync into RailNet so you get intelligence, compliance, and the preparedness loop. Lite is portal training only and does not include a KT desktop license.',
   },
   {
     q: 'How does monthly billing work?',
