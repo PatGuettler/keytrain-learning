@@ -90,13 +90,31 @@ type FeatureCardProps = {
   title: string
   description: string
   className?: string
+  learnMoreHref?: string
+  learnMoreLabel?: string
 }
 
-export function FeatureCard({ title, description, className }: FeatureCardProps) {
+export function FeatureCard({
+  title,
+  description,
+  className,
+  learnMoreHref,
+  learnMoreLabel = 'Learn more',
+}: FeatureCardProps) {
   return (
     <div className={cn('rounded-xl border bg-card p-6 shadow-sm', className)}>
       <h3 className="font-semibold text-lg mb-2">{title}</h3>
       <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+      {learnMoreHref ? (
+        <a
+          href={learnMoreHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+        >
+          {learnMoreLabel}
+        </a>
+      ) : null}
     </div>
   )
 }

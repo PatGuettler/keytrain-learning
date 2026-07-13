@@ -17,6 +17,8 @@ const FEATURES = [
     title: 'RailNet intelligence',
     description:
       'Aggregate anonymized security signals from KeyTrain desktop hosts. Review trends, reports, and organizational risk in one place.',
+    learnMoreHref: 'https://keytrainsecure.com/',
+    learnMoreLabel: 'Learn more about KeyTrain',
   },
   {
     title: 'Compliance workflows',
@@ -74,8 +76,18 @@ export function HomePage() {
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map(({ title, description }) => (
-            <FeatureCard key={title} title={title} description={description} />
+          {FEATURES.map((feature) => (
+            <FeatureCard
+              key={feature.title}
+              title={feature.title}
+              description={feature.description}
+              {...('learnMoreHref' in feature
+                ? {
+                    learnMoreHref: feature.learnMoreHref,
+                    learnMoreLabel: feature.learnMoreLabel,
+                  }
+                : {})}
+            />
           ))}
         </div>
       </section>

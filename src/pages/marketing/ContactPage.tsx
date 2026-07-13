@@ -4,35 +4,41 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { SUPPORT_INBOX_EMAIL, SUPPORT_INBOX_EMAILS } from '@/lib/support-email'
+import { submitMarketingContact } from '@/services/marketing-contact.service'
 
 export function ContactPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [organization, setOrganization] = useState('')
   const [message, setMessage] = useState('')
+  const [website, setWebsite] = useState('')
   const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const subject = encodeURIComponent(
-      organization.trim()
-        ? `KTL inquiry — ${organization.trim()}`
-        : 'KeyTrain Learning inquiry'
-    )
-    const body = encodeURIComponent(
-      [
-        `Name: ${name.trim()}`,
-        `Email: ${email.trim()}`,
-        organization.trim() ? `Organization: ${organization.trim()}` : '',
-        '',
-        message.trim(),
-      ]
-        .filter(Boolean)
-        .join('\n')
-    )
-    window.location.href = `mailto:${SUPPORT_INBOX_EMAIL}?subject=${subject}&body=${body}`
-    setSent(true)
+    setError('')
+    setSending(true)
+    try {
+      await submitMarketingContact({
+        name,
+        email,
+        organization,
+        message,
+        website,
+      })
+      setSent(true)
+      setName('')
+      setEmail('')
+      setOrganization('')
+      setMessage('')
+      setWebsite('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not send your message.')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -52,17 +58,6 @@ export function ContactPage() {
               </Link>{' '}
               and use the contact form on your profile for faster support (we already know your org).
             </p>
-            <p>
-              <span className="font-medium text-foreground">Email:</span>{' '}
-              {SUPPORT_INBOX_EMAILS.map((addr, i) => (
-                <span key={addr}>
-                  {i > 0 ? ', ' : ''}
-                  <a href={`mailto:${addr}`} className="text-primary hover:underline">
-                    {addr}
-                  </a>
-                </span>
-              ))}
-            </p>
           </div>
         </div>
 
@@ -70,30 +65,21 @@ export function ContactPage() {
           <CardHeader>
             <CardTitle>Send a message</CardTitle>
             <CardDescription>
-              We&apos;ll open your email client with your message pre-filled.
+              Submit the form and our team will get back to you by email.
             </CardDescription>
           </CardHeader>
           <CardContent>
             {sent ? (
               <div className="space-y-4 text-sm">
                 <p className="text-emerald-600 dark:text-emerald-400">
-                  If your email app opened, finish sending from there. Otherwise copy your message to{' '}
-                  {SUPPORT_INBOX_EMAILS.map((addr, i) => (
-                    <span key={addr}>
-                      {i > 0 ? ', ' : ''}
-                      <a href={`mailto:${addr}`} className="text-primary hover:underline">
-                        {addr}
-                      </a>
-                    </span>
-                  ))}
-                  .
+                  Thanks — we received your message and will follow up soon.
                 </p>
                 <Button type="button" variant="outline" onClick={() => setSent(false)}>
                   Send another message
                 </Button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="relative space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="contact-name">Name</Label>
                   <Input
@@ -101,6 +87,7 @@ export function ContactPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
+                    autoComplete="name"
                   />
                 </div>
                 <div className="space-y-2">
@@ -112,6 +99,7 @@ export function ContactPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@company.com"
                     required
+                    autoComplete="email"
                   />
                 </div>
                 <div className="space-y-2">
@@ -121,6 +109,18 @@ export function ContactPage() {
                     value={organization}
                     onChange={(e) => setOrganization(e.target.value)}
                     placeholder="Acme Corporation"
+                    autoComplete="organization"
+                  />
+                </div>
+                {/* Honeypot — hidden from users */}
+                <div className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden" aria-hidden>
+                  <Label htmlFor="contact-website">Website</Label>
+                  <Input
+                    id="contact-website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -134,8 +134,9 @@ export function ContactPage() {
                     className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[120px]"
                   />
                 </div>
-                <Button type="submit" className="w-full">
-                  Open email to send
+                {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                <Button type="submit" className="w-full" disabled={sending}>
+                  {sending ? 'Sending…' : 'Send message'}
                 </Button>
               </form>
             )}

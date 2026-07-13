@@ -1,8 +1,12 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders, corsHeadersForRequest } from '../_shared/cors.ts'
 
-const DEFAULT_TO = 'patguettler@gmail.com'
-const DEFAULT_FROM = 'KeyTrain Learning Support <onboarding@resend.dev>'
+const DEFAULT_TO = [
+  'patguettlerkt@outlook.com',
+  'austinhosekt@outlook.com',
+  'austinryalskt@outlook.com',
+].join(',')
+const DEFAULT_FROM = 'KeyTrain Learning <support@keytrainlearning.com>'
 
 const CATEGORY_LABELS: Record<string, string> = {
   bug: 'Bug report',
@@ -50,7 +54,11 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const resendKey = Deno.env.get('RESEND_API_KEY')
-    const toEmail = Deno.env.get('SUPPORT_TO_EMAIL') ?? DEFAULT_TO
+    const toEmailRaw = Deno.env.get('SUPPORT_TO_EMAIL') ?? DEFAULT_TO
+    const toEmails = toEmailRaw
+      .split(/[,;]/)
+      .map((s) => s.trim())
+      .filter(Boolean)
     const fromEmail = Deno.env.get('RESEND_FROM') ?? DEFAULT_FROM
 
     if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
@@ -107,7 +115,7 @@ Deno.serve(async (req) => {
     ].join('\n')
 
     if (!resendKey) {
-      console.log('Support request saved (RESEND_API_KEY not set):', { toEmail, subject })
+      console.log('Support request saved (RESEND_API_KEY not set):', { toEmails, subject })
       return jsonResponse({
         saved: true,
         email_sent: false,
@@ -124,7 +132,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: fromEmail,
-        to: [toEmail],
+        to: toEmails,
         subject: `[KeyTrain Learning — ${categoryLabel(category)}] ${subject}`,
         text: emailBody,
       }),
@@ -145,7 +153,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('Support email sent:', { toEmail, subject, resendBody })
+    console.log('Support email sent:', { toEmails, subject, resendBody })
     return jsonResponse({
       saved: true,
       email_sent: true,

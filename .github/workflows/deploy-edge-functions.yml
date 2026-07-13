@@ -47,6 +47,18 @@ jobs:
           npx --yes supabase@latest functions deploy get-daily-verse --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
           npx --yes supabase@latest functions deploy submit-prayer-request --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
 
+      - name: Deploy support / contact email
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_PROJECT_REF" ]; then
+            echo "Skipping support/contact deploy: missing repo secrets."
+            exit 0
+          fi
+          npx --yes supabase@latest functions deploy send-support-request --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
+          npx --yes supabase@latest functions deploy send-marketing-contact --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt --use-api
+
       - name: Deploy phishing functions
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
