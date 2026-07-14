@@ -21,17 +21,18 @@ export interface OrgBillingTerms {
 
 /** Current public catalog (new signups). Existing orgs use locked org_billing_terms. */
 export const CATALOG_PLAN_BASE_CENTS: Record<OrgPlan, number> = {
-  /** KeyTrain Lite — LMS / training only */
-  lms: 1199,
+  /** KeyTrain Standard — LMS / training only ($60 includes up to 20 users) */
+  lms: 6000,
   /** Legacy RailNet-only SKU (not shown on marketing; grandfathered orgs) */
   railnet: 2999,
-  /** KeyTrain Pro — Lite (LMS) + KT desktop license + RailNet / compliance / staging */
+  /** KeyTrain w/ Intelligence — custom quote */
   both: 2999,
 }
 
-/** Optional org-wide phishing simulations add-on (not included in Lite or Pro). */
+/** Optional org-wide phishing simulations add-on (quote — not listed as fixed catalog price). */
 export const CATALOG_PHISHING_ADDON_CENTS = 199
 
+/** @deprecated Marketing no longer shows role seat fees; kept for locked billing terms / legacy orgs. */
 export const CATALOG_SEAT_CENTS: SeatRatesCents = {
   org_admin: 1099,
   manager: 899,
@@ -39,9 +40,9 @@ export const CATALOG_SEAT_CENTS: SeatRatesCents = {
 }
 
 export const PLAN_LABELS: Record<OrgPlan, string> = {
-  lms: 'KeyTrain Lite',
-  railnet: 'KeyTrain Pro (RailNet only)',
-  both: 'KeyTrain Pro',
+  lms: 'KeyTrain Standard',
+  railnet: 'KeyTrain w/ Intelligence (RailNet only)',
+  both: 'KeyTrain w/ Intelligence',
 }
 
 export const ROLE_SEAT_LABELS: Record<BillableRole, string> = {

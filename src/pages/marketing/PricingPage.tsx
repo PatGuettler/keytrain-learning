@@ -3,13 +3,7 @@ import { Link } from 'react-router-dom'
 import { Check, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import {
-  CATALOG_PHISHING_ADDON_CENTS,
-  CATALOG_PLAN_BASE_CENTS,
-  CATALOG_SEAT_CENTS,
-  PAYMENT_STRUCTURE_COPY,
-  formatUsdFromCents,
-} from '@/lib/seat-pricing'
+import { PAYMENT_STRUCTURE_COPY } from '@/lib/seat-pricing'
 
 type BillingCadence = 'monthly' | 'yearly'
 
@@ -18,55 +12,60 @@ type PlanCard = {
   name: string
   priceLabel: string
   priceSuffix: string
+  priceNote: string
   description: string
   includesLabel?: string
   features: string[]
+  footnote?: string
   cta: { label: string; to: string }
   highlighted?: boolean
-  custom?: boolean
 }
 
+/** Display order: Intelligence (left), Standard (middle), Enterprise (right). */
 const PLANS: PlanCard[] = [
   {
-    id: 'lite',
-    name: 'Lite',
-    priceLabel: formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.lms),
-    priceSuffix: '/ mo.',
-    description: 'Security awareness training for your organization.',
-    features: [
-      'Course catalog & assignments',
-      'Required training & progress tracking',
-      'Org admin user management',
-      'Manager dashboards & reports',
-      'Per-seat fees by role',
-    ],
-    cta: { label: 'Get started', to: '/signup' },
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    priceLabel: formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.both),
-    priceSuffix: '/ mo.',
+    id: 'intelligence',
+    name: 'w/ Intelligence',
+    priceLabel: 'Custom',
+    priceSuffix: '',
+    priceNote: 'Talk to us',
     description: 'Desktop KeyTrain plus RailNet intelligence, compliance, and training.',
-    includesLabel: 'Everything in Lite, plus:',
+    includesLabel: 'Everything in Standard, plus:',
     features: [
       'KeyTrain desktop app license (KT)',
       'RailNet host intelligence & sync',
       'Compliance document library',
       'Trend → course staging workflow',
       'Preparedness loop for your org',
-      'Per-seat fees by role',
     ],
-    cta: { label: 'Get started', to: '/signup' },
+    cta: { label: 'Talk to us', to: '/contact' },
     highlighted: true,
+  },
+  {
+    id: 'standard',
+    name: 'Standard',
+    priceLabel: '$60.00',
+    priceSuffix: '/ mo.',
+    priceNote: 'Up to 20 users included',
+    description: 'Security awareness training for your organization.',
+    features: [
+      'Course catalog & assignments',
+      'Required training & progress tracking',
+      'Org admin user management',
+      'Manager dashboards & reports',
+    ],
+    footnote:
+      'Standard base includes up to 20 users (includes an org admin and manager account). Additional users: $2.20 each up to 100, $1.90 from 101–200. Call for pricing beyond that.',
+    cta: { label: 'Get started', to: '/signup' },
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
     priceLabel: 'Custom',
     priceSuffix: '',
+    priceNote: 'Talk to us',
     description: 'For larger orgs that need invoicing, pooled seats, or advanced controls.',
-    includesLabel: 'Everything in Pro, plus:',
+    includesLabel: 'Everything in w/ Intelligence, plus:',
     features: [
       'Invoice / PO billing',
       'Custom seat or volume pricing',
@@ -75,30 +74,29 @@ const PLANS: PlanCard[] = [
       'Security & compliance review',
     ],
     cta: { label: 'Contact sales', to: '/contact' },
-    custom: true,
   },
 ]
 
 const FAQS: { q: string; a: string }[] = [
   {
     q: 'What is the right plan for me?',
-    a: 'Choose Lite if you only need LMS training in the portal. Choose Pro if you need the KeyTrain desktop app (KT) on workstations, RailNet host intelligence, compliance docs, and trend-based course staging. Add phishing simulations as a separate org add-on on either plan.',
+    a: 'Choose Standard for portal training with up to 20 users included. Choose w/ Intelligence if you need the KeyTrain desktop app, RailNet host intelligence, compliance docs, and trend-based course staging. Enterprise is for invoice billing and custom volume pricing. Phishing simulations are an optional add-on — talk to us to enable them.',
   },
   {
-    q: 'Does Pro include the KeyTrain desktop app?',
-    a: 'Yes. KeyTrain Pro includes a license to activate the KeyTrain desktop app (KT) on org hosts. Hosts sync into RailNet so you get intelligence, compliance, and the preparedness loop. Lite is portal training only and does not include a KT desktop license.',
+    q: 'Does w/ Intelligence include the KeyTrain desktop app?',
+    a: 'Yes. KeyTrain with Intelligence includes a license to activate the KeyTrain desktop app (KT) on org hosts. Hosts sync into RailNet so you get intelligence, compliance, and the preparedness loop. Standard is portal training only and does not include a KT desktop license.',
+  },
+  {
+    q: 'How does Standard user pricing work?',
+    a: 'The $60/month Standard base includes up to 20 users (including an org admin and a manager). Additional users are $2.20 each up to 100, then $1.90 from 101–200. Call us for pricing beyond 200 users.',
   },
   {
     q: 'How does monthly billing work?',
     a: `${PAYMENT_STRUCTURE_COPY.billingCycle} ${PAYMENT_STRUCTURE_COPY.proration}`,
   },
   {
-    q: 'Are seat fees included in the plan base?',
-    a: `No. Your bill is plan base + optional phishing add-on + seats. Catalog seats: org admin ${formatUsdFromCents(CATALOG_SEAT_CENTS.org_admin)}, manager ${formatUsdFromCents(CATALOG_SEAT_CENTS.manager)}, employee ${formatUsdFromCents(CATALOG_SEAT_CENTS.employee)} per month.`,
-  },
-  {
-    q: 'Is phishing included in Pro?',
-    a: `No. Phishing simulations are an optional add-on at ${formatUsdFromCents(CATALOG_PHISHING_ADDON_CENTS)} per organization per month, billed separately from Lite or Pro.`,
+    q: 'Is phishing included?',
+    a: 'No. Phishing simulations are an optional add-on available with any plan. Talk to us for pricing and enablement.',
   },
   {
     q: 'Do prices change for existing customers?',
@@ -144,7 +142,6 @@ export function PricingPage() {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Soft atmospheric wash — Cursor-like clean field */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]"
@@ -154,7 +151,7 @@ export function PricingPage() {
         <div className="text-center mb-12 sm:mb-16">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">Pricing</h1>
           <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-            Plan base + seats. Optional phishing. Rates lock at signup.
+            Clear plan options. Optional phishing. Rates lock at signup.
           </p>
 
           <div className="mt-8 inline-flex items-center rounded-full border bg-muted/40 p-1 text-sm">
@@ -190,7 +187,6 @@ export function PricingPage() {
           ) : null}
         </div>
 
-        {/* Plan grid — Cursor-style equal columns */}
         <div className="grid gap-4 lg:grid-cols-3 lg:gap-0 lg:rounded-2xl lg:border lg:bg-card lg:overflow-hidden">
           {PLANS.map((plan, i) => (
             <div
@@ -219,9 +215,7 @@ export function PricingPage() {
                   <span className="text-sm text-muted-foreground">{plan.priceSuffix}</span>
                 ) : null}
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {plan.custom ? 'Talk to us' : 'plan base · seats extra'}
-              </p>
+              <p className="mt-1 text-xs text-muted-foreground">{plan.priceNote}</p>
 
               <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
                 {plan.description}
@@ -248,29 +242,30 @@ export function PricingPage() {
                   </li>
                 ))}
               </ul>
+              {plan.footnote ? (
+                <p className="mt-5 text-xs leading-relaxed text-muted-foreground border-t pt-4">
+                  {plan.footnote}
+                </p>
+              ) : null}
             </div>
           ))}
         </div>
 
-        {/* Add-on + seats — secondary strip like Cursor usage notes */}
-        <div className="mt-10 grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border bg-card p-6 sm:p-7">
+        <div className="mt-10">
+          <div className="rounded-2xl border bg-card p-6 sm:p-7 max-w-xl">
             <div className="flex items-baseline justify-between gap-4">
               <h3 className="text-base font-semibold tracking-tight">Phishing add-on</h3>
-              <p className="text-2xl font-semibold tabular-nums">
-                {formatUsdFromCents(CATALOG_PHISHING_ADDON_CENTS)}
-                <span className="ml-1 text-sm font-normal text-muted-foreground">/ org / mo.</span>
-              </p>
+              <p className="text-sm font-semibold text-foreground">Talk to us</p>
             </div>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-              Optional simulated phishing campaigns for your organization. Not included in Lite or
-              Pro — enable when you need it.
+              Optional simulated phishing campaigns for your organization. Not included in any plan —
+              enable when you need it.
             </p>
             <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
               {[
                 'Campaign templates & scheduling',
                 'Click / report analytics',
-                'Works with Lite or Pro',
+                'Available with any plan',
               ].map((f) => (
                 <li key={f} className="flex gap-2.5">
                   <Check className="h-4 w-4 shrink-0 text-foreground mt-0.5" strokeWidth={2.25} />
@@ -279,55 +274,20 @@ export function PricingPage() {
               ))}
             </ul>
           </div>
-
-          <div className="rounded-2xl border bg-card p-6 sm:p-7">
-            <h3 className="text-base font-semibold tracking-tight">Seat pricing</h3>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-              Added on top of the plan base (and phishing, if enabled). Same rates on Lite and Pro.
-            </p>
-            <dl className="mt-5 space-y-3 text-sm">
-              {(
-                [
-                  ['Org admin', CATALOG_SEAT_CENTS.org_admin],
-                  ['Manager', CATALOG_SEAT_CENTS.manager],
-                  ['Employee', CATALOG_SEAT_CENTS.employee],
-                ] as const
-              ).map(([label, cents]) => (
-                <div key={label} className="flex items-center justify-between border-b border-border/60 pb-2 last:border-0 last:pb-0">
-                  <dt className="text-muted-foreground">{label}</dt>
-                  <dd className="font-medium tabular-nums">
-                    {formatUsdFromCents(cents)}
-                    <span className="font-normal text-muted-foreground"> / mo</span>
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           {PAYMENT_STRUCTURE_COPY.estimatedBanner}
         </p>
 
-        {/* Example bill */}
         <div className="mt-10 rounded-2xl border border-dashed bg-muted/20 px-6 py-5 text-center text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">Example:</span> Pro (
-          {formatUsdFromCents(CATALOG_PLAN_BASE_CENTS.both)}) + phishing (
-          {formatUsdFromCents(CATALOG_PHISHING_ADDON_CENTS)}) + 1 org admin + 2 managers + 10
-          employees ={' '}
-          <span className="font-semibold text-foreground tabular-nums">
-            {formatUsdFromCents(
-              CATALOG_PLAN_BASE_CENTS.both +
-                CATALOG_PHISHING_ADDON_CENTS +
-                CATALOG_SEAT_CENTS.org_admin +
-                2 * CATALOG_SEAT_CENTS.manager +
-                10 * CATALOG_SEAT_CENTS.employee
-            )}
-          </span>
-          /month.
+          <span className="font-medium text-foreground">Example:</span> Standard at{' '}
+          <span className="font-semibold text-foreground tabular-nums">$60</span>/month covers up to
+          20 users. Add 30 more users at $2.20 each ={' '}
+          <span className="font-semibold text-foreground tabular-nums">$126</span>/month. Optional
+          phishing is quoted separately — talk to us.
         </div>
 
-        {/* FAQ — Cursor-style */}
         <section className="mt-20 sm:mt-28 max-w-2xl mx-auto">
           <h2 className="text-center text-2xl sm:text-3xl font-semibold tracking-tight mb-8">
             Questions & Answers
