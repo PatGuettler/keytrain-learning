@@ -51,7 +51,7 @@ export function HomePage() {
             Train your team. Simulate threats. See the bigger picture.
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-2xl leading-relaxed">
-            {`KeyTrain Learning is the compliance portal for assigned security training, phishing exercises, and RailNet reporting — paired with the KeyTrain desktop agent on every workstation.`}
+            {`KeyTrain Learning is the compliance portal for assigned security training, phishing exercises, and RailNet reporting — ability to pair with KeyTrain desktop agent on every workstation.`}
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
             <Button size="lg" asChild>
@@ -71,7 +71,7 @@ export function HomePage() {
         <div className="max-w-2xl mb-12">
           <h2 className="text-3xl font-bold tracking-tight">Everything in one portal</h2>
           <p className="mt-3 text-muted-foreground">
-            From frontline staff taking annual HIPAA refreshers to security leads reviewing RailNet
+            From frontline staff taking monthly HIPAA refreshers to security leads reviewing RailNet
             trend reports — KTL is where your program lives.
           </p>
         </div>
