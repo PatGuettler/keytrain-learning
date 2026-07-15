@@ -35,6 +35,7 @@ import { PhishingCampaignDetailPage } from '@/pages/admin/PhishingCampaignDetail
 import { PhishingDashboardPage } from '@/pages/admin/PhishingDashboardPage'
 import { RailNetPage } from '@/pages/admin/RailNetPage'
 import { OrgAdminDashboardPage } from '@/pages/org-admin/OrgAdminDashboardPage'
+import { OrgAdminOrganizationsPage } from '@/pages/org-admin/OrgAdminOrganizationsPage'
 import { OrgAdminUsersPage } from '@/pages/org-admin/OrgAdminUsersPage'
 import { OrgAdminBillingPage } from '@/pages/org-admin/OrgAdminBillingPage'
 import { OrgAdminCatalogPage } from '@/pages/org-admin/OrgAdminCatalogPage'
@@ -200,9 +201,14 @@ export default function App() {
               element={<RoleGuard roles={['org_admin']}><OrgAdminDashboardPage /></RoleGuard>}
             />
             <Route
-              path="/org-admin/users"
+              path="/org-admin/organizations"
+              element={<RoleGuard roles={['org_admin']}><OrgAdminOrganizationsPage /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/organizations/:orgId"
               element={<RoleGuard roles={['org_admin']}><OrgAdminUsersPage /></RoleGuard>}
             />
+            <Route path="/org-admin/users" element={<Navigate to="/org-admin/organizations" replace />} />
             <Route
               path="/org-admin/billing"
               element={<RoleGuard roles={['org_admin']}><OrgAdminBillingPage /></RoleGuard>}

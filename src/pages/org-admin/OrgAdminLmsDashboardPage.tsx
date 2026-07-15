@@ -56,7 +56,7 @@ export function OrgAdminLmsDashboardPage() {
     <div className="space-y-5 sm:space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Button variant="outline" size="sm" asChild>
-          <Link to="/org-admin/users">Manage users</Link>
+          <Link to="/org-admin/organizations">Manage organizations</Link>
         </Button>
         <ExportPdfButton
           allowNonAdmin
@@ -103,7 +103,7 @@ export function OrgAdminLmsDashboardPage() {
 
       <OrgStaffDirectory
         rows={staffSummaries}
-        getStaffDetailPath={() => '/org-admin/users'}
+        getStaffDetailPath={() => '/org-admin/organizations'}
         title="Staff training"
       />
 

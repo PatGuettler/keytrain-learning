@@ -47,7 +47,7 @@ const adminNav: NavItem[] = [
 
 const orgAdminNav: NavItem[] = [
   { to: '/org-admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/org-admin/users', label: 'Users', icon: Users },
+  { to: '/org-admin/organizations', label: 'Organizations', icon: Building2 },
   { to: '/org-admin/training-reports', label: 'Training reports', icon: BarChart3 },
   { to: '/org-admin/catalog', label: 'Security catalog', icon: Library },
   { to: '/org-admin/billing', label: 'Billing', icon: CreditCard },
@@ -79,7 +79,7 @@ export const mobileTabNavByRole: Record<UserRole, NavItem[]> = {
   ],
   org_admin: [
     { to: '/org-admin/dashboard', label: 'Home', icon: LayoutDashboard },
-    { to: '/org-admin/users', label: 'Users', icon: Users },
+    { to: '/org-admin/organizations', label: 'Orgs', icon: Building2 },
     { to: '/org-admin/catalog', label: 'Catalog', icon: Library },
     { to: '/org-admin/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
   ],

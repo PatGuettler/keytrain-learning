@@ -69,7 +69,7 @@ export function OrgAdminDashboardPage() {
 
       <div className="flex flex-wrap gap-2">
         <Button asChild>
-          <Link to="/org-admin/users">Manage users</Link>
+          <Link to="/org-admin/organizations">Organizations</Link>
         </Button>
         <Button asChild variant="outline">
           <Link to="/org-admin/billing">View billing</Link>
