@@ -1,7 +1,38 @@
--- Allow service-role / edge-function sync after admin org moves.
--- Previously: auth.uid() IS NULL left the gate ambiguous; privilege is explicit now.
--- Also allow org_admin to sync users in orgs they administer (membership).
--- Note: learner ON CONFLICT updates need app.assignment_sync_ok — see 054.
+-- sync_user_required_assignments uses ON CONFLICT DO UPDATE for due dates.
+-- guard_assignment_user_update still sees the caller JWT (auth.uid()), so learners
+-- hit: "Assignment progress must be recorded through completion." → HTTP 400.
+-- Allow a sync-only GUC (same pattern as app.assignment_progress_ok in 052).
+
+CREATE OR REPLACE FUNCTION guard_assignment_user_update()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF current_setting('app.assignment_progress_ok', true) = '1' THEN
+    RETURN NEW;
+  END IF;
+
+  IF current_setting('app.assignment_sync_ok', true) = '1' THEN
+    RETURN NEW;
+  END IF;
+
+  IF auth_user_role() IN ('admin', 'manager') THEN
+    RETURN NEW;
+  END IF;
+
+  IF OLD.user_id = auth.uid() THEN
+    RAISE EXCEPTION 'Assignment progress must be recorded through training completion.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION sync_user_required_assignments(p_user_id UUID)
 RETURNS void
@@ -16,11 +47,10 @@ DECLARE
   v_due DATE;
   v_caller_role user_role;
 BEGIN
-  -- No JWT = service role / backend (manage-users move_user, etc.)
   IF auth.uid() IS NULL THEN
-    NULL; -- privileged
+    NULL;
   ELSIF p_user_id = auth.uid() THEN
-    NULL; -- self
+    NULL;
   ELSE
     v_caller_role := auth_user_role();
     IF v_caller_role IS DISTINCT FROM 'admin'::user_role
@@ -43,6 +73,7 @@ BEGIN
     RETURN;
   END IF;
 
+  -- Permit due_date upserts owned by the learner without tripping the progress guard.
   PERFORM set_config('app.assignment_sync_ok', '1', true);
 
   FOR pub IN
