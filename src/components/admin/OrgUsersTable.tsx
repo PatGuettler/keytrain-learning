@@ -112,6 +112,7 @@ export function OrgUsersTable({
                     <SendPasswordResetButton
                       orgId={orgId}
                       userId={u.id}
+                      invitationPending={u.invitation_pending}
                       disabled={!u.email}
                       onSuccess={(message) => {
                         setActionError('')

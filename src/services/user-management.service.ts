@@ -10,6 +10,7 @@ export interface ImportUserRowResult {
   email: string
   status: 'invited' | 'created' | 'skipped' | 'error'
   message?: string
+  access_link?: string
 }
 
 export interface ImportUsersResult {
@@ -247,7 +248,7 @@ export async function deleteOrgUser(orgId: string, userId: string): Promise<void
 export async function sendUserPasswordReset(
   orgId: string,
   userId: string
-): Promise<{ message: string }> {
+): Promise<{ message: string; access_link?: string }> {
   return invokeManageUsers({
     action: 'send_password_reset',
     org_id: orgId,
@@ -255,7 +256,22 @@ export async function sendUserPasswordReset(
   })
 }
 
-export async function sendPlatformAdminPasswordReset(userId: string): Promise<{ message: string }> {
+export async function generateUserAccessLink(
+  orgId: string,
+  userId: string,
+  linkType: 'invite' | 'recovery' = 'recovery'
+): Promise<{ message: string; access_link: string; link_type: string }> {
+  return invokeManageUsers({
+    action: 'generate_access_link',
+    org_id: orgId,
+    user_id: userId,
+    link_type: linkType,
+  })
+}
+
+export async function sendPlatformAdminPasswordReset(
+  userId: string
+): Promise<{ message: string; access_link?: string }> {
   return sendUserPasswordReset(PLATFORM_ORG_ID, userId)
 }
 

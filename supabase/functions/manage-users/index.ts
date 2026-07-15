@@ -24,6 +24,7 @@ interface RowResult {
   email: string
   status: 'invited' | 'created' | 'skipped' | 'error'
   message?: string
+  access_link?: string
 }
 
 let requestCors: Record<string, string> = corsHeaders
@@ -330,12 +331,15 @@ async function invitePlatformAdmin(
 
   if (!userId) {
     if (sendInvites) {
-      const { data, error } = await adminClient.auth.admin.inviteUserByEmail(normalizedEmail, {
-        redirectTo,
-        data: { full_name: name },
+      const generated = await buildSpaAccessLink(adminClient, normalizedEmail, 'invite', redirectTo, {
+        full_name: name,
       })
-      if (error) throw error
-      userId = data.user.id
+      userId = generated.userId
+      await sendInviteEmailViaResend({
+        to: normalizedEmail,
+        fullName: name,
+        accessLink: generated.link,
+      })
     } else {
       const tempPassword = crypto.randomUUID().replace(/-/g, '') + 'Aa1!'
       const { data, error } = await adminClient.auth.admin.createUser({
@@ -371,7 +375,7 @@ async function invitePlatformAdmin(
     message: existingId
       ? 'Linked existing auth account as platform admin.'
       : sendInvites
-        ? 'Invite email sent.'
+        ? 'Invite email sent with a Safe Links–safe accept URL.'
         : 'Admin account created. User should use Forgot password to set a password.',
   }
 }
@@ -414,7 +418,7 @@ async function inviteOneUser(
     return { email: row.email, status: 'error', message: rowEmailError }
   }
 
-  const existingId = await findUserIdByEmail(adminClient, row.email)
+  let existingId = await findUserIdByEmail(adminClient, row.email)
   if (existingId) {
     const { data: existingProfile } = await adminClient
       .from('profiles')
@@ -428,6 +432,18 @@ async function inviteOneUser(
       }
       return { email: row.email, status: 'error', message: 'User already belongs to another organization.' }
     }
+
+    // Auth user exists without a profile (orphan from a failed invite / partial delete).
+    // Remove it so we can send a clean invite; otherwise they can't log in or reset.
+    const { error: orphanDeleteError } = await adminClient.auth.admin.deleteUser(existingId)
+    if (orphanDeleteError) {
+      return {
+        email: row.email,
+        status: 'error',
+        message: `An incomplete auth account exists for this email and could not be cleared: ${orphanDeleteError.message}`,
+      }
+    }
+    existingId = null
   }
 
   let managerId: string | null = null
@@ -443,15 +459,22 @@ async function inviteOneUser(
   }
 
   let userId = existingId
+  let accessLink: string | undefined
 
   if (!userId) {
     if (sendInvites) {
-      const { data, error } = await adminClient.auth.admin.inviteUserByEmail(row.email, {
-        redirectTo,
-        data: { full_name: row.full_name },
+      // Do NOT use inviteUserByEmail — Auth templates emit /auth/v1/verify ConfirmationURL
+      // which Outlook Safe Links burn. generateLink + Resend uses a token_hash SPA URL.
+      const generated = await buildSpaAccessLink(adminClient, row.email, 'invite', redirectTo, {
+        full_name: row.full_name,
       })
-      if (error) throw error
-      userId = data.user.id
+      userId = generated.userId
+      accessLink = generated.link
+      await sendInviteEmailViaResend({
+        to: row.email,
+        fullName: row.full_name,
+        accessLink: generated.link,
+      })
     } else {
       const tempPassword = crypto.randomUUID().replace(/-/g, '') + 'Aa1!'
       const { data, error } = await adminClient.auth.admin.createUser({
@@ -462,6 +485,14 @@ async function inviteOneUser(
       })
       if (error) throw error
       userId = data.user.id
+      accessLink = (
+        await buildSpaAccessLink(
+          adminClient,
+          row.email,
+          'recovery',
+          redirectTo?.replace('/accept-invite', '/reset-password')
+        )
+      ).link
     }
   }
 
@@ -484,15 +515,100 @@ async function inviteOneUser(
   }
 
   emailToId.set(row.email, userId)
+
   return {
     email: row.email,
     status: invitedNewUser ? 'invited' : 'created',
-    message: existingId
-      ? 'Linked existing auth account to organization.'
-      : sendInvites
-        ? 'Invite email sent.'
-        : 'Account created. User should use Forgot password to set a password.',
+    message: invitedNewUser
+      ? 'Invite email sent with a Safe Links–safe accept URL.'
+      : 'Account created. Use Copy access link so they can set a password.',
+    access_link: accessLink,
   }
+}
+
+/** SPA URLs with token_hash — Safe Links can fetch the HTML without consuming the OTP. */
+async function buildSpaAccessLink(
+  adminClient: SupabaseClient,
+  email: string,
+  type: 'invite' | 'recovery',
+  redirectTo: string | undefined,
+  userMeta?: Record<string, unknown>
+): Promise<{ link: string; userId: string }> {
+  const site =
+    type === 'invite'
+      ? 'https://keytrainlearning.com/accept-invite'
+      : 'https://keytrainlearning.com/reset-password'
+  const { data, error } = await adminClient.auth.admin.generateLink({
+    type,
+    email,
+    options: {
+      redirectTo: redirectTo || site,
+      data: userMeta,
+    },
+  })
+  if (error) throw error
+  const hashed = data.properties?.hashed_token
+  const userId = data.user?.id
+  if (!hashed || !userId) throw new Error('Could not create access link.')
+  const link = `${site}?token_hash=${encodeURIComponent(hashed)}&type=${
+    type === 'invite' ? 'invite' : 'recovery'
+  }`
+  return { link, userId }
+}
+
+async function sendInviteEmailViaResend(params: {
+  to: string
+  fullName: string
+  accessLink: string
+}): Promise<void> {
+  const resendKey = Deno.env.get('RESEND_API_KEY')?.trim()
+  if (!resendKey) {
+    throw new Error(
+      'RESEND_API_KEY is not set on manage-users. Cannot send invite email with a safe SPA link.'
+    )
+  }
+  const from =
+    Deno.env.get('INVITE_FROM_EMAIL')?.trim() ||
+    Deno.env.get('RESEND_FROM')?.trim() ||
+    'KeyTrain Learning <noreply@keytrainlearning.com>'
+
+  const subject = 'You’re invited to KeyTrain Learning'
+  const html = `<!DOCTYPE html>
+<html>
+<body style="font-family: system-ui, sans-serif; line-height: 1.5; color: #0f172a;">
+  <p>Hi ${escapeHtml(params.fullName)},</p>
+  <p>You’ve been invited to KeyTrain Learning. Open the link below to choose a password and activate your account:</p>
+  <p><a href="${params.accessLink}" style="display:inline-block;padding:10px 16px;background:#0d9488;color:#fff;text-decoration:none;border-radius:6px;">Accept invitation</a></p>
+  <p style="font-size:12px;color:#64748b;">If the button doesn’t work, copy and paste this URL into your browser:<br>${escapeHtml(params.accessLink)}</p>
+  <p style="font-size:12px;color:#64748b;">This link is for you only. If you weren’t expecting this email, you can ignore it.</p>
+</body>
+</html>`
+
+  const emailRes = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${resendKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from,
+      to: [params.to],
+      subject,
+      html,
+    }),
+  })
+  if (!emailRes.ok) {
+    const body = await emailRes.text()
+    throw new Error(`Invite email failed (${emailRes.status}): ${body}`)
+  }
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
 async function handleImportCsv(
@@ -918,7 +1034,68 @@ Deno.serve(async (req) => {
         .update({ failed_login_attempts: 0, login_locked_at: null })
         .eq('id', userId)
 
-      return jsonResponse({ message: 'Password reset email sent.' })
+      // Also return a copyable SPA link — Outlook Safe Links often burns emailed recovery URLs.
+      let accessLink: string | undefined
+      try {
+        accessLink = (await buildSpaAccessLink(adminClient, targetEmail, 'recovery', resetRedirect))
+          .link
+      } catch (linkErr) {
+        console.error('generate access link after reset email failed', linkErr)
+      }
+
+      return jsonResponse({
+        message: accessLink
+          ? 'Password reset email sent. For Outlook, also copy the access link below and send it to the user.'
+          : 'Password reset email sent.',
+        access_link: accessLink,
+      })
+    }
+
+    if (action === 'generate_access_link') {
+      const userId = typeof body.user_id === 'string' ? body.user_id : ''
+      if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)
+
+      const linkType = body.link_type === 'invite' ? 'invite' : 'recovery'
+      const profileQuery = adminClient.from('profiles').select('id, email, org_id, role, invitation_pending').eq('id', userId)
+      const { data: profile, error: profileError } =
+        orgId === PLATFORM_ORG_ID
+          ? await profileQuery.eq('role', 'admin').maybeSingle()
+          : await profileQuery.eq('org_id', orgId).maybeSingle()
+
+      if (profileError) throw profileError
+      if (!profile) return jsonResponse({ error: 'User not found in this scope.' }, 404)
+
+      let targetEmail = profile.email ?? null
+      if (!targetEmail) {
+        const { data: authUser, error: authUserError } =
+          await adminClient.auth.admin.getUserById(userId)
+        if (authUserError) throw authUserError
+        targetEmail = authUser.user?.email ?? null
+      }
+      if (!targetEmail) {
+        return jsonResponse({ error: 'User has no email address on file.' }, 422)
+      }
+
+      const effectiveType =
+        linkType === 'invite' || profile.invitation_pending ? 'invite' : 'recovery'
+      const redirect =
+        effectiveType === 'invite'
+          ? (redirectTo ?? 'https://keytrainlearning.com/accept-invite')
+          : (redirectTo?.replace('/accept-invite', '/reset-password') ??
+            'https://keytrainlearning.com/reset-password')
+
+      const accessLink = (await buildSpaAccessLink(adminClient, targetEmail, effectiveType, redirect))
+        .link
+      await adminClient
+        .from('profiles')
+        .update({ failed_login_attempts: 0, login_locked_at: null })
+        .eq('id', userId)
+
+      return jsonResponse({
+        access_link: accessLink,
+        link_type: effectiveType,
+        message: 'Copy this link and send it to the user (do not use the email link if Outlook broke it).',
+      })
     }
 
     if (action === 'unlock_user_login') {

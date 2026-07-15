@@ -26,7 +26,8 @@ These are done — no further action unless something breaks.
 | **Fake login + training URLs** | `keytrainlearning.com/phishing-sim/login.html` and `/phishing-training` |
 | **Custom SMTP (Resend)** | Enabled — `noreply@keytrainlearning.com`, `smtp.resend.com:465`, user `resend` |
 | **Reset password email template** | Uses `{{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery` |
-| **Invite user email template** | **Required:** `{{ .SiteURL }}/accept-invite?token_hash={{ .TokenHash }}&type=invite` (not ConfirmationURL — scanners burn verify links) |
+| **Invite emails (app)** | Sent by `manage-users` via Resend with `…/accept-invite?token_hash=…&type=invite` — not Auth `ConfirmationURL` |
+| **Invite user email template** | Still update Dashboard template if anything else uses Auth invites: `{{ .SiteURL }}/accept-invite?token_hash={{ .TokenHash }}&type=invite` |
 | **Password reset live test** | Email from `noreply@keytrainlearning.com`; link opens reset page; login with new password works |
 | **Frontend deploy** | Pushed to `main`; GitHub Actions Pages deploy succeeds |
 | **Frontend verified in browser** | Hard refresh + login; no console errors; daily verse loads (client-side) |
@@ -81,7 +82,7 @@ Complete in order. Check each box when done.
 |------|------|
 | `npm run test:resend-support` returns HTTP 200 | [ ] |
 | Profile → Contact → delivered to `SUPPORT_TO_EMAIL` | [ ] |
-| Invite user → from `noreply@keytrainlearning.com`, link opens keytrainlearning.com | [ ] Fix Invite template to `token_hash` (see Completed table); then re-test with a **new** invite |
+| Invite user → from `noreply@keytrainlearning.com`, link opens keytrainlearning.com | [x] Invites sent by `manage-users` via Resend with `token_hash` SPA URL (not Auth ConfirmationURL) |
 | Password reset → same | [x] |
 | Phishing test send → from campaign sender on your domain | [ ] |
 | Resend → **Logs** shows Delivered (no unexpected bounces) | [ ] |

@@ -36,7 +36,14 @@ export function ForgotPasswordPage() {
         </CardHeader>
         <CardContent>
           {sent ? (
-            <p className="text-sm text-emerald-600">Check your email for the reset link.</p>
+            <div className="space-y-2 text-sm">
+              <p className="text-emerald-600">If that account exists, we sent a reset email.</p>
+              <p className="text-muted-foreground">
+                Outlook and many corporate scanners open password links before you do, which
+                invalidates them. Ask your admin to use <span className="font-medium">Copy access
+                link</span> on your user row instead.
+              </p>
+            </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">

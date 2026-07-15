@@ -67,7 +67,16 @@ export function AddOrgUserForm({
         manager_email: role === 'employee' && managerEmail ? managerEmail : undefined,
         send_invites: sendInvite,
       })
-      setMessage(result.message ?? `User ${result.status}.`)
+      let success = result.message ?? `User ${result.status}.`
+      if (result.access_link) {
+        try {
+          await navigator.clipboard.writeText(result.access_link)
+          success += ' Access link copied — paste it to Outlook users; email scanners often burn invite links.'
+        } catch {
+          success += ` Access link: ${result.access_link}`
+        }
+      }
+      setMessage(success)
       setEmail('')
       setFullName('')
       setRole('employee')
