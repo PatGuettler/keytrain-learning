@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -16,7 +17,16 @@ import { previewSeatDelta } from '@/lib/org-billing'
 import { isBillableRole } from '@/lib/org-billing'
 import type { OrgBillingTerms } from '@/lib/seat-pricing'
 import { formatUsdFromCents } from '@/lib/seat-pricing'
-import { updateOrgUser, sendUserPasswordReset, unlockUserLogin } from '@/services/user-management.service'
+import { PLATFORM_ORG_ID } from '@/lib/constants'
+import { fetchHospitalOrganizations } from '@/services/organizations.service'
+import { fetchMyOrgMemberships } from '@/services/org-memberships.service'
+import {
+  updateOrgUser,
+  moveOrgUser,
+  sendUserPasswordReset,
+  unlockUserLogin,
+} from '@/services/user-management.service'
+import { useAuthStore } from '@/store/authStore'
 import type { Profile, UserRole } from '@/types/user.types'
 
 const selectClass =
@@ -44,18 +54,52 @@ export function EditOrgUserDialog({
   /** KTL platform admins can assign org_admin */
   allowOrgAdminRole?: boolean
   railnetOrgId: string | null
-  onSaved: () => void
+  onSaved: (result?: { movedToOrgId?: string }) => void
 }) {
+  const profile = useAuthStore((s) => s.profile)
+  const isKtlAdmin = profile?.role === 'admin'
   const [fullName, setFullName] = useState('')
   const [role, setRole] = useState<UserRole>('employee')
   const [managerId, setManagerId] = useState('')
   const [isActive, setIsActive] = useState(true)
   const [railnetEnabled, setRailnetEnabled] = useState(false)
+  const [destinationOrgId, setDestinationOrgId] = useState('')
   const [loading, setLoading] = useState(false)
   const [securityLoading, setSecurityLoading] = useState<'unlock' | 'reset' | null>(null)
   const [securityMessage, setSecurityMessage] = useState('')
   const [error, setError] = useState('')
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [moveConfirmOpen, setMoveConfirmOpen] = useState(false)
+
+  const { data: destinationOrgs = [] } = useQuery({
+    queryKey: ['edit-user-destination-orgs', profile?.id, isKtlAdmin],
+    queryFn: async () => {
+      if (isKtlAdmin) {
+        const orgs = await fetchHospitalOrganizations()
+        return orgs
+          .filter((o) => o.id !== PLATFORM_ORG_ID)
+          .map((o) => ({ id: o.id, name: o.name }))
+          .sort((a, b) => a.name.localeCompare(b.name))
+      }
+      const memberships = await fetchMyOrgMemberships()
+      return memberships
+        .filter((m) => m.role === 'org_admin' && m.is_active)
+        .map((m) => ({
+          id: m.org_id,
+          name: m.organization?.name ?? m.org_id,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    },
+    enabled: open && Boolean(profile?.id),
+  })
+
+  const otherOrgs = useMemo(
+    () => destinationOrgs.filter((o) => o.id !== orgId),
+    [destinationOrgs, orgId]
+  )
+
+  const canMoveOrgAdmin = isKtlAdmin || user?.role !== 'org_admin'
+  const canOfferMove = otherOrgs.length > 0 && Boolean(user) && canMoveOrgAdmin
 
   useEffect(() => {
     if (!user) return
@@ -68,15 +112,18 @@ export function EditOrgUserDialog({
     setManagerId(user.manager_id ?? '')
     setIsActive(user.is_active)
     setRailnetEnabled(user.railnet_enabled === true)
+    setDestinationOrgId('')
     setError('')
     setSecurityMessage('')
     setConfirmOpen(false)
+    setMoveConfirmOpen(false)
   }, [user, open])
 
   const managerOptions = managers.filter((m) => m.id !== user?.id)
+  const isMoving = Boolean(destinationOrgId && destinationOrgId !== orgId)
 
   const seatImpact = useMemo(() => {
-    if (!user || !billingTerms) return null
+    if (!user || !billingTerms || isMoving) return null
     const roleChanged = role !== user.role
     const activeChanged = isActive !== user.is_active
     if (!roleChanged && !activeChanged) return null
@@ -84,7 +131,7 @@ export function EditOrgUserDialog({
     return previewSeatDelta(billingTerms, orgUsers, {
       replaceUser: { id: user.id, role, is_active: isActive },
     })
-  }, [user, billingTerms, orgUsers, role, isActive])
+  }, [user, billingTerms, orgUsers, role, isActive, isMoving])
 
   const handleUnlockLogin = async () => {
     if (!user) return
@@ -129,6 +176,17 @@ export function EditOrgUserDialog({
     setLoading(true)
     setError('')
     try {
+      if (isMoving) {
+        if (trimmedName !== user.full_name) {
+          await updateOrgUser(orgId, user.id, { full_name: trimmedName })
+        }
+        await moveOrgUser(orgId, user.id, destinationOrgId)
+        onSaved({ movedToOrgId: destinationOrgId })
+        setMoveConfirmOpen(false)
+        onOpenChange(false)
+        return
+      }
+
       const patch: {
         full_name?: string
         role?: UserRole
@@ -146,7 +204,7 @@ export function EditOrgUserDialog({
         patch.manager_id = null
       }
       if (isActive !== user.is_active) patch.is_active = isActive
-      if (railnetEnabled !== user.railnet_enabled) patch.railnet_enabled = railnetEnabled
+      if (railnetEnabled !== (user.railnet_enabled === true)) patch.railnet_enabled = railnetEnabled
 
       if (Object.keys(patch).length === 0) {
         onOpenChange(false)
@@ -171,17 +229,23 @@ export function EditOrgUserDialog({
       setError('Full name is required.')
       return
     }
+    if (isMoving) {
+      setMoveConfirmOpen(true)
+      return
+    }
     if (seatImpact && seatImpact.deltaCents !== 0) {
       setConfirmOpen(true)
       return
     }
     if (seatImpact && (role !== user.role || isActive !== user.is_active)) {
-      // Still confirm zero-delta role swaps for clarity when billable seats change composition
       setConfirmOpen(true)
       return
     }
     void applySave()
   }
+
+  const destinationName =
+    otherOrgs.find((o) => o.id === destinationOrgId)?.name ?? 'the selected organization'
 
   return (
     <>
@@ -209,85 +273,115 @@ export function EditOrgUserDialog({
                 <Label htmlFor="edit-user-email">Email</Label>
                 <Input id="edit-user-email" value={user.email ?? ''} disabled />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-user-role">Role</Label>
-                <select
-                  id="edit-user-role"
-                  className={selectClass}
-                  value={role}
-                  onChange={(e) => {
-                    const nextRole = e.target.value as UserRole
-                    setRole(nextRole)
-                    if (nextRole !== 'employee') setManagerId('')
-                  }}
-                >
-                  <option value="employee">Employee</option>
-                  <option value="manager">Manager</option>
-                  {allowOrgAdminRole && <option value="org_admin">Org admin</option>}
-                </select>
-                {billingTerms && isBillableRole(role) && (
-                  <p className="text-xs text-muted-foreground">
-                    Seat rate:{' '}
-                    {formatUsdFromCents(
-                      role === 'org_admin'
-                        ? billingTerms.org_admin_cents
-                        : role === 'manager'
-                          ? billingTerms.manager_cents
-                          : billingTerms.employee_cents
-                    )}
-                    /mo
-                  </p>
-                )}
-              </div>
-              {role === 'employee' && (
+              {canOfferMove && (
                 <div className="space-y-2">
-                  <Label htmlFor="edit-user-manager">Manager</Label>
+                  <Label htmlFor="edit-user-org">Organization</Label>
                   <select
-                    id="edit-user-manager"
+                    id="edit-user-org"
                     className={selectClass}
-                    value={managerId}
-                    onChange={(e) => setManagerId(e.target.value)}
+                    value={destinationOrgId || orgId}
+                    onChange={(e) => {
+                      const next = e.target.value
+                      setDestinationOrgId(next === orgId ? '' : next)
+                    }}
                   >
-                    <option value="">No manager assigned</option>
-                    {managerOptions.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.full_name}
+                    <option value={orgId}>Stay in current organization</option>
+                    {otherOrgs.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        Move to {o.name}
                       </option>
                     ))}
                   </select>
+                  {isMoving && (
+                    <p className="text-xs text-muted-foreground">
+                      Leaves this org, clears manager, and syncs required training for the destination.
+                    </p>
+                  )}
                 </div>
               )}
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={(e) => setIsActive(e.target.checked)}
-                  className="rounded border-input"
-                />
-                Active account (can sign in and take training)
-              </label>
-
-              <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="edit-user-railnet">RailNet access</Label>
-                    <p className="text-sm text-muted-foreground">
-                      User can open the RailNet tab and view reports for this organization only.
-                    </p>
+              {!isMoving && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-user-role">Role</Label>
+                    <select
+                      id="edit-user-role"
+                      className={selectClass}
+                      value={role}
+                      onChange={(e) => {
+                        const nextRole = e.target.value as UserRole
+                        setRole(nextRole)
+                        if (nextRole !== 'employee') setManagerId('')
+                      }}
+                    >
+                      <option value="employee">Employee</option>
+                      <option value="manager">Manager</option>
+                      {allowOrgAdminRole && <option value="org_admin">Org admin</option>}
+                    </select>
+                    {billingTerms && isBillableRole(role) && (
+                      <p className="text-xs text-muted-foreground">
+                        Seat rate:{' '}
+                        {formatUsdFromCents(
+                          role === 'org_admin'
+                            ? billingTerms.org_admin_cents
+                            : role === 'manager'
+                              ? billingTerms.manager_cents
+                              : billingTerms.employee_cents
+                        )}
+                        /mo
+                      </p>
+                    )}
                   </div>
-                  <Switch
-                    id="edit-user-railnet"
-                    checked={railnetEnabled}
-                    disabled={!railnetOrgId?.trim()}
-                    onCheckedChange={setRailnetEnabled}
-                  />
-                </div>
-                {!railnetOrgId?.trim() && (
-                  <p className="text-sm text-muted-foreground">
-                    Set the RailNet AWS org id in organization settings before granting access.
-                  </p>
-                )}
-              </div>
+                  {role === 'employee' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-user-manager">Manager</Label>
+                      <select
+                        id="edit-user-manager"
+                        className={selectClass}
+                        value={managerId}
+                        onChange={(e) => setManagerId(e.target.value)}
+                      >
+                        <option value="">No manager assigned</option>
+                        {managerOptions.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.full_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      onChange={(e) => setIsActive(e.target.checked)}
+                      className="rounded border-input"
+                    />
+                    Active account (can sign in and take training)
+                  </label>
+
+                  <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="edit-user-railnet">RailNet access</Label>
+                        <p className="text-sm text-muted-foreground">
+                          User can open the RailNet tab and view reports for this organization only.
+                        </p>
+                      </div>
+                      <Switch
+                        id="edit-user-railnet"
+                        checked={railnetEnabled}
+                        disabled={!railnetOrgId?.trim()}
+                        onCheckedChange={setRailnetEnabled}
+                      />
+                    </div>
+                    {!railnetOrgId?.trim() && (
+                      <p className="text-sm text-muted-foreground">
+                        Set the RailNet AWS org id in organization settings before granting access.
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
 
               <div className="rounded-lg border bg-muted/20 p-3 space-y-3">
                 <p className="text-sm font-medium">Account access</p>
@@ -330,7 +424,33 @@ export function EditOrgUserDialog({
               Cancel
             </Button>
             <Button type="button" disabled={loading || !user} onClick={handleSaveClick}>
-              {loading ? 'Saving…' : 'Save changes'}
+              {loading ? (isMoving ? 'Moving…' : 'Saving…') : isMoving ? 'Move user' : 'Save changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={moveConfirmOpen} onOpenChange={setMoveConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm move</DialogTitle>
+            <DialogDescription>
+              {user
+                ? `Move ${user.full_name} to ${destinationName}? They will leave this organization and their manager assignment will be cleared.`
+                : 'Confirm move'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={loading}
+              onClick={() => setMoveConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="button" disabled={loading} onClick={() => void applySave()}>
+              {loading ? 'Moving…' : 'Confirm move'}
             </Button>
           </DialogFooter>
         </DialogContent>

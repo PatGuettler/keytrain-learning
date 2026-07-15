@@ -226,8 +226,33 @@ async function getCaller(adminClient: SupabaseClient, userId: string): Promise<C
   return { role: callerProfile.role, org_id: callerProfile.org_id }
 }
 
-/** Platform admin: any org. Org admin: own org only; cannot assign org_admin. */
-function assertCanManageOrgUsers(caller: CallerContext, orgId: string, roleBeingAssigned?: string) {
+async function callerAdministersOrg(
+  adminClient: SupabaseClient,
+  callerUserId: string,
+  callerActiveOrgId: string | null,
+  orgId: string
+): Promise<boolean> {
+  if (callerActiveOrgId === orgId) return true
+  const { data, error } = await adminClient
+    .from('organization_memberships')
+    .select('id')
+    .eq('user_id', callerUserId)
+    .eq('org_id', orgId)
+    .eq('role', 'org_admin')
+    .eq('is_active', true)
+    .maybeSingle()
+  if (error) throw error
+  return Boolean(data)
+}
+
+/** Platform admin: any org. Org admin: any org they administer; cannot assign org_admin. */
+async function assertCanManageOrgUsers(
+  adminClient: SupabaseClient,
+  caller: CallerContext,
+  callerUserId: string,
+  orgId: string,
+  roleBeingAssigned?: string
+) {
   if (caller.role === 'admin') {
     if (roleBeingAssigned && roleBeingAssigned !== 'admin' && !ORG_ASSIGNABLE_ROLES.has(roleBeingAssigned)) {
       throw new Error('Invalid role.')
@@ -235,7 +260,10 @@ function assertCanManageOrgUsers(caller: CallerContext, orgId: string, roleBeing
     return
   }
   if (caller.role === 'org_admin') {
-    if (caller.org_id !== orgId) throw new Error('You can only manage users in your organization.')
+    const administers = await callerAdministersOrg(adminClient, callerUserId, caller.org_id, orgId)
+    if (!administers) {
+      throw new Error('You can only manage users in organizations you administer.')
+    }
     if (roleBeingAssigned === 'org_admin' || roleBeingAssigned === 'admin') {
       throw new Error('Only KeyTrain Learning admins can assign org admin.')
     }
@@ -616,7 +644,7 @@ Deno.serve(async (req) => {
     if (action === 'delete_organization') {
       if (caller.role !== 'admin') throw new Error('Only admins can manage users.')
     } else if (action === 'regenerate_org_join_code') {
-      assertCanManageOrgUsers(caller, orgId)
+      await assertCanManageOrgUsers(adminClient, caller, user.id, orgId)
     } else {
       const roleHint =
         typeof body.role === 'string'
@@ -624,7 +652,7 @@ Deno.serve(async (req) => {
           : action === 'import_csv'
             ? undefined
             : undefined
-      assertCanManageOrgUsers(caller, orgId, roleHint)
+      await assertCanManageOrgUsers(adminClient, caller, user.id, orgId, roleHint)
     }
 
     if (action === 'regenerate_org_join_code') {
@@ -639,11 +667,83 @@ Deno.serve(async (req) => {
       return jsonResponse({ join_code: data.join_code, organization_name: data.name })
     }
 
+    if (action === 'move_user') {
+      const userId = typeof body.user_id === 'string' ? body.user_id : ''
+      const targetOrgId = typeof body.target_org_id === 'string' ? body.target_org_id : ''
+      if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)
+      if (!targetOrgId) return jsonResponse({ error: 'target_org_id is required.' }, 400)
+      if (targetOrgId === orgId) {
+        return jsonResponse({ error: 'User is already in that organization.' }, 400)
+      }
+      if (targetOrgId === PLATFORM_ORG_ID || orgId === PLATFORM_ORG_ID) {
+        return jsonResponse({ error: 'Cannot move users to or from the platform organization.' }, 400)
+      }
+
+      await assertOrg(adminClient, targetOrgId)
+      await assertCanManageOrgUsers(adminClient, caller, user.id, targetOrgId)
+
+      const { data: profile, error: profileError } = await adminClient
+        .from('profiles')
+        .select('id, role, org_id, is_active')
+        .eq('id', userId)
+        .eq('org_id', orgId)
+        .maybeSingle()
+      if (profileError) throw profileError
+      if (!profile) {
+        return jsonResponse({ error: 'User not found in this organization.' }, 404)
+      }
+      if (profile.role === 'admin') {
+        return jsonResponse({ error: 'Cannot move platform admin accounts.' }, 400)
+      }
+      if (caller.role === 'org_admin' && profile.role === 'org_admin') {
+        return jsonResponse(
+          { error: 'Only KeyTrain Learning admins can move organization admins.' },
+          403
+        )
+      }
+
+      // Keep role when moving; drop manager (managers are org-scoped).
+      const keptRole =
+        profile.role === 'org_admin' || profile.role === 'manager' || profile.role === 'employee'
+          ? profile.role
+          : 'employee'
+
+      const { data: moved, error: moveError } = await adminClient
+        .from('profiles')
+        .update({
+          org_id: targetOrgId,
+          manager_id: null,
+          role: keptRole,
+        })
+        .eq('id', userId)
+        .eq('org_id', orgId)
+        .select()
+        .single()
+      if (moveError) throw moveError
+
+      // Trigger upserts target membership; deactivate membership on the source org.
+      const { error: deactivateError } = await adminClient
+        .from('organization_memberships')
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('org_id', orgId)
+      if (deactivateError) throw deactivateError
+
+      const { error: syncError } = await adminClient.rpc('sync_user_required_assignments', {
+        p_user_id: userId,
+      })
+      if (syncError) {
+        console.error('sync_user_required_assignments after move_user failed', syncError.message)
+      }
+
+      return jsonResponse({ profile: moved, source_org_id: orgId, target_org_id: targetOrgId })
+    }
+
     if (action === 'invite_one') {
       const email = typeof body.email === 'string' ? body.email : ''
       if (!email) return jsonResponse({ error: 'email is required.' }, 400)
       const inviteRole = typeof body.role === 'string' ? body.role : DEFAULT_ROLE
-      assertCanManageOrgUsers(caller, orgId, inviteRole)
+      await assertCanManageOrgUsers(adminClient, caller, user.id, orgId, inviteRole)
 
       const result = await inviteOneUser(
         adminClient,
@@ -812,7 +912,7 @@ Deno.serve(async (req) => {
       }
 
       if (typeof body.role === 'string') {
-        assertCanManageOrgUsers(caller, orgId, body.role)
+        await assertCanManageOrgUsers(adminClient, caller, user.id, orgId, body.role)
       }
 
       const patch: Record<string, unknown> = {}

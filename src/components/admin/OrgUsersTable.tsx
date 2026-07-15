@@ -41,11 +41,16 @@ export function OrgUsersTable({
     enabled: Boolean(orgId),
   })
 
-  const refreshUsers = () => {
+  const refreshUsers = (movedToOrgId?: string) => {
     void queryClient.invalidateQueries({ queryKey: ['org-users', orgId] })
+    if (movedToOrgId) {
+      void queryClient.invalidateQueries({ queryKey: ['org-users', movedToOrgId] })
+      void queryClient.invalidateQueries({ queryKey: ['org-billing-terms', movedToOrgId] })
+    }
     void queryClient.invalidateQueries({ queryKey: ['organizations'] })
     void queryClient.invalidateQueries({ queryKey: ['all-org-users'] })
     void queryClient.invalidateQueries({ queryKey: ['org-billing-terms', orgId] })
+    void queryClient.invalidateQueries({ queryKey: ['my-org-memberships'] })
   }
 
   if (users.length === 0) {
@@ -147,7 +152,13 @@ export function OrgUsersTable({
         billingTerms={billingTerms}
         allowOrgAdminRole={allowOrgAdminRole}
         railnetOrgId={railnetOrgId}
-        onSaved={refreshUsers}
+        onSaved={(result) => {
+          refreshUsers(result?.movedToOrgId)
+          if (result?.movedToOrgId && editUser) {
+            setActionError('')
+            setActionMessage(`${editUser.full_name} was moved to another organization.`)
+          }
+        }}
       />
 
       <DeleteOrgUserDialog

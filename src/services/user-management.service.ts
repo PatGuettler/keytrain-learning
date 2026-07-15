@@ -210,6 +210,24 @@ export async function updateOrgUser(
   }
 }
 
+/** Move a user to another organization (active org + memberships). Requires manage-users Edge Function. */
+export async function moveOrgUser(
+  sourceOrgId: string,
+  userId: string,
+  targetOrgId: string
+): Promise<Profile> {
+  if (!targetOrgId || targetOrgId === sourceOrgId) {
+    throw new Error('Choose a different organization.')
+  }
+  const data = await invokeManageUsers<{ profile: Profile }>({
+    action: 'move_user',
+    org_id: sourceOrgId,
+    user_id: userId,
+    target_org_id: targetOrgId,
+  })
+  return data.profile
+}
+
 export async function deleteOrganizationById(orgId: string): Promise<void> {
   await invokeManageUsers({ action: 'delete_organization', org_id: orgId })
 }
