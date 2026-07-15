@@ -18,6 +18,8 @@ export interface OrgLicense {
   railnet_enabled: boolean
   compliance_enabled: boolean
   lms_enabled: boolean
+  /** Paid phishing simulations add-on (independent of RailNet). */
+  phishing_enabled: boolean
   plan: OrgPlan
   max_seats?: number | null
   updated_at?: string
@@ -47,14 +49,14 @@ export function canAccessLms(
   return true
 }
 
-/** KTL admins always; else org must have RailNet product and user grant (org_admin always granted). */
+/** KTL admins always; else org license must enable RailNet. Org admins inherit org grant. */
 export function canAccessRailnet(
   profile: Profile | null | undefined,
   license?: Pick<OrgLicense, 'railnet_enabled'> | null
 ): boolean {
   if (!profile) return false
   if (isKtlAdmin(profile)) return true
-  if (license && license.railnet_enabled === false) return false
+  if (!license || license.railnet_enabled !== true) return false
   if (isOrgAdmin(profile)) return true
   return profile.railnet_enabled === true
 }
@@ -65,9 +67,7 @@ export function canAccessCompliance(
 ): boolean {
   if (!profile) return false
   if (isKtlAdmin(profile)) return true
-  if (license) {
-    if (!license.railnet_enabled || !license.compliance_enabled) return false
-  }
+  if (!license || !license.railnet_enabled || !license.compliance_enabled) return false
   if (isOrgAdmin(profile)) return true
   return profile.railnet_enabled === true
 }
@@ -87,22 +87,24 @@ export function canAccessCourseStaging(
   )
 }
 
+/** Org-level paid phishing add-on (org admins only; KTL admins always). */
 export function canAccessPhishing(
   profile: Profile | null | undefined,
-  license?: Pick<OrgLicense, 'railnet_enabled'> | null
+  license?: Pick<OrgLicense, 'phishing_enabled'> | null
 ): boolean {
   if (!profile) return false
   if (isKtlAdmin(profile)) return true
   if (!isOrgAdmin(profile)) return false
-  if (license && license.railnet_enabled === false) return false
-  return true
+  return license?.phishing_enabled === true
 }
 
 export async function fetchOrgLicense(orgId: string): Promise<OrgLicense | null> {
   const supabase = requireSupabase()
   const { data, error } = await supabase
     .from('org_license')
-    .select('org_id, railnet_enabled, compliance_enabled, lms_enabled, plan, max_seats, updated_at')
+    .select(
+      'org_id, railnet_enabled, compliance_enabled, lms_enabled, phishing_enabled, plan, max_seats, updated_at'
+    )
     .eq('org_id', orgId)
     .maybeSingle()
 
@@ -111,7 +113,63 @@ export async function fetchOrgLicense(orgId: string): Promise<OrgLicense | null>
   return {
     ...data,
     lms_enabled: data.lms_enabled !== false,
-    plan: (data.plan as OrgPlan) || 'both',
+    phishing_enabled: data.phishing_enabled === true,
+    plan: (data.plan as OrgPlan) || 'lms',
+  }
+}
+
+export type OrgLicenseEntitlementPatch = {
+  lms_enabled?: boolean
+  railnet_enabled?: boolean
+  compliance_enabled?: boolean
+  phishing_enabled?: boolean
+  plan?: OrgPlan
+}
+
+/** KTL admin: set paid feature flags for an organization. */
+export async function updateOrgLicenseEntitlements(
+  orgId: string,
+  patch: OrgLicenseEntitlementPatch
+): Promise<OrgLicense> {
+  const supabase = requireSupabase()
+  const existing = await fetchOrgLicense(orgId)
+  const next = {
+    org_id: orgId,
+    lms_enabled: patch.lms_enabled ?? existing?.lms_enabled ?? true,
+    railnet_enabled: patch.railnet_enabled ?? existing?.railnet_enabled ?? false,
+    compliance_enabled: patch.compliance_enabled ?? existing?.compliance_enabled ?? false,
+    phishing_enabled: patch.phishing_enabled ?? existing?.phishing_enabled ?? false,
+    plan: patch.plan ?? existing?.plan ?? 'lms',
+    updated_at: new Date().toISOString(),
+  }
+
+  const { data, error } = await supabase
+    .from('org_license')
+    .upsert(next, { onConflict: 'org_id' })
+    .select(
+      'org_id, railnet_enabled, compliance_enabled, lms_enabled, phishing_enabled, plan, max_seats, updated_at'
+    )
+    .eq('org_id', orgId)
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  const existingTerms = await fetchOrgBillingTerms(orgId)
+  if (!existingTerms) {
+    await ensureOrgBillingTerms(orgId, next.plan)
+  } else if (patch.plan && patch.plan !== existingTerms.plan) {
+    const { error: termsError } = await supabase
+      .from('org_billing_terms')
+      .update({ plan: patch.plan, updated_at: new Date().toISOString() })
+      .eq('org_id', orgId)
+    if (termsError) throw new Error(termsError.message)
+  }
+
+  return {
+    ...data,
+    lms_enabled: data.lms_enabled !== false,
+    phishing_enabled: data.phishing_enabled === true,
+    plan: (data.plan as OrgPlan) || 'lms',
   }
 }
 
@@ -159,29 +217,12 @@ export async function ensureOrgBillingTerms(
 }
 
 export async function setOrgPlanAsAdmin(orgId: string, plan: OrgPlan): Promise<void> {
-  const supabase = requireSupabase()
   const entitlements = entitlementsForPlan(plan)
-  const { error: licenseError } = await supabase.from('org_license').upsert(
-    {
-      org_id: orgId,
-      plan,
-      ...entitlements,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'org_id' }
-  )
-  if (licenseError) throw new Error(licenseError.message)
-
-  // Only insert billing terms if missing — do not overwrite grandfathered rates
-  const existing = await fetchOrgBillingTerms(orgId)
-  if (!existing) {
-    await ensureOrgBillingTerms(orgId, plan)
-  } else {
-    // Plan change for existing org updates plan on license; base on locked terms stays until Stripe upgrade flow
-    const { error } = await supabase
-      .from('org_billing_terms')
-      .update({ plan, updated_at: new Date().toISOString() })
-      .eq('org_id', orgId)
-    if (error) throw new Error(error.message)
-  }
+  const existing = await fetchOrgLicense(orgId)
+  await updateOrgLicenseEntitlements(orgId, {
+    plan,
+    ...entitlements,
+    // Plan SKU does not imply phishing; keep existing add-on state
+    phishing_enabled: existing?.phishing_enabled === true,
+  })
 }

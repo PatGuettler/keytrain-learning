@@ -17,6 +17,7 @@ import { OrgUsersTable } from '@/components/admin/OrgUsersTable'
 import { OrgJoinCodeCard } from '@/components/admin/OrgJoinCodeCard'
 import { RailNetOrgSetupCard } from '@/components/admin/RailNetOrgSetupCard'
 import { OrgBillingPanel } from '@/components/billing/OrgBillingPanel'
+import { OrgEntitlementsCard } from '@/components/admin/OrgEntitlementsCard'
 import { DeleteHospitalCard } from '@/components/admin/DeleteHospitalCard'
 import { useOrgRoute } from '@/hooks/useOrgRoute'
 import { adminOrganizationPath, getOrgSlug } from '@/lib/org-slugs'
@@ -123,6 +124,7 @@ export function OrganizationDetailPage() {
 
       {orgId && org && org.id !== PLATFORM_ORG_ID && (
         <>
+          <OrgEntitlementsCard orgId={orgId} orgName={org.name} />
           <RailNetOrgSetupCard
             orgId={orgId}
             initialRailNetOrgId={org.railnet_org_id ?? ''}

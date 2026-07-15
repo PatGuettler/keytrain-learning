@@ -130,8 +130,10 @@ BEGIN
     invitation_pending = false,
     updated_at = now();
 
-  -- Ensure license row exists so org-admin feature gates work
-  INSERT INTO org_license (org_id, railnet_enabled, compliance_enabled, lms_enabled, plan)
-  VALUES (v_org_id, true, true, true, 'both')
-  ON CONFLICT (org_id) DO NOTHING;
+  -- Ensure license row exists; leave flags so KTL admin can toggle for demos.
+  -- Default demo ON: RailNet + phishing + LMS (KeyTrain w/ Intelligence).
+  INSERT INTO org_license (org_id, railnet_enabled, compliance_enabled, lms_enabled, phishing_enabled, plan)
+  VALUES (v_org_id, true, true, true, true, 'both')
+  ON CONFLICT (org_id) DO UPDATE SET
+    updated_at = now();
 END $$;

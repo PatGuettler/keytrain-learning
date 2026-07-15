@@ -14,9 +14,11 @@ export function MobileSidebar() {
   const { role } = useRole()
   const location = useLocation()
   const { sidebarOpen, setSidebarOpen } = useUiStore()
-  const { canAccessRailnet } = useRailnetAccess()
+  const { canAccessRailnet, canAccessPhishing } = useRailnetAccess()
   const items = (role ? navByRole[role] : []).filter(
-    (item) => !item.requiresRailnet || canAccessRailnet
+    (item) =>
+      (!item.requiresRailnet || canAccessRailnet) &&
+      (!item.requiresPhishing || canAccessPhishing)
   )
 
   useEffect(() => {

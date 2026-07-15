@@ -21,8 +21,10 @@ export type NavItem = {
   to: string
   label: string
   icon: LucideIcon
-  /** Org users need RailNet granted on their profile; KTL admins always see this item. */
+  /** Org users need RailNet license (+ personal grant for non-admins). */
   requiresRailnet?: boolean
+  /** Org admin phishing add-on (paid). */
+  requiresPhishing?: boolean
 }
 
 export const RAILNET_PATH_BY_ROLE: Record<UserRole, string> = {
@@ -52,7 +54,7 @@ const orgAdminNav: NavItem[] = [
   { to: '/org-admin/catalog', label: 'Security catalog', icon: Library },
   { to: '/org-admin/billing', label: 'Billing', icon: CreditCard },
   { to: '/org-admin/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
-  { to: '/org-admin/phishing/campaigns', label: 'Phishing sims', icon: Fish, requiresRailnet: true },
+  { to: '/org-admin/phishing/campaigns', label: 'Phishing sims', icon: Fish, requiresPhishing: true },
   { to: '/org-admin/training', label: 'Required Training', icon: GraduationCap },
 ]
 

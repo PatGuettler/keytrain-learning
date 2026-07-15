@@ -8,12 +8,14 @@ import { mobileTabNavByRole } from './nav-config'
 export function MobileNav() {
   const location = useLocation()
   const { role } = useRole()
-  const { canAccessRailnet } = useRailnetAccess()
+  const { canAccessRailnet, canAccessPhishing } = useRailnetAccess()
 
   if (isTrainingPlayerPath(location.pathname)) return null
 
   const items = (role ? mobileTabNavByRole[role] : []).filter(
-    (item) => !item.requiresRailnet || canAccessRailnet
+    (item) =>
+      (!item.requiresRailnet || canAccessRailnet) &&
+      (!item.requiresPhishing || canAccessPhishing)
   )
 
   return (

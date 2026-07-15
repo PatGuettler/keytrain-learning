@@ -94,6 +94,7 @@ export interface Database {
           railnet_enabled: boolean
           compliance_enabled: boolean
           lms_enabled: boolean
+          phishing_enabled: boolean
           plan: string
           max_seats: number | null
           updated_at: string
@@ -103,6 +104,7 @@ export interface Database {
           railnet_enabled?: boolean
           compliance_enabled?: boolean
           lms_enabled?: boolean
+          phishing_enabled?: boolean
           plan?: string
           max_seats?: number | null
           updated_at?: string
@@ -111,6 +113,7 @@ export interface Database {
           railnet_enabled: boolean
           compliance_enabled: boolean
           lms_enabled: boolean
+          phishing_enabled: boolean
           plan: string
           max_seats: number | null
           updated_at: string
