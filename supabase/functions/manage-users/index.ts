@@ -721,13 +721,36 @@ Deno.serve(async (req) => {
         .single()
       if (moveError) throw moveError
 
-      // Trigger upserts target membership; deactivate membership on the source org.
+      // Explicit destination membership (do not rely only on the profile trigger).
+      const { error: upsertMembershipError } = await adminClient
+        .from('organization_memberships')
+        .upsert(
+          {
+            user_id: userId,
+            org_id: targetOrgId,
+            role: keptRole,
+            is_active: true,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,org_id' }
+        )
+      if (upsertMembershipError) throw upsertMembershipError
+
+      // Deactivate membership on the source org only.
       const { error: deactivateError } = await adminClient
         .from('organization_memberships')
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .eq('user_id', userId)
         .eq('org_id', orgId)
       if (deactivateError) throw deactivateError
+
+      // Never leave destination inactive if a prior row existed and lost the race.
+      const { error: reactivateError } = await adminClient
+        .from('organization_memberships')
+        .update({ is_active: true, role: keptRole, updated_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('org_id', targetOrgId)
+      if (reactivateError) throw reactivateError
 
       const { error: syncError } = await adminClient.rpc('sync_user_required_assignments', {
         p_user_id: userId,
@@ -739,7 +762,21 @@ Deno.serve(async (req) => {
         )
       }
 
-      return jsonResponse({ profile: moved, source_org_id: orgId, target_org_id: targetOrgId })
+      const { count: pubCount, error: pubCountError } = await adminClient
+        .from('course_publications')
+        .select('id', { count: 'exact', head: true })
+        .eq('org_id', targetOrgId)
+        .is('unpublished_at', null)
+      if (pubCountError) {
+        console.error('publication count after move_user failed', pubCountError.message)
+      }
+
+      return jsonResponse({
+        profile: moved,
+        source_org_id: orgId,
+        target_org_id: targetOrgId,
+        active_publications: pubCount ?? 0,
+      })
     }
 
     if (action === 'invite_one') {

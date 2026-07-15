@@ -250,9 +250,47 @@ export function createSupabaseBackend(): Backend {
     courses: {
       async fetchCourses(orgId, publishedOnly = false) {
         if (publishedOnly) {
+          // Prefer SECURITY DEFINER RPC so nested RLS / course embeds can't hide published courses.
+          const { data: rpcRows, error: rpcError } = await supabase.rpc(
+            'list_required_courses_for_user',
+            {}
+          )
+          if (!rpcError && Array.isArray(rpcRows)) {
+            const courses: Course[] = rpcRows
+              .filter((row) => row.org_id === orgId)
+              .map((row) => ({
+                id: row.course_id,
+                org_id: row.org_id,
+                title: row.title,
+                description: row.description ?? '',
+                thumbnail_url: row.thumbnail_url,
+                estimated_minutes: row.estimated_minutes ?? 30,
+                is_published: true,
+                max_attempts: row.max_attempts ?? 3,
+                show_results_after_completion: row.show_results_after_completion ?? false,
+                certificate_enabled: row.certificate_enabled ?? false,
+                certificate_expires_days: row.certificate_expires_days,
+                is_monthly_catalog: false,
+                created_by: null,
+                created_at: row.published_at,
+                updated_at: row.published_at,
+                publication: {
+                  id: row.publication_id,
+                  course_id: row.course_id,
+                  org_id: row.org_id,
+                  published_at: row.published_at,
+                  available_until: row.available_until,
+                  unpublished_at: null,
+                  published_by: null,
+                  created_at: row.published_at,
+                },
+              }))
+            return courses.sort((a, b) => a.title.localeCompare(b.title))
+          }
+
           const { data, error } = await supabase
             .from('course_publications')
-            .select('*, course:courses!inner(*)')
+            .select('*, course:courses(*)')
             .eq('org_id', orgId)
             .is('unpublished_at', null)
           if (error) throw error
