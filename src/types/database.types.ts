@@ -886,6 +886,24 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: {
+      list_required_courses_for_user: {
+        Args: { p_user_id?: string | null }
+        Returns: {
+          course_id: string
+          publication_id: string
+          title: string
+          description: string
+          thumbnail_url: string | null
+          estimated_minutes: number
+          max_attempts: number
+          show_results_after_completion: boolean
+          certificate_enabled: boolean
+          certificate_expires_days: number | null
+          org_id: string
+          published_at: string
+          available_until: string | null
+        }[]
+      }
       sync_user_required_assignments: {
         Args: { p_user_id: string }
         Returns: undefined
