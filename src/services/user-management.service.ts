@@ -282,3 +282,11 @@ export async function unlockUserLogin(orgId: string, userId: string): Promise<{ 
     user_id: userId,
   })
 }
+
+/** Sets password via service role while the user has an invite/recovery session. */
+export async function setOwnPassword(password: string): Promise<{ email: string | null }> {
+  return invokeManageUsers({
+    action: 'set_own_password',
+    password,
+  })
+}

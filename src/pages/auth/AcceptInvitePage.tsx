@@ -8,10 +8,17 @@ import { isBackendReady } from '@/backend'
 import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
 import { ROLE_DASHBOARD } from '@/lib/constants'
 import { useRecoveryAuthSession } from '@/hooks/useRecoveryAuthSession'
-import { completeInvitationRegistration, signIn, updatePassword } from '@/services/auth.service'
+import { fetchProfile, signOut } from '@/services/auth.service'
 import { syncRequiredAssignmentsForUser } from '@/services/assignments.service'
+import { setOwnPassword } from '@/services/user-management.service'
+import { getSupabase } from '@/services/supabase'
 import { useAuthStore } from '@/store/authStore'
-import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, PASSWORD_CRITERIA_HINT, passwordLengthError } from '@/lib/password'
+import {
+  isPasswordLongEnough,
+  MIN_PASSWORD_LENGTH,
+  PASSWORD_CRITERIA_HINT,
+  passwordLengthError,
+} from '@/lib/password'
 
 function parseHashError(): string | null {
   const hash = window.location.hash.replace(/^#/, '')
@@ -53,28 +60,42 @@ export function AcceptInvitePage() {
 
     setSaving(true)
     try {
-      await updatePassword(password)
-      await completeInvitationRegistration()
-
-      // Password changes can invalidate the invite/recovery session. Sign in with
-      // the new password so grant_type=password works after logout.
-      const emailForLogin = (sessionEmail ?? '').trim().toLowerCase()
+      // Service-role password set — client updateUser has left accounts unable to
+      // signInWithPassword after logout.
+      const { email: savedEmail } = await setOwnPassword(password)
+      const emailForLogin = (savedEmail ?? sessionEmail ?? '').trim().toLowerCase()
       if (!emailForLogin) {
-        throw new Error('Could not determine account email. Use Forgot password on the login page.')
+        throw new Error('Could not determine account email. Ask an admin for a new invite.')
       }
 
-      const result = await signIn(emailForLogin, password)
-      let profile = result.profile
-      profile = { ...profile, invitation_pending: false }
+      await signOut()
 
+      const supabase = getSupabase()
+      if (!supabase) throw new Error(BACKEND_NOT_CONFIGURED_MESSAGE)
+
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: emailForLogin,
+        password,
+      })
+      if (signInError || !data.user) {
+        throw new Error(
+          signInError
+            ? `Password was saved, but sign-in failed (${signInError.message}). Try Forgot password, or ask an admin to use Copy access link.`
+            : 'Password was saved, but sign-in failed. Try Forgot password.'
+        )
+      }
+
+      await supabase.rpc('clear_failed_login', { p_user_id: data.user.id })
+
+      const profile = await fetchProfile(data.user.id)
       if (profile.role !== 'admin') {
-        await syncRequiredAssignmentsForUser(result.user.id)
+        await syncRequiredAssignmentsForUser(data.user.id)
       }
 
       setAuth({
-        userId: result.user.id,
-        email: result.user.email ?? emailForLogin,
-        profile,
+        userId: data.user.id,
+        email: data.user.email ?? emailForLogin,
+        profile: { ...profile, invitation_pending: false },
       })
 
       navigate(ROLE_DASHBOARD[profile.role] ?? '/employee/training', { replace: true })
@@ -113,7 +134,8 @@ export function AcceptInvitePage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {sessionEmail && (
                 <p className="text-sm text-muted-foreground">
-                  Setting up account for <span className="font-medium text-foreground">{sessionEmail}</span>
+                  Setting up account for{' '}
+                  <span className="font-medium text-foreground">{sessionEmail}</span>
                 </p>
               )}
               <div className="space-y-2">

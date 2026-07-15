@@ -761,6 +761,37 @@ Deno.serve(async (req) => {
       return jsonResponse({ deleted_id: userId })
     }
 
+    // Invited/recovery users set their own password via service role (avoids client
+    // updateUser leaving accounts that cannot signInWithPassword after logout).
+    if (action === 'set_own_password') {
+      const password = typeof body.password === 'string' ? body.password : ''
+      if (password.length < 10) {
+        return jsonResponse({ error: 'Password must be at least 10 characters.' }, 400)
+      }
+
+      const { error: updateAuthError } = await adminClient.auth.admin.updateUserById(user.id, {
+        password,
+        email_confirm: true,
+      })
+      if (updateAuthError) throw updateAuthError
+
+      const { error: profileError } = await adminClient
+        .from('profiles')
+        .update({
+          invitation_pending: false,
+          failed_login_attempts: 0,
+          login_locked_at: null,
+          password_upgrade_required: false,
+        })
+        .eq('id', user.id)
+      if (profileError) throw profileError
+
+      return jsonResponse({
+        email: user.email ?? null,
+        message: 'Password saved.',
+      })
+    }
+
     const orgId = typeof body.org_id === 'string' ? body.org_id : ''
     if (!orgId) return jsonResponse({ error: 'org_id is required.' }, 400)
     await assertOrg(adminClient, orgId)
