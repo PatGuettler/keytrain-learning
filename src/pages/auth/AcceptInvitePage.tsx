@@ -18,7 +18,7 @@ function parseHashError(): string | null {
   if (description) return description.replace(/\+/g, ' ')
   const code = params.get('error_code')
   if (code === 'otp_expired') {
-    return 'This invitation link is invalid or has expired. Ask your administrator to send a new invite.'
+    return 'This invitation link is invalid or has already been used. Corporate email scanners often open links before you do — ask your administrator to delete the invited user and send a new invite, or use password reset if you already set a password.'
   }
   return 'Could not verify this invitation. Ask your administrator to send a new invite.'
 }

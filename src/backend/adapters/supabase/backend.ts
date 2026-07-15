@@ -176,9 +176,61 @@ export function createSupabaseBackend(): Backend {
         return data as Organization[]
       },
       async createOrganization(name) {
-        const { data, error } = await supabase.from('organizations').insert({ name }).select().single()
+        const trimmed = name.trim()
+        if (!trimmed) throw new Error('Organization name is required.')
+
+        let joinCode = ''
+        for (let i = 0; i < 8; i++) {
+          joinCode = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()
+          const { data: clash } = await supabase
+            .from('organizations')
+            .select('id')
+            .eq('join_code', joinCode)
+            .maybeSingle()
+          if (!clash) break
+        }
+
+        const { data, error } = await supabase
+          .from('organizations')
+          .insert({ name: trimmed, join_code: joinCode || null })
+          .select()
+          .single()
         if (error) throw error
-        return data as Organization
+
+        const org = data as Organization
+        const now = new Date().toISOString()
+
+        // Mirror create_organization_as_org_admin: LMS license + Standard billing
+        const { error: licenseError } = await supabase.from('org_license').upsert(
+          {
+            org_id: org.id,
+            railnet_enabled: false,
+            compliance_enabled: false,
+            lms_enabled: true,
+            phishing_enabled: false,
+            plan: 'lms',
+            updated_at: now,
+          },
+          { onConflict: 'org_id' }
+        )
+        if (licenseError) throw licenseError
+
+        const { error: billingError } = await supabase.from('org_billing_terms').upsert(
+          {
+            org_id: org.id,
+            plan: 'lms',
+            plan_base_cents: 6000,
+            org_admin_cents: 0,
+            manager_cents: 0,
+            employee_cents: 220,
+            locked_at: now,
+            updated_at: now,
+          },
+          { onConflict: 'org_id', ignoreDuplicates: true }
+        )
+        if (billingError) throw billingError
+
+        return org
       },
       async updateOrganization(id, patch) {
         const { data, error } = await supabase.from('organizations').update(patch).eq('id', id).select().single()

@@ -85,8 +85,16 @@ export function useOrgDashboard(orgId: string | undefined) {
   })
 
   const { data: courses = [], isLoading: coursesLoading } = useQuery({
-    queryKey: ['courses', orgId, false],
-    queryFn: () => fetchCourses(orgId!, false),
+    queryKey: ['courses', orgId, 'owned+published'],
+    queryFn: async () => {
+      const [owned, published] = await Promise.all([
+        fetchCourses(orgId!, false),
+        fetchCourses(orgId!, true),
+      ])
+      const byId = new Map(owned.map((c) => [c.id, c]))
+      for (const course of published) byId.set(course.id, course)
+      return [...byId.values()]
+    },
     enabled: Boolean(orgId),
   })
 

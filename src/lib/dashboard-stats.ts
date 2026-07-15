@@ -394,13 +394,16 @@ export function computeOrgMetrics(
 ): OrgDashboardMetrics {
   const orgUsers = users.filter((u) => u.org_id === orgId)
   const orgUserIds = new Set(orgUsers.map((u) => u.id))
-  const orgCourses = courses.filter((c) => c.org_id === orgId)
+  // Include owned courses and courses published to this org (catalog subscriptions)
+  const orgCourses = courses.filter(
+    (c) => c.org_id === orgId || c.publication?.org_id === orgId
+  )
   const orgAssignments = assignments.filter((a) => orgUserIds.has(a.user_id))
 
   return {
     userCount: orgUsers.length,
     totalCourses: orgCourses.length,
-    publishedCourses: orgCourses.filter((c) => c.is_published).length,
+    publishedCourses: orgCourses.filter((c) => c.is_published || Boolean(c.publication)).length,
     assignmentCount: orgAssignments.length,
     completionRate: computeCompletionRate(orgAssignments),
     overdueCount: orgAssignments.filter((a) => a.status === 'overdue').length,
