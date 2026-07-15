@@ -182,11 +182,16 @@ export function MultiOrgBillingPanel() {
         }
       />
 
-      <Card className="border-amber-500/40 bg-amber-500/5">
-        <CardContent className="pt-6 text-sm text-muted-foreground">
-          {PAYMENT_STRUCTURE_COPY.estimatedBanner} Switch the active organization in the header to
-          manage users, training, and RailNet for that org. Billing below can include every org you
-          administer.
+                  <Card className="border-amber-500/40 bg-amber-500/5">
+        <CardContent className="pt-6 text-sm text-muted-foreground space-y-2">
+          <p>
+            {PAYMENT_STRUCTURE_COPY.estimatedBanner}{' '}
+            {PAYMENT_STRUCTURE_COPY.multiOrgAdmin}
+          </p>
+          <p>
+            Switch the active organization in the header to manage users, training, and RailNet for
+            that org.
+          </p>
         </CardContent>
       </Card>
 
@@ -271,7 +276,9 @@ export function MultiOrgBillingPanel() {
                               {l.key !== 'plan_base' ? ` × ${l.quantity}` : ''}
                             </span>
                             <span className="tabular-nums">
-                              {formatUsdFromCents(l.subtotalCents)}
+                              {l.subtotalCents === 0 && l.key !== 'plan_base'
+                                ? 'Included'
+                                : formatUsdFromCents(l.subtotalCents)}
                             </span>
                           </li>
                         ))}

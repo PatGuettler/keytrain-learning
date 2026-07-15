@@ -123,19 +123,25 @@ export function OrgBillingPanel({
                 <li key={line.key} className="flex justify-between gap-4">
                   <span>
                     {line.label}
-                    {line.key !== 'plan_base' ? (
-                      <span className="text-muted-foreground">
-                        {' '}
-                        · {line.quantity} × {formatUsdFromCents(line.unitCents)}
-                      </span>
-                    ) : (
+                    {line.key === 'plan_base' ? (
                       <span className="text-muted-foreground">
                         {' '}
                         · {formatUsdFromCents(line.unitCents)}
                       </span>
+                    ) : line.subtotalCents === 0 ? (
+                      <span className="text-muted-foreground"> · included</span>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {' '}
+                        · {line.quantity} × {formatUsdFromCents(line.unitCents)}
+                      </span>
                     )}
                   </span>
-                  <span className="font-medium">{formatUsdFromCents(line.subtotalCents)}</span>
+                  <span className="font-medium">
+                    {line.subtotalCents === 0 && line.key !== 'plan_base'
+                      ? 'Included'
+                      : formatUsdFromCents(line.subtotalCents)}
+                  </span>
                 </li>
               ))}
             </ul>

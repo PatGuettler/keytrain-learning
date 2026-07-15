@@ -1,5 +1,6 @@
 import type { Profile, UserRole } from '@/types/user.types'
 import {
+  STANDARD_INCLUDED_USERS,
   type BillableRole,
   type OrgBillingTerms,
   type OrgPlan,
@@ -21,6 +22,11 @@ export interface OrgBillSnapshot {
   plan: OrgPlan
   planBaseCents: number
   seatCounts: SeatCounts
+  /** Active billable headcount (org admins, managers, employees). */
+  activeUserCount: number
+  /** True when Standard-style inclusive pricing is in effect (no per-role seat fees). */
+  inclusivePricing: boolean
+  includedUsers: number
   lineItems: BillLineItem[]
   seatsSubtotalCents: number
   monthlyTotalCents: number
@@ -42,21 +48,47 @@ export function countSeats(profiles: Pick<Profile, 'role' | 'is_active'>[]): Sea
   return counts
 }
 
-export function seatUnitCents(terms: Pick<OrgBillingTerms, 'org_admin_cents' | 'manager_cents' | 'employee_cents'>, role: BillableRole): number {
+export function countActiveBillableUsers(
+  profiles: Pick<Profile, 'role' | 'is_active'>[]
+): number {
+  return profiles.filter((p) => p.is_active && isBillableRole(p.role)).length
+}
+
+/**
+ * Standard ($60) locks org_admin/manager seat rates at $0 and uses employee_cents
+ * as the overage rate past included users. Legacy orgs keep per-role seat fees.
+ */
+export function usesInclusiveUserPricing(
+  terms: Pick<OrgBillingTerms, 'org_admin_cents' | 'manager_cents'>
+): boolean {
+  return terms.org_admin_cents === 0 && terms.manager_cents === 0
+}
+
+export function seatUnitCents(
+  terms: Pick<OrgBillingTerms, 'org_admin_cents' | 'manager_cents' | 'employee_cents'>,
+  role: BillableRole
+): number {
   if (role === 'org_admin') return terms.org_admin_cents
   if (role === 'manager') return terms.manager_cents
   return terms.employee_cents
 }
 
 export function computeOrgBill(
-  terms: Pick<OrgBillingTerms, 'plan' | 'plan_base_cents' | 'org_admin_cents' | 'manager_cents' | 'employee_cents' | 'locked_at'>,
+  terms: Pick<
+    OrgBillingTerms,
+    'plan' | 'plan_base_cents' | 'org_admin_cents' | 'manager_cents' | 'employee_cents' | 'locked_at'
+  >,
   profiles: Pick<Profile, 'role' | 'is_active'>[]
 ): OrgBillSnapshot {
   const seatCounts = countSeats(profiles)
+  const activeUserCount = countActiveBillableUsers(profiles)
+  const inclusivePricing = usesInclusiveUserPricing(terms)
+  const includedUsers = inclusivePricing ? STANDARD_INCLUDED_USERS : 0
+
   const lineItems: BillLineItem[] = [
     {
       key: 'plan_base',
-      label: `Plan base`,
+      label: 'Plan base',
       quantity: 1,
       unitCents: terms.plan_base_cents,
       subtotalCents: terms.plan_base_cents,
@@ -64,25 +96,54 @@ export function computeOrgBill(
   ]
 
   let seatsSubtotalCents = 0
-  for (const role of BILLABLE) {
-    const quantity = seatCounts[role]
-    if (quantity === 0) continue
-    const unitCents = seatUnitCents(terms, role)
-    const subtotalCents = quantity * unitCents
-    seatsSubtotalCents += subtotalCents
+
+  if (inclusivePricing) {
+    const overage = Math.max(0, activeUserCount - STANDARD_INCLUDED_USERS)
     lineItems.push({
-      key: role,
-      label: ROLE_SEAT_LABELS[role],
-      quantity,
-      unitCents,
-      subtotalCents,
+      key: 'users_included',
+      label: `Users included (${Math.min(activeUserCount, STANDARD_INCLUDED_USERS)} of ${STANDARD_INCLUDED_USERS})`,
+      quantity: Math.min(activeUserCount, STANDARD_INCLUDED_USERS),
+      unitCents: 0,
+      subtotalCents: 0,
     })
+    if (overage > 0) {
+      const unitCents = terms.employee_cents
+      const subtotalCents = overage * unitCents
+      seatsSubtotalCents += subtotalCents
+      lineItems.push({
+        key: 'additional_users',
+        label: 'Additional users',
+        quantity: overage,
+        unitCents,
+        subtotalCents,
+      })
+    }
+  } else {
+    for (const role of BILLABLE) {
+      const quantity = seatCounts[role]
+      if (quantity === 0) continue
+      const unitCents = seatUnitCents(terms, role)
+      // Skip $0 role lines so multi-org admins aren't shown as "charged $0 here"
+      if (unitCents === 0) continue
+      const subtotalCents = quantity * unitCents
+      seatsSubtotalCents += subtotalCents
+      lineItems.push({
+        key: role,
+        label: ROLE_SEAT_LABELS[role],
+        quantity,
+        unitCents,
+        subtotalCents,
+      })
+    }
   }
 
   return {
     plan: terms.plan,
     planBaseCents: terms.plan_base_cents,
     seatCounts,
+    activeUserCount,
+    inclusivePricing,
+    includedUsers,
     lineItems,
     seatsSubtotalCents,
     monthlyTotalCents: terms.plan_base_cents + seatsSubtotalCents,
@@ -92,7 +153,10 @@ export function computeOrgBill(
 
 /** Preview bill after applying seat deltas (role adds / swaps / deactivates). */
 export function previewSeatDelta(
-  terms: Pick<OrgBillingTerms, 'plan' | 'plan_base_cents' | 'org_admin_cents' | 'manager_cents' | 'employee_cents' | 'locked_at'>,
+  terms: Pick<
+    OrgBillingTerms,
+    'plan' | 'plan_base_cents' | 'org_admin_cents' | 'manager_cents' | 'employee_cents' | 'locked_at'
+  >,
   currentProfiles: Pick<Profile, 'id' | 'role' | 'is_active'>[],
   options: {
     /** New users to add (not yet in currentProfiles). */

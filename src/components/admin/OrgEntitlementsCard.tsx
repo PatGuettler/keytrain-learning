@@ -11,10 +11,14 @@ import {
   type OrgPlan,
 } from '@/lib/seat-pricing'
 import {
+  applyCatalogBillingTerms,
+  fetchOrgBillingTerms,
   fetchOrgLicense,
   updateOrgLicenseEntitlements,
   type OrgLicense,
 } from '@/services/org-license.service'
+import { Button } from '@/components/ui/button'
+import { usesInclusiveUserPricing } from '@/lib/org-billing'
 
 type Props = {
   orgId: string
@@ -30,14 +34,33 @@ export function OrgEntitlementsCard({ orgId, orgName }: Props) {
     enabled: Boolean(orgId),
   })
 
+  const { data: billingTerms } = useQuery({
+    queryKey: ['org-billing-terms', orgId],
+    queryFn: () => fetchOrgBillingTerms(orgId),
+    enabled: Boolean(orgId),
+  })
+
   const mutation = useMutation({
     mutationFn: (patch: Parameters<typeof updateOrgLicenseEntitlements>[1]) =>
       updateOrgLicenseEntitlements(orgId, patch),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['org-license', orgId] })
       void queryClient.invalidateQueries({ queryKey: ['org-billing-terms', orgId] })
+      void queryClient.invalidateQueries({ queryKey: ['multi-org-bills'] })
     },
   })
+
+  const catalogMutation = useMutation({
+    mutationFn: () => applyCatalogBillingTerms(orgId, 'lms'),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['org-billing-terms', orgId] })
+      void queryClient.invalidateQueries({ queryKey: ['multi-org-bills'] })
+      void queryClient.invalidateQueries({ queryKey: ['org-license', orgId] })
+    },
+  })
+
+  const needsStandardPricing =
+    Boolean(billingTerms) && !usesInclusiveUserPricing(billingTerms!)
 
   const current: Pick<
     OrgLicense,
@@ -123,6 +146,35 @@ export function OrgEntitlementsCard({ orgId, orgName }: Props) {
               disabled={mutation.isPending}
               onCheckedChange={(v) => toggle('phishing_enabled', v)}
             />
+
+            {needsStandardPricing ? (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
+                <p className="text-sm font-medium">Legacy seat rates</p>
+                <p className="text-xs text-muted-foreground">
+                  This org still has old per-role seat fees (e.g. charging org admins separately).
+                  Standard billing is $60/mo for up to 20 users — the org admin is included, not a
+                  separate line.
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={catalogMutation.isPending}
+                  onClick={() => catalogMutation.mutate()}
+                >
+                  {catalogMutation.isPending
+                    ? 'Updating…'
+                    : 'Apply current Standard pricing ($60 / 20 users)'}
+                </Button>
+                {catalogMutation.isError ? (
+                  <p className="text-sm text-destructive">
+                    {catalogMutation.error instanceof Error
+                      ? catalogMutation.error.message
+                      : 'Could not update billing terms.'}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             {mutation.isError ? (
               <p className="text-sm text-destructive">

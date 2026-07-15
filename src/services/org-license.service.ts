@@ -226,3 +226,29 @@ export async function setOrgPlanAsAdmin(orgId: string, plan: OrgPlan): Promise<v
     phishing_enabled: existing?.phishing_enabled === true,
   })
 }
+
+/** KTL admin: overwrite locked billing terms with current catalog (e.g. Standard $60 / 20 users). */
+export async function applyCatalogBillingTerms(
+  orgId: string,
+  plan: OrgPlan = 'lms'
+): Promise<OrgBillingTerms> {
+  const supabase = requireSupabase()
+  const catalog = catalogTermsForPlan(plan)
+  const row = {
+    org_id: orgId,
+    ...catalog,
+    locked_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+  const { data, error } = await supabase
+    .from('org_billing_terms')
+    .upsert(row, { onConflict: 'org_id' })
+    .select(
+      'org_id, plan, plan_base_cents, org_admin_cents, manager_cents, employee_cents, locked_at'
+    )
+    .eq('org_id', orgId)
+    .single()
+
+  if (error) throw new Error(error.message)
+  return data as OrgBillingTerms
+}

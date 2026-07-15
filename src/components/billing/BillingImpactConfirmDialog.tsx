@@ -80,9 +80,15 @@ function BillColumn({ heading, bill }: { heading: string; bill: OrgBillSnapshot 
           <li key={line.key} className="flex justify-between gap-2">
             <span>
               {line.label}
-              {line.key !== 'plan_base' ? ` × ${line.quantity}` : ''}
+              {line.key !== 'plan_base' && line.key !== 'users_included'
+                ? ` × ${line.quantity}`
+                : ''}
             </span>
-            <span>{formatUsdFromCents(line.subtotalCents)}</span>
+            <span>
+              {line.subtotalCents === 0 && line.key !== 'plan_base'
+                ? 'Included'
+                : formatUsdFromCents(line.subtotalCents)}
+            </span>
           </li>
         ))}
       </ul>

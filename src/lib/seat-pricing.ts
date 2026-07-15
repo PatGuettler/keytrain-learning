@@ -29,10 +29,16 @@ export const CATALOG_PLAN_BASE_CENTS: Record<OrgPlan, number> = {
   both: 2999,
 }
 
+/** Users included in KeyTrain Standard plan base (before additional-user fees). */
+export const STANDARD_INCLUDED_USERS = 20
+
+/** Per-user monthly rate after STANDARD_INCLUDED_USERS on KeyTrain Standard. */
+export const CATALOG_ADDITIONAL_USER_CENTS = 220
+
 /** Optional org-wide phishing simulations add-on (quote — not listed as fixed catalog price). */
 export const CATALOG_PHISHING_ADDON_CENTS = 199
 
-/** @deprecated Marketing no longer shows role seat fees; kept for locked billing terms / legacy orgs. */
+/** @deprecated Legacy role seat fees for grandfathered orgs only. */
 export const CATALOG_SEAT_CENTS: SeatRatesCents = {
   org_admin: 1099,
   manager: 899,
@@ -56,6 +62,15 @@ export function formatUsdFromCents(cents: number): string {
 }
 
 export function catalogTermsForPlan(plan: OrgPlan): Omit<OrgBillingTerms, 'org_id' | 'locked_at'> {
+  if (plan === 'lms') {
+    return {
+      plan,
+      plan_base_cents: CATALOG_PLAN_BASE_CENTS.lms,
+      org_admin_cents: 0,
+      manager_cents: 0,
+      employee_cents: CATALOG_ADDITIONAL_USER_CENTS,
+    }
+  }
   return {
     plan,
     plan_base_cents: CATALOG_PLAN_BASE_CENTS[plan],
@@ -80,9 +95,11 @@ export function entitlementsForPlan(plan: OrgPlan): {
 export const PAYMENT_STRUCTURE_COPY = {
   estimatedBanner: 'Estimated — payment collection via Stripe coming soon.',
   billingCycle:
-    'Your monthly bill date is the day the organization subscription starts. You are charged that day each month for the plan base plus current seats.',
+    'Your monthly bill date is the day the organization subscription starts. You are charged that day each month for the plan base plus any users beyond the included allotment.',
   proration:
     'Users added mid-cycle are charged only for the remaining days in the billing period. Removals receive a prorated credit. The next renewal is a full month at the then-current headcount.',
   grandfathering:
     'Rates are locked for your organization at signup. Catalog price changes do not affect existing organizations.',
+  multiOrgAdmin:
+    'Each organization has its own subscription. An org admin who manages several orgs counts toward each org’s included user allotment — they are not billed a separate “org admin seat” fee on Standard.',
 } as const

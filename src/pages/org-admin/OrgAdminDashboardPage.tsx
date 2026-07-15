@@ -9,10 +9,12 @@ import { fetchOrgBillingTerms } from '@/services/org-license.service'
 import { computeOrgBill } from '@/lib/org-billing'
 import { PLAN_LABELS, formatUsdFromCents } from '@/lib/seat-pricing'
 import { useAuthStore } from '@/store/authStore'
+import { useRailnetAccess } from '@/hooks/useRailnetAccess'
 
 export function OrgAdminDashboardPage() {
   const profile = useAuthStore((s) => s.profile)
   const orgId = profile?.org_id
+  const { canAccessRailnet, canAccessPhishing } = useRailnetAccess()
 
   const { data: org } = useQuery({
     queryKey: ['organization', orgId],
@@ -39,7 +41,7 @@ export function OrgAdminDashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title={org?.name ?? 'Organization'}
-        description="Manage users, billing, training, and RailNet for the active organization. Use the organization switcher to change or create orgs."
+        description="Manage users, billing, and training for the active organization. Use the organization switcher to change or create orgs."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -77,9 +79,16 @@ export function OrgAdminDashboardPage() {
         <Button asChild variant="outline">
           <Link to="/org-admin/training-reports">Training reports</Link>
         </Button>
-        <Button asChild variant="outline">
-          <Link to="/org-admin/railnet">RailNet</Link>
-        </Button>
+        {canAccessRailnet ? (
+          <Button asChild variant="outline">
+            <Link to="/org-admin/railnet">RailNet</Link>
+          </Button>
+        ) : null}
+        {canAccessPhishing ? (
+          <Button asChild variant="outline">
+            <Link to="/org-admin/phishing/campaigns">Phishing sims</Link>
+          </Button>
+        ) : null}
       </div>
     </div>
   )
