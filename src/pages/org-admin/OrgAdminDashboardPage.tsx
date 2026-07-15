@@ -39,7 +39,7 @@ export function OrgAdminDashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title={org?.name ?? 'Organization'}
-        description="Manage users, billing, training, and RailNet for your organization."
+        description="Manage users, billing, training, and RailNet for the active organization. Use the organization switcher to change or create orgs."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

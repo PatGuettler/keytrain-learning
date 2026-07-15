@@ -8,9 +8,25 @@ export interface Database {
   public: {
     Tables: {
       organizations: {
-        Row: { id: string; name: string; created_at: string }
-        Insert: { id?: string; name: string; created_at?: string }
-        Update: Partial<{ name: string }>
+        Row: {
+          id: string
+          name: string
+          created_at: string
+          railnet_org_id: string | null
+          join_code: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string
+          railnet_org_id?: string | null
+          join_code?: string | null
+        }
+        Update: Partial<{
+          name: string
+          railnet_org_id: string | null
+          join_code: string | null
+        }>
         Relationships: []
       }
       profiles: {
@@ -129,6 +145,32 @@ export interface Database {
           manager_cents: number
           employee_cents: number
           locked_at: string
+          updated_at: string
+        }>
+        Relationships: []
+      }
+      organization_memberships: {
+        Row: {
+          id: string
+          user_id: string
+          org_id: string
+          role: UserRole
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          org_id: string
+          role: UserRole
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<{
+          role: UserRole
+          is_active: boolean
           updated_at: string
         }>
         Relationships: []
@@ -884,6 +926,14 @@ export interface Database {
       complete_password_upgrade: {
         Args: Record<string, never>
         Returns: undefined
+      }
+      switch_active_organization: {
+        Args: { p_org_id: string }
+        Returns: Database['public']['Tables']['profiles']['Row']
+      }
+      create_organization_as_org_admin: {
+        Args: { p_name: string }
+        Returns: Database['public']['Tables']['organizations']['Row']
       }
       approve_course_unlock: {
         Args: {
