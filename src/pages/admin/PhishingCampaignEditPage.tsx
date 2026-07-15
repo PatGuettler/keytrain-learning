@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
+import { fetchMyOrgMemberships } from '@/services/org-memberships.service'
+import { fetchOrgLicense, isOrgAdmin } from '@/services/org-license.service'
 import {
   createPhishingCampaign,
   createPhishingTemplate,
@@ -29,9 +31,8 @@ import { previewPhishingText } from '@/lib/phishing-preview'
 import { usePhishingBasePath } from '@/lib/phishing-paths'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { isOrgAdmin } from '@/services/org-license.service'
 import { PHISHING_PRETEXT_LABELS, type PhishingPretext, type PhishingTargetScope } from '@/types/phishing.types'
-import type { Profile } from '@/types/user.types'
+import type { Organization, Profile } from '@/types/user.types'
 
 const RECIPIENTS_PER_PAGE = 8
 
@@ -60,7 +61,30 @@ export function PhishingCampaignEditPage() {
   const { data: hospitals = [] } = useQuery({
     queryKey: ['organizations'],
     queryFn: fetchHospitalOrganizations,
+    enabled: !orgAdminMode,
   })
+
+  const { data: phishingOrgs = [] } = useQuery({
+    queryKey: ['org-admin-phishing-orgs', userId],
+    queryFn: async (): Promise<Organization[]> => {
+      const memberships = await fetchMyOrgMemberships()
+      const adminMemberships = memberships.filter(
+        (m) => m.role === 'org_admin' && m.is_active && m.organization
+      )
+      const rows = await Promise.all(
+        adminMemberships.map(async (m) => {
+          const license = await fetchOrgLicense(m.org_id)
+          return license?.phishing_enabled === true ? m.organization! : null
+        })
+      )
+      return rows
+        .filter((org): org is Organization => Boolean(org))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    },
+    enabled: orgAdminMode && Boolean(userId),
+  })
+
+  const orgChoices = orgAdminMode ? phishingOrgs : hospitals
 
   const [name, setName] = useState('')
   const [templateId, setTemplateId] = useState('')
@@ -113,9 +137,11 @@ export function PhishingCampaignEditPage() {
 
   const selectableUsers = useMemo(() => {
     const scoped =
-      orgAdminMode && authProfile?.org_id
-        ? allUsers.filter((user) => user.org_id === authProfile.org_id || user.id === userId)
-        : allUsers
+      orgAdminMode && orgId
+        ? allUsers.filter((user) => user.org_id === orgId || user.id === userId)
+        : orgAdminMode && authProfile?.org_id
+          ? allUsers.filter((user) => user.org_id === authProfile.org_id || user.id === userId)
+          : allUsers
     if (!selfProfile) return scoped
     const existing = scoped.find((user) => user.id === selfProfile.id)
     if (existing) {
@@ -126,7 +152,7 @@ export function PhishingCampaignEditPage() {
       )
     }
     return [selfProfile, ...scoped]
-  }, [allUsers, selfProfile, orgAdminMode, authProfile?.org_id, userId])
+  }, [allUsers, selfProfile, orgAdminMode, orgId, authProfile?.org_id, userId])
 
   const resolveRecipientEmail = (user: Profile) =>
     user.email?.trim() || (user.id === userId ? authEmail?.trim() : '') || ''
@@ -199,10 +225,17 @@ export function PhishingCampaignEditPage() {
   }, [existing])
 
   useEffect(() => {
-    if (!orgAdminMode || !authProfile?.org_id) return
-    setOrgId(authProfile.org_id)
+    if (!orgAdminMode) return
     if (targetScope === 'all') setTargetScope('org')
-  }, [orgAdminMode, authProfile?.org_id, targetScope])
+  }, [orgAdminMode, targetScope])
+
+  useEffect(() => {
+    if (!orgAdminMode || phishingOrgs.length === 0) return
+    if (orgId && phishingOrgs.some((o) => o.id === orgId)) return
+    const preferred =
+      phishingOrgs.find((o) => o.id === authProfile?.org_id) ?? phishingOrgs[0]
+    if (preferred) setOrgId(preferred.id)
+  }, [orgAdminMode, phishingOrgs, orgId, authProfile?.org_id])
 
   useEffect(() => {
     if (!existing?.template_id || !templates.length) return
@@ -372,7 +405,7 @@ export function PhishingCampaignEditPage() {
         fake_login_url: fakeLoginUrl.trim() || getDefaultFakeLoginUrl(),
         track_opens: trackOpens,
         org_id: orgAdminMode
-          ? authProfile?.org_id ?? null
+          ? orgId || null
           : targetScope === 'org'
             ? orgId || null
             : null,
@@ -555,41 +588,47 @@ export function PhishingCampaignEditPage() {
                   setSelectedUserIds([])
                 } else if (scope === 'org') {
                   setSelectedUserIds([])
-                  if (orgAdminMode && authProfile?.org_id) setOrgId(authProfile.org_id)
+                  if (orgAdminMode) {
+                    const preferred =
+                      orgChoices.find((o) => o.id === authProfile?.org_id) ?? orgChoices[0]
+                    if (preferred) setOrgId(preferred.id)
+                  }
                 } else {
                   setOrgId('')
                 }
               }}
             >
               {!orgAdminMode && <option value="all">All organization staff</option>}
-              <option value="org">{orgAdminMode ? 'My organization' : 'One organization'}</option>
+              <option value="org">{orgAdminMode ? 'One organization' : 'One organization'}</option>
               <option value="custom">Hand-picked users</option>
             </select>
           </div>
           {targetScope === 'org' && (
             <div className="space-y-2">
               <Label htmlFor="org">Organization</Label>
-              {orgAdminMode ? (
-                <Input
-                  id="org"
-                  value={hospitals.find((h) => h.id === orgId)?.name ?? 'Your organization'}
-                  disabled
-                />
-              ) : (
-                <select
-                  id="org"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={orgId}
-                  onChange={(e) => setOrgId(e.target.value)}
-                >
-                  <option value="">Select…</option>
-                  {hospitals.map((h) => (
-                    <option key={h.id} value={h.id}>
-                      {h.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+              <select
+                id="org"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={orgId}
+                onChange={(e) => {
+                  setOrgId(e.target.value)
+                  setSelectedUserIds([])
+                  setUserPage(1)
+                }}
+              >
+                <option value="">Select…</option>
+                {orgChoices.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.name}
+                  </option>
+                ))}
+              </select>
+              {orgAdminMode && orgChoices.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  No organizations with phishing enabled. Ask a KeyTrain admin to turn on the
+                  phishing add-on for an organization you manage.
+                </p>
+              ) : null}
             </div>
           )}
         </div>

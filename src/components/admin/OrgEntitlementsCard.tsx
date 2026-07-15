@@ -47,6 +47,7 @@ export function OrgEntitlementsCard({ orgId, orgName }: Props) {
       void queryClient.invalidateQueries({ queryKey: ['org-license', orgId] })
       void queryClient.invalidateQueries({ queryKey: ['org-billing-terms', orgId] })
       void queryClient.invalidateQueries({ queryKey: ['multi-org-bills'] })
+      void queryClient.invalidateQueries({ queryKey: ['org-admin-phishing-orgs'] })
     },
   })
 
@@ -56,6 +57,7 @@ export function OrgEntitlementsCard({ orgId, orgName }: Props) {
       void queryClient.invalidateQueries({ queryKey: ['org-billing-terms', orgId] })
       void queryClient.invalidateQueries({ queryKey: ['multi-org-bills'] })
       void queryClient.invalidateQueries({ queryKey: ['org-license', orgId] })
+      void queryClient.invalidateQueries({ queryKey: ['org-admin-phishing-orgs'] })
     },
   })
 
