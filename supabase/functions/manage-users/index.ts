@@ -330,26 +330,29 @@ async function invitePlatformAdmin(
   let userId = existingId
 
   if (!userId) {
+    const tempPassword = crypto.randomUUID().replace(/-/g, '') + 'Aa1!'
+    const { data, error } = await adminClient.auth.admin.createUser({
+      email: normalizedEmail,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: { full_name: name },
+    })
+    if (error) throw error
+    userId = data.user.id
+
     if (sendInvites) {
-      const generated = await buildSpaAccessLink(adminClient, normalizedEmail, 'invite', redirectTo, {
-        full_name: name,
-      })
-      userId = generated.userId
+      const generated = await buildSpaAccessLink(
+        adminClient,
+        normalizedEmail,
+        'recovery',
+        redirectTo || 'https://keytrainlearning.com/accept-invite'
+      )
+      const accessLink = generated.link.replace('/reset-password?', '/accept-invite?')
       await sendInviteEmailViaResend({
         to: normalizedEmail,
         fullName: name,
-        accessLink: generated.link,
+        accessLink,
       })
-    } else {
-      const tempPassword = crypto.randomUUID().replace(/-/g, '') + 'Aa1!'
-      const { data, error } = await adminClient.auth.admin.createUser({
-        email: normalizedEmail,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: { full_name: name },
-      })
-      if (error) throw error
-      userId = data.user.id
     }
   }
 
@@ -462,35 +465,41 @@ async function inviteOneUser(
   let accessLink: string | undefined
 
   if (!userId) {
+    // Always create a confirmed Auth user with a temp password, then email a recovery
+    // SPA link (token_hash). Plain invite generateLink users can accept and get a
+    // session, but signInWithPassword often fails afterward — this path is reliable.
+    const tempPassword = crypto.randomUUID().replace(/-/g, '') + 'Aa1!'
+    const { data, error } = await adminClient.auth.admin.createUser({
+      email: row.email,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: { full_name: row.full_name },
+    })
+    if (error) throw error
+    userId = data.user.id
+
     if (sendInvites) {
-      // Do NOT use inviteUserByEmail — Auth templates emit /auth/v1/verify ConfirmationURL
-      // which Outlook Safe Links burn. generateLink + Resend uses a token_hash SPA URL.
-      const generated = await buildSpaAccessLink(adminClient, row.email, 'invite', redirectTo, {
-        full_name: row.full_name,
-      })
-      userId = generated.userId
-      accessLink = generated.link
+      const generated = await buildSpaAccessLink(
+        adminClient,
+        row.email,
+        'recovery',
+        redirectTo || 'https://keytrainlearning.com/accept-invite'
+      )
+      accessLink = generated.link.replace('/reset-password?', '/accept-invite?')
+      // Keep type=recovery in the query (accept-invite handles recovery + invite).
       await sendInviteEmailViaResend({
         to: row.email,
         fullName: row.full_name,
-        accessLink: generated.link,
+        accessLink,
       })
     } else {
-      const tempPassword = crypto.randomUUID().replace(/-/g, '') + 'Aa1!'
-      const { data, error } = await adminClient.auth.admin.createUser({
-        email: row.email,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: { full_name: row.full_name },
-      })
-      if (error) throw error
-      userId = data.user.id
       accessLink = (
         await buildSpaAccessLink(
           adminClient,
           row.email,
           'recovery',
-          redirectTo?.replace('/accept-invite', '/reset-password')
+          redirectTo?.replace('/accept-invite', '/reset-password') ||
+            'https://keytrainlearning.com/reset-password'
         )
       ).link
     }
@@ -1055,7 +1064,10 @@ Deno.serve(async (req) => {
       if (!userId) return jsonResponse({ error: 'user_id is required.' }, 400)
 
       const linkType = body.link_type === 'invite' ? 'invite' : 'recovery'
-      const profileQuery = adminClient.from('profiles').select('id, email, org_id, role, invitation_pending').eq('id', userId)
+      const profileQuery = adminClient
+        .from('profiles')
+        .select('id, email, org_id, role, invitation_pending')
+        .eq('id', userId)
       const { data: profile, error: profileError } =
         orgId === PLATFORM_ORG_ID
           ? await profileQuery.eq('role', 'admin').maybeSingle()
@@ -1075,16 +1087,20 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: 'User has no email address on file.' }, 422)
       }
 
-      const effectiveType =
-        linkType === 'invite' || profile.invitation_pending ? 'invite' : 'recovery'
-      const redirect =
-        effectiveType === 'invite'
-          ? (redirectTo ?? 'https://keytrainlearning.com/accept-invite')
-          : (redirectTo?.replace('/accept-invite', '/reset-password') ??
-            'https://keytrainlearning.com/reset-password')
+      // Always use recovery links for password setup — invite OTP users often cannot
+      // signInWithPassword after accepting. Pending invites still land on /accept-invite.
+      const forAcceptInvite = linkType === 'invite' || profile.invitation_pending === true
+      const redirect = forAcceptInvite
+        ? (redirectTo ?? 'https://keytrainlearning.com/accept-invite')
+        : (redirectTo?.replace('/accept-invite', '/reset-password') ??
+          'https://keytrainlearning.com/reset-password')
 
-      const accessLink = (await buildSpaAccessLink(adminClient, targetEmail, effectiveType, redirect))
-        .link
+      const generated = await buildSpaAccessLink(adminClient, targetEmail, 'recovery', redirect)
+      let accessLink = generated.link
+      if (forAcceptInvite) {
+        accessLink = accessLink.replace('/reset-password?', '/accept-invite?')
+      }
+
       await adminClient
         .from('profiles')
         .update({ failed_login_attempts: 0, login_locked_at: null })
@@ -1092,7 +1108,7 @@ Deno.serve(async (req) => {
 
       return jsonResponse({
         access_link: accessLink,
-        link_type: effectiveType,
+        link_type: 'recovery',
         message: 'Copy this link and send it to the user (do not use the email link if Outlook broke it).',
       })
     }

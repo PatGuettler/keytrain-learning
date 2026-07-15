@@ -8,7 +8,7 @@ import { isBackendReady } from '@/backend'
 import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
 import { ROLE_DASHBOARD } from '@/lib/constants'
 import { useRecoveryAuthSession } from '@/hooks/useRecoveryAuthSession'
-import { completeInvitationRegistration, fetchProfile, getSession, updatePassword } from '@/services/auth.service'
+import { completeInvitationRegistration, signIn, updatePassword } from '@/services/auth.service'
 import { syncRequiredAssignmentsForUser } from '@/services/assignments.service'
 import { useAuthStore } from '@/store/authStore'
 import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, PASSWORD_CRITERIA_HINT, passwordLengthError } from '@/lib/password'
@@ -56,22 +56,25 @@ export function AcceptInvitePage() {
       await updatePassword(password)
       await completeInvitationRegistration()
 
-      const session = (await getSession()) as { user?: { id: string; email?: string | null } } | null
-      const userId = session?.user?.id
-      if (!userId) {
-        throw new Error('Session expired after setting your password. Use Forgot password on the login page.')
+      // Password changes can invalidate the invite/recovery session. Sign in with
+      // the new password so grant_type=password works after logout.
+      const emailForLogin = (sessionEmail ?? '').trim().toLowerCase()
+      if (!emailForLogin) {
+        throw new Error('Could not determine account email. Use Forgot password on the login page.')
       }
 
-      const profile = await fetchProfile(userId)
-      const email = session.user?.email ?? profile.email ?? ''
+      const result = await signIn(emailForLogin, password)
+      let profile = result.profile
+      profile = { ...profile, invitation_pending: false }
+
       if (profile.role !== 'admin') {
-        await syncRequiredAssignmentsForUser(userId)
+        await syncRequiredAssignmentsForUser(result.user.id)
       }
 
       setAuth({
-        userId,
-        email,
-        profile: { ...profile, invitation_pending: false },
+        userId: result.user.id,
+        email: result.user.email ?? emailForLogin,
+        profile,
       })
 
       navigate(ROLE_DASHBOARD[profile.role] ?? '/employee/training', { replace: true })
