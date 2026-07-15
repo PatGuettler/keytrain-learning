@@ -24,33 +24,48 @@ const statusLabel: Record<string, string> = {
 }
 
 type RoleFilter = 'all' | UserRole
+type ResponseFilter = 'all' | 'needs_response' | 'responded' | 'overdue'
 
 export function OrgStaffDirectory({
   rows,
   getStaffDetailPath,
   title = 'Staff training',
+  showOrgColumn = false,
 }: {
   rows: StaffSummaryRow[]
   getStaffDetailPath: (userId: string) => string
   title?: string
+  showOrgColumn?: boolean
 }) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
+  const [responseFilter, setResponseFilter] = useState<ResponseFilter>('all')
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return rows.filter((row) => {
       if (roleFilter !== 'all' && row.role !== roleFilter) return false
+      if (responseFilter === 'needs_response' && row.currentMonthOpen <= 0) return false
+      if (responseFilter === 'responded' && (row.currentMonthOpen > 0 || row.totalCourses === 0)) {
+        return false
+      }
+      if (responseFilter === 'overdue' && row.overdueCourses <= 0) return false
       if (!q) return true
       return (
         row.userName.toLowerCase().includes(q) ||
-        (row.userEmail?.toLowerCase().includes(q) ?? false)
+        (row.userEmail?.toLowerCase().includes(q) ?? false) ||
+        (row.orgName?.toLowerCase().includes(q) ?? false)
       )
     })
-  }, [rows, query, roleFilter])
+  }, [rows, query, roleFilter, responseFilter])
 
-  const openStaff = (userId: string) => navigate(getStaffDetailPath(userId))
+  const openStaff = (userId: string) => {
+    const path = getStaffDetailPath(userId)
+    if (path) navigate(path)
+  }
+
+  const showOrg = showOrgColumn || rows.some((r) => Boolean(r.orgName))
 
   return (
     <Card>
@@ -58,19 +73,43 @@ export function OrgStaffDirectory({
         <div>
           <CardTitle className="text-base">{title}</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Search by name or email, then open a staff member to view their courses.
+            Filter by organization response status, then open a staff member for course detail.
+            Scores show average completed training.
           </p>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search staff by name or email…"
+              placeholder="Search staff by name, email, or org…"
               className="pl-9"
               aria-label="Search staff"
             />
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {(
+              [
+                ['all', 'All'],
+                ['needs_response', 'Not responded'],
+                ['responded', 'Responded'],
+                ['overdue', 'Overdue'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setResponseFilter(value)}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  responseFilter === value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
           <div className="flex flex-wrap gap-1">
             {(['all', 'employee', 'manager'] as const).map((role) => (
@@ -84,7 +123,7 @@ export function OrgStaffDirectory({
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }`}
               >
-                {role === 'all' ? 'All' : `${role}s`}
+                {role === 'all' ? 'All roles' : `${role}s`}
               </button>
             ))}
           </div>
@@ -95,7 +134,7 @@ export function OrgStaffDirectory({
           <p className="text-sm text-muted-foreground text-center py-8">No staff in this organization.</p>
         ) : filtered.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
-            No staff match &quot;{query}&quot;.
+            No staff match your filters.
           </p>
         ) : (
           <>
@@ -113,18 +152,26 @@ export function OrgStaffDirectory({
                         <div className="min-w-0">
                           <p className="font-medium text-sm text-primary">{row.userName}</p>
                           <p className="text-xs text-muted-foreground truncate">{row.userEmail}</p>
+                          {showOrg && row.orgName ? (
+                            <p className="text-xs text-muted-foreground mt-0.5">{row.orgName}</p>
+                          ) : null}
                           <p className="text-xs text-muted-foreground capitalize mt-1">{row.role}</p>
                         </div>
                         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground mt-1" />
                       </div>
                       <div className="mt-2 flex flex-wrap gap-2 text-xs">
                         <Badge variant={statusVariant[status]}>{statusLabel[status]}</Badge>
+                        {row.currentMonthOpen > 0 ? (
+                          <Badge variant="destructive">
+                            {row.currentMonthOpen} need response
+                          </Badge>
+                        ) : null}
                         <span className="text-muted-foreground">
                           {row.completedCourses}/{row.totalCourses} courses
                         </span>
-                        {row.avgScore != null && (
-                          <span className="text-muted-foreground">Avg {row.avgScore}%</span>
-                        )}
+                        <span className="font-medium tabular-nums">
+                          Score {row.avgScore != null ? `${row.avgScore}%` : '—'}
+                        </span>
                       </div>
                     </button>
                   </li>
@@ -137,9 +184,11 @@ export function OrgStaffDirectory({
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
                     <th className="pb-2 pr-4">Staff</th>
+                    {showOrg ? <th className="pb-2 pr-4">Organization</th> : null}
                     <th className="pb-2 pr-4">Role</th>
                     <th className="pb-2 pr-4">Progress</th>
                     <th className="pb-2 pr-4">Avg score</th>
+                    <th className="pb-2 pr-4">This month</th>
                     <th className="pb-2 pr-4">Status</th>
                     <th className="pb-2 w-8" />
                   </tr>
@@ -175,6 +224,9 @@ export function OrgStaffDirectory({
                             </Badge>
                           )}
                         </td>
+                        {showOrg ? (
+                          <td className="py-3 pr-4 text-muted-foreground">{row.orgName ?? '—'}</td>
+                        ) : null}
                         <td className="py-3 pr-4 capitalize text-muted-foreground">{row.role}</td>
                         <td className="py-3 pr-4 tabular-nums">
                           <span className="font-medium">
@@ -187,8 +239,17 @@ export function OrgStaffDirectory({
                             </Badge>
                           )}
                         </td>
-                        <td className="py-3 pr-4 tabular-nums">
+                        <td className="py-3 pr-4 tabular-nums font-medium">
                           {row.avgScore != null ? `${row.avgScore}%` : '—'}
+                        </td>
+                        <td className="py-3 pr-4">
+                          {row.currentMonthOpen > 0 ? (
+                            <Badge variant="destructive">
+                              {row.currentMonthOpen} open
+                            </Badge>
+                          ) : (
+                            <Badge variant="success">Caught up</Badge>
+                          )}
                         </td>
                         <td className="py-3 pr-4">
                           <Badge variant={statusVariant[status]}>{statusLabel[status]}</Badge>

@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ThemeDropdownItems } from '@/components/layout/ThemeSelector'
-import { OrgContextSwitcher } from '@/components/org-admin/OrgContextSwitcher'
 import { AppLogo } from '@/components/brand/AppLogo'
 import { useAuth } from '@/hooks/useAuth'
 import { useUiStore } from '@/store/uiStore'
@@ -49,18 +48,8 @@ export function Topbar() {
         <h1 className="hidden lg:block text-lg font-semibold truncate">
           Welcome, {profile?.full_name?.split(' ')[0] ?? 'User'}
         </h1>
-        {role === 'org_admin' ? (
-          <div className="hidden sm:block ml-2">
-            <OrgContextSwitcher />
-          </div>
-        ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-        {role === 'org_admin' ? (
-          <div className="sm:hidden">
-            <OrgContextSwitcher />
-          </div>
-        ) : null}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Account menu">

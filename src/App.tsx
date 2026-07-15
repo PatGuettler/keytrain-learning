@@ -40,6 +40,7 @@ import { OrgAdminUsersPage } from '@/pages/org-admin/OrgAdminUsersPage'
 import { OrgAdminBillingPage } from '@/pages/org-admin/OrgAdminBillingPage'
 import { OrgAdminCatalogPage } from '@/pages/org-admin/OrgAdminCatalogPage'
 import { OrgAdminLmsDashboardPage } from '@/pages/org-admin/OrgAdminLmsDashboardPage'
+import { OrgAdminStaffTrainingPage } from '@/pages/org-admin/OrgAdminStaffTrainingPage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { MarketingLayout } from '@/components/marketing/MarketingLayout'
 import { HomePage } from '@/pages/marketing/HomePage'
@@ -220,6 +221,10 @@ export default function App() {
             <Route
               path="/org-admin/training-reports"
               element={<RoleGuard roles={['org_admin']}><OrgAdminLmsDashboardPage /></RoleGuard>}
+            />
+            <Route
+              path="/org-admin/training-reports/staff/:userId"
+              element={<RoleGuard roles={['org_admin']}><OrgAdminStaffTrainingPage /></RoleGuard>}
             />
             <Route
               path="/org-admin/phishing/campaigns"

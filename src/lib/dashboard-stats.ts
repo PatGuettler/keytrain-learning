@@ -152,12 +152,16 @@ export interface StaffSummaryRow {
   userEmail: string | null
   role: Profile['role']
   isActive: boolean
+  orgId?: string
+  orgName?: string
   totalCourses: number
   completedCourses: number
   inProgressCourses: number
   overdueCourses: number
   pendingCourses: number
   lockedCourses: number
+  /** Incomplete current-month / monthly-catalog assignments (needs response). */
+  currentMonthOpen: number
   avgScore: number | null
   completionRate: number
 }
@@ -165,7 +169,8 @@ export interface StaffSummaryRow {
 export function buildStaffSummaryRows(
   users: Profile[],
   assignments: Assignment[],
-  activeCourseIds?: Set<string>
+  activeCourseIds?: Set<string>,
+  orgNameById?: Map<string, string>
 ): StaffSummaryRow[] {
   return users
     .map((user) => {
@@ -178,18 +183,33 @@ export function buildStaffSummaryRows(
         .map(resolveAssignmentScore)
         .filter((s): s is number => s != null)
 
+      const currentMonthOpen = userAssignments.filter((a) => {
+        const monthly = Boolean(a.course?.is_monthly_catalog)
+        if (monthly) return a.status !== 'completed'
+        if (a.status === 'completed') return false
+        const now = new Date()
+        const assigned = a.assigned_at ? new Date(a.assigned_at) : null
+        const due = a.due_date ? new Date(a.due_date) : null
+        const inMonth = (d: Date | null) =>
+          Boolean(d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth())
+        return inMonth(assigned) || inMonth(due)
+      }).length
+
       return {
         userId: user.id,
         userName: user.full_name,
         userEmail: user.email,
         role: user.role,
         isActive: user.is_active,
+        orgId: user.org_id,
+        orgName: orgNameById?.get(user.org_id),
         totalCourses: userAssignments.length,
         completedCourses: completed.length,
         inProgressCourses: userAssignments.filter((a) => a.status === 'in_progress').length,
         overdueCourses: userAssignments.filter((a) => a.status === 'overdue').length,
         pendingCourses: userAssignments.filter((a) => a.status === 'pending').length,
         lockedCourses: userAssignments.filter((a) => a.locked_at).length,
+        currentMonthOpen,
         avgScore:
           scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length) : null,
         completionRate:
@@ -198,7 +218,10 @@ export function buildStaffSummaryRows(
             : 0,
       }
     })
-    .sort((a, b) => a.userName.localeCompare(b.userName))
+    .sort((a, b) => {
+      if (a.currentMonthOpen !== b.currentMonthOpen) return b.currentMonthOpen - a.currentMonthOpen
+      return a.userName.localeCompare(b.userName)
+    })
 }
 
 export function staffOverallStatus(

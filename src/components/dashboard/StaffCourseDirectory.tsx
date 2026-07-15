@@ -20,7 +20,7 @@ export function StaffCourseDirectory({
   getCourseDetailPath,
 }: {
   rows: StaffTrainingRow[]
-  getCourseDetailPath: (courseId: string) => string
+  getCourseDetailPath?: (courseId: string) => string
 }) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
@@ -31,7 +31,10 @@ export function StaffCourseDirectory({
     return rows.filter((row) => row.courseTitle.toLowerCase().includes(q))
   }, [rows, query])
 
-  const openCourse = (courseId: string) => navigate(getCourseDetailPath(courseId))
+  const openCourse = (courseId: string) => {
+    const path = getCourseDetailPath?.(courseId)
+    if (path) navigate(path)
+  }
 
   return (
     <Card>
@@ -39,7 +42,9 @@ export function StaffCourseDirectory({
         <div>
           <CardTitle className="text-base">Courses</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Search by course name, then open a course to view scores, attempts, and mistakes.
+            {getCourseDetailPath
+              ? 'Search by course name, then open a course to view scores, attempts, and mistakes.'
+              : 'Search by course name. Scores and attempts are listed below.'}
           </p>
         </div>
         <div className="relative">
@@ -68,7 +73,10 @@ export function StaffCourseDirectory({
                   <button
                     type="button"
                     onClick={() => openCourse(row.courseId)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors"
+                    disabled={!getCourseDetailPath}
+                    className={`flex w-full items-center gap-3 px-4 py-3 text-left ${
+                      getCourseDetailPath ? 'hover:bg-muted/50 transition-colors' : 'cursor-default'
+                    }`}
                   >
                     <div className="min-w-0 flex-1 space-y-1">
                       <p className="font-medium text-sm truncate">{row.courseTitle}</p>
@@ -80,7 +88,9 @@ export function StaffCourseDirectory({
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <Badge variant={statusVariant[row.status]}>{STATUS_LABELS[row.status]}</Badge>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      {getCourseDetailPath ? (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      ) : null}
                     </div>
                   </button>
                 </li>
@@ -103,11 +113,21 @@ export function StaffCourseDirectory({
                     <tr
                       key={row.assignmentId}
                       onClick={() => openCourse(row.courseId)}
-                      className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
+                      className={`border-b last:border-0 ${
+                        getCourseDetailPath
+                          ? 'cursor-pointer hover:bg-muted/50 transition-colors'
+                          : ''
+                      }`}
                     >
-                      <td className="py-3 pr-4 font-medium text-primary">{row.courseTitle}</td>
+                      <td
+                        className={`py-3 pr-4 font-medium ${
+                          getCourseDetailPath ? 'text-primary' : 'text-foreground'
+                        }`}
+                      >
+                        {row.courseTitle}
+                      </td>
                       <td className="py-3 pr-4 text-muted-foreground">{formatDate(row.dueDate)}</td>
-                      <td className="py-3 pr-4 tabular-nums">
+                      <td className="py-3 pr-4 tabular-nums font-medium">
                         {row.score != null ? `${row.score}%` : '—'}
                       </td>
                       <td className="py-3 pr-4 tabular-nums">
@@ -122,7 +142,9 @@ export function StaffCourseDirectory({
                         <Badge variant={statusVariant[row.status]}>{STATUS_LABELS[row.status]}</Badge>
                       </td>
                       <td className="py-3">
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        {getCourseDetailPath ? (
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        ) : null}
                       </td>
                     </tr>
                   ))}
