@@ -569,7 +569,6 @@ async function sendInviteEmailViaResend(params: {
   }
   const from =
     Deno.env.get('INVITE_FROM_EMAIL')?.trim() ||
-    Deno.env.get('RESEND_FROM')?.trim() ||
     'KeyTrain Learning <noreply@keytrainlearning.com>'
 
   const subject = 'You’re invited to KeyTrain Learning'

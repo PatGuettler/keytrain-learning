@@ -11,11 +11,14 @@ export function useRecoveryAuthSession() {
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const [ready, setReady] = useState(false)
   const [checking, setChecking] = useState(true)
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     const { hasTokens, hasError } = getAuthCallbackSignals()
     const onAuthCallback = isAuthCallbackRoute()
+    const searchParams = new URLSearchParams(window.location.search)
+    const pendingVerify = searchParams.has('token_hash') || searchParams.has('code')
 
     const prepare = async () => {
       clearAuth()
@@ -25,8 +28,10 @@ export function useRecoveryAuthSession() {
         return
       }
 
-      // Never sign out when URL still has tokens, or when bootstrap already established a session.
-      if (!hasTokens) {
+      // Drop any existing login before consuming invite/reset tokens (avoids updating the wrong account).
+      if (pendingVerify) {
+        await signOut()
+      } else if (!hasTokens) {
         const existing = await getSession()
         if (!existing) {
           await signOut()
@@ -40,19 +45,18 @@ export function useRecoveryAuthSession() {
           const session =
             hasTokens || onAuthCallback ? await recoverSessionFromUrl() : await getSession()
           if (session) {
+            const user = (session as { user?: { email?: string } }).user
+            setSessionEmail(user?.email ?? null)
             setReady(true)
             setChecking(false)
             return
           }
         } catch (err) {
           console.error('Failed to establish recovery session:', err)
-          const session = await getSession()
-          if (session) {
-            setReady(true)
+          if (!cancelled) {
+            setReady(false)
             setChecking(false)
-            return
           }
-          if (!cancelled) setChecking(false)
           return
         }
 
@@ -73,5 +77,5 @@ export function useRecoveryAuthSession() {
     }
   }, [clearAuth])
 
-  return { ready, checking }
+  return { ready, checking, sessionEmail }
 }

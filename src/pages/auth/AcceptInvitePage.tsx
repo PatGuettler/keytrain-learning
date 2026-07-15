@@ -6,8 +6,11 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { isBackendReady } from '@/backend'
 import { BACKEND_NOT_CONFIGURED_MESSAGE } from '@/lib/backend-config'
+import { ROLE_DASHBOARD } from '@/lib/constants'
 import { useRecoveryAuthSession } from '@/hooks/useRecoveryAuthSession'
-import { completeInvitationRegistration, signOut, updatePassword } from '@/services/auth.service'
+import { completeInvitationRegistration, fetchProfile, getSession, updatePassword } from '@/services/auth.service'
+import { syncRequiredAssignmentsForUser } from '@/services/assignments.service'
+import { useAuthStore } from '@/store/authStore'
 import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, PASSWORD_CRITERIA_HINT, passwordLengthError } from '@/lib/password'
 
 function parseHashError(): string | null {
@@ -25,12 +28,13 @@ function parseHashError(): string | null {
 
 export function AcceptInvitePage() {
   const navigate = useNavigate()
+  const setAuth = useAuthStore((s) => s.setAuth)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const linkError = parseHashError()
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
-  const { ready, checking } = useRecoveryAuthSession()
+  const { ready, checking, sessionEmail } = useRecoveryAuthSession()
 
   const passwordTooShort = password.length > 0 && !isPasswordLongEnough(password)
 
@@ -51,11 +55,26 @@ export function AcceptInvitePage() {
     try {
       await updatePassword(password)
       await completeInvitationRegistration()
-      await signOut()
-      navigate('/login', {
-        replace: true,
-        state: { message: 'Account ready. Sign in with your email and new password.' },
+
+      const session = (await getSession()) as { user?: { id: string; email?: string | null } } | null
+      const userId = session?.user?.id
+      if (!userId) {
+        throw new Error('Session expired after setting your password. Use Forgot password on the login page.')
+      }
+
+      const profile = await fetchProfile(userId)
+      const email = session.user?.email ?? profile.email ?? ''
+      if (profile.role !== 'admin') {
+        await syncRequiredAssignmentsForUser(userId)
+      }
+
+      setAuth({
+        userId,
+        email,
+        profile: { ...profile, invitation_pending: false },
       })
+
+      navigate(ROLE_DASHBOARD[profile.role] ?? '/employee/training', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to set password')
       setSaving(false)
@@ -89,6 +108,11 @@ export function AcceptInvitePage() {
 
           {!linkError && ready && (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {sessionEmail && (
+                <p className="text-sm text-muted-foreground">
+                  Setting up account for <span className="font-medium text-foreground">{sessionEmail}</span>
+                </p>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="invite-password">Password</Label>
                 <Input
@@ -118,7 +142,7 @@ export function AcceptInvitePage() {
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={saving}>
-                {saving ? 'Saving…' : 'Create account'}
+                {saving ? 'Saving…' : 'Create account and continue'}
               </Button>
             </form>
           )}
