@@ -107,7 +107,7 @@ export function OrgAdminUsersPage() {
 
       {ready && activeOrgId ? (
         <>
-          {org ? <OrgJoinCodeCard org={org} /> : null}
+          {org ? <OrgJoinCodeCard org={org} memberCount={users.length} /> : null}
 
           <AddOrgUserForm orgId={activeOrgId} managers={managers} />
 
