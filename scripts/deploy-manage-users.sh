@@ -52,13 +52,30 @@ INVITE_URL="${INVITE_REDIRECT_URL:-https://keytrainlearning.com/accept-invite}"
 
 echo "Linking project and pushing auth config (Site URL + redirect URLs)…"
 "${SUPABASE_CMD[@]}" link --project-ref "$PROJECT_REF" --yes || true
-if ! "${SUPABASE_CMD[@]}" config push --yes; then
-  echo ""
-  echo "WARNING: config push failed. Manually set in Supabase Dashboard → Authentication → URL configuration:"
-  echo "  Site URL: https://keytrainlearning.com"
-  echo "  Redirect URLs: https://keytrainlearning.com/**"
-  echo ""
+
+# Prefer writing push logs so we can tell Auth success apart from Storage CLI bugs.
+# Known issue: some CLI versions fail after Auth with:
+#   failed to read Storage config: SchemaError(Missing key at ["databasePoolMode"])
+# Auth may already be up to date when that happens — see supabase/cli#5726 (fixed in ~2.109.0-beta.10+).
+CONFIG_PUSH_LOG="$(mktemp)"
+if "${SUPABASE_CMD[@]}" config push --yes 2>&1 | tee "$CONFIG_PUSH_LOG"; then
+  echo "Config push succeeded."
+else
+  if grep -q 'Remote Auth config is up to date' "$CONFIG_PUSH_LOG" \
+    && grep -q 'databasePoolMode' "$CONFIG_PUSH_LOG"; then
+    echo ""
+    echo "NOTE: Auth config was pushed (or already up to date). Ignoring Storage config CLI bug (databasePoolMode)."
+    echo "If redirects look wrong, set them in Dashboard → Authentication → URL configuration."
+    echo ""
+  else
+    echo ""
+    echo "WARNING: config push failed. Manually set in Supabase Dashboard → Authentication → URL configuration:"
+    echo "  Site URL: https://keytrainlearning.com"
+    echo "  Redirect URLs: https://keytrainlearning.com/**"
+    echo ""
+  fi
 fi
+rm -f "$CONFIG_PUSH_LOG"
 
 echo "Setting INVITE_REDIRECT_URL=$INVITE_URL"
 "${SUPABASE_CMD[@]}" secrets set "INVITE_REDIRECT_URL=$INVITE_URL" --project-ref "$PROJECT_REF"

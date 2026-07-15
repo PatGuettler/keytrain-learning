@@ -734,6 +734,9 @@ Deno.serve(async (req) => {
       })
       if (syncError) {
         console.error('sync_user_required_assignments after move_user failed', syncError.message)
+        throw new Error(
+          `User moved, but could not sync training for the new organization: ${syncError.message}`
+        )
       }
 
       return jsonResponse({ profile: moved, source_org_id: orgId, target_org_id: targetOrgId })

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useAuthStore } from '@/store/authStore'
 import { fetchProfiles } from '@/services/users.service'
+import { fetchOrganizationById } from '@/services/organizations.service'
 import { submitSupportRequest } from '@/services/support.service'
 import { updateDailyVerseEnabled } from '@/services/daily-verse.service'
 import { useAuth } from '@/hooks/useAuth'
@@ -26,6 +27,12 @@ import {
 const selectClass =
   'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm'
 
+function roleLabel(role: string) {
+  if (role === 'org_admin') return 'Org admin'
+  if (role === 'admin') return 'KeyTrain Learning admin'
+  return role
+}
+
 export function ProfilePage() {
   const profile = useAuthStore((s) => s.profile)
   const userId = useAuthStore((s) => s.userId)!
@@ -34,12 +41,21 @@ export function ProfilePage() {
   const { role } = useAuth()
   const prayerPath = role ? ROLE_PRAYER[role] : '/employee/prayer'
 
+  const belongsToOrg = profile?.role === 'employee' || profile?.role === 'manager'
+
+  const { data: organization } = useQuery({
+    queryKey: ['profile-organization', profile?.org_id],
+    queryFn: () => fetchOrganizationById(profile!.org_id),
+    enabled: Boolean(belongsToOrg && profile?.org_id),
+  })
+
   const { data: manager } = useQuery({
     queryKey: ['profile-manager', profile?.manager_id],
     queryFn: () => fetchProfiles({ orgId: profile!.org_id, includeInactive: true }),
-    enabled: Boolean(profile?.manager_id && profile?.org_id),
+    enabled: Boolean(profile?.manager_id && profile?.org_id && belongsToOrg),
     select: (rows) => rows.find((p) => p.id === profile?.manager_id) ?? null,
   })
+
 
   const [category, setCategory] = useState<SupportCategory>('question')
   const [subject, setSubject] = useState('')
@@ -122,10 +138,15 @@ export function ProfilePage() {
             <span className="text-muted-foreground">Email:</span> {profile.email ?? '—'}
           </p>
           <p>
-            <span className="text-muted-foreground">Role:</span>{' '}
-            <span className="capitalize">{profile.role}</span>
+            <span className="text-muted-foreground">Role:</span> {roleLabel(profile.role)}
           </p>
-          {profile.role !== 'admin' && (
+          {belongsToOrg && (
+            <p>
+              <span className="text-muted-foreground">Organization:</span>{' '}
+              {organization?.name ?? (profile.org_id ? 'Loading…' : '—')}
+            </p>
+          )}
+          {belongsToOrg && (
             <p>
               <span className="text-muted-foreground">Manager:</span>{' '}
               {manager?.full_name ?? 'Not assigned'}

@@ -6,6 +6,7 @@ import { DailyVerseBanner } from '@/components/spiritual/DailyVerseBanner'
 import { useNewCourseNotices } from '@/hooks/useNewCourseNotices'
 import { useDailyVerse } from '@/hooks/useDailyVerse'
 import { useRequiredAssignmentSync } from '@/hooks/useRequiredAssignmentSync'
+import { useRefreshProfileOnMount } from '@/hooks/useRefreshProfileOnMount'
 import { useAuthStore } from '@/store/authStore'
 import { SPIRITUAL_FEATURES_ENABLED } from '@/lib/spiritual-features'
 import { Sidebar } from './Sidebar'
@@ -18,6 +19,7 @@ export function AppShell() {
   const role = useAuthStore((s) => s.profile?.role)
   const { notices, dismissNotice, enabled } = useNewCourseNotices()
   const { showBanner, verse, dismiss } = useDailyVerse()
+  useRefreshProfileOnMount()
   useRequiredAssignmentSync()
   const inTrainingPlayer = isTrainingPlayerPath(location.pathname)
 
