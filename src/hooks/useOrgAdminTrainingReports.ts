@@ -5,7 +5,6 @@ import { fetchCourses } from '@/services/courses.service'
 import { fetchMyOrgMemberships } from '@/services/org-memberships.service'
 import { fetchProfiles } from '@/services/users.service'
 import { buildStaffSummaryRows, computeAvgScore } from '@/lib/dashboard-stats'
-import { buildCurrentMonthTrainingRows } from '@/lib/current-month-training'
 import { useAuthStore } from '@/store/authStore'
 import type { Assignment, Course } from '@/types/course.types'
 import type { Organization, Profile } from '@/types/user.types'
@@ -115,16 +114,6 @@ export function useOrgAdminTrainingReports() {
     [aggregated.users, aggregated.assignments, orgNameById]
   )
 
-  const monthRows = useMemo(
-    () =>
-      buildCurrentMonthTrainingRows(
-        aggregated.assignments,
-        aggregated.users,
-        orgNameById
-      ),
-    [aggregated.assignments, aggregated.users, orgNameById]
-  )
-
   const avgScore = useMemo(
     () => computeAvgScore(aggregated.assignments),
     [aggregated.assignments]
@@ -144,7 +133,6 @@ export function useOrgAdminTrainingReports() {
     assignments: aggregated.assignments,
     metrics,
     staffSummaries,
-    monthRows,
     avgScore,
     isLoading,
   }

@@ -11,7 +11,6 @@ import {
   HeartHandshake,
   Hexagon,
   CreditCard,
-  Library,
   BarChart3,
 } from 'lucide-react'
 import type { UserRole } from '@/types/user.types'
@@ -51,7 +50,6 @@ const orgAdminNav: NavItem[] = [
   { to: '/org-admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/org-admin/organizations', label: 'Organizations', icon: Building2 },
   { to: '/org-admin/training-reports', label: 'Training reports', icon: BarChart3 },
-  { to: '/org-admin/catalog', label: 'Security catalog', icon: Library },
   { to: '/org-admin/billing', label: 'Billing', icon: CreditCard },
   { to: '/org-admin/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
   { to: '/org-admin/phishing/campaigns', label: 'Phishing sims', icon: Fish, requiresPhishing: true },
@@ -82,7 +80,7 @@ export const mobileTabNavByRole: Record<UserRole, NavItem[]> = {
   org_admin: [
     { to: '/org-admin/dashboard', label: 'Home', icon: LayoutDashboard },
     { to: '/org-admin/organizations', label: 'Orgs', icon: Building2 },
-    { to: '/org-admin/catalog', label: 'Catalog', icon: Library },
+    { to: '/org-admin/training-reports', label: 'Reports', icon: BarChart3 },
     { to: '/org-admin/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
   ],
   manager: [

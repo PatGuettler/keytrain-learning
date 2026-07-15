@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Award, BookOpen, TrendingUp, Users, AlertTriangle } from 'lucide-react'
 import { CompletionChart } from '@/components/dashboard/CompletionChart'
-import { CurrentMonthTrainingPanel } from '@/components/dashboard/CurrentMonthTrainingPanel'
 import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { OrgCourseTable } from '@/components/dashboard/OrgCourseTable'
 import { OrgStaffDirectory } from '@/components/dashboard/OrgStaffDirectory'
@@ -13,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { useOrgAdminTrainingReports } from '@/hooks/useOrgAdminTrainingReports'
 import { getOrgSlug } from '@/lib/org-slugs'
 
-/** Multi-org LMS training reports: filter by org, scores, current-month responders. */
+/** Multi-org LMS training reports: filter by org, then open staff for scores and progress. */
 export function OrgAdminLmsDashboardPage() {
   const {
     adminOrgs,
@@ -25,7 +24,6 @@ export function OrgAdminLmsDashboardPage() {
     assignments,
     metrics,
     staffSummaries,
-    monthRows,
     avgScore,
     isLoading,
   } = useOrgAdminTrainingReports()
@@ -78,7 +76,7 @@ export function OrgAdminLmsDashboardPage() {
 
       <PageHeader
         title={title}
-        description="Filter by organization, review scores, and see who still needs to respond to this month’s training."
+        description="Filter by organization, then open a staff member to see scores and course progress."
       />
 
       <div className="space-y-2">
@@ -108,31 +106,14 @@ export function OrgAdminLmsDashboardPage() {
         />
         <StatCard title="Completion Rate" value={`${metrics.completionRate}%`} icon={TrendingUp} />
         <StatCard title="Avg Score" value={`${avgScore}%`} icon={Award} />
-        <StatCard
-          title="Not responded"
-          value={monthRows.filter((r) => !r.responded).length}
-          subtitle="this month"
-          icon={AlertTriangle}
-        />
+        <StatCard title="Overdue" value={metrics.overdueCount} icon={AlertTriangle} />
       </div>
 
-      <CurrentMonthTrainingPanel rows={monthRows} showOrgColumn={showOrgColumn} />
-
-      <div className="grid gap-5 sm:gap-6 grid-cols-1 lg:grid-cols-2">
-        <CompletionChart
-          completed={metrics.completionRate}
-          remaining={100 - metrics.completionRate}
-          title="Organization completion"
-        />
-        <div className="rounded-lg border bg-card p-4 space-y-2">
-          <p className="text-sm font-medium">Why this matters</p>
-          <p className="text-sm text-muted-foreground">
-            Use the lists above to confirm every staff member has responded to the current
-            month&apos;s training and to spot low scores before audits. Filter by organization when you
-            manage more than one.
-          </p>
-        </div>
-      </div>
+      <CompletionChart
+        completed={metrics.completionRate}
+        remaining={100 - metrics.completionRate}
+        title="Organization completion"
+      />
 
       <OrgStaffDirectory
         rows={staffSummaries}

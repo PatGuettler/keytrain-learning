@@ -258,7 +258,7 @@ export function RailNetPage() {
               trainingAssignments={data.training_assignments}
               trendReports={data.trend_reports}
               lockedOrgId={platformAdmin ? null : railnetOrgId}
-              courseEditBasePath={isKtlAdmin ? '/admin/courses' : '/org-admin/catalog'}
+              courseEditBasePath={isKtlAdmin ? '/admin/courses' : '/org-admin/training-reports'}
             />
           )}
           {view === 'compliance' && showCompliance && (

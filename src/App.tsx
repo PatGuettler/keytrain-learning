@@ -39,7 +39,6 @@ import { OrgAdminDashboardPage } from '@/pages/org-admin/OrgAdminDashboardPage'
 import { OrgAdminOrganizationsPage } from '@/pages/org-admin/OrgAdminOrganizationsPage'
 import { OrgAdminUsersPage } from '@/pages/org-admin/OrgAdminUsersPage'
 import { OrgAdminBillingPage } from '@/pages/org-admin/OrgAdminBillingPage'
-import { OrgAdminCatalogPage } from '@/pages/org-admin/OrgAdminCatalogPage'
 import { OrgAdminLmsDashboardPage } from '@/pages/org-admin/OrgAdminLmsDashboardPage'
 import { OrgAdminStaffTrainingPage } from '@/pages/org-admin/OrgAdminStaffTrainingPage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
@@ -215,10 +214,7 @@ export default function App() {
               path="/org-admin/billing"
               element={<RoleGuard roles={['org_admin']}><OrgAdminBillingPage /></RoleGuard>}
             />
-            <Route
-              path="/org-admin/catalog"
-              element={<RoleGuard roles={['org_admin']}><OrgAdminCatalogPage /></RoleGuard>}
-            />
+            <Route path="/org-admin/catalog" element={<Navigate to="/org-admin/dashboard" replace />} />
             <Route
               path="/org-admin/training-reports"
               element={<RoleGuard roles={['org_admin']}><OrgAdminLmsDashboardPage /></RoleGuard>}
