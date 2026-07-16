@@ -36,6 +36,7 @@ export function createUnconfiguredBackend(): Backend {
       deleteModule: fail,
       syncCourseModules: fail,
       fetchPublicationsForOrg: fail,
+      fetchActivePublications: fail,
       fetchPublicationsForCourse: fail,
       publishCourseToOrg: fail,
       unpublishCourseFromOrg: fail,

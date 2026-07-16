@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchAllAssignments, fetchAssignmentsForOrg } from '@/services/assignments.service'
 import { fetchCourses, fetchHospitalCourses } from '@/services/courses.service'
+import { fetchActivePublications } from '@/services/course-publications.service'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
 import { fetchProfiles } from '@/services/users.service'
 import { fetchOrgModuleAttempts } from '@/services/sessions.service'
@@ -29,6 +30,11 @@ export function useAdminDashboard() {
     queryFn: fetchHospitalCourses,
   })
 
+  const { data: publications = [], isLoading: publicationsLoading } = useQuery({
+    queryKey: ['course-publications', 'active'],
+    queryFn: fetchActivePublications,
+  })
+
   const { data: assignments = [], isLoading: assignmentsLoading } = useQuery({
     queryKey: ['all-assignments'],
     queryFn: fetchAllAssignments,
@@ -38,9 +44,9 @@ export function useAdminDashboard() {
     () =>
       hospitals.map((org) => ({
         org,
-        ...computeOrgMetrics(org.id, users, courses, assignments),
+        ...computeOrgMetrics(org.id, users, courses, assignments, publications),
       })),
-    [hospitals, users, courses, assignments]
+    [hospitals, users, courses, assignments, publications]
   )
 
   const platformTotals = useMemo(() => {
@@ -68,7 +74,8 @@ export function useAdminDashboard() {
   return {
     hospitals: hospitalSummaries,
     platformTotals,
-    isLoading: orgsLoading || usersLoading || coursesLoading || assignmentsLoading,
+    isLoading:
+      orgsLoading || usersLoading || coursesLoading || publicationsLoading || assignmentsLoading,
   }
 }
 

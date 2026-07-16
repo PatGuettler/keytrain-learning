@@ -249,11 +249,13 @@ export function createSupabaseBackend(): Backend {
       async fetchCourses(orgId, publishedOnly = false) {
         if (publishedOnly) {
           // Prefer SECURITY DEFINER RPC so nested RLS / course embeds can't hide published courses.
+          // Platform admins get an empty set from this RPC by design — fall through to
+          // course_publications so org dashboards still see catalog subscriptions.
           const { data: rpcRows, error: rpcError } = await supabase.rpc(
             'list_required_courses_for_user',
             {}
           )
-          if (!rpcError && Array.isArray(rpcRows)) {
+          if (!rpcError && Array.isArray(rpcRows) && rpcRows.length > 0) {
             const courses: Course[] = rpcRows
               .filter((row) => row.org_id === orgId)
               .map((row) => ({
@@ -283,7 +285,9 @@ export function createSupabaseBackend(): Backend {
                   created_at: row.published_at,
                 },
               }))
-            return courses.sort((a, b) => a.title.localeCompare(b.title))
+            if (courses.length > 0) {
+              return courses.sort((a, b) => a.title.localeCompare(b.title))
+            }
           }
 
           const { data, error } = await supabase
@@ -409,6 +413,14 @@ export function createSupabaseBackend(): Backend {
           .eq('org_id', orgId)
         if (error) throw error
         return data as CoursePublication[]
+      },
+      async fetchActivePublications() {
+        const { data, error } = await supabase
+          .from('course_publications')
+          .select('*')
+          .is('unpublished_at', null)
+        if (error) throw error
+        return ((data ?? []) as CoursePublication[]).filter(isPublicationActive)
       },
       async fetchPublicationsForCourse(courseId) {
         const { data, error } = await supabase

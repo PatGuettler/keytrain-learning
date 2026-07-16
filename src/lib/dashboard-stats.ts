@@ -1,5 +1,6 @@
-import type { Assignment, Course, Module, ModuleAttempt, TrainingSession } from '@/types/course.types'
+import type { Assignment, Course, CoursePublication, Module, ModuleAttempt, TrainingSession } from '@/types/course.types'
 import type { Profile } from '@/types/user.types'
+import { isPublicationActive } from '@/lib/course-publications'
 
 /** Assignments that count toward staff progress (active courses + completed history). */
 export function filterAssignmentsForReporting(
@@ -390,20 +391,28 @@ export function computeOrgMetrics(
   orgId: string,
   users: Profile[],
   courses: Course[],
-  assignments: Assignment[]
+  assignments: Assignment[],
+  publications: CoursePublication[] = []
 ): OrgDashboardMetrics {
   const orgUsers = users.filter((u) => u.org_id === orgId)
   const orgUserIds = new Set(orgUsers.map((u) => u.id))
+  const publishedToOrgIds = new Set(
+    publications
+      .filter((p) => p.org_id === orgId && isPublicationActive(p))
+      .map((p) => p.course_id)
+  )
   // Include owned courses and courses published to this org (catalog subscriptions)
   const orgCourses = courses.filter(
-    (c) => c.org_id === orgId || c.publication?.org_id === orgId
+    (c) => c.org_id === orgId || c.publication?.org_id === orgId || publishedToOrgIds.has(c.id)
   )
   const orgAssignments = assignments.filter((a) => orgUserIds.has(a.user_id))
 
   return {
     userCount: orgUsers.length,
     totalCourses: orgCourses.length,
-    publishedCourses: orgCourses.filter((c) => c.is_published || Boolean(c.publication)).length,
+    publishedCourses: orgCourses.filter(
+      (c) => c.is_published || Boolean(c.publication) || publishedToOrgIds.has(c.id)
+    ).length,
     assignmentCount: orgAssignments.length,
     completionRate: computeCompletionRate(orgAssignments),
     overdueCount: orgAssignments.filter((a) => a.status === 'overdue').length,

@@ -4,6 +4,10 @@ export async function fetchPublicationsForOrg(orgId: string) {
   return backend.courses.fetchPublicationsForOrg(orgId)
 }
 
+export async function fetchActivePublications() {
+  return backend.courses.fetchActivePublications()
+}
+
 export async function fetchPublicationsForCourse(courseId: string) {
   return backend.courses.fetchPublicationsForCourse(courseId)
 }
