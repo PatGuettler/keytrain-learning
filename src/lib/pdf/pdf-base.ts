@@ -3,6 +3,7 @@ import autoTable from 'jspdf-autotable'
 import { APP_NAME } from '@/lib/constants'
 
 const BRAND_RGB: [number, number, number] = [13, 148, 136]
+const PDF_BOTTOM_MARGIN = 18
 
 type JsPDFWithAutoTable = jsPDF & {
   lastAutoTable?: { finalY: number }
@@ -81,18 +82,29 @@ export function addMetricsSection(
     styles: { fontSize: 10, cellPadding: 2.5 },
     headStyles: { fillColor: BRAND_RGB, textColor: 255, fontStyle: 'bold' },
     columnStyles: { 0: { cellWidth: 70 } },
-    margin: { left: 14, right: 14 },
+    rowPageBreak: 'avoid',
+    margin: { left: 14, right: 14, bottom: PDF_BOTTOM_MARGIN },
   })
   return ((doc as JsPDFWithAutoTable).lastAutoTable?.finalY ?? startY) + 8
 }
 
+export function ensurePdfSpace(doc: jsPDF, startY: number, neededMm = 24): number {
+  const pageHeight = doc.internal.pageSize.getHeight()
+  if (startY + neededMm > pageHeight - PDF_BOTTOM_MARGIN) {
+    doc.addPage()
+    return 20
+  }
+  return startY
+}
+
 export function addSectionHeading(doc: jsPDF, title: string, startY: number): number {
+  const y = ensurePdfSpace(doc, startY, 16)
   doc.setFontSize(11)
   doc.setTextColor(40)
   doc.setFont('helvetica', 'bold')
-  doc.text(title, 14, startY)
+  doc.text(title, 14, y)
   doc.setFont('helvetica', 'normal')
-  return startY + 8
+  return y + 8
 }
 
 export function addDataTable(
@@ -106,9 +118,21 @@ export function addDataTable(
     startY,
     head: [head],
     body,
-    styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak' },
-    headStyles: { fillColor: BRAND_RGB, textColor: 255, fontStyle: 'bold' },
-    margin: { left: 14, right: 14 },
+    styles: {
+      fontSize: 9,
+      cellPadding: 2,
+      overflow: 'linebreak',
+      valign: 'top',
+    },
+    headStyles: {
+      fillColor: BRAND_RGB,
+      textColor: 255,
+      fontStyle: 'bold',
+      overflow: 'linebreak',
+    },
+    // Keep rows intact across pages when possible; leave room for footer.
+    rowPageBreak: 'avoid',
+    margin: { left: 14, right: 14, bottom: PDF_BOTTOM_MARGIN },
     columnStyles,
   })
   return ((doc as JsPDFWithAutoTable).lastAutoTable?.finalY ?? startY) + 10

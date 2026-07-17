@@ -21,6 +21,69 @@ import {
   saveDashboardPdf,
 } from '@/lib/pdf/pdf-base'
 
+function trainingNeedsSummaryRows(needs: TrainingNeed[], includeCourse: boolean): (string | number)[][] {
+  return needs.map((need) => {
+    const stats: (string | number)[] = [
+      need.moduleTitle,
+      need.moduleType,
+      need.attemptCount,
+      `${need.passRate}%`,
+      `${need.avgScore}%`,
+    ]
+    return includeCourse ? [need.courseTitle, ...stats] : stats
+  })
+}
+
+function trainingNeedIssueRows(
+  needs: TrainingNeed[],
+  includeCourse: boolean
+): (string | number)[][] {
+  return needs.flatMap((need) => {
+    const issues = need.issues.length > 0 ? need.issues : ['—']
+    return issues.map((issue) => {
+      const row: (string | number)[] = [need.moduleTitle, issue]
+      return includeCourse ? [need.courseTitle, ...row] : row
+    })
+  })
+}
+
+function addTrainingNeedsPdfSection(
+  doc: ReturnType<typeof createDashboardPdf>,
+  needs: TrainingNeed[],
+  startY: number,
+  options: { includeCourse: boolean }
+): number {
+  if (needs.length === 0) return startY
+
+  let y = addSectionHeading(doc, 'Training needs', startY)
+  y = addDataTable(
+    doc,
+    options.includeCourse
+      ? ['Course', 'Module', 'Type', 'Attempts', 'Pass rate', 'Avg score']
+      : ['Module', 'Type', 'Attempts', 'Pass rate', 'Avg score'],
+    trainingNeedsSummaryRows(needs, options.includeCourse),
+    y
+  )
+
+  y = addSectionHeading(doc, 'Missed questions & issues', y)
+  return addDataTable(
+    doc,
+    options.includeCourse ? ['Course', 'Module', 'Issue'] : ['Module', 'Issue'],
+    trainingNeedIssueRows(needs, options.includeCourse),
+    y,
+    options.includeCourse
+      ? {
+          0: { cellWidth: 42 },
+          1: { cellWidth: 36 },
+          2: { cellWidth: 'auto' },
+        }
+      : {
+          0: { cellWidth: 48 },
+          1: { cellWidth: 'auto' },
+        }
+  )
+}
+
 const STAFF_STATUS_LABELS: Record<string, string> = {
   completed: 'All complete',
   in_progress: 'In progress',
@@ -145,30 +208,7 @@ export function exportOrgDashboardPdf(
   )
 
   if (trainingNeeds.length > 0) {
-    y = addSectionHeading(doc, 'Training needs', y)
-    addDataTable(
-      doc,
-      ['Course', 'Module', 'Type', 'Attempts', 'Pass rate', 'Avg score', 'Top issues'],
-      trainingNeeds.map((need) => [
-        need.courseTitle,
-        need.moduleTitle,
-        need.moduleType,
-        need.attemptCount,
-        `${need.passRate}%`,
-        `${need.avgScore}%`,
-        need.issues.join('; ') || '—',
-      ]),
-      y,
-      {
-        0: { cellWidth: 28 },
-        1: { cellWidth: 28 },
-        2: { cellWidth: 16 },
-        3: { cellWidth: 16 },
-        4: { cellWidth: 16 },
-        5: { cellWidth: 16 },
-        6: { cellWidth: 'wrap' },
-      }
-    )
+    addTrainingNeedsPdfSection(doc, trainingNeeds, y, { includeCourse: true })
   }
 
   saveDashboardPdf(doc, `${orgName}-dashboard-${new Date().toISOString().slice(0, 10)}`)
@@ -217,28 +257,7 @@ export function exportOrgCoursePdf(
   }
 
   if (trainingNeeds.length > 0) {
-    y = addSectionHeading(doc, 'Training needs', y)
-    y = addDataTable(
-      doc,
-      ['Module', 'Type', 'Attempts', 'Pass rate', 'Avg score', 'Missed / issues'],
-      trainingNeeds.map((need) => [
-        need.moduleTitle,
-        need.moduleType,
-        need.attemptCount,
-        `${need.passRate}%`,
-        `${need.avgScore}%`,
-        need.issues.join('; ') || '—',
-      ]),
-      y,
-      {
-        0: { cellWidth: 36 },
-        1: { cellWidth: 18 },
-        2: { cellWidth: 16 },
-        3: { cellWidth: 18 },
-        4: { cellWidth: 18 },
-        5: { cellWidth: 'wrap' },
-      }
-    )
+    y = addTrainingNeedsPdfSection(doc, trainingNeeds, y, { includeCourse: false })
   }
 
   y = addSectionHeading(doc, 'Staff on this course', y)
