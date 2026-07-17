@@ -97,7 +97,12 @@ export function AdminOrgCourseDetailPage() {
       </div>
 
       {trainingNeeds.length > 0 && (
-        <OrgTrainingNeedsPanel needs={trainingNeeds} orgSlug={orgSlug!} highlightModuleId={highlightModuleId} />
+        <OrgTrainingNeedsPanel
+          needs={trainingNeeds}
+          orgSlug={orgSlug!}
+          highlightModuleId={highlightModuleId}
+          disableNavigation
+        />
       )}
 
       <OrgCourseStaffDirectory
