@@ -88,7 +88,7 @@ export function StaffCourseDetailSections({
               </dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Attempts</dt>
+              <dt className="text-muted-foreground">Course attempts</dt>
               <dd className="mt-1 font-medium tabular-nums text-foreground">
                 {formatAttemptsLabel(courseRow.attemptsUsed, courseRow.maxAttempts)}
                 {courseRow.locked && (

@@ -59,8 +59,8 @@ function addTrainingNeedsPdfSection(
   y = addDataTable(
     doc,
     options.includeCourse
-      ? ['Course', 'Module', 'Type', 'Attempts', 'Pass rate', 'Avg score']
-      : ['Module', 'Type', 'Attempts', 'Pass rate', 'Avg score'],
+      ? ['Course', 'Module', 'Type', 'Quiz takes', 'Pass rate', 'Avg score']
+      : ['Module', 'Type', 'Quiz takes', 'Pass rate', 'Avg score'],
     trainingNeedsSummaryRows(needs, options.includeCourse),
     y
   )
@@ -263,7 +263,7 @@ export function exportOrgCoursePdf(
   y = addSectionHeading(doc, 'Staff on this course', y)
   addDataTable(
     doc,
-    ['Name', 'Email', 'Due', 'Score', 'Attempts', 'Status'],
+    ['Name', 'Email', 'Due', 'Score', 'Course attempts', 'Status'],
     staffRows.map((row) => [
       row.userName,
       row.userEmail ?? '—',
@@ -307,7 +307,7 @@ export function exportStaffDashboardPdf(user: Profile, summary: StaffSummaryRow,
   y = addSectionHeading(doc, 'Courses', y)
   addDataTable(
     doc,
-    ['Course', 'Due', 'Score', 'Attempts', 'Status'],
+    ['Course', 'Due', 'Score', 'Course attempts', 'Status'],
     courseRows.map((row) => [
       row.courseTitle,
       formatDate(row.dueDate),
@@ -346,7 +346,7 @@ export function exportStaffCoursePdf(
       { label: 'Status', value: STATUS_LABELS[courseRow.status] ?? courseRow.status },
       { label: 'Score', value: scoreText(courseRow.score) },
       {
-        label: 'Attempts',
+        label: 'Course attempts',
         value: `${courseRow.attemptsUsed}/${courseRow.maxAttempts}${courseRow.locked ? ' (locked)' : ''}`,
       },
       { label: 'Due date', value: formatDate(courseRow.dueDate) },

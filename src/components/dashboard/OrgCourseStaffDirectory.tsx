@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { STATUS_LABELS } from '@/lib/constants'
+import { formatAttemptsLabel } from '@/lib/course-attempts'
 import { formatDate } from '@/lib/utils'
 import type { StaffTrainingRow } from '@/lib/dashboard-stats'
 
@@ -43,7 +44,8 @@ export function OrgCourseStaffDirectory({
         <div>
           <CardTitle className="text-base">Staff on this course</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Search by name or email, then open a staff member for scores, attempts, and module mistakes.
+            Course attempts are used / allowed for the whole course (unlocks can go past the limit).
+            Quiz takes appear under Training needs above.
           </p>
         </div>
         <div className="relative">
@@ -78,8 +80,8 @@ export function OrgCourseStaffDirectory({
                       <p className="font-medium text-sm truncate">{row.userName}</p>
                       <p className="text-xs text-muted-foreground truncate">{row.userEmail}</p>
                       <p className="text-xs text-muted-foreground">
-                        Score {row.score != null ? `${row.score}%` : '—'} · Attempts {row.attemptsUsed}/
-                        {row.maxAttempts}
+                        Score {row.score != null ? `${row.score}%` : '—'} · Course attempts{' '}
+                        {formatAttemptsLabel(row.attemptsUsed, row.maxAttempts)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -97,7 +99,12 @@ export function OrgCourseStaffDirectory({
                     <th className="pb-2 pr-4">Staff</th>
                     <th className="pb-2 pr-4">Due</th>
                     <th className="pb-2 pr-4">Score</th>
-                    <th className="pb-2 pr-4">Attempts</th>
+                    <th
+                      className="pb-2 pr-4"
+                      title="Used / allowed course attempts. Unlocks can exceed the max."
+                    >
+                      Course attempts
+                    </th>
                     <th className="pb-2 pr-4">Status</th>
                     <th className="pb-2 w-8" />
                   </tr>
@@ -120,7 +127,7 @@ export function OrgCourseStaffDirectory({
                         {row.score != null ? `${row.score}%` : '—'}
                       </td>
                       <td className="py-3 pr-4 tabular-nums text-foreground">
-                        {row.attemptsUsed}/{row.maxAttempts}
+                        {formatAttemptsLabel(row.attemptsUsed, row.maxAttempts)}
                         {row.locked && (
                           <Badge variant="destructive" className="ml-2">
                             Locked

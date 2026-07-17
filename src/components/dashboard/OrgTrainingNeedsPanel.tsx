@@ -28,7 +28,8 @@ export function OrgTrainingNeedsPanel({
           Training needs
         </CardTitle>
         <CardDescription>
-          Click a module to view staff scores and mistakes — course editing is only in Course Management.
+          Module quiz results across staff — pass rate and missed questions here are not the same as
+          course attempts in the staff table.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -58,7 +59,12 @@ export function OrgTrainingNeedsPanel({
                         {need.passRate}% pass
                       </Badge>
                       <Badge variant="outline">{need.avgScore}% avg</Badge>
-                      <Badge variant="secondary">{need.attemptCount} attempts</Badge>
+                      <Badge
+                        variant="secondary"
+                        title="Times this quiz/module was submitted (not course attempts)"
+                      >
+                        {need.attemptCount} quiz {need.attemptCount === 1 ? 'take' : 'takes'}
+                      </Badge>
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
