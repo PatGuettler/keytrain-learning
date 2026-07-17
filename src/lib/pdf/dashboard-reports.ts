@@ -174,6 +174,94 @@ export function exportOrgDashboardPdf(
   saveDashboardPdf(doc, `${orgName}-dashboard-${new Date().toISOString().slice(0, 10)}`)
 }
 
+export function exportOrgCoursePdf(
+  orgName: string,
+  course: Course,
+  metrics: {
+    assignmentCount: number
+    completedCount: number
+    inProgressCount: number
+    overdueCount: number
+    completionRate: number
+    avgScore: number | null
+  },
+  trainingNeeds: TrainingNeed[],
+  staffRows: StaffTrainingRow[]
+) {
+  const subtitle = `${orgName} · Course training report`
+  const doc = createDashboardPdf(course.title, subtitle)
+  let y = pdfStartY(subtitle)
+
+  y = addMetricsSection(
+    doc,
+    [
+      { label: 'Status', value: course.is_published ? 'Published' : 'Draft' },
+      { label: 'Assigned', value: String(metrics.assignmentCount) },
+      { label: 'Completed', value: String(metrics.completedCount) },
+      { label: 'In progress', value: String(metrics.inProgressCount) },
+      { label: 'Completion rate', value: `${metrics.completionRate}%` },
+      { label: 'Average score', value: scoreText(metrics.avgScore) },
+      { label: 'Overdue', value: String(metrics.overdueCount) },
+    ],
+    y
+  )
+
+  if (course.description?.trim()) {
+    y = addSectionHeading(doc, 'Course description', y)
+    const description = course.description.trim()
+    doc.setFontSize(9)
+    doc.setTextColor(60, 60, 60)
+    const lines = doc.splitTextToSize(description, 180)
+    doc.text(lines, 14, y)
+    y += lines.length * 4.2 + 6
+  }
+
+  if (trainingNeeds.length > 0) {
+    y = addSectionHeading(doc, 'Training needs', y)
+    y = addDataTable(
+      doc,
+      ['Module', 'Type', 'Attempts', 'Pass rate', 'Avg score', 'Missed / issues'],
+      trainingNeeds.map((need) => [
+        need.moduleTitle,
+        need.moduleType,
+        need.attemptCount,
+        `${need.passRate}%`,
+        `${need.avgScore}%`,
+        need.issues.join('; ') || '—',
+      ]),
+      y,
+      {
+        0: { cellWidth: 36 },
+        1: { cellWidth: 18 },
+        2: { cellWidth: 16 },
+        3: { cellWidth: 18 },
+        4: { cellWidth: 18 },
+        5: { cellWidth: 'wrap' },
+      }
+    )
+  }
+
+  y = addSectionHeading(doc, 'Staff on this course', y)
+  addDataTable(
+    doc,
+    ['Name', 'Email', 'Due', 'Score', 'Attempts', 'Status'],
+    staffRows.map((row) => [
+      row.userName,
+      row.userEmail ?? '—',
+      formatDate(row.dueDate),
+      scoreText(row.score),
+      `${row.attemptsUsed}/${row.maxAttempts}${row.locked ? ' (locked)' : ''}`,
+      STATUS_LABELS[row.status] ?? row.status,
+    ]),
+    y
+  )
+
+  saveDashboardPdf(
+    doc,
+    `${orgName}-${course.title}-course-${new Date().toISOString().slice(0, 10)}`
+  )
+}
+
 export function exportStaffDashboardPdf(user: Profile, summary: StaffSummaryRow, courseRows: StaffTrainingRow[]) {
   const doc = createDashboardPdf(
     `${user.full_name} — Training Report`,

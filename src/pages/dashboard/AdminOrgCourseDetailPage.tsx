@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useOrgRoute } from '@/hooks/useOrgRoute'
 import { adminOrgDashboardPath } from '@/lib/org-slugs'
 import { ArrowLeft, BookOpen, TrendingUp, Award, AlertTriangle } from 'lucide-react'
+import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { OrgCourseStaffDirectory } from '@/components/dashboard/OrgCourseStaffDirectory'
 import { OrgTrainingNeedsPanel } from '@/components/dashboard/OrgTrainingNeedsPanel'
 import { StatCard } from '@/components/dashboard/StatCard'
@@ -15,6 +16,7 @@ import {
   computeCourseMetrics,
   computeTrainingNeeds,
 } from '@/lib/dashboard-stats'
+import { exportOrgCoursePdf } from '@/lib/pdf/dashboard-reports'
 
 export function AdminOrgCourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>()
@@ -62,12 +64,19 @@ export function AdminOrgCourseDetailPage() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <Button variant="ghost" size="sm" asChild>
-        <Link to={adminOrgDashboardPath(orgSlug!)}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to {org.name}
-        </Link>
-      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" asChild>
+          <Link to={adminOrgDashboardPath(orgSlug!)}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to {org.name}
+          </Link>
+        </Button>
+        <ExportPdfButton
+          onExport={() =>
+            exportOrgCoursePdf(org.name, course, courseMetrics, trainingNeeds, staffRows)
+          }
+        />
+      </div>
 
       <div className="space-y-2">
         <PageHeader title={course.title} description={course.description ?? 'Course training overview'} />
