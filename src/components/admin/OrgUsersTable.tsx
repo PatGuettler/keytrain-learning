@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Search, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { DeleteOrgUserDialog } from '@/components/admin/DeleteOrgUserDialog'
 import { EditOrgUserDialog } from '@/components/admin/EditOrgUserDialog'
 import { SendPasswordResetButton } from '@/components/admin/SendPasswordResetButton'
@@ -34,6 +35,16 @@ export function OrgUsersTable({
   const [deleteUser, setDeleteUser] = useState<Profile | null>(null)
   const [actionMessage, setActionMessage] = useState('')
   const [actionError, setActionError] = useState('')
+  const [search, setSearch] = useState('')
+
+  const filteredUsers = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return users
+    return users.filter((u) =>
+      [u.full_name, u.email ?? '', u.role.replace('_', ' ')]
+        .some((field) => field.toLowerCase().includes(q))
+    )
+  }, [users, search])
 
   const { data: billingTerms = null } = useQuery({
     queryKey: ['org-billing-terms', orgId],
@@ -63,6 +74,17 @@ export function OrgUsersTable({
         <p className="text-sm text-emerald-600 dark:text-emerald-400">{actionMessage}</p>
       )}
       {actionError && <p className="text-sm text-destructive">{actionError}</p>}
+      <div className="relative mb-3 max-w-sm">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search name, email, or role…"
+          className="pl-9"
+          aria-label="Search users"
+        />
+      </div>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead>
@@ -77,7 +99,14 @@ export function OrgUsersTable({
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {filteredUsers.length === 0 && (
+              <tr>
+                <td colSpan={7} className="p-3 text-center text-muted-foreground">
+                  No users match “{search.trim()}”.
+                </td>
+              </tr>
+            )}
+            {filteredUsers.map((u) => (
               <tr key={u.id} className="border-b last:border-0">
                 <td className="p-3 pr-4 font-medium">{u.full_name}</td>
                 <td className="p-3 pr-4 text-muted-foreground">{u.email ?? '—'}</td>

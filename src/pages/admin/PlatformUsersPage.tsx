@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Download } from 'lucide-react'
+import { ArrowLeft, Download, Search } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { SendPasswordResetButton } from '@/components/admin/SendPasswordResetButton'
 import { fetchProfiles } from '@/services/users.service'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
@@ -69,6 +70,7 @@ export function PlatformUsersPage() {
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [actionMessage, setActionMessage] = useState('')
   const [actionError, setActionError] = useState('')
+  const [search, setSearch] = useState('')
 
   const paramFilter = searchParams.get('filter')
   const filter: UserFilter =
@@ -111,13 +113,20 @@ export function PlatformUsersPage() {
   )
 
   const filtered = useMemo(() => {
-    if (filter === 'all') return enriched
+    const q = search.trim().toLowerCase()
     return enriched.filter((u) => {
-      const category = getProfileStatusCategory(u)
-      if (filter === 'invited') return category === 'invitation_pending'
-      return category === filter
+      if (filter !== 'all') {
+        const category = getProfileStatusCategory(u)
+        const matchesFilter =
+          filter === 'invited' ? category === 'invitation_pending' : category === filter
+        if (!matchesFilter) return false
+      }
+      if (!q) return true
+      return [u.full_name, u.email ?? '', u.orgName, u.role].some((field) =>
+        field.toLowerCase().includes(q)
+      )
     })
-  }, [enriched, filter])
+  }, [enriched, filter, search])
 
   const counts = useMemo(() => {
     const statusCounts = countProfileStatuses(enriched)
@@ -192,6 +201,18 @@ export function PlatformUsersPage() {
           </Button>
         }
       />
+
+      <div className="relative max-w-sm">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search name, email, organization, or role…"
+          className="pl-9"
+          aria-label="Search users"
+        />
+      </div>
 
       <div className="flex flex-wrap gap-2">
         {USER_FILTERS.map(({ key, label }) => (

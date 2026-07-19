@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ShieldCheck, Trash2, UserPlus } from 'lucide-react'
+import { Search, ShieldCheck, Trash2, UserPlus } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -26,11 +26,20 @@ export function PlatformAdminsPage() {
   const [formError, setFormError] = useState('')
   const [formSuccess, setFormSuccess] = useState('')
   const [deleteAdmin, setDeleteAdmin] = useState<Profile | null>(null)
+  const [search, setSearch] = useState('')
 
   const { data: admins = [], isLoading } = useQuery({
     queryKey: ['platform-admins'],
     queryFn: () => fetchProfiles({ role: 'admin', includeInactive: true }),
   })
+
+  const filteredAdmins = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return admins
+    return admins.filter((a) =>
+      [a.full_name, a.email ?? ''].some((field) => field.toLowerCase().includes(q))
+    )
+  }, [admins, search])
 
   const createMutation = useMutation({
     mutationFn: () =>
@@ -124,10 +133,25 @@ export function PlatformAdminsPage() {
           <ShieldCheck className="h-5 w-5 text-primary" />
           Current admins
         </h2>
+        {!isLoading && admins.length > 0 && (
+          <div className="relative max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name or email…"
+              className="pl-9"
+              aria-label="Search admins"
+            />
+          </div>
+        )}
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : admins.length === 0 ? (
           <p className="text-sm text-muted-foreground">No platform admins yet.</p>
+        ) : filteredAdmins.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No admins match “{search.trim()}”.</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border">
             <table className="w-full text-sm">
@@ -140,7 +164,7 @@ export function PlatformAdminsPage() {
                 </tr>
               </thead>
               <tbody>
-                {admins.map((admin) => (
+                {filteredAdmins.map((admin) => (
                   <tr key={admin.id} className="border-b last:border-0">
                     <td className="p-3 pr-4 font-medium">{admin.full_name}</td>
                     <td className="p-3 pr-4 text-muted-foreground">{admin.email ?? '—'}</td>
