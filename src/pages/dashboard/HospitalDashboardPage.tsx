@@ -6,7 +6,7 @@ import { OrgCourseTable } from '@/components/dashboard/OrgCourseTable'
 import { OrgStaffDirectory } from '@/components/dashboard/OrgStaffDirectory'
 import { OrgTrainingNeedsPanel } from '@/components/dashboard/OrgTrainingNeedsPanel'
 import { StatCard } from '@/components/dashboard/StatCard'
-import { exportOrgDashboardPdf } from '@/lib/pdf/dashboard-reports'
+import { exportMonthlyScoresPdf, exportOrgDashboardPdf } from '@/lib/pdf/dashboard-reports'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { useOrgDashboard } from '@/hooks/useAdminDashboard'
@@ -54,19 +54,25 @@ export function HospitalDashboardPage() {
             </Link>
           </Button>
         </div>
-        <ExportPdfButton
-          onExport={() =>
-            exportOrgDashboardPdf(
-              org.name,
-              metrics,
-              avgScore,
-              staffSummaries,
-              courses,
-              assignments,
-              trainingNeeds
-            )
-          }
-        />
+        <div className="flex flex-wrap gap-2">
+          <ExportPdfButton
+            label="Monthly scores (PDF)"
+            onExport={() => exportMonthlyScoresPdf(org.name, courses, assignments, users)}
+          />
+          <ExportPdfButton
+            onExport={() =>
+              exportOrgDashboardPdf(
+                org.name,
+                metrics,
+                avgScore,
+                staffSummaries,
+                courses,
+                assignments,
+                trainingNeeds
+              )
+            }
+          />
+        </div>
       </div>
 
       <PageHeader title={org.name} description="Course and training overview for this organization" />

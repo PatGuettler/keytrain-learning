@@ -3,6 +3,7 @@ import { formatDate } from '@/lib/utils'
 import {
   computeCourseMetrics,
   extractModuleIssues,
+  resolveAssignmentScore,
   staffOverallStatus,
   type StaffSummaryRow,
   type StaffTrainingRow,
@@ -393,4 +394,85 @@ export function exportStaffCoursePdf(
     doc,
     `${user.full_name}-${courseRow.courseTitle}-${new Date().toISOString().slice(0, 10)}`
   )
+}
+
+/**
+ * Monthly training scores audit report: one row per employee × monthly-training
+ * course with their score, status, and completion date. This is the artifact
+ * organizations store for audits. Falls back to all courses when an org has no
+ * monthly-catalog courses defined.
+ */
+export function exportMonthlyScoresPdf(
+  orgName: string,
+  courses: Course[],
+  assignments: Assignment[],
+  users: Profile[]
+) {
+  const now = new Date()
+  const monthLabel = now.toLocaleString(undefined, { month: 'long', year: 'numeric' })
+  const subtitle = `${orgName} · ${monthLabel}`
+
+  const monthlyCourseIds = new Set(
+    courses.filter((c) => c.is_monthly_catalog).map((c) => c.id)
+  )
+  const useMonthly = monthlyCourseIds.size > 0
+  const relevant = assignments.filter((a) =>
+    useMonthly ? monthlyCourseIds.has(a.course_id) : true
+  )
+
+  const userById = new Map(users.map((u) => [u.id, u]))
+  const courseTitleById = new Map(courses.map((c) => [c.id, c.title]))
+
+  const doc = createDashboardPdf('Monthly training scores', subtitle)
+  let y = pdfStartY(subtitle)
+
+  const completed = relevant.filter((a) => a.status === 'completed')
+  const scores = completed
+    .map(resolveAssignmentScore)
+    .filter((s): s is number => s != null)
+  const avg =
+    scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length) : null
+  const courseCount = useMonthly
+    ? monthlyCourseIds.size
+    : new Set(relevant.map((a) => a.course_id)).size
+
+  y = addMetricsSection(
+    doc,
+    [
+      { label: 'Report month', value: monthLabel },
+      { label: useMonthly ? 'Monthly training courses' : 'Training courses', value: String(courseCount) },
+      { label: 'Assignments', value: String(relevant.length) },
+      { label: 'Completed', value: String(completed.length) },
+      { label: 'Average score', value: avg != null ? `${avg}%` : '—' },
+    ],
+    y
+  )
+
+  const rows = relevant
+    .map((a) => {
+      const profile = a.user ?? userById.get(a.user_id)
+      return {
+        name: profile?.full_name ?? 'Unknown',
+        email: profile?.email ?? '—',
+        course: a.course?.title ?? courseTitleById.get(a.course_id) ?? 'Course',
+        score: resolveAssignmentScore(a),
+        status: STATUS_LABELS[a.status] ?? a.status,
+        completedOn: a.status === 'completed' ? formatDate(a.completed_at ?? null) : '—',
+      }
+    })
+    .sort((x, z) => x.name.localeCompare(z.name) || x.course.localeCompare(z.course))
+
+  y = addSectionHeading(
+    doc,
+    useMonthly ? 'Employee scores — monthly training' : 'Employee scores',
+    y
+  )
+  addDataTable(
+    doc,
+    ['Name', 'Email', 'Course', 'Score', 'Status', 'Completed'],
+    rows.map((r) => [r.name, r.email, r.course, scoreText(r.score), r.status, r.completedOn]),
+    y
+  )
+
+  saveDashboardPdf(doc, `monthly-scores-${orgName}-${monthLabel}`)
 }

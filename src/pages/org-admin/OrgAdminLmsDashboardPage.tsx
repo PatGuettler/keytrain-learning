@@ -5,7 +5,7 @@ import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { OrgCourseTable } from '@/components/dashboard/OrgCourseTable'
 import { OrgStaffDirectory } from '@/components/dashboard/OrgStaffDirectory'
 import { StatCard } from '@/components/dashboard/StatCard'
-import { exportOrgDashboardPdf } from '@/lib/pdf/dashboard-reports'
+import { exportMonthlyScoresPdf, exportOrgDashboardPdf } from '@/lib/pdf/dashboard-reports'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -20,6 +20,7 @@ export function OrgAdminLmsDashboardPage() {
     setOrgFilter,
     selectedOrg,
     showOrgColumn,
+    users,
     courses,
     assignments,
     metrics,
@@ -58,20 +59,34 @@ export function OrgAdminLmsDashboardPage() {
         <Button variant="outline" size="sm" asChild>
           <Link to="/org-admin/organizations">Manage organizations</Link>
         </Button>
-        <ExportPdfButton
-          allowNonAdmin
-          onExport={() =>
-            exportOrgDashboardPdf(
-              orgFilter === 'all' ? 'All managed organizations' : (selectedOrg?.name ?? 'Organization'),
-              metrics,
-              avgScore,
-              staffSummaries,
-              courses,
-              assignments,
-              []
-            )
-          }
-        />
+        <div className="flex flex-wrap gap-2">
+          <ExportPdfButton
+            allowNonAdmin
+            label="Monthly scores (PDF)"
+            onExport={() =>
+              exportMonthlyScoresPdf(
+                orgFilter === 'all' ? 'All managed organizations' : (selectedOrg?.name ?? 'Organization'),
+                courses,
+                assignments,
+                users
+              )
+            }
+          />
+          <ExportPdfButton
+            allowNonAdmin
+            onExport={() =>
+              exportOrgDashboardPdf(
+                orgFilter === 'all' ? 'All managed organizations' : (selectedOrg?.name ?? 'Organization'),
+                metrics,
+                avgScore,
+                staffSummaries,
+                courses,
+                assignments,
+                []
+              )
+            }
+          />
+        </div>
       </div>
 
       <PageHeader
