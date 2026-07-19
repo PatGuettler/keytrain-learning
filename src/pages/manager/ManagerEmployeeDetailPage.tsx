@@ -6,7 +6,6 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { AssignCourseToUserCard } from '@/components/manager/AssignCourseToUserCard'
 import { fetchAssignments } from '@/services/assignments.service'
 import { fetchProfiles } from '@/services/users.service'
 import { useAuthStore } from '@/store/authStore'
@@ -71,10 +70,6 @@ export function ManagerEmployeeDetailPage() {
         title={employee.full_name}
         description={employee.email ?? 'Team member training overview'}
       />
-
-      {employee.org_id && (
-        <AssignCourseToUserCard userId={employee.id} orgId={employee.org_id} />
-      )}
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading courses…</p>
