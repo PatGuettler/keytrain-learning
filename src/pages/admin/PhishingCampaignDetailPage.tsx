@@ -14,6 +14,8 @@ import {
   deletePhishingCampaign,
 } from '@/services/phishing.service'
 import { buildRecipientOutcomes, computeCampaignMetrics } from '@/lib/phishing-stats'
+import { exportPhishingCampaignPdf } from '@/lib/pdf/phishing-reports'
+import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
 import { usePhishingBasePath } from '@/lib/phishing-paths'
 import { formatDate } from '@/lib/utils'
 
@@ -124,6 +126,12 @@ export function PhishingCampaignDetailPage() {
         description={statusDescription}
         action={
           <div className="flex flex-wrap gap-2">
+            {!isDraft && (
+              <ExportPdfButton
+                allowNonAdmin
+                onExport={() => exportPhishingCampaignPdf(campaign, metrics, outcomes, events)}
+              />
+            )}
             {isDraft ? (
               <>
                 <Button variant="outline" size="sm" asChild>
