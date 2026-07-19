@@ -47,6 +47,9 @@ interface ModuleScoreRecord {
 
 type FinishOutcome = 'passed' | 'failed' | 'locked'
 
+const LEAVE_COURSE_MESSAGE =
+  'Leave this course? Your progress is saved — you can resume from Required Training.'
+
 export function CoursePlayerPage({
   trainingPath = '/employee/training',
 }: {
@@ -123,6 +126,50 @@ export function CoursePlayerPage({
       savedAt: Date.now(),
     })
   }, [progressKey, assignment, currentIndex, completedIndices, finished])
+
+  // Whether the learner is mid-attempt and should be warned before leaving.
+  const guardActive = Boolean(
+    assignment &&
+      !finished &&
+      assignment.status !== 'completed' &&
+      !isLocked &&
+      !viewResults &&
+      modules.length > 0
+  )
+
+  // Guard the browser Back button (and hard unloads) so a course is not exited
+  // by accident. Progress is saved, so leaving is recoverable, but confirm first.
+  useEffect(() => {
+    if (!guardActive) return
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+
+    window.history.pushState({ ktlCourseGuard: true }, '')
+    const onPopState = () => {
+      if (window.confirm(LEAVE_COURSE_MESSAGE)) {
+        window.removeEventListener('popstate', onPopState)
+        window.removeEventListener('beforeunload', onBeforeUnload)
+        navigate(trainingPath)
+      } else {
+        // Re-arm the sentinel so the next Back press is caught again.
+        window.history.pushState({ ktlCourseGuard: true }, '')
+      }
+    }
+    window.addEventListener('popstate', onPopState)
+
+    return () => {
+      window.removeEventListener('popstate', onPopState)
+      window.removeEventListener('beforeunload', onBeforeUnload)
+    }
+  }, [guardActive, navigate, trainingPath])
+
+  const handleExit = () => {
+    if (guardActive && !window.confirm(LEAVE_COURSE_MESSAGE)) return
+    navigate(trainingPath)
+  }
 
   const showUnlockQuery = Boolean(assignment?.id && (isLocked || (finished && outcome === 'locked')))
 
@@ -467,7 +514,7 @@ export function CoursePlayerPage({
   return (
     <div className="space-y-3 sm:space-y-4 w-full min-w-0 max-w-5xl mx-auto pb-course-player-footer lg:pb-4">
       <div className="flex items-center justify-between gap-2 min-w-0">
-        <Button variant="ghost" size="sm" className="h-11 shrink-0" onClick={() => navigate(-1)}>
+        <Button variant="ghost" size="sm" className="h-11 shrink-0" onClick={handleExit}>
           <ChevronLeft className="h-4 w-4" />
           <span className="hidden sm:inline">Back</span>
         </Button>
