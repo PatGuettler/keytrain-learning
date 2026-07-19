@@ -25,6 +25,12 @@ import { fetchPendingUnlockForAssignment } from '@/services/unlock-requests.serv
 import { downloadCertificatePdf } from '@/lib/pdf/certificates'
 import { Skeleton } from '@/components/ui/skeleton'
 import { resolveAttemptsUsed } from '@/lib/dashboard-stats'
+import {
+  clearCourseProgress,
+  courseProgressKey,
+  loadCourseProgress,
+  saveCourseProgress,
+} from '@/lib/course-progress'
 import { formatDuration } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { SAVE_COURSE_RESULT_ERROR, toServiceErrorMessage } from '@/lib/service-errors'
@@ -76,6 +82,48 @@ export function CoursePlayerPage({
   const isLocked = !unlimitedAttempts && Boolean(assignment?.locked_at)
   const learnerName = useAuthStore((s) => s.profile?.full_name) ?? 'Learner'
 
+  const progressKey = assignment?.id ? courseProgressKey(userId, assignment.id) : null
+  const progressRestoredRef = useRef(false)
+
+  // Restore in-progress state after a refresh/return so the course does not
+  // restart. Runs once per mount when the assignment + modules are available.
+  useEffect(() => {
+    if (progressRestoredRef.current) return
+    if (!progressKey || !assignment || modules.length === 0) return
+    if (assignment.status === 'completed' || isLocked || viewResults) {
+      progressRestoredRef.current = true
+      return
+    }
+    const saved = loadCourseProgress(progressKey)
+    if (saved && saved.attemptsUsed === resolveAttemptsUsed(assignment)) {
+      const lastIndex = modules.length - 1
+      const restoredIndex = Math.min(Math.max(saved.currentIndex ?? 0, 0), lastIndex)
+      const restoredCompleted = saved.completedIndices.filter((i) => i >= 0 && i <= lastIndex)
+      setCurrentIndex(restoredIndex)
+      setCompletedIndices(new Set(restoredCompleted))
+      moduleScoresRef.current = Array.isArray(saved.moduleScores) ? saved.moduleScores : []
+      setModuleReady(restoredCompleted.includes(restoredIndex))
+    } else if (saved) {
+      clearCourseProgress(progressKey)
+    }
+    progressRestoredRef.current = true
+  }, [progressKey, assignment, modules.length, isLocked, viewResults])
+
+  // Persist progress as the learner advances (fires on module completion and
+  // navigation, since completedIndices/currentIndex change together).
+  useEffect(() => {
+    if (!progressRestoredRef.current || !progressKey || !assignment) return
+    if (finished || assignment.status === 'completed') return
+    saveCourseProgress(progressKey, {
+      assignmentId: assignment.id,
+      attemptsUsed: resolveAttemptsUsed(assignment),
+      currentIndex,
+      completedIndices: [...completedIndices],
+      moduleScores: moduleScoresRef.current,
+      savedAt: Date.now(),
+    })
+  }, [progressKey, assignment, currentIndex, completedIndices, finished])
+
   const showUnlockQuery = Boolean(assignment?.id && (isLocked || (finished && outcome === 'locked')))
 
   const { data: pendingUnlock } = useQuery({
@@ -98,6 +146,13 @@ export function CoursePlayerPage({
   useEffect(() => {
     if (existingCertificate) setIssuedCertificate(existingCertificate)
   }, [existingCertificate])
+
+  // Once an assignment is completed, drop any lingering saved progress.
+  useEffect(() => {
+    if (progressKey && assignment?.status === 'completed') {
+      clearCourseProgress(progressKey)
+    }
+  }, [progressKey, assignment?.status])
 
   useEffect(() => {
     if (!assignment?.locked_at && finished && outcome === 'locked') {
@@ -196,6 +251,7 @@ export function CoursePlayerPage({
         setAttemptInfo(result)
         setOutcome(allPassed ? 'passed' : result.locked ? 'locked' : 'failed')
         setFinished(true)
+        if (progressKey) clearCourseProgress(progressKey)
         if (allPassed && course?.certificate_enabled) {
           try {
             await issueCertificateForAssignment(assignment.id, userId)
