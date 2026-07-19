@@ -281,22 +281,6 @@ export function CourseEditPage() {
         />
       </div>
 
-      <label className="flex items-start gap-2 text-sm cursor-pointer max-w-md">
-        <input
-          type="checkbox"
-          checked={isMonthlyCatalog}
-          onChange={(e) => setIsMonthlyCatalog(e.target.checked)}
-          className="mt-0.5 rounded border-input"
-        />
-        <span>
-          <span className="font-medium">Monthly security catalog</span>
-          <span className="block text-xs text-muted-foreground mt-0.5">
-            Org admins with LMS can subscribe their organization to this course from the Security
-            catalog.
-          </span>
-        </span>
-      </label>
-
       <div className="max-w-xs space-y-3">
         <label className="flex items-center gap-2 text-sm cursor-pointer">
           <input
