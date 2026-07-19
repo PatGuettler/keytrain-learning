@@ -2,13 +2,16 @@ import { useMemo, useState } from 'react'
 import {
   DndContext,
   DragEndEvent,
-  PointerSensor,
+  DragOverlay,
+  DragStartEvent,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   closestCenter,
 } from '@dnd-kit/core'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
-import { BookOpen, Check, Lightbulb, X } from 'lucide-react'
+import { BookOpen, Check, GripVertical, Lightbulb, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,7 +22,11 @@ import type { WorkshopContent, SortingConfig } from '@/types/workshop.types'
 
 function DraggableCard({ id, text }: { id: string; text: string }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id })
-  const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined
+  const style = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    // Let dnd-kit own touch gestures on the card so touch-drag works reliably.
+    touchAction: 'none' as const,
+  }
   return (
     <div
       ref={setNodeRef}
@@ -27,11 +34,12 @@ function DraggableCard({ id, text }: { id: string; text: string }) {
       {...listeners}
       {...attributes}
       className={cn(
-        'rounded-md border bg-card px-3 py-2 text-sm cursor-grab shadow-sm',
-        isDragging && 'opacity-50'
+        'flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm shadow-sm select-none cursor-grab active:cursor-grabbing touch-none',
+        isDragging && 'opacity-40'
       )}
     >
-      {text}
+      <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <span>{text}</span>
     </div>
   )
 }
@@ -51,28 +59,36 @@ function DropColumn({
   wrongIds: Set<string>
   submitted: boolean
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id })
+  const { setNodeRef, isOver } = useDroppable({ id, disabled: submitted })
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        'flex flex-col gap-2 rounded-lg border-2 border-dashed p-3 min-h-[100px] bg-muted/30',
-        isOver && 'border-primary'
+        'flex flex-col gap-2 rounded-lg border-2 border-dashed p-3 min-h-[100px] bg-muted/30 transition-colors',
+        isOver && 'border-primary bg-primary/5'
       )}
     >
       <h4 className="font-semibold text-sm">{label}</h4>
-      {cards.map((c) => (
-        <div
-          key={c.id}
-          className={cn(
-            'rounded-md border bg-card px-3 py-2 text-sm',
-            submitted && correctIds.has(c.id) && 'border-emerald-500 bg-emerald-500/10',
-            submitted && wrongIds.has(c.id) && 'border-destructive bg-destructive/10'
-          )}
-        >
-          {c.text}
-        </div>
-      ))}
+      {!submitted && cards.length === 0 && (
+        <p className="text-xs text-muted-foreground italic">Drop a card here</p>
+      )}
+      {cards.map((c) =>
+        submitted ? (
+          <div
+            key={c.id}
+            className={cn(
+              'rounded-md border bg-card px-3 py-2 text-sm',
+              correctIds.has(c.id) && 'border-emerald-500 bg-emerald-500/10',
+              wrongIds.has(c.id) && 'border-destructive bg-destructive/10'
+            )}
+          >
+            {c.text}
+          </div>
+        ) : (
+          // Placed cards stay draggable so learners can re-sort before submitting.
+          <DraggableCard key={c.id} id={c.id} text={c.text} />
+        )
+      )}
     </div>
   )
 }
@@ -92,7 +108,7 @@ export function SortingWorkshop({
   const passingScore = config.passing_score ?? 70
   const [placements, setPlacements] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
-  const [selectedCard, setSelectedCard] = useState<string | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
 
   const { correctIds, wrongIds, score } = useMemo(() => {
     const correct = new Set<string>()
@@ -110,19 +126,24 @@ export function SortingWorkshop({
   const unplaced = config.cards.filter((c) => !placements[c.id])
   const wrongCards = config.cards.filter((c) => wrongIds.has(c.id))
   const passed = score >= passingScore
+  const activeCard = activeId ? config.cards.find((c) => c.id === activeId) : null
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+  // Mouse for desktop; touch long-press for mobile so normal taps still scroll.
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 160, tolerance: 8 } })
+  )
+
+  const handleDragStart = (event: DragStartEvent) => {
+    if (submitted) return
+    setActiveId(event.active.id as string)
+  }
 
   const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null)
     if (submitted) return
     const { active, over } = event
     if (over?.id) setPlacements((p) => ({ ...p, [active.id as string]: over.id as string }))
-  }
-
-  const handleTapPlace = (categoryId: string) => {
-    if (submitted || !selectedCard) return
-    setPlacements((p) => ({ ...p, [selectedCard]: categoryId }))
-    setSelectedCard(null)
   }
 
   const submit = () => {
@@ -154,45 +175,49 @@ export function SortingWorkshop({
 
       {!submitted && (
         <>
-          <div className="md:hidden space-y-2">
-            <p className="text-xs font-medium">Tap a card, then tap a category</p>
-            <div className="flex flex-wrap gap-2">
-              {unplaced.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setSelectedCard(c.id)}
-                  className={cn(
-                    'rounded-lg border px-3 py-2 text-sm min-h-[44px]',
-                    selectedCard === c.id && 'border-primary bg-primary/10'
-                  )}
-                >
-                  {c.text}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <div className="hidden md:flex flex-wrap gap-2 mb-4 min-h-[48px]">
-              {unplaced.map((c) => (
-                <DraggableCard key={c.id} id={c.id} text={c.text} />
-              ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={() => setActiveId(null)}
+          >
+            <div className="rounded-lg border bg-muted/20 p-3 mb-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">
+                Drag each card into the matching category
+                <span className="sm:hidden"> (press and hold to pick up)</span>
+              </p>
+              <div className="flex flex-wrap gap-2 min-h-[48px]">
+                {unplaced.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic self-center">
+                    All cards placed — review your columns, then submit.
+                  </p>
+                ) : (
+                  unplaced.map((c) => <DraggableCard key={c.id} id={c.id} text={c.text} />)
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
               {config.categories.map((cat) => (
-                <div key={cat.id} onClick={() => handleTapPlace(cat.id)} className="md:contents">
-                  <DropColumn
-                    id={cat.id}
-                    label={cat.label}
-                    cards={cardsIn(cat.id)}
-                    correctIds={correctIds}
-                    wrongIds={wrongIds}
-                    submitted={false}
-                  />
-                </div>
+                <DropColumn
+                  key={cat.id}
+                  id={cat.id}
+                  label={cat.label}
+                  cards={cardsIn(cat.id)}
+                  correctIds={correctIds}
+                  wrongIds={wrongIds}
+                  submitted={false}
+                />
               ))}
             </div>
+            <DragOverlay>
+              {activeCard ? (
+                <div className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm shadow-lg">
+                  <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span>{activeCard.text}</span>
+                </div>
+              ) : null}
+            </DragOverlay>
           </DndContext>
 
           <Button
@@ -229,21 +254,19 @@ export function SortingWorkshop({
             </CardContent>
           </Card>
 
-          <DndContext sensors={sensors} collisionDetection={closestCenter}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 opacity-90">
-              {config.categories.map((cat) => (
-                <DropColumn
-                  key={cat.id}
-                  id={cat.id}
-                  label={cat.label}
-                  cards={cardsIn(cat.id)}
-                  correctIds={correctIds}
-                  wrongIds={wrongIds}
-                  submitted
-                />
-              ))}
-            </div>
-          </DndContext>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 opacity-90">
+            {config.categories.map((cat) => (
+              <DropColumn
+                key={cat.id}
+                id={cat.id}
+                label={cat.label}
+                cards={cardsIn(cat.id)}
+                correctIds={correctIds}
+                wrongIds={wrongIds}
+                submitted
+              />
+            ))}
+          </div>
 
           {wrongCards.length > 0 && (
             <Card className="border-destructive/30 bg-destructive/5">
