@@ -41,7 +41,7 @@ function formatFetchedAt(value: string): string {
 
 const VIEW_OPTIONS: { id: RailNetView; label: string }[] = [
   { id: 'overview', label: 'Overview' },
-  { id: 'security', label: 'Security Posture' },
+  { id: 'security', label: 'Signatures' },
   { id: 'reporting', label: 'Reporting' },
   { id: 'host-uploads', label: 'Host uploads' },
   { id: 'training', label: 'Training' },

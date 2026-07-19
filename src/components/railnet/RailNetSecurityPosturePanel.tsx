@@ -1,9 +1,16 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle, Search, XCircle } from 'lucide-react'
+import { CheckCircle, Eye, Search, XCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { ConfigurableRailNetTable } from '@/components/railnet/ConfigurableRailNetTable'
@@ -67,6 +74,7 @@ export function RailNetSecurityPosturePanel({
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<SignatureStatusFilter>('all')
   const [sort, setSort] = useState<SignatureSort>('status')
+  const [viewRecord, setViewRecord] = useState<RailNetRecord | null>(null)
 
   const statusCounts = countSignaturesByStatus(signatures)
 
@@ -151,32 +159,41 @@ export function RailNetSecurityPosturePanel({
           </span>
         )
       case 'actions':
-        if (!canManageSignatures) return '—'
-        if (!pending || !pk || !sk) {
-          return <span className="text-muted-foreground">—</span>
-        }
         return (
           <div className="flex flex-wrap gap-1">
             <Button
               type="button"
               size="sm"
-              variant="outline"
-              disabled={busy}
-              onClick={() => approveMutation.mutate({ pk, sk })}
-            >
-              <CheckCircle className="mr-1 h-3.5 w-3.5" />
-              Approve
-            </Button>
-            <Button
-              type="button"
-              size="sm"
               variant="ghost"
-              disabled={busy}
-              onClick={() => rejectMutation.mutate({ pk, sk })}
+              onClick={() => setViewRecord(record)}
             >
-              <XCircle className="mr-1 h-3.5 w-3.5" />
-              Reject
+              <Eye className="mr-1 h-3.5 w-3.5" />
+              View
             </Button>
+            {canManageSignatures && pending && pk && sk && (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => approveMutation.mutate({ pk, sk })}
+                >
+                  <CheckCircle className="mr-1 h-3.5 w-3.5" />
+                  Approve
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => rejectMutation.mutate({ pk, sk })}
+                >
+                  <XCircle className="mr-1 h-3.5 w-3.5" />
+                  Reject
+                </Button>
+              </>
+            )}
           </div>
         )
       default:
@@ -285,15 +302,73 @@ export function RailNetSecurityPosturePanel({
                 rows={filteredSignatures}
                 rowKey={(record, index) => signatureRowKey(record, index)}
                 renderCell={(columnId, record) => renderSignatureCell(columnId, record)}
-                columnFilter={(column) =>
-                  column.id !== 'actions' || canManageSignatures
-                }
                 emptyMessage="No signatures match your filters. Clear search or set status to “All statuses”."
               />
             </>
           )}
         </CardContent>
       </Card>
+
+      <SignatureDetailsDialog record={viewRecord} onClose={() => setViewRecord(null)} />
     </div>
+  )
+}
+
+/** Hidden/technical fields we don't need to surface in the details view. */
+const HIDDEN_SIGNATURE_FIELDS = new Set(['railnet_org_id'])
+
+function SignatureDetailsDialog({
+  record,
+  onClose,
+}: {
+  record: RailNetRecord | null
+  onClose: () => void
+}) {
+  const entries = useMemo(() => {
+    if (!record) return []
+    return Object.entries(record)
+      .filter(([key, value]) => !HIDDEN_SIGNATURE_FIELDS.has(key) && typeof value !== 'function')
+      .sort(([a], [b]) => a.localeCompare(b))
+  }, [record])
+
+  const formatValue = (value: unknown): string => {
+    if (value == null) return '—'
+    if (typeof value === 'object') return JSON.stringify(value, null, 2)
+    return String(value)
+  }
+
+  return (
+    <Dialog open={Boolean(record)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Signature detail</DialogTitle>
+          <DialogDescription>
+            {record ? signatureSummary(record) : ''}
+          </DialogDescription>
+        </DialogHeader>
+        {record && (
+          <div className="space-y-4">
+            <dl className="grid gap-x-4 gap-y-2 sm:grid-cols-[10rem_1fr] text-sm">
+              {entries.map(([key, value]) => (
+                <div key={key} className="sm:contents">
+                  <dt className="font-medium text-muted-foreground break-words">{key}</dt>
+                  <dd className="break-words whitespace-pre-wrap font-mono text-xs sm:text-sm">
+                    {formatValue(value)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <details className="rounded-md border bg-muted/30 p-3">
+              <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+                Raw JSON
+              </summary>
+              <pre className="mt-2 overflow-x-auto text-xs">
+                {JSON.stringify(record, null, 2)}
+              </pre>
+            </details>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }

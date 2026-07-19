@@ -72,7 +72,7 @@ export function exportRailNetReportPdf(data: RailNetDataResponse, selectedOrgIds
     y += 8
   }
 
-  y = addSectionHeading(doc, 'Security posture — signatures', y)
+  y = addSectionHeading(doc, 'Signatures', y)
   if (data.signatures.length === 0) {
     doc.setFontSize(9)
     doc.setTextColor(100)
