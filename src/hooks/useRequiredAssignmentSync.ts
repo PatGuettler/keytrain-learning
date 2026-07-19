@@ -12,7 +12,8 @@ export function useRequiredAssignmentSync() {
   const syncedFor = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!userId || !role || role === 'admin' || !orgId) return
+    // Required training applies to learners only — skip platform + org admins.
+    if (!userId || !role || role === 'admin' || role === 'org_admin' || !orgId) return
     const key = `${userId}:${orgId}`
     if (syncedFor.current === key) return
 

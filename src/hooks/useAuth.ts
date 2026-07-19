@@ -26,7 +26,9 @@ export function useAuth() {
       email: result.user.email ?? email,
       profile,
     })
-    if (profile.role !== 'admin') {
+    // Only learners (managers/employees) receive required training. Platform
+    // admins and org admins are excluded.
+    if (profile.role === 'manager' || profile.role === 'employee') {
       await syncRequiredAssignmentsForUser(result.user.id)
     }
     return {

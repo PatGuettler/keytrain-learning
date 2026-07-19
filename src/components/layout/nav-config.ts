@@ -53,7 +53,6 @@ const orgAdminNav: NavItem[] = [
   { to: '/org-admin/billing', label: 'Billing', icon: CreditCard },
   { to: '/org-admin/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
   { to: '/org-admin/phishing/campaigns', label: 'Phishing sims', icon: Fish, requiresPhishing: true },
-  { to: '/org-admin/training', label: 'Required Training', icon: GraduationCap },
 ]
 
 export const navByRole: Record<UserRole, NavItem[]> = {
