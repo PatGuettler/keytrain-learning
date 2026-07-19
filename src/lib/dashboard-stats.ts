@@ -15,36 +15,32 @@ export function filterAssignmentsForReporting(
   )
 }
 
-/** Best-effort attempt count (stored value, session history, or legacy completion). */
+/**
+ * Attempts a learner has actually used.
+ *
+ * `assignments.attempts_used` is the source of truth — the attempts RPC
+ * increments it exactly once per finished attempt (pass or fail). We must NOT
+ * infer from `training_sessions.attempt_number`, which is bumped on every player
+ * mount (refresh, back/forward, StrictMode double-invoke) and therefore counts
+ * abandoned starts, inflating the number (e.g. 0/3 jumping to 2/3).
+ *
+ * The only inference is a legacy fallback for old rows that predate reliable
+ * `attempts_used`: when nothing is stored but there is clear evidence of a
+ * finished attempt, count COMPLETED sessions (never `attempt_number`).
+ */
 export function resolveAttemptsUsed(assignment: Assignment): number {
-  if (assignment.force_retake) {
-    return assignment.attempts_used ?? 0
-  }
-
   const stored = assignment.attempts_used ?? 0
+  if (stored > 0 || assignment.force_retake) {
+    return stored
+  }
+
   const sessions = assignment.training_sessions ?? []
-  const completedSessions = sessions.filter((s) => s.completed_at != null)
-  const completedCount = completedSessions.length
-  const maxCompletedAttempt = completedSessions.reduce(
-    (max, s) => Math.max(max, s.attempt_number ?? 0),
-    0
-  )
+  const completedCount = sessions.filter((s) => s.completed_at != null).length
+  if (completedCount > 0) return completedCount
 
-  let inferred = Math.max(completedCount, maxCompletedAttempt)
+  if (assignment.status === 'completed' || assignment.last_score != null) return 1
 
-  if (assignment.status === 'completed' && inferred < 1) {
-    inferred = 1
-  }
-
-  if (stored === 0 && assignment.last_score != null && inferred === 0) {
-    const maxSessionAttempt = sessions.reduce(
-      (max, s) => Math.max(max, s.attempt_number ?? 0),
-      0
-    )
-    inferred = Math.max(maxSessionAttempt, 1)
-  }
-
-  return Math.max(stored, inferred)
+  return 0
 }
 
 /** Best display score for an assignment (stored value or latest completed session). */

@@ -397,11 +397,15 @@ export function CoursePlayerPage({
     )
   }
 
+  // Show the attempt currently in progress based on attempts already used
+  // (source of truth), not the training session's attempt_number, which is
+  // bumped by refreshes/back-forward and would overcount.
+  const currentAttemptNumber = assignment ? resolveAttemptsUsed(assignment) + 1 : 1
   const attemptLabel =
     assignment && !unlimitedAttempts
-      ? `Attempt ${session?.attempt_number ?? resolveAttemptsUsed(assignment) + 1} of ${maxAttempts}`
+      ? `Attempt ${Math.min(currentAttemptNumber, maxAttempts)} of ${maxAttempts}`
       : assignment
-        ? `Attempt ${session?.attempt_number ?? resolveAttemptsUsed(assignment) + 1}`
+        ? `Attempt ${currentAttemptNumber}`
         : null
 
   return (
