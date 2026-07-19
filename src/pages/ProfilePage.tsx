@@ -68,7 +68,7 @@ export function ProfilePage() {
   const [verseToggleError, setVerseToggleError] = useState('')
 
   const handleCategoryChange = (next: SupportCategory) => {
-    setCategory(next)
+    if (next === category) return
     if (next === 'training_request') {
       if (!subject.trim()) {
         setSubject(TRAINING_REQUEST_SUBJECT_SUGGESTION)
@@ -76,7 +76,17 @@ export function ProfilePage() {
       if (!message.trim()) {
         setMessage(TRAINING_REQUEST_MESSAGE_TEMPLATE)
       }
+    } else if (category === 'training_request') {
+      // Leaving "Request training": clear the prefilled template only if the
+      // user hasn't edited it, so real edits are never discarded.
+      if (subject === TRAINING_REQUEST_SUBJECT_SUGGESTION) {
+        setSubject('')
+      }
+      if (message === TRAINING_REQUEST_MESSAGE_TEMPLATE) {
+        setMessage('')
+      }
     }
+    setCategory(next)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
