@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { Assignment, Course } from '@/types/course.types'
 import { STATUS_LABELS } from '@/lib/constants'
+import { isUnlimitedAttempts } from '@/lib/course-attempts'
 import { formatDate } from '@/lib/utils'
 
 interface CourseCardProps {
@@ -21,8 +22,9 @@ export function CourseCard({
   hasCompletedAttempt = false,
 }: CourseCardProps) {
   const takeBy = course.publication?.available_until ?? assignment?.due_date
+  const unlimited = isUnlimitedAttempts(course.max_attempts)
   const maxAttempts = course.max_attempts ?? 3
-  const isLocked = Boolean(assignment?.locked_at)
+  const isLocked = !unlimited && Boolean(assignment?.locked_at)
   const attemptsUsed = assignment?.attempts_used ?? 0
   const showResults = Boolean(course.show_results_after_completion && hasCompletedAttempt)
   const isCompleted = assignment?.status === 'completed'
@@ -77,7 +79,9 @@ export function CourseCard({
           <p className="text-xs text-muted-foreground">
             {isLocked
               ? `All ${maxAttempts} attempts used — request unlock to continue`
-              : `${attemptsUsed} of ${maxAttempts} attempts used`}
+              : unlimited
+                ? `${attemptsUsed} attempt${attemptsUsed === 1 ? '' : 's'} used — unlimited attempts`
+                : `${attemptsUsed} of ${maxAttempts} attempts used`}
           </p>
         )}
       </CardHeader>
