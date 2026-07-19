@@ -1,5 +1,6 @@
 import type { SupportCategory } from '@/lib/support-categories'
 import { getEdgeFunctionAccessToken } from '@/lib/edge-function-auth'
+import { fetchOrganizationById } from '@/services/organizations.service'
 import { getSupabase, getSupabaseAnonKey, getSupabaseUrl } from '@/services/supabase'
 import { useAuthStore } from '@/store/authStore'
 
@@ -25,12 +26,24 @@ export async function submitSupportRequest(payload: {
   const userId = useAuthStore.getState().userId
   if (!profile || !userId) throw new Error('You must be signed in.')
 
+  // Resolve a human-readable org name so the support email shows more than a UUID.
+  let orgName: string | null = null
+  if (profile.org_id) {
+    try {
+      const org = await fetchOrganizationById(profile.org_id)
+      orgName = org?.name ?? null
+    } catch {
+      orgName = null
+    }
+  }
+
   const user_snapshot = {
     user_id: userId,
     full_name: profile.full_name,
     email: profile.email,
     role: profile.role,
     org_id: profile.org_id,
+    org_name: orgName,
     manager_id: profile.manager_id,
   }
 
