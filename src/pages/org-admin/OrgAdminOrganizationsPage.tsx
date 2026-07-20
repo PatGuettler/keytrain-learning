@@ -13,6 +13,7 @@ import {
   fetchMyOrgMemberships,
   switchActiveOrganization,
 } from '@/services/org-memberships.service'
+import { orgAdminCanCreateOrganizations } from '@/services/org-license.service'
 import { useAuthStore } from '@/store/authStore'
 
 export function OrgAdminOrganizationsPage() {
@@ -42,6 +43,12 @@ export function OrgAdminOrganizationsPage() {
     }))
     .sort((a, b) => a.name.localeCompare(b.name))
 
+  const { data: canCreateOrgs = false } = useQuery({
+    queryKey: ['org-admin-can-create-orgs', adminOrgs.map((o) => o.id).join(',')],
+    queryFn: () => orgAdminCanCreateOrganizations(adminOrgs.map((o) => o.id)),
+    enabled: adminOrgs.length > 0,
+  })
+
   const createMutation = useMutation({
     mutationFn: createOrganizationAsOrgAdmin,
     onSuccess: async (org) => {
@@ -62,14 +69,23 @@ export function OrgAdminOrganizationsPage() {
         title="Organizations"
         description="Choose an organization to manage its users, or create a new one."
         action={
-          <Button onClick={() => setShowForm((v) => !v)} className="w-full sm:w-auto min-h-11">
-            <Plus className="h-4 w-4 mr-1" />
-            New Organization
-          </Button>
+          canCreateOrgs ? (
+            <Button onClick={() => setShowForm((v) => !v)} className="w-full sm:w-auto min-h-11">
+              <Plus className="h-4 w-4 mr-1" />
+              New Organization
+            </Button>
+          ) : undefined
         }
       />
 
-      {showForm && (
+      {!canCreateOrgs && adminOrgs.length > 0 && (
+        <p className="text-sm text-muted-foreground rounded-lg border bg-muted/30 px-4 py-3">
+          Creating additional organizations is a paid add-on. Contact KeyTrain if you need to
+          manage more than one organization.
+        </p>
+      )}
+
+      {showForm && canCreateOrgs && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Create organization</CardTitle>

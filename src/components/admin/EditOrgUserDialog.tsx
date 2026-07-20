@@ -43,6 +43,7 @@ export function EditOrgUserDialog({
   allowOrgAdminRole = false,
   railnetOrgId,
   onSaved,
+  embedded = false,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -55,6 +56,8 @@ export function EditOrgUserDialog({
   allowOrgAdminRole?: boolean
   railnetOrgId: string | null
   onSaved: (result?: { movedToOrgId?: string }) => void
+  /** Render form inline (no modal) for user admin pages */
+  embedded?: boolean
 }) {
   const profile = useAuthStore((s) => s.profile)
   const isKtlAdmin = profile?.role === 'admin'
@@ -90,7 +93,7 @@ export function EditOrgUserDialog({
         }))
         .sort((a, b) => a.name.localeCompare(b.name))
     },
-    enabled: open && Boolean(profile?.id),
+    enabled: (embedded || open) && Boolean(profile?.id),
   })
 
   const otherOrgs = useMemo(
@@ -117,7 +120,12 @@ export function EditOrgUserDialog({
     setSecurityMessage('')
     setConfirmOpen(false)
     setMoveConfirmOpen(false)
-  }, [user, open])
+  }, [user, open, embedded])
+
+  const closeEditor = () => {
+    if (embedded) return
+    onOpenChange(false)
+  }
 
   const managerOptions = managers.filter((m) => m.id !== user?.id)
   const isMoving = Boolean(destinationOrgId && destinationOrgId !== orgId)
@@ -183,7 +191,7 @@ export function EditOrgUserDialog({
         await moveOrgUser(orgId, user.id, destinationOrgId)
         onSaved({ movedToOrgId: destinationOrgId })
         setMoveConfirmOpen(false)
-        onOpenChange(false)
+        closeEditor()
         return
       }
 
@@ -207,14 +215,14 @@ export function EditOrgUserDialog({
       if (railnetEnabled !== (user.railnet_enabled === true)) patch.railnet_enabled = railnetEnabled
 
       if (Object.keys(patch).length === 0) {
-        onOpenChange(false)
+        closeEditor()
         return
       }
 
       await updateOrgUser(orgId, user.id, patch)
       onSaved()
       setConfirmOpen(false)
-      onOpenChange(false)
+      closeEditor()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Update failed')
     } finally {

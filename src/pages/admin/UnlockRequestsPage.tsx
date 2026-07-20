@@ -24,7 +24,7 @@ const FILTER_LABELS: Record<Filter, string> = {
   all: 'All',
 }
 
-export function UnlockRequestsPage() {
+export function UnlockRequestsPage({ allowDelete = true }: { allowDelete?: boolean }) {
   const adminId = useAuthStore((s) => s.userId)!
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<Filter>('pending')
@@ -157,9 +157,13 @@ export function UnlockRequestsPage() {
     <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title="Unlock requests"
-        description="Staff who exhaust course attempts request access here. Approving resets their attempts. Delete old requests to clear history."
+        description={
+          allowDelete
+            ? 'Staff who exhaust course attempts request access here. Approving resets their attempts. Delete old requests to clear history.'
+            : 'Staff who exhaust course attempts request access here. Approving resets their attempts for your organization.'
+        }
         action={
-          requests.length > 0 ? (
+          allowDelete && requests.length > 0 ? (
             <div className="flex flex-wrap gap-2 justify-end">
               <Button
                 variant="outline"
@@ -196,7 +200,7 @@ export function UnlockRequestsPage() {
         ))}
       </div>
 
-      {requests.length > 0 && (
+      {allowDelete && requests.length > 0 && (
         <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer w-fit">
           <input
             type="checkbox"
@@ -224,13 +228,15 @@ export function UnlockRequestsPage() {
                 <CardHeader className="pb-2">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="flex items-start gap-3 min-w-0">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 mt-1 rounded border-input shrink-0"
-                        checked={selectedIds.has(req.id)}
-                        onChange={(e) => toggleSelected(req.id, e.target.checked)}
-                        aria-label={`Select request from ${req.user?.full_name ?? 'user'}`}
-                      />
+                      {allowDelete ? (
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 mt-1 rounded border-input shrink-0"
+                          checked={selectedIds.has(req.id)}
+                          onChange={(e) => toggleSelected(req.id, e.target.checked)}
+                          aria-label={`Select request from ${req.user?.full_name ?? 'user'}`}
+                        />
+                      ) : null}
                       <CardTitle className="text-base">
                         {req.user?.full_name ?? 'User'} — {req.course?.title ?? 'Course'}
                       </CardTitle>
@@ -273,15 +279,17 @@ export function UnlockRequestsPage() {
                         </Button>
                       </>
                     )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={deleting || actingId === req.id}
-                      onClick={() => void handleDeleteOne(req.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete
-                    </Button>
+                    {allowDelete ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={deleting || actingId === req.id}
+                        onClick={() => void handleDeleteOne(req.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    ) : null}
                   </div>
                   {req.resolved_at && (
                     <p className="text-xs text-muted-foreground">Resolved {formatDate(req.resolved_at)}</p>

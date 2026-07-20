@@ -95,6 +95,7 @@ export interface Database {
           compliance_enabled: boolean
           lms_enabled: boolean
           phishing_enabled: boolean
+          can_create_orgs: boolean
           plan: string
           max_seats: number | null
           updated_at: string
@@ -105,6 +106,7 @@ export interface Database {
           compliance_enabled?: boolean
           lms_enabled?: boolean
           phishing_enabled?: boolean
+          can_create_orgs?: boolean
           plan?: string
           max_seats?: number | null
           updated_at?: string
@@ -114,6 +116,7 @@ export interface Database {
           compliance_enabled: boolean
           lms_enabled: boolean
           phishing_enabled: boolean
+          can_create_orgs: boolean
           plan: string
           max_seats: number | null
           updated_at: string

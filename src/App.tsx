@@ -41,6 +41,7 @@ import { OrgAdminUsersPage } from '@/pages/org-admin/OrgAdminUsersPage'
 import { OrgAdminBillingPage } from '@/pages/org-admin/OrgAdminBillingPage'
 import { OrgAdminLmsDashboardPage } from '@/pages/org-admin/OrgAdminLmsDashboardPage'
 import { OrgAdminStaffTrainingPage } from '@/pages/org-admin/OrgAdminStaffTrainingPage'
+import { UserAdminPage } from '@/pages/UserAdminPage'
 import { CoursePlayerPage } from '@/pages/training/CoursePlayerPage'
 import { MarketingLayout } from '@/components/marketing/MarketingLayout'
 import { HomePage } from '@/pages/marketing/HomePage'
@@ -194,7 +195,15 @@ export default function App() {
               path="/admin/organizations/:orgSlug"
               element={<RoleGuard roles={['admin']}><OrganizationDetailPage /></RoleGuard>}
             />
-            <Route path="/admin/users" element={<Navigate to="/admin/organizations" replace />} />
+            <Route path="/admin/users" element={<Navigate to="/admin/dashboard/users" replace />} />
+            <Route
+              path="/admin/users/:userId"
+              element={
+                <RoleGuard roles={['admin']}>
+                  <UserAdminPage scope="admin" />
+                </RoleGuard>
+              }
+            />
 
             <Route path="/manager/dashboard" element={<Navigate to="/manager/training" replace />} />
             <Route
@@ -210,6 +219,22 @@ export default function App() {
               element={<RoleGuard roles={['org_admin']}><OrgAdminUsersPage /></RoleGuard>}
             />
             <Route path="/org-admin/users" element={<Navigate to="/org-admin/organizations" replace />} />
+            <Route
+              path="/org-admin/users/:userId"
+              element={
+                <RoleGuard roles={['org_admin']}>
+                  <UserAdminPage scope="org_admin" />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="/org-admin/unlock-requests"
+              element={
+                <RoleGuard roles={['org_admin']}>
+                  <UnlockRequestsPage allowDelete={false} />
+                </RoleGuard>
+              }
+            />
             <Route
               path="/org-admin/billing"
               element={<RoleGuard roles={['org_admin']}><OrgAdminBillingPage /></RoleGuard>}

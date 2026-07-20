@@ -10,7 +10,7 @@ import { SendPasswordResetButton } from '@/components/admin/SendPasswordResetBut
 import { fetchProfiles } from '@/services/users.service'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
 import { APP_SLUG } from '@/lib/constants'
-import { adminOrganizationPath, buildOrgSlugLookup } from '@/lib/org-slugs'
+import { adminUserPath } from '@/lib/user-admin-paths'
 import { countProfileStatuses, getProfileStatusBadge, getProfileStatusCategory } from '@/lib/user-status'
 import { formatDate } from '@/lib/utils'
 import type { Profile } from '@/types/user.types'
@@ -100,8 +100,6 @@ export function PlatformUsersPage() {
     () => new Map(hospitals.map((h) => [h.id, h.name])),
     [hospitals]
   )
-
-  const orgSlugById = useMemo(() => buildOrgSlugLookup(hospitals).slugById, [hospitals])
 
   const enriched = useMemo<EnrichedUser[]>(
     () =>
@@ -313,13 +311,7 @@ export function PlatformUsersPage() {
                           }}
                         />
                         <Button type="button" size="sm" variant="outline" asChild>
-                          <Link
-                            to={adminOrganizationPath(
-                              orgSlugById.get(u.org_id) ?? u.org_id
-                            )}
-                          >
-                            Manage
-                          </Link>
+                          <Link to={adminUserPath(u.id)}>Manage</Link>
                         </Button>
                       </div>
                     </td>

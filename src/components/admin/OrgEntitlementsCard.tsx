@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Fish, Hexagon, GraduationCap } from 'lucide-react'
+import { Fish, Hexagon, GraduationCap, Building2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -66,23 +66,30 @@ export function OrgEntitlementsCard({ orgId, orgName }: Props) {
 
   const current: Pick<
     OrgLicense,
-    'lms_enabled' | 'railnet_enabled' | 'compliance_enabled' | 'phishing_enabled' | 'plan'
+    | 'lms_enabled'
+    | 'railnet_enabled'
+    | 'compliance_enabled'
+    | 'phishing_enabled'
+    | 'can_create_orgs'
+    | 'plan'
   > = {
     lms_enabled: license?.lms_enabled !== false,
     railnet_enabled: license?.railnet_enabled === true,
     compliance_enabled: license?.compliance_enabled === true,
     phishing_enabled: license?.phishing_enabled === true,
+    can_create_orgs: license?.can_create_orgs === true,
     plan: license?.plan ?? 'lms',
   }
 
   const toggle = (
-    key: 'lms_enabled' | 'railnet_enabled' | 'phishing_enabled',
+    key: 'lms_enabled' | 'railnet_enabled' | 'phishing_enabled' | 'can_create_orgs',
     enabled: boolean
   ) => {
     const next = {
       lms_enabled: key === 'lms_enabled' ? enabled : current.lms_enabled,
       railnet_enabled: key === 'railnet_enabled' ? enabled : current.railnet_enabled,
       phishing_enabled: key === 'phishing_enabled' ? enabled : current.phishing_enabled,
+      can_create_orgs: key === 'can_create_orgs' ? enabled : current.can_create_orgs,
     }
     // Compliance follows RailNet for org admins (Intelligence package)
     const compliance_enabled =
@@ -147,6 +154,16 @@ export function OrgEntitlementsCard({ orgId, orgName }: Props) {
               checked={current.phishing_enabled}
               disabled={mutation.isPending}
               onCheckedChange={(v) => toggle('phishing_enabled', v)}
+            />
+
+            <EntitlementRow
+              icon={Building2}
+              title="Create additional organizations"
+              description="Allow org admins who manage this organization to create new organizations (multi-org)."
+              priceHint="Paid add-on — enable per customer after quote"
+              checked={current.can_create_orgs}
+              disabled={mutation.isPending}
+              onCheckedChange={(v) => toggle('can_create_orgs', v)}
             />
 
             {needsStandardPricing ? (

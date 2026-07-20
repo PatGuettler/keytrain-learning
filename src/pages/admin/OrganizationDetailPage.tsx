@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { AddOrgUserForm } from '@/components/admin/AddOrgUserForm'
 import { OrgUserImportPanel } from '@/components/admin/OrgUserImportPanel'
 import { OrgUsersTable } from '@/components/admin/OrgUsersTable'
+import { adminUserPath } from '@/lib/user-admin-paths'
 import { OrgJoinCodeCard } from '@/components/admin/OrgJoinCodeCard'
 import { RailNetOrgSetupCard } from '@/components/admin/RailNetOrgSetupCard'
 import { OrgBillingPanel } from '@/components/billing/OrgBillingPanel'
@@ -210,6 +211,7 @@ export function OrganizationDetailPage() {
             users={users}
             managers={managers}
             railnetOrgId={configuredRailNetOrgId}
+            getUserDetailPath={adminUserPath}
           />
         ) : null}
       </section>

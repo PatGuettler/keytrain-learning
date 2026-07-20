@@ -20,6 +20,8 @@ export interface OrgLicense {
   lms_enabled: boolean
   /** Paid phishing simulations add-on (independent of RailNet). */
   phishing_enabled: boolean
+  /** Paid add-on: org admins may create additional organizations. */
+  can_create_orgs: boolean
   plan: OrgPlan
   max_seats?: number | null
   updated_at?: string
@@ -98,12 +100,25 @@ export function canAccessPhishing(
   return license?.phishing_enabled === true
 }
 
+/** True when any org the user administers has the multi-org creation add-on. */
+export async function orgAdminCanCreateOrganizations(orgIds: string[]): Promise<boolean> {
+  if (orgIds.length === 0) return false
+  const supabase = requireSupabase()
+  const { data, error } = await supabase
+    .from('org_license')
+    .select('org_id, can_create_orgs')
+    .in('org_id', orgIds)
+
+  if (error) throw new Error(error.message)
+  return (data ?? []).some((row) => row.can_create_orgs === true)
+}
+
 export async function fetchOrgLicense(orgId: string): Promise<OrgLicense | null> {
   const supabase = requireSupabase()
   const { data, error } = await supabase
     .from('org_license')
     .select(
-      'org_id, railnet_enabled, compliance_enabled, lms_enabled, phishing_enabled, plan, max_seats, updated_at'
+      'org_id, railnet_enabled, compliance_enabled, lms_enabled, phishing_enabled, can_create_orgs, plan, max_seats, updated_at'
     )
     .eq('org_id', orgId)
     .maybeSingle()
@@ -114,6 +129,7 @@ export async function fetchOrgLicense(orgId: string): Promise<OrgLicense | null>
     ...data,
     lms_enabled: data.lms_enabled !== false,
     phishing_enabled: data.phishing_enabled === true,
+    can_create_orgs: data.can_create_orgs === true,
     plan: (data.plan as OrgPlan) || 'lms',
   }
 }
@@ -123,6 +139,7 @@ export type OrgLicenseEntitlementPatch = {
   railnet_enabled?: boolean
   compliance_enabled?: boolean
   phishing_enabled?: boolean
+  can_create_orgs?: boolean
   plan?: OrgPlan
 }
 
@@ -139,6 +156,7 @@ export async function updateOrgLicenseEntitlements(
     railnet_enabled: patch.railnet_enabled ?? existing?.railnet_enabled ?? false,
     compliance_enabled: patch.compliance_enabled ?? existing?.compliance_enabled ?? false,
     phishing_enabled: patch.phishing_enabled ?? existing?.phishing_enabled ?? false,
+    can_create_orgs: patch.can_create_orgs ?? existing?.can_create_orgs ?? false,
     plan: patch.plan ?? existing?.plan ?? 'lms',
     updated_at: new Date().toISOString(),
   }
@@ -147,7 +165,7 @@ export async function updateOrgLicenseEntitlements(
     .from('org_license')
     .upsert(next, { onConflict: 'org_id' })
     .select(
-      'org_id, railnet_enabled, compliance_enabled, lms_enabled, phishing_enabled, plan, max_seats, updated_at'
+      'org_id, railnet_enabled, compliance_enabled, lms_enabled, phishing_enabled, can_create_orgs, plan, max_seats, updated_at'
     )
     .eq('org_id', orgId)
     .single()
@@ -169,6 +187,7 @@ export async function updateOrgLicenseEntitlements(
     ...data,
     lms_enabled: data.lms_enabled !== false,
     phishing_enabled: data.phishing_enabled === true,
+    can_create_orgs: data.can_create_orgs === true,
     plan: (data.plan as OrgPlan) || 'lms',
   }
 }

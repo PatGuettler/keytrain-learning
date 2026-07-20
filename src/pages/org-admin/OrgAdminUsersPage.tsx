@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { AddOrgUserForm } from '@/components/admin/AddOrgUserForm'
 import { OrgUserImportPanel } from '@/components/admin/OrgUserImportPanel'
 import { OrgUsersTable } from '@/components/admin/OrgUsersTable'
+import { orgAdminUserPath } from '@/lib/user-admin-paths'
 import { OrgJoinCodeCard } from '@/components/admin/OrgJoinCodeCard'
 import { fetchOrganizationById } from '@/services/organizations.service'
 import { fetchOrgMembers } from '@/services/users.service'
@@ -126,6 +127,7 @@ export function OrgAdminUsersPage() {
                   users={users}
                   managers={managers}
                   railnetOrgId={org?.railnet_org_id ?? null}
+                  getUserDetailPath={orgAdminUserPath}
                 />
               )}
             </CardContent>

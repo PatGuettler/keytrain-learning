@@ -50,6 +50,7 @@ const orgAdminNav: NavItem[] = [
   { to: '/org-admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/org-admin/organizations', label: 'Organizations', icon: Building2 },
   { to: '/org-admin/training-reports', label: 'Training reports', icon: BarChart3 },
+  { to: '/org-admin/unlock-requests', label: 'Unlock requests', icon: LockKeyhole },
   { to: '/org-admin/billing', label: 'Billing', icon: CreditCard },
   { to: '/org-admin/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
   { to: '/org-admin/phishing/campaigns', label: 'Phishing sims', icon: Fish, requiresPhishing: true },

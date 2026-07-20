@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Pencil, Search, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -22,11 +23,13 @@ export function OrgUsersTable({
   users,
   managers,
   railnetOrgId,
+  getUserDetailPath,
 }: {
   orgId: string
   users: Profile[]
   managers: Profile[]
   railnetOrgId: string | null
+  getUserDetailPath?: (userId: string) => string
 }) {
   const queryClient = useQueryClient()
   const profile = useAuthStore((s) => s.profile)
@@ -108,7 +111,18 @@ export function OrgUsersTable({
             )}
             {filteredUsers.map((u) => (
               <tr key={u.id} className="border-b last:border-0">
-                <td className="p-3 pr-4 font-medium">{u.full_name}</td>
+                <td className="p-3 pr-4 font-medium">
+                  {getUserDetailPath ? (
+                    <Link
+                      to={getUserDetailPath(u.id)}
+                      className="text-foreground hover:underline underline-offset-2"
+                    >
+                      {u.full_name}
+                    </Link>
+                  ) : (
+                    u.full_name
+                  )}
+                </td>
                 <td className="p-3 pr-4 text-muted-foreground">{u.email ?? '—'}</td>
                 <td className="p-3 pr-4 capitalize">{u.role.replace('_', ' ')}</td>
                 <td className="p-3 pr-4 text-muted-foreground">
