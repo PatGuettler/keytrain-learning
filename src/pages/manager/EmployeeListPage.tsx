@@ -34,7 +34,7 @@ export function EmployeeListPage() {
     <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title="My Team"
-        description="Team roster. Training progress and reports are available to platform admins."
+        description="Team roster. Open Training reports for course-level grades and compliance exports."
       />
       {hasTeam && (
         <div className="relative max-w-sm">

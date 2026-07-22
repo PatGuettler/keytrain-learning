@@ -90,6 +90,8 @@ export interface AssignmentFilters {
   userId?: string
   orgId?: string
   managerId?: string
+  /** Include unpublished / inactive assignments (grade history). */
+  includeHistory?: boolean
 }
 
 export interface AssignmentsBackend {

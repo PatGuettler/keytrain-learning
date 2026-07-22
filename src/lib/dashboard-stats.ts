@@ -126,6 +126,43 @@ export function computeCourseMetrics(courses: Course[], assignments: Assignment[
   })
 }
 
+export interface GradeHistoryRow {
+  assignmentId: string
+  courseId: string
+  courseTitle: string
+  isPublished: boolean
+  status: Assignment['status']
+  score: number | null
+  attemptsUsed: number
+  maxAttempts: number
+  completedAt: string | null
+  assignedAt: string | null
+  completedSessions: number
+}
+
+export function buildGradeHistoryRows(assignments: Assignment[]): GradeHistoryRow[] {
+  return assignments
+    .map((a) => ({
+      assignmentId: a.id,
+      courseId: a.course_id,
+      courseTitle: a.course?.title ?? 'Course',
+      isPublished: a.course?.is_published ?? false,
+      status: a.status,
+      score: resolveAssignmentScore(a),
+      attemptsUsed: resolveAttemptsUsed(a),
+      maxAttempts: a.course?.max_attempts ?? 3,
+      completedAt: a.completed_at,
+      assignedAt: a.assigned_at,
+      completedSessions: (a.training_sessions ?? []).filter((s) => s.completed_at != null).length,
+    }))
+    .sort((a, b) => {
+      const aTime = a.completedAt ? new Date(a.completedAt).getTime() : 0
+      const bTime = b.completedAt ? new Date(b.completedAt).getTime() : 0
+      if (aTime !== bTime) return bTime - aTime
+      return a.courseTitle.localeCompare(b.courseTitle)
+    })
+}
+
 export interface StaffTrainingRow {
   assignmentId: string
   userId: string

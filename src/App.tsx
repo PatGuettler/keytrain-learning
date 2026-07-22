@@ -26,7 +26,10 @@ import { AdminStaffTrainingPage } from '@/pages/admin/AdminStaffTrainingPage'
 import { AdminStaffCourseDetailPage } from '@/pages/admin/AdminStaffCourseDetailPage'
 import { EmployeeListPage } from '@/pages/manager/EmployeeListPage'
 import { ManagerEmployeeDetailPage } from '@/pages/manager/ManagerEmployeeDetailPage'
+import { ManagerReportsPage } from '@/pages/manager/ManagerReportsPage'
+import { ManagerCourseReportPage } from '@/pages/manager/ManagerCourseReportPage'
 import { MyTrainingPage } from '@/pages/employee/MyTrainingPage'
+import { TrainingGradeHistoryPage } from '@/pages/training/TrainingGradeHistoryPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { PrayerPage } from '@/pages/PrayerPage'
 import { PhishingTrainingPage } from '@/pages/phishing/PhishingTrainingPage'
@@ -334,10 +337,22 @@ export default function App() {
               path="/manager/team/:employeeId"
               element={<RoleGuard roles={['manager']}><ManagerEmployeeDetailPage /></RoleGuard>}
             />
+            <Route
+              path="/manager/reports"
+              element={<RoleGuard roles={['manager']}><ManagerReportsPage /></RoleGuard>}
+            />
+            <Route
+              path="/manager/reports/courses/:courseId"
+              element={<RoleGuard roles={['manager']}><ManagerCourseReportPage /></RoleGuard>}
+            />
             <Route path="/manager/assignments" element={<Navigate to="/manager/training" replace />} />
             <Route
               path="/manager/training"
               element={<RoleGuard roles={['manager']}><MyTrainingPage basePath="/manager/training" /></RoleGuard>}
+            />
+            <Route
+              path="/manager/training/history"
+              element={<RoleGuard roles={['manager']}><TrainingGradeHistoryPage /></RoleGuard>}
             />
             <Route
               path="/manager/training/play/:courseId"
@@ -362,6 +377,10 @@ export default function App() {
             <Route
               path="/employee/training"
               element={<RoleGuard roles={['employee']}><MyTrainingPage /></RoleGuard>}
+            />
+            <Route
+              path="/employee/training/history"
+              element={<RoleGuard roles={['employee']}><TrainingGradeHistoryPage /></RoleGuard>}
             />
             <Route
               path="/employee/training/play/:courseId"

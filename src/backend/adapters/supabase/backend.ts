@@ -774,17 +774,19 @@ export function createSupabaseBackend(): Backend {
           )
         }
 
-        if (opts?.orgId) {
-          await filterByActivePublications(opts.orgId)
-        } else if (opts?.userId) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('org_id, role')
-            .eq('id', opts.userId)
-            .maybeSingle()
+        if (!opts?.includeHistory) {
+          if (opts?.orgId) {
+            await filterByActivePublications(opts.orgId)
+          } else if (opts?.userId) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('org_id, role')
+              .eq('id', opts.userId)
+              .maybeSingle()
 
-          if (profile?.org_id && profile.role !== 'admin') {
-            await filterByActivePublications(profile.org_id)
+            if (profile?.org_id && profile.role !== 'admin') {
+              await filterByActivePublications(profile.org_id)
+            }
           }
         }
 

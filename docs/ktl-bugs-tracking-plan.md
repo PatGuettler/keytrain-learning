@@ -2,7 +2,7 @@
 
 Track the bug list from the pre-launch review. **Do not push** until you have reviewed the local commits.
 
-Repo: `keytrain-learning` · branch: `main` (14 frontend commits + 1 migration commit, local only).
+Repo: `keytrain-learning` · branch: `main` (local only).
 
 ---
 
@@ -12,8 +12,9 @@ Repo: `keytrain-learning` · branch: `main` (14 frontend commits + 1 migration c
 |--------|---------|
 | **Done (local)** | Committed locally; ready to test after deploy + any DB step below |
 | **Needs DB** | Migration written; you must apply it to Supabase before this item is fully testable |
-| **Discuss** | Product / architecture — no code yet |
-| **Needs DB (later)** | Requires new tables/RPCs; not required for the 14 frontend fixes |
+| **Discuss** | Product / architecture — decision still open |
+| **Pending** | Decision locked; implementation not started |
+| **Needs DB (later)** | Requires new tables/RPCs beyond current migrations |
 
 ---
 
@@ -30,11 +31,11 @@ Repo: `keytrain-learning` · branch: `main` (14 frontend commits + 1 migration c
 | 8 | Refresh restarts course | **Done (local)** | `c944758` | Progress in `localStorage`; resume on reload |
 | 7 | Browser Back exits course | **Done (local)** | `6c1daef` | Confirm before leave; progress still saved |
 | 6 | Remove manager assign-course UI | **Done (local)** | `f1a50e5` | Card removed; component kept for later |
-| 5 | Org admin should not get required training | **Needs DB** | `d6760b9` + migration `056` | Client done; apply `056` (section B) |
+| 5 | Org admin should not get required training | **Needs DB** | `d6760b9` + `c3bdd89` | Client + migration `056`; apply **056** (§B) |
 | 21 | RailNet "Security Posture" → Signatures + view | **Done (local)** | `c76da92` | Tab rename + View dialog |
 | 20 | Per-campaign phishing PDF | **Done (local)** | `41c672a` | Export on campaign detail (sent campaigns) |
 | 30 | Monthly employee scores audit PDF | **Done (local)** | `0982bfe` | "Monthly scores (PDF)" on training reports / org dashboard |
-| 4 / 29 | User directories need search (consistent) | **Done (local)** | `5c91ee8` | Search on all directories; column redesign still **Discuss** |
+| 4 / 29 | User directories need search (consistent) | **Done (local)** | `5c91ee8` | Search on all directories |
 
 ### Frontend only — no DB for these 14 except #5
 
@@ -42,9 +43,9 @@ None of the other 13 need a migration or edge-function deploy to test.
 
 ---
 
-## B. DB update required to finish testing the 14 fixes
+## B. DB updates required
 
-### Migration `056_exclude_org_admin_from_required_training.sql`
+### Migration `056_exclude_org_admin_from_required_training.sql` (for §A #5)
 
 **Why:** Client no longer syncs required training for org admins, but the RPCs still assigned them, and existing `assignments` rows remain.
 
@@ -52,102 +53,161 @@ None of the other 13 need a migration or edge-function deploy to test.
 
 1. `sync_user_required_assignments` — early-return for `org_admin` (same as `admin`)
 2. `list_required_courses_for_user` — early-return for `org_admin`
-3. `DELETE` existing assignments for profiles with `role = 'org_admin'`  
-   (`training_sessions` / `module_attempts` cascade; `certificates.assignment_id` SET NULL)
-
-### Commands to run (you)
-
-From the `keytrain-learning` repo, linked to the Supabase project you want to test against (staging recommended; prod only when you are ready):
+3. `DELETE` existing assignments for profiles with `role = 'org_admin'`
 
 ```bash
 cd /home/pat/dev/keytrain-learning
-
-# Confirm CLI is linked to the right project
-npx supabase projects list
-npx supabase link --project-ref <YOUR_PROJECT_REF>
-
-# Apply pending migrations (includes 056)
-npx supabase db push
+npx supabase db push   # or paste SQL from supabase/migrations/056_*.sql
 ```
 
-If `db push` complains about older migrations already applied in the remote but not marked in history, use the repair approach from `docs/keytrainlearning-domain-setup.md` (do **not** re-run 001–027 SQL). Then push again.
-
-**Verify after push** (SQL editor or `psql`):
+**Verify:**
 
 ```sql
--- Should return no rows
 SELECT a.id, p.full_name, p.role
 FROM assignments a
 JOIN profiles p ON p.id = a.user_id
 WHERE p.role = 'org_admin';
-
--- Smoke: sync as org_admin should be a no-op (run while signed in as org_admin, or call via RPC)
--- SELECT sync_user_required_assignments('<org_admin_user_uuid>');
-```
-
-**Optional — only if you prefer to paste SQL by hand** (e.g. dashboard SQL editor): open  
-`supabase/migrations/056_exclude_org_admin_from_required_training.sql` and run the whole file, then mark it applied:
-
-```bash
-npx supabase migration repair --status applied 056
+-- Should return no rows
 ```
 
 ---
 
-## C. Test checklist (14 fixes)
+### Migration `057_org_license_can_create_orgs.sql` (for §D #2)
 
-Deploy or run the frontend against the same Supabase you pushed `056` to.
+**Why:** Org creation is a paid add-on; org admins should only create additional orgs when entitled.
+
+**What it does:**
+
+1. Adds `org_license.can_create_orgs` (default `false`)
+2. Grandfathers existing rows: `UPDATE org_license SET can_create_orgs = true`
+3. Updates `create_organization_as_org_admin` to require `can_create_orgs` on any org the caller administers
+4. New orgs created via RPC get `can_create_orgs = false`
+
+**Client (commit `a5d6fb8`):** KTL toggle in Org Entitlements; org admin Organizations page hides "New Organization" when not entitled.
+
+---
+
+### Migration `058_org_admin_unlock_requests.sql` (for §D #15)
+
+**Why:** Org admins should approve/deny unlock requests for their org (platform admin retains full access + delete).
+
+**What it does:**
+
+1. Updates `approve_course_unlock` to allow `org_admin` when `auth_is_org_admin_of(request.org_id)`
+2. Adds RLS policy `unlock_requests_org_admin_select` so org admins can read requests for their orgs
+
+**Client (commit `a5d6fb8`):** `/org-admin/unlock-requests` route + nav; delete UI hidden for org admins.
+
+---
+
+### Apply 056–058 together
+
+```bash
+cd /home/pat/dev/keytrain-learning
+npx supabase db push
+```
+
+Or paste each file from `supabase/migrations/056_*.sql`, `057_*.sql`, `058_*.sql` into the Supabase SQL editor.
+
+---
+
+## C. Test checklist — §A (14 fixes)
+
+Deploy or run the frontend against the same Supabase you pushed migrations to.
 
 - [ ] **11** Profile → Contact: select Request training → switch to Bug → message is empty (or only your edits)
 - [ ] **12** Submit a support request → email / `support_requests.user_snapshot` has `org_name`
 - [ ] **26** Course builder has no "Monthly security catalog" checkbox
-- [ ] **10 / 19** Unlimited course (`max_attempts = 0`): card shows "unlimited", never "X of 0"; still startable
-- [ ] **13 / 14** Fail once on a 3-attempt course → shows **1 of 3** (not 2); after 3 finishes, locked and cannot start again without unlock
-- [ ] **9** Sorting workshop: drag cards into categories (desktop + phone long-press); can move a placed card
+- [ ] **10 / 19** Unlimited course (`max_attempts = 0`): card shows "unlimited", never "X of 0"
+- [ ] **13 / 14** Fail once on a 3-attempt course → shows **1 of 3**; after 3 finishes, locked without unlock
+- [ ] **9** Sorting workshop: drag cards (desktop + phone long-press); can move a placed card
 - [ ] **8** Mid-course refresh → resumes same module / completed set
-- [ ] **7** Browser Back mid-course → confirm dialog; Cancel stays; OK goes to training list; resume works
+- [ ] **7** Browser Back mid-course → confirm dialog; resume works
 - [ ] **6** Manager → team member: no "Assign training" card
-- [ ] **5** After `056`: org admin has no Required Training nav; no new assignments after login; old org_admin assignments gone
+- [ ] **5** After **056**: org admin has no Required Training nav; no org_admin assignments
 - [ ] **21** RailNet tab "Signatures"; View opens detail + raw JSON
 - [ ] **20** Sent phishing campaign → Export PDF has metrics + recipient table
-- [ ] **30** Training reports / org dashboard → "Monthly scores (PDF)" downloads employee × course scores
+- [ ] **30** Training reports → "Monthly scores (PDF)" downloads employee × course scores
 - [ ] **4 / 29** Search works on: platform All users, org users table, Platform Admins, manager My Team
 
 ---
 
-## D. Deferred — needs discussion (no code yet)
+## D. Section D — product decisions & implementation
 
-| # | Item | Status | Notes / decision needed |
-|---|------|--------|-------------------------|
-| 1 | Org admins like KTL admins (not org-bound) | **Discuss** | Today: `profiles.org_id` + `organization_memberships`. Big model change. |
-| 2 | Org creation as paid add-on? | **Discuss** | Org admins can create orgs today (`create_organization_as_org_admin`). Pricing call. |
-| 3 | Org admin course creation add-on vs always? | **Discuss** | RLS allows it; no org-admin builder UI. Product call. |
-| 4 (rest) | Directories = name + CRUD only; click opens user page | **Discuss** | Search done. No generic user page yet — only training-detail pages. Confirm target UX. |
-| 15 | Manager / org admin unlock courses? | **Discuss** + **Needs DB (later)** | Unlock is platform-admin only today. |
-| 22 | RailNet Reporting "useless" | **Discuss** | What would make it useful? |
-| 23 | Host uploads "useless" / view JSON usefully | **Discuss** | What view do you want? |
-| 24 | Compliance reports all look the same | **Discuss** | Most sections are hardcoded boilerplate in `compliance-generator.ts`. |
-| 25 | RailNet training → AI suggested courses from signatures | **Discuss** | Today: AWS assignment roll-up → staging. AI redesign. |
-| 27 | Org with no paid features can still take courses | **Discuss** + **Needs DB (later)** | Learner RLS ignores `lms_enabled`. Decide: block / hide / allow. |
-| 28 | RailNet link auto from AWS on signup | **Discuss** | Today: manual `organizations.railnet_org_id`. |
+### D.1 Locked decisions (2026-07-20)
+
+| # | Decision |
+|---|----------|
+| **1** | Keep current org admin model (`profiles.org_id` + `organization_memberships`) — no KTL-style platform role for org admins |
+| **2** | Org creation = **paid add-on** via `can_create_orgs` on `org_license`; KTL admin toggles in entitlements UI |
+| **3** | Org admins **can create courses** when LMS enabled — need **org-admin course builder UI** (`/org-admin/courses/*`) |
+| **4** | **Generic user admin page**: profile + CRUD + training tab; platform admin and org admin scopes |
+| **15** | Unlock: **platform admin + org admin** (not managers); org admins approve/deny only (no delete) |
+| **23** | Host uploads: **human-readable summary cards** (alerts, weak domains, software findings) |
+| **24** | Compliance: **wire real AWS data** (replace boilerplate in `compliance-generator.ts`) |
+| **25** | RailNet training: **rules-based suggested training from approved signatures** (AI later) |
+
+**Enforcement defaults (not explicitly overridden):**
+
+- **2:** Grandfather migration sets `can_create_orgs = true` for all existing `org_license` rows; new orgs from RPC get `false`
+- **27** License gating for course-taking — **deferred**
+- **22** RailNet Reporting redesign — **deferred**
+- **28** Auto `railnet_org_id` from AWS — **deferred**
 
 ---
 
-## E. Deferred — Supabase feature work (unlock + notifications)
+### D.2 Shipped locally (Section D pass 1)
 
-These are **not** required for the 14 fixes. Best built as one package:
+| # | Item | Status | Commit | Notes |
+|---|------|--------|--------|-------|
+| **2** | Org creation as paid add-on | **Needs DB** | `a5d6fb8` | Migration **057**; entitlements toggle + gated "New Organization" |
+| **4** | Generic user admin page | **Done (local)** | `a5d6fb8` | `/admin/users/:userId`, `/org-admin/users/:userId`; Profile + Training tabs; directories link in |
+| **15** | Org admin unlock requests | **Needs DB** | `a5d6fb8` | Migration **058**; `/org-admin/unlock-requests`; no delete for org admins |
+
+**Key files:**
+
+| Area | Path |
+|------|------|
+| User admin page | `src/pages/UserAdminPage.tsx` |
+| Training tab panel | `src/components/admin/UserTrainingPanel.tsx` |
+| Path helpers | `src/lib/user-admin-paths.ts` |
+| Org create gate | `src/pages/org-admin/OrgAdminOrganizationsPage.tsx` |
+| Entitlements toggle | `src/components/admin/OrgEntitlementsCard.tsx` |
+| Unlock (org admin) | `src/pages/admin/UnlockRequestsPage.tsx` (reused with `allowDelete={false}`) |
+
+---
+
+### D.3 Still pending (Section D pass 2)
 
 | # | Item | Status | Rough scope |
 |---|------|--------|-------------|
-| 16 | Denied unlock still allows re-request; user not notified | **Needs DB (later)** | Policy on re-request after deny; notify user |
-| 17 | Admin message on approve/deny | **Needs DB (later)** | Column + RPC param + admin UI |
-| 18 | User notifications inbox (view / delete with confirm) | **Needs DB (later)** | New `notifications` table, RLS, UI — none exists today |
+| **3** | Org-admin course builder | **Pending** | Mirror `/admin/courses/*` under `/org-admin/courses/*` when LMS enabled |
+| **23** | Host uploads human-readable summaries | **Pending** | `RailNetHostUploadsPanel.tsx` — summary cards from JSON |
+| **24** | Compliance reports use real AWS data | **Pending** | Replace boilerplate in `compliance-generator.ts` |
+| **25** | Suggested training from signatures | **Pending** | Rules from approved signatures → staging |
+| **22** | RailNet Reporting redesign | **Discuss** | Deferred |
+| **27** | License gating for course-taking | **Discuss** | Deferred — learner RLS ignores `lms_enabled` today |
+| **28** | Auto `railnet_org_id` from AWS | **Discuss** | Deferred |
 
-Suggested order when you greenlight: **18 table → 17 message on resolve → 16 denial UX + notify**.
+**Suggested build order:** **3 → 23 → 24 → 25**
+
+---
+
+## E. Deferred — unlock notifications (not in Section D pass 1)
+
+| # | Item | Status | Rough scope |
+|---|------|--------|-------------|
+| **16** | Denied unlock still allows re-request; user not notified | **Needs DB (later)** | Policy on re-request after deny; notify user |
+| **17** | Admin message on approve/deny | **Needs DB (later)** | Column + RPC param + admin UI |
+| **18** | User notifications inbox | **Needs DB (later)** | New `notifications` table, RLS, UI |
+
+Suggested order when greenlit: **18 table → 17 message on resolve → 16 denial UX + notify**.
 
 ---
 
 ## F. Local commit list (review before push)
+
+**Phase 1 — 14 bug fixes:**
 
 ```
 5c91ee8 Add search to all user directories
@@ -164,19 +224,37 @@ c944758 Persist course progress so refresh resumes instead of restarting
 b125d6d Remove Monthly security catalog control from course builder
 b8f8df9 Include organization name in support request email
 bd4e94d Fix support form leaving stale training template on category switch
+c3bdd89 Exclude org admins from required training at the database layer (056)
+c9ed65f Add KTL bugs tracking plan
 ```
 
-Plus (after this plan lands):
+**Phase 2 — Section D pass 1:**
 
-- migration `056_exclude_org_admin_from_required_training.sql`
-- this file: `docs/ktl-bugs-tracking-plan.md`
+```
+a5d6fb8 Section D: can_create_orgs, user admin page, org admin unlock requests (057, 058)
+```
 
 ---
 
-## G. Next actions for you
+## G. Test checklist — §D (pass 1)
 
-1. [ ] Review the 14 local commits (and the migration + this plan once committed)
-2. [ ] Apply **`056`** to the Supabase project you will test (`npx supabase db push`)
-3. [ ] Deploy / run the frontend against that project
-4. [ ] Walk the checklist in **§C**
-5. [ ] Decide which **§D / §E** items to do next (I can implement once you pick)
+After applying **057** and **058** and running frontend from `a5d6fb8`:
+
+- [ ] **2** KTL admin: Org detail → Paid features → toggle "Create additional organizations" off → org admin loses "New Organization" button + sees contact message
+- [ ] **2** Toggle back on → org admin can create org again (RPC enforces entitlement)
+- [ ] **4** Platform: All users → Manage → user page with Profile + Training tabs; Edit opens dialog; Delete works
+- [ ] **4** Org admin: Organizations → org → click user name → same user page (scoped to orgs they admin)
+- [ ] **4** Training tab shows course stats + directory; platform admin can drill to course detail
+- [ ] **15** Org admin: Unlock requests nav → sees pending requests for their org only
+- [ ] **15** Org admin can Approve/Deny; no delete checkboxes or bulk delete
+- [ ] **15** Platform admin: Unlock requests still has full delete UI
+
+---
+
+## H. Next actions
+
+1. [ ] Review local commits (Phase 1 + `a5d6fb8`)
+2. [ ] Apply migrations **056**, **057**, **058** (`npx supabase db push`)
+3. [ ] Deploy / run frontend against that Supabase project
+4. [ ] Walk checklists **§C** and **§G**
+5. [ ] Greenlight Section D pass 2: **3 → 23 → 24 → 25** (or reprioritize)

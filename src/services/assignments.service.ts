@@ -6,6 +6,11 @@ export async function fetchAssignments(userId?: string): Promise<Assignment[]> {
   return backend.assignments.fetchAssignments(userId)
 }
 
+/** All assignments for grade history (includes unpublished / inactive courses). */
+export async function fetchAssignmentHistory(userId: string): Promise<Assignment[]> {
+  return backend.assignments.fetchAssignments({ userId, includeHistory: true })
+}
+
 /** Ensures the user has assignments for every active published course in their org. */
 export async function syncRequiredAssignmentsForUser(userId: string): Promise<void> {
   return backend.assignments.syncRequiredAssignmentsForUser(userId)
