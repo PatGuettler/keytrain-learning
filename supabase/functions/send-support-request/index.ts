@@ -8,6 +8,8 @@ const DEFAULT_TO = [
 ]
 const DEFAULT_FROM = 'KeyTrain Learning <support@keytrainlearning.com>'
 
+const ALLOWED_CATEGORIES = new Set(['bug', 'feature', 'training_request', 'question', 'other'])
+
 const CATEGORY_LABELS: Record<string, string> = {
   bug: 'Bug report',
   feature: 'Feature request',
@@ -83,6 +85,10 @@ Deno.serve(async (req) => {
     const message = typeof body.message === 'string' ? body.message.trim() : ''
     const userSnapshot = body.user_snapshot ?? {}
 
+    if (!ALLOWED_CATEGORIES.has(category)) {
+      return jsonResponse({ error: 'Invalid support category.' }, 400)
+    }
+
     if (!subject || !message) {
       return jsonResponse({ error: 'Subject and message are required.' }, 400)
     }
@@ -100,7 +106,17 @@ Deno.serve(async (req) => {
     })
     if (insertError) {
       console.error('support_requests insert error:', insertError)
-      return jsonResponse({ error: insertError.message }, 500)
+      const msg = insertError.message ?? 'Could not save support request.'
+      if (msg.includes('support_requests_category_check')) {
+        return jsonResponse(
+          {
+            error:
+              'Training requests are not enabled on the server yet. Ask your admin to apply database migration 060_support_request_training_category.',
+          },
+          500
+        )
+      }
+      return jsonResponse({ error: msg }, 500)
     }
 
     const emailBody = [
