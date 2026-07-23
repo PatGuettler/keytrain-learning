@@ -31,11 +31,13 @@ export function OrgStaffDirectory({
   getStaffDetailPath,
   title = 'Staff training',
   showOrgColumn = false,
+  showMonthColumn = true,
 }: {
   rows: StaffSummaryRow[]
   getStaffDetailPath: (userId: string) => string
   title?: string
   showOrgColumn?: boolean
+  showMonthColumn?: boolean
 }) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
@@ -73,8 +75,9 @@ export function OrgStaffDirectory({
         <div>
           <CardTitle className="text-base">{title}</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            Filter by organization response status, then open a staff member for course detail.
-            Scores show average completed training.
+            {showMonthColumn
+              ? 'Filter by organization response status, then open a staff member for course detail. Scores show average completed training.'
+              : 'Open a staff member for course detail. Scores show average completed training.'}
           </p>
         </div>
         <div className="flex flex-col gap-3">
@@ -92,8 +95,12 @@ export function OrgStaffDirectory({
             {(
               [
                 ['all', 'All'],
-                ['needs_response', 'Not responded'],
-                ['responded', 'Responded'],
+                ...(showMonthColumn
+                  ? ([
+                      ['needs_response', 'Not responded'],
+                      ['responded', 'Responded'],
+                    ] as const)
+                  : []),
                 ['overdue', 'Overdue'],
               ] as const
             ).map(([value, label]) => (
@@ -161,7 +168,7 @@ export function OrgStaffDirectory({
                       </div>
                       <div className="mt-2 flex flex-wrap gap-2 text-xs">
                         <Badge variant={statusVariant[status]}>{statusLabel[status]}</Badge>
-                        {row.currentMonthOpen > 0 ? (
+                        {showMonthColumn && row.currentMonthOpen > 0 ? (
                           <Badge variant="destructive">
                             {row.currentMonthOpen} need response
                           </Badge>
@@ -188,7 +195,7 @@ export function OrgStaffDirectory({
                     <th className="pb-2 pr-4">Role</th>
                     <th className="pb-2 pr-4">Progress</th>
                     <th className="pb-2 pr-4">Avg score</th>
-                    <th className="pb-2 pr-4">This month</th>
+                    {showMonthColumn ? <th className="pb-2 pr-4">This month</th> : null}
                     <th className="pb-2 pr-4">Status</th>
                     <th className="pb-2 w-8" />
                   </tr>
@@ -242,15 +249,17 @@ export function OrgStaffDirectory({
                         <td className="py-3 pr-4 tabular-nums font-medium">
                           {row.avgScore != null ? `${row.avgScore}%` : '—'}
                         </td>
-                        <td className="py-3 pr-4">
-                          {row.currentMonthOpen > 0 ? (
-                            <Badge variant="destructive">
-                              {row.currentMonthOpen} open
-                            </Badge>
-                          ) : (
-                            <Badge variant="success">Caught up</Badge>
-                          )}
-                        </td>
+                        {showMonthColumn ? (
+                          <td className="py-3 pr-4">
+                            {row.currentMonthOpen > 0 ? (
+                              <Badge variant="destructive">
+                                {row.currentMonthOpen} open
+                              </Badge>
+                            ) : (
+                              <Badge variant="success">Caught up</Badge>
+                            )}
+                          </td>
+                        ) : null}
                         <td className="py-3 pr-4">
                           <Badge variant={statusVariant[status]}>{statusLabel[status]}</Badge>
                         </td>

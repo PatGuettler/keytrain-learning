@@ -220,6 +220,93 @@ export interface StaffSummaryRow {
   completionRate: number
 }
 
+/** Stats aligned with grade history (all assignments on record, scores from any attempt). */
+export function summarizeStaffAssignments(
+  assignments: Assignment[],
+  activeCourseIds: Set<string>
+): Pick<
+  StaffSummaryRow,
+  | 'totalCourses'
+  | 'completedCourses'
+  | 'inProgressCourses'
+  | 'overdueCourses'
+  | 'pendingCourses'
+  | 'lockedCourses'
+  | 'avgScore'
+  | 'completionRate'
+> {
+  const rows = buildGradeHistoryRows(assignments, activeCourseIds)
+  const completedCourses = rows.filter((r) => r.status === 'completed').length
+  const scores = rows.filter((r) => r.score != null).map((r) => r.score as number)
+  const avgScore =
+    scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length) : null
+
+  return {
+    totalCourses: rows.length,
+    completedCourses,
+    inProgressCourses: rows.filter((r) => r.status === 'in_progress').length,
+    overdueCourses: rows.filter((r) => r.effectiveProgress === 'expired').length,
+    pendingCourses: rows.filter((r) => r.status === 'pending').length,
+    lockedCourses: assignments.filter((a) => a.locked_at).length,
+    avgScore,
+    completionRate: rows.length > 0 ? Math.round((completedCourses / rows.length) * 100) : 0,
+  }
+}
+
+export function computeAvgScoreFromGradeHistory(
+  assignments: Assignment[],
+  activeCourseIds: Set<string>
+): number {
+  const rows = buildGradeHistoryRows(assignments, activeCourseIds)
+  const scores = rows.filter((r) => r.score != null).map((r) => r.score as number)
+  if (scores.length === 0) return 0
+  return Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
+}
+
+function countCurrentMonthOpen(assignments: Assignment[]): number {
+  return assignments.filter((a) => {
+    const monthly = Boolean(a.course?.is_monthly_catalog)
+    if (monthly) return a.status !== 'completed'
+    if (a.status === 'completed') return false
+    const now = new Date()
+    const assigned = a.assigned_at ? new Date(a.assigned_at) : null
+    const due = a.due_date ? new Date(a.due_date) : null
+    const inMonth = (d: Date | null) =>
+      Boolean(d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth())
+    return inMonth(assigned) || inMonth(due)
+  }).length
+}
+
+/** Staff summary rows using full grade history (matches employee / manager drill-down). */
+export function buildStaffSummaryRowsFromGradeHistory(
+  users: Profile[],
+  assignments: Assignment[],
+  activeCourseIds: Set<string>,
+  orgNameById?: Map<string, string>
+): StaffSummaryRow[] {
+  return users
+    .map((user) => {
+      const userAssignments = assignments.filter((a) => a.user_id === user.id)
+      const stats = summarizeStaffAssignments(userAssignments, activeCourseIds)
+
+      return {
+        userId: user.id,
+        userName: user.full_name,
+        userEmail: user.email,
+        role: user.role,
+        isActive: user.is_active,
+        orgId: user.org_id,
+        orgName: orgNameById?.get(user.org_id),
+        currentMonthOpen: countCurrentMonthOpen(userAssignments),
+        ...stats,
+      }
+    })
+    .sort((a, b) => {
+      if (a.currentMonthOpen !== b.currentMonthOpen) return b.currentMonthOpen - a.currentMonthOpen
+      return a.userName.localeCompare(b.userName)
+    })
+}
+
 export function buildStaffSummaryRows(
   users: Profile[],
   assignments: Assignment[],
@@ -237,17 +324,7 @@ export function buildStaffSummaryRows(
         .map(resolveAssignmentScore)
         .filter((s): s is number => s != null)
 
-      const currentMonthOpen = userAssignments.filter((a) => {
-        const monthly = Boolean(a.course?.is_monthly_catalog)
-        if (monthly) return a.status !== 'completed'
-        if (a.status === 'completed') return false
-        const now = new Date()
-        const assigned = a.assigned_at ? new Date(a.assigned_at) : null
-        const due = a.due_date ? new Date(a.due_date) : null
-        const inMonth = (d: Date | null) =>
-          Boolean(d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth())
-        return inMonth(assigned) || inMonth(due)
-      }).length
+      const currentMonthOpen = countCurrentMonthOpen(userAssignments)
 
       return {
         userId: user.id,

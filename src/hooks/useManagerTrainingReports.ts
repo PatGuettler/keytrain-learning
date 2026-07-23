@@ -1,13 +1,15 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { fetchAssignmentsForManager } from '@/services/assignments.service'
+import { fetchAssignmentHistoryForManager } from '@/services/assignments.service'
 import { fetchProfiles } from '@/services/users.service'
 import { fetchOrganizationById } from '@/services/organizations.service'
+import { fetchPublicationsForOrg } from '@/services/course-publications.service'
 import { useAuthStore } from '@/store/authStore'
+import { activePublicationCourseIds } from '@/lib/course-publications'
 import {
-  buildStaffSummaryRows,
+  buildStaffSummaryRowsFromGradeHistory,
   buildStaffTrainingRows,
-  computeAvgScore,
+  computeAvgScoreFromGradeHistory,
   computeCompletionRate,
   type StaffSummaryRow,
 } from '@/lib/dashboard-stats'
@@ -40,8 +42,8 @@ export function useManagerTrainingReports() {
   const employeeIds = useMemo(() => new Set(employees.map((e) => e.id)), [employees])
 
   const { data: assignments = [], isLoading: assignmentsLoading } = useQuery({
-    queryKey: ['assignments', 'manager', managerId, 'reports'],
-    queryFn: () => fetchAssignmentsForManager(managerId!),
+    queryKey: ['assignments', 'manager', managerId, 'reports', 'history'],
+    queryFn: () => fetchAssignmentHistoryForManager(managerId!),
     enabled: Boolean(managerId),
   })
 
@@ -57,14 +59,28 @@ export function useManagerTrainingReports() {
     enabled: Boolean(orgId),
   })
 
+  const { data: publications = [] } = useQuery({
+    queryKey: ['publications', orgId],
+    queryFn: () => fetchPublicationsForOrg(orgId!),
+    enabled: Boolean(orgId),
+  })
+
+  const activeCourseIds = useMemo(
+    () => activePublicationCourseIds(publications),
+    [publications]
+  )
+
   const courses = useMemo(() => coursesFromAssignments(teamAssignments), [teamAssignments])
 
   const staffSummaries = useMemo<StaffSummaryRow[]>(
-    () => buildStaffSummaryRows(employees, teamAssignments),
-    [employees, teamAssignments]
+    () => buildStaffSummaryRowsFromGradeHistory(employees, teamAssignments, activeCourseIds),
+    [employees, teamAssignments, activeCourseIds]
   )
 
-  const avgScore = useMemo(() => computeAvgScore(teamAssignments), [teamAssignments])
+  const avgScore = useMemo(
+    () => computeAvgScoreFromGradeHistory(teamAssignments, activeCourseIds),
+    [teamAssignments, activeCourseIds]
+  )
   const completionRate = useMemo(() => computeCompletionRate(teamAssignments), [teamAssignments])
 
   const metrics = useMemo(

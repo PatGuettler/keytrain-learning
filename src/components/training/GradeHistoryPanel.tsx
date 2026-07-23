@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { LearnerCourseAvailabilityFilter } from '@/components/training/LearnerCourseAvailabilityFilter'
 import { fetchAssignmentHistory } from '@/services/assignments.service'
 import { fetchPublicationsForOrg } from '@/services/course-publications.service'
-import { buildGradeHistoryRows } from '@/lib/dashboard-stats'
+import { buildGradeHistoryRows, summarizeStaffAssignments } from '@/lib/dashboard-stats'
 import { formatAttemptsLabel } from '@/lib/course-attempts'
 import { activePublicationCourseIds } from '@/lib/course-publications'
 import {
@@ -232,20 +232,16 @@ export function useGradeHistorySummary(userId: string | undefined, orgId?: strin
   }, [assignments, publications])
 
   const summary = useMemo(() => {
-    const completed = rows.filter((r) => r.status === 'completed').length
-    const scores = rows
-      .filter((r) => r.score != null)
-      .map((r) => r.score as number)
-    const avgScore =
-      scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
+    const activeCourseIds = activePublicationCourseIds(publications)
+    const stats = summarizeStaffAssignments(assignments, activeCourseIds)
     return {
-      totalCourses: rows.length,
-      completedCourses: completed,
-      completionRate: rows.length > 0 ? Math.round((completed / rows.length) * 100) : 0,
-      avgScore,
-      overdueCourses: rows.filter((r) => r.effectiveProgress === 'expired').length,
+      totalCourses: stats.totalCourses,
+      completedCourses: stats.completedCourses,
+      completionRate: stats.completionRate,
+      avgScore: stats.avgScore,
+      overdueCourses: stats.overdueCourses,
     }
-  }, [rows])
+  }, [assignments, publications])
 
   return { rows, assignments, summary, isLoading }
 }

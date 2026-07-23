@@ -33,6 +33,11 @@ export async function fetchAssignmentsForManager(managerId: string): Promise<Ass
   return backend.assignments.fetchAssignments({ managerId })
 }
 
+/** Full assignment history for a manager's direct reports (includes closed / unpublished courses). */
+export async function fetchAssignmentHistoryForManager(managerId: string): Promise<Assignment[]> {
+  return backend.assignments.fetchAssignments({ managerId, includeHistory: true })
+}
+
 export async function fetchAllAssignments(): Promise<Assignment[]> {
   return backend.assignments.fetchAssignments()
 }

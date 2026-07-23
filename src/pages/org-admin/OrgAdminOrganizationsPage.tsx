@@ -11,10 +11,10 @@ import { Badge } from '@/components/ui/badge'
 import {
   createOrganizationAsOrgAdmin,
   fetchMyOrgMemberships,
-  switchActiveOrganization,
 } from '@/services/org-memberships.service'
 import { orgAdminCanCreateOrganizations } from '@/services/org-license.service'
 import { orgAdminManagedOrgIds } from '@/lib/org-admin-access'
+import { syncAuthAfterOrgCreate } from '@/lib/sync-auth-after-org-create'
 import { useAuthStore } from '@/store/authStore'
 
 export function OrgAdminOrganizationsPage() {
@@ -66,8 +66,10 @@ export function OrgAdminOrganizationsPage() {
   const createMutation = useMutation({
     mutationFn: createOrganizationAsOrgAdmin,
     onSuccess: async (org) => {
-      const nextProfile = await switchActiveOrganization(org.id)
-      if (userId && email) setAuth({ userId, email, profile: nextProfile })
+      if (userId && email) {
+        const nextProfile = await syncAuthAfterOrgCreate(userId, org, profile)
+        setAuth({ userId, email, profile: nextProfile })
+      }
       await queryClient.invalidateQueries()
       setNewOrgName('')
       setShowForm(false)

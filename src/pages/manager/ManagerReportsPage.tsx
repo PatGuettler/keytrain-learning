@@ -91,6 +91,7 @@ export function ManagerReportsPage() {
         rows={staffSummaries}
         getStaffDetailPath={(userId) => `/manager/reports/staff/${userId}`}
         title="Team training summary"
+        showMonthColumn={false}
       />
 
       <OrgCourseTable

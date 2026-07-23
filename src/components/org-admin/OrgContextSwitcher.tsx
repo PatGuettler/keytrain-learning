@@ -18,6 +18,7 @@ import {
   switchActiveOrganization,
 } from '@/services/org-memberships.service'
 import { orgAdminCanCreateOrganizations } from '@/services/org-license.service'
+import { syncAuthAfterOrgCreate } from '@/lib/sync-auth-after-org-create'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
 
@@ -59,8 +60,10 @@ export function OrgContextSwitcher({ className }: { className?: string }) {
   const createMutation = useMutation({
     mutationFn: createOrganizationAsOrgAdmin,
     onSuccess: async (org) => {
-      const nextProfile = await switchActiveOrganization(org.id)
-      if (userId && email) setAuth({ userId, email, profile: nextProfile })
+      if (userId && email) {
+        const nextProfile = await syncAuthAfterOrgCreate(userId, org, profile)
+        setAuth({ userId, email, profile: nextProfile })
+      }
       await queryClient.invalidateQueries()
       setNewName('')
       setCreateOpen(false)
