@@ -8,7 +8,7 @@ import { useUiStore } from '@/store/uiStore'
 import { Button } from '@/components/ui/button'
 import { AppLogo } from '@/components/brand/AppLogo'
 import { useRailnetAccess } from '@/hooks/useRailnetAccess'
-import { navByRole } from './nav-config'
+import { navByRole, isNavItemActive } from './nav-config'
 
 export function MobileSidebar() {
   const { role } = useRole()
@@ -57,12 +57,12 @@ export function MobileSidebar() {
             <NavLink
               key={to}
               to={to}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium min-h-[48px]',
-                  isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-accent'
-                )
-              }
+              className={cn(
+                'flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium min-h-[48px]',
+                isNavItemActive(location.pathname, to)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-foreground hover:bg-accent'
+              )}
             >
               <Icon className="h-5 w-5 shrink-0" />
               {label}

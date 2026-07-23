@@ -30,6 +30,7 @@ import { ManagerReportsPage } from '@/pages/manager/ManagerReportsPage'
 import { ManagerCourseReportPage } from '@/pages/manager/ManagerCourseReportPage'
 import { MyTrainingPage } from '@/pages/employee/MyTrainingPage'
 import { TrainingGradeHistoryPage } from '@/pages/training/TrainingGradeHistoryPage'
+import { GradeHistoryCoursePage } from '@/pages/training/GradeHistoryCoursePage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { PrayerPage } from '@/pages/PrayerPage'
 import { PhishingTrainingPage } from '@/pages/phishing/PhishingTrainingPage'
@@ -352,7 +353,11 @@ export default function App() {
             />
             <Route
               path="/manager/training/history"
-              element={<RoleGuard roles={['manager']}><TrainingGradeHistoryPage /></RoleGuard>}
+              element={<RoleGuard roles={['manager']}><TrainingGradeHistoryPage basePath="/manager/training" /></RoleGuard>}
+            />
+            <Route
+              path="/manager/training/history/:courseId"
+              element={<RoleGuard roles={['manager']}><GradeHistoryCoursePage basePath="/manager/training" /></RoleGuard>}
             />
             <Route
               path="/manager/training/play/:courseId"
@@ -380,7 +385,11 @@ export default function App() {
             />
             <Route
               path="/employee/training/history"
-              element={<RoleGuard roles={['employee']}><TrainingGradeHistoryPage /></RoleGuard>}
+              element={<RoleGuard roles={['employee']}><TrainingGradeHistoryPage basePath="/employee/training" /></RoleGuard>}
+            />
+            <Route
+              path="/employee/training/history/:courseId"
+              element={<RoleGuard roles={['employee']}><GradeHistoryCoursePage basePath="/employee/training" /></RoleGuard>}
             />
             <Route
               path="/employee/training/play/:courseId"

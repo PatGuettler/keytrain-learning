@@ -777,6 +777,16 @@ export function createSupabaseBackend(): Backend {
         if (!opts?.includeHistory) {
           if (opts?.orgId) {
             await filterByActivePublications(opts.orgId)
+          } else if (opts?.managerId) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('org_id')
+              .eq('id', opts.managerId)
+              .maybeSingle()
+
+            if (profile?.org_id) {
+              await filterByActivePublications(profile.org_id)
+            }
           } else if (opts?.userId) {
             const { data: profile } = await supabase
               .from('profiles')

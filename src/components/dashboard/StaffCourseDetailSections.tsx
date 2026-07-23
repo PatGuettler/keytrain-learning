@@ -50,12 +50,14 @@ export function StaffCourseDetailSections({
   moduleAttempts,
   unlockRequests = [],
   userId,
+  readOnly = false,
 }: {
   courseRow: StaffTrainingRow
   sessions: TrainingSession[]
   moduleAttempts: ModuleAttempt[]
   unlockRequests?: CourseUnlockRequest[]
   userId: string
+  readOnly?: boolean
 }) {
   const courseSessions = sessions.filter((s) => s.course_id === courseRow.courseId)
   const courseModuleAttempts = moduleAttempts.filter(
@@ -120,9 +122,11 @@ export function StaffCourseDetailSections({
               <dd className="mt-1 font-medium text-foreground">{formatDate(courseRow.dueDate)}</dd>
             </div>
           </dl>
-          <div className="mt-4 pt-4 border-t">
-            <AssignCourseRetakeButton courseRow={courseRow} userId={userId} />
-          </div>
+          {!readOnly && (
+            <div className="mt-4 pt-4 border-t">
+              <AssignCourseRetakeButton courseRow={courseRow} userId={userId} />
+            </div>
+          )}
         </CardContent>
       </Card>
 

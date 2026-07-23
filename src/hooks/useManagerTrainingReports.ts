@@ -37,11 +37,19 @@ export function useManagerTrainingReports() {
     [team]
   )
 
+  const employeeIds = useMemo(() => new Set(employees.map((e) => e.id)), [employees])
+
   const { data: assignments = [], isLoading: assignmentsLoading } = useQuery({
     queryKey: ['assignments', 'manager', managerId, 'reports'],
     queryFn: () => fetchAssignmentsForManager(managerId!),
     enabled: Boolean(managerId),
   })
+
+  /** Only current direct-report employees — excludes stale rows after org moves. */
+  const teamAssignments = useMemo(
+    () => assignments.filter((a) => employeeIds.has(a.user_id)),
+    [assignments, employeeIds]
+  )
 
   const { data: organization } = useQuery({
     queryKey: ['profile-organization', orgId],
@@ -49,26 +57,26 @@ export function useManagerTrainingReports() {
     enabled: Boolean(orgId),
   })
 
-  const courses = useMemo(() => coursesFromAssignments(assignments), [assignments])
+  const courses = useMemo(() => coursesFromAssignments(teamAssignments), [teamAssignments])
 
   const staffSummaries = useMemo<StaffSummaryRow[]>(
-    () => buildStaffSummaryRows(employees, assignments),
-    [employees, assignments]
+    () => buildStaffSummaryRows(employees, teamAssignments),
+    [employees, teamAssignments]
   )
 
-  const avgScore = useMemo(() => computeAvgScore(assignments), [assignments])
-  const completionRate = useMemo(() => computeCompletionRate(assignments), [assignments])
+  const avgScore = useMemo(() => computeAvgScore(teamAssignments), [teamAssignments])
+  const completionRate = useMemo(() => computeCompletionRate(teamAssignments), [teamAssignments])
 
   const metrics = useMemo(
     () => ({
       teamCount: employees.length,
       courseCount: courses.length,
-      assignmentCount: assignments.length,
+      assignmentCount: teamAssignments.length,
       completionRate,
-      overdueCount: assignments.filter((a) => a.status === 'overdue').length,
-      inProgressCount: assignments.filter((a) => a.status === 'in_progress').length,
+      overdueCount: teamAssignments.filter((a) => a.status === 'overdue').length,
+      inProgressCount: teamAssignments.filter((a) => a.status === 'in_progress').length,
     }),
-    [employees.length, courses.length, assignments, completionRate]
+    [employees.length, courses.length, teamAssignments, completionRate]
   )
 
   return {
@@ -77,7 +85,7 @@ export function useManagerTrainingReports() {
     employees,
     team: employees as Profile[],
     courses,
-    assignments,
+    assignments: teamAssignments,
     staffSummaries,
     avgScore,
     metrics,

@@ -98,3 +98,12 @@ export const mobileTabNavByRole: Record<UserRole, NavItem[]> = {
     { to: '/employee/railnet', label: 'RailNet', icon: Hexagon, requiresRailnet: true },
   ],
 }
+
+/** Sidebar active state — Required Training must not match /training/history. */
+export function isNavItemActive(pathname: string, to: string): boolean {
+  if (pathname === to) return true
+  if (/^\/(employee|manager)\/training$/.test(to)) {
+    return pathname.startsWith(`${to}/play/`)
+  }
+  return pathname.startsWith(`${to}/`)
+}
