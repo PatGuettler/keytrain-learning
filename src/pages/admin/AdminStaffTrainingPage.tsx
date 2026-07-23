@@ -5,6 +5,7 @@ import { adminOrgDashboardPath } from '@/lib/org-slugs'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Award, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react'
 import { fetchAssignments } from '@/services/assignments.service'
+import { fetchPublicationsForOrg } from '@/services/course-publications.service'
 import { fetchOrgMembers } from '@/services/users.service'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { StatCard } from '@/components/dashboard/StatCard'
@@ -18,6 +19,7 @@ import {
   buildStaffTrainingRows,
   staffOverallStatus,
 } from '@/lib/dashboard-stats'
+import { activePublicationCourseIds } from '@/lib/course-publications'
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
   completed: 'success',
@@ -51,6 +53,16 @@ export function AdminStaffTrainingPage() {
     enabled: Boolean(userId),
   })
 
+  const { data: publications = [] } = useQuery({
+    queryKey: ['publications', orgId],
+    queryFn: () => fetchPublicationsForOrg(orgId!),
+    enabled: Boolean(orgId),
+  })
+  const activeCourseIds = useMemo(
+    () => activePublicationCourseIds(publications),
+    [publications]
+  )
+
   const user = users.find((u) => u.id === userId)
   const trainingRows = useMemo(
     () => buildStaffTrainingRows(assignments, user ? [user] : []),
@@ -79,7 +91,9 @@ export function AdminStaffTrainingPage() {
         </Button>
         {summary && (
           <ExportPdfButton
-            onExport={() => exportStaffDashboardPdf(user, summary, trainingRows)}
+            onExport={() =>
+              exportStaffDashboardPdf(user, summary, trainingRows, { activeCourseIds })
+            }
           />
         )}
       </div>

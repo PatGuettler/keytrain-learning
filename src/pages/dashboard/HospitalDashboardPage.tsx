@@ -20,6 +20,7 @@ import {
   computeTrainingNeeds,
   filterResolvedTrainingNeeds,
 } from '@/lib/dashboard-stats'
+import { activePublicationCourseIds } from '@/lib/course-publications'
 import {
   fetchResolvedTrainingNeedModuleIds,
   resolveTrainingNeed,
@@ -49,6 +50,7 @@ export function HospitalDashboardPage() {
     [moduleAttempts, courses, resolvedModuleIds]
   )
   const avgScore = computeAvgScore(assignments)
+  const activeCourseIds = activePublicationCourseIds(publications)
 
   const handleResolveTrainingNeed = async (moduleId: string) => {
     if (!orgId || !adminId) return
@@ -96,7 +98,9 @@ export function HospitalDashboardPage() {
         <div className="flex flex-wrap gap-2">
           <ExportPdfButton
             label="Monthly scores (PDF)"
-            onExport={() => exportMonthlyScoresPdf(org.name, courses, assignments, users)}
+            onExport={() =>
+              exportMonthlyScoresPdf(org.name, courses, assignments, users, { activeCourseIds })
+            }
           />
           <ExportPdfButton
             onExport={() =>

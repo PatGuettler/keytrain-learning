@@ -67,15 +67,18 @@ export function resolveAssignmentScore(assignment: Assignment): number | null {
   return Math.round(Number(best.score))
 }
 
-/** Average score across completed assignments that have a recorded score. */
-export function computeAvgScore(assignments: Assignment[]): number {
+/** Average score across assignments that have a recorded score (any status). */
+export function computeAvgScoreNullable(assignments: Assignment[]): number | null {
   const scores = assignments
-    .filter((a) => a.status === 'completed')
     .map(resolveAssignmentScore)
     .filter((s): s is number => s != null)
 
-  if (scores.length === 0) return 0
+  if (scores.length === 0) return null
   return Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
+}
+
+export function computeAvgScore(assignments: Assignment[]): number {
+  return computeAvgScoreNullable(assignments) ?? 0
 }
 
 export function buildScoreHistory(sessions: TrainingSession[]) {
@@ -87,6 +90,111 @@ export function buildScoreHistory(sessions: TrainingSession[]) {
       score: Math.round(Number(s.score)),
       courseId: s.course_id,
     }))
+}
+
+export interface CourseAttemptSummary {
+  sessionId: string
+  attemptNumber: number
+  completedAt: string | null
+  score: number | null
+  passed: boolean | null
+  finished: boolean
+}
+
+function latestTimestamp(...values: (string | null | undefined)[]): string | null {
+  let latest: string | null = null
+  for (const value of values) {
+    if (!value) continue
+    if (!latest || new Date(value) > new Date(latest)) latest = value
+  }
+  return latest
+}
+
+/** Every course take with module activity or a finished session (includes incomplete runs). */
+export function buildCourseAttemptSummaries(
+  sessions: TrainingSession[],
+  moduleAttempts: ModuleAttempt[],
+  courseId: string
+): CourseAttemptSummary[] {
+  const courseSessions = sessions.filter((s) => s.course_id === courseId)
+  const sessionById = new Map(courseSessions.map((s) => [s.id, s]))
+
+  const modulesBySession = new Map<string, ModuleAttempt[]>()
+  for (const attempt of moduleAttempts) {
+    if (attempt.module?.course_id !== courseId) continue
+    const list = modulesBySession.get(attempt.session_id) ?? []
+    list.push(attempt)
+    modulesBySession.set(attempt.session_id, list)
+  }
+
+  const relevantSessionIds = new Set<string>()
+  for (const session of courseSessions) {
+    if (session.completed_at || modulesBySession.has(session.id)) {
+      relevantSessionIds.add(session.id)
+    }
+  }
+
+  return [...relevantSessionIds]
+    .map((sessionId) => {
+      const session = sessionById.get(sessionId)!
+      const mods = modulesBySession.get(sessionId) ?? []
+      const finished = Boolean(session.completed_at)
+      const moduleScores = mods
+        .filter((m) => m.score != null)
+        .map((m) => Math.round(Number(m.score)))
+
+      const score =
+        session.score != null
+          ? Math.round(Number(session.score))
+          : moduleScores.length > 0
+            ? Math.round(moduleScores.reduce((sum, s) => sum + s, 0) / moduleScores.length)
+            : null
+
+      const completedAt = latestTimestamp(session.completed_at, ...mods.map((m) => m.completed_at))
+
+      const passed = finished ? Boolean(session.passed) : null
+
+      return {
+        sessionId,
+        attemptNumber: session.attempt_number,
+        completedAt,
+        score,
+        passed,
+        finished,
+      }
+    })
+    .sort((a, b) => a.attemptNumber - b.attemptNumber)
+}
+
+export function buildScoreHistoryFromAttemptSummaries(summaries: CourseAttemptSummary[]) {
+  const withScores = summaries.filter((a) => a.score != null && a.completedAt)
+  const dateCounts = new Map<string, number>()
+  for (const attempt of withScores) {
+    const day = new Date(attempt.completedAt!).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    })
+    dateCounts.set(day, (dateCounts.get(day) ?? 0) + 1)
+  }
+
+  return withScores
+    .sort((a, b) => {
+      const byTime = new Date(a.completedAt!).getTime() - new Date(b.completedAt!).getTime()
+      if (byTime !== 0) return byTime
+      return a.attemptNumber - b.attemptNumber
+    })
+    .map((attempt) => {
+      const day = new Date(attempt.completedAt!).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+      })
+      const label = (dateCounts.get(day) ?? 0) > 1 ? `${day} (#${attempt.attemptNumber})` : day
+      return {
+        date: label,
+        score: attempt.score!,
+        attemptNumber: attempt.attemptNumber,
+      }
+    })
 }
 
 export interface OrgDashboardMetrics {
@@ -114,7 +222,6 @@ export function computeCourseMetrics(courses: Course[], assignments: Assignment[
     const courseAssignments = assignments.filter((a) => a.course_id === course.id)
     const completedCount = courseAssignments.filter((a) => a.status === 'completed').length
     const scores = courseAssignments
-      .filter((a) => a.status === 'completed')
       .map(resolveAssignmentScore)
       .filter((s): s is number => s != null)
     const avgScore =
@@ -255,12 +362,9 @@ export function summarizeStaffAssignments(
 
 export function computeAvgScoreFromGradeHistory(
   assignments: Assignment[],
-  activeCourseIds: Set<string>
+  _activeCourseIds: Set<string>
 ): number {
-  const rows = buildGradeHistoryRows(assignments, activeCourseIds)
-  const scores = rows.filter((r) => r.score != null).map((r) => r.score as number)
-  if (scores.length === 0) return 0
-  return Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
+  return computeAvgScore(assignments)
 }
 
 function countCurrentMonthOpen(assignments: Assignment[]): number {
@@ -320,7 +424,7 @@ export function buildStaffSummaryRows(
         userAssignments = filterAssignmentsForReporting(userAssignments, activeCourseIds)
       }
       const completed = userAssignments.filter((a) => a.status === 'completed')
-      const scores = completed
+      const scores = userAssignments
         .map(resolveAssignmentScore)
         .filter((s): s is number => s != null)
 

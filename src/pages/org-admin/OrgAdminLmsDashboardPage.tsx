@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { useOrgAdminTrainingReports } from '@/hooks/useOrgAdminTrainingReports'
 import { getOrgSlug } from '@/lib/org-slugs'
+import { activePublicationCourseIds } from '@/lib/course-publications'
+import { useMemo } from 'react'
 
 /** Multi-org LMS training reports: filter by org, then open staff for scores and progress. */
 export function OrgAdminLmsDashboardPage() {
@@ -29,6 +31,11 @@ export function OrgAdminLmsDashboardPage() {
     avgScore,
     isLoading,
   } = useOrgAdminTrainingReports()
+
+  const activeCourseIds = useMemo(
+    () => activePublicationCourseIds(publications),
+    [publications]
+  )
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading training reports…</p>
@@ -69,7 +76,8 @@ export function OrgAdminLmsDashboardPage() {
                 orgFilter === 'all' ? 'All managed organizations' : (selectedOrg?.name ?? 'Organization'),
                 courses,
                 assignments,
-                users
+                users,
+                { activeCourseIds }
               )
             }
           />

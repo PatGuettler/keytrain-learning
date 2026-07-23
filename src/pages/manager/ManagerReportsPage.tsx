@@ -21,6 +21,7 @@ export function ManagerReportsPage() {
     staffSummaries,
     avgScore,
     metrics,
+    activeCourseIds,
     isLoading,
   } = useManagerTrainingReports()
 
@@ -47,7 +48,7 @@ export function ManagerReportsPage() {
             allowNonAdmin
             label="Monthly compliance (PDF)"
             onExport={() =>
-              exportMonthlyScoresPdf(orgName, courses, assignments, team)
+              exportMonthlyScoresPdf(orgName, courses, assignments, team, { activeCourseIds })
             }
           />
           <ExportPdfButton

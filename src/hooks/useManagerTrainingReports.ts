@@ -105,6 +105,8 @@ export function useManagerTrainingReports() {
     staffSummaries,
     avgScore,
     metrics,
+    publications,
+    activeCourseIds,
     isLoading: teamLoading || assignmentsLoading,
   }
 }

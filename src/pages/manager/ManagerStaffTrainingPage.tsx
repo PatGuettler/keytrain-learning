@@ -1,7 +1,9 @@
+import { useMemo } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Award, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react'
 import { fetchProfiles } from '@/services/users.service'
+import { fetchPublicationsForOrg } from '@/services/course-publications.service'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
@@ -10,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { exportStaffDashboardPdf } from '@/lib/pdf/dashboard-reports'
 import { buildStaffTrainingRows, staffOverallStatus } from '@/lib/dashboard-stats'
+import { activePublicationCourseIds } from '@/lib/course-publications'
 import { useAuthStore } from '@/store/authStore'
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
@@ -55,6 +58,16 @@ export function ManagerStaffTrainingPage({
   const employee = team.find((p) => p.id === employeeId && p.role === 'employee')
 
   const { assignments, summary, isLoading } = useGradeHistorySummary(employeeId, orgId)
+
+  const { data: publications = [] } = useQuery({
+    queryKey: ['publications', orgId],
+    queryFn: () => fetchPublicationsForOrg(orgId!),
+    enabled: Boolean(orgId),
+  })
+  const activeCourseIds = useMemo(
+    () => activePublicationCourseIds(publications),
+    [publications]
+  )
 
   const trainingRows = employee ? buildStaffTrainingRows(assignments, [employee]) : []
 
@@ -134,7 +147,9 @@ export function ManagerStaffTrainingPage({
         <ExportPdfButton
           allowNonAdmin
           label="Download report (PDF)"
-          onExport={() => exportStaffDashboardPdf(employee, pdfSummary, trainingRows)}
+          onExport={() =>
+            exportStaffDashboardPdf(employee, pdfSummary, trainingRows, { activeCourseIds })
+          }
         />
       </div>
 

@@ -43,6 +43,15 @@ const EFFECTIVE_PROGRESS_LABELS: Record<EffectiveProgressStatus, string> = {
   expired: 'Expired',
 }
 
+export function assignmentProgressLabel(
+  courseId: string,
+  status: AssignmentStatus,
+  activeCourseIds: Set<string>
+): string {
+  const catalog = resolveCatalogAvailability(courseId, activeCourseIds)
+  return effectiveProgressLabel(resolveEffectiveProgressStatus(catalog, status))
+}
+
 export function effectiveProgressLabel(status: EffectiveProgressStatus): string {
   return EFFECTIVE_PROGRESS_LABELS[status]
 }

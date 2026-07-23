@@ -5,13 +5,16 @@ import {
   extractModuleIssues,
   resolveAssignmentScore,
   staffOverallStatus,
+  buildCourseAttemptSummaries,
+  computeAvgScoreNullable,
   type StaffSummaryRow,
   type StaffTrainingRow,
   type TrainingNeed,
 } from '@/lib/dashboard-stats'
 import type { Assignment, Course, CoursePublication, ModuleAttempt, TrainingSession } from '@/types/course.types'
 import type { Profile } from '@/types/user.types'
-import { courseStatusLabelForOrg } from '@/lib/course-publications'
+import { courseStatusLabelForOrg, activePublicationCourseIds } from '@/lib/course-publications'
+import { assignmentProgressLabel } from '@/lib/learner-course-availability'
 import type { HospitalDashboardSummary } from '@/hooks/useAdminDashboard'
 import type { OrgDashboardMetrics } from '@/lib/dashboard-stats'
 import {
@@ -100,6 +103,26 @@ function staffStatusLabel(row: StaffSummaryRow): string {
 
 function scoreText(score: number | null | undefined): string {
   return score != null ? `${score}%` : '—'
+}
+
+function staffTrainingStatusLabel(
+  row: StaffTrainingRow,
+  activeCourseIds?: Set<string>
+): string {
+  if (activeCourseIds) {
+    return assignmentProgressLabel(row.courseId, row.status, activeCourseIds)
+  }
+  return STATUS_LABELS[row.status] ?? row.status
+}
+
+function assignmentStatusLabel(
+  assignment: Assignment,
+  activeCourseIds?: Set<string>
+): string {
+  if (activeCourseIds) {
+    return assignmentProgressLabel(assignment.course_id, assignment.status, activeCourseIds)
+  }
+  return STATUS_LABELS[assignment.status] ?? assignment.status
 }
 
 export function exportPlatformDashboardPdf(
@@ -276,6 +299,9 @@ export function exportOrgCoursePdf(
   }
 
   y = addSectionHeading(doc, 'Staff on this course', y)
+  const activeCourseIds = options?.publications
+    ? activePublicationCourseIds(options.publications)
+    : undefined
   addDataTable(
     doc,
     ['Name', 'Email', 'Due', 'Score', 'Course attempts', 'Status'],
@@ -285,7 +311,7 @@ export function exportOrgCoursePdf(
       formatDate(row.dueDate),
       scoreText(row.score),
       `${row.attemptsUsed}/${row.maxAttempts}${row.locked ? ' (locked)' : ''}`,
-      STATUS_LABELS[row.status] ?? row.status,
+      staffTrainingStatusLabel(row, activeCourseIds),
     ]),
     y
   )
@@ -296,7 +322,12 @@ export function exportOrgCoursePdf(
   )
 }
 
-export function exportStaffDashboardPdf(user: Profile, summary: StaffSummaryRow, courseRows: StaffTrainingRow[]) {
+export function exportStaffDashboardPdf(
+  user: Profile,
+  summary: StaffSummaryRow,
+  courseRows: StaffTrainingRow[],
+  options?: { activeCourseIds?: Set<string> }
+) {
   const doc = createDashboardPdf(
     `${user.full_name} — Training Report`,
     user.email ?? 'Staff training record'
@@ -328,7 +359,7 @@ export function exportStaffDashboardPdf(user: Profile, summary: StaffSummaryRow,
       formatDate(row.dueDate),
       scoreText(row.score),
       `${row.attemptsUsed}/${row.maxAttempts}${row.locked ? ' (locked)' : ''}`,
-      STATUS_LABELS[row.status] ?? row.status,
+      staffTrainingStatusLabel(row, options?.activeCourseIds),
     ]),
     y
   )
@@ -348,6 +379,12 @@ export function exportStaffCoursePdf(
   const courseModuleAttempts = moduleAttempts
     .filter((a) => a.module?.course_id === courseRow.courseId)
     .sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime())
+
+  const courseAttempts = buildCourseAttemptSummaries(
+    courseSessions,
+    courseModuleAttempts,
+    courseRow.courseId
+  )
 
   const doc = createDashboardPdf(
     `${courseRow.courseTitle} — Course Report`,
@@ -373,14 +410,12 @@ export function exportStaffCoursePdf(
   y = addDataTable(
     doc,
     ['Attempt', 'Completed', 'Score', 'Result'],
-    courseSessions
-      .filter((s) => s.completed_at)
-      .map((session) => [
-        session.attempt_number,
-        formatDate(session.completed_at),
-        scoreText(session.score != null ? Math.round(Number(session.score)) : null),
-        session.passed ? 'Passed' : 'Failed',
-      ]),
+    courseAttempts.map((attempt) => [
+      attempt.attemptNumber,
+      formatDate(attempt.completedAt),
+      scoreText(attempt.score),
+      attempt.finished ? (attempt.passed ? 'Passed' : 'Failed') : 'Incomplete',
+    ]),
     y
   )
 
@@ -420,7 +455,8 @@ export function exportMonthlyScoresPdf(
   orgName: string,
   courses: Course[],
   assignments: Assignment[],
-  users: Profile[]
+  users: Profile[],
+  options?: { activeCourseIds?: Set<string> }
 ) {
   const now = new Date()
   const monthLabel = now.toLocaleString(undefined, { month: 'long', year: 'numeric' })
@@ -441,11 +477,7 @@ export function exportMonthlyScoresPdf(
   let y = pdfStartY(subtitle)
 
   const completed = relevant.filter((a) => a.status === 'completed')
-  const scores = completed
-    .map(resolveAssignmentScore)
-    .filter((s): s is number => s != null)
-  const avg =
-    scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length) : null
+  const avg = computeAvgScoreNullable(relevant)
   const courseCount = useMonthly
     ? monthlyCourseIds.size
     : new Set(relevant.map((a) => a.course_id)).size
@@ -470,7 +502,7 @@ export function exportMonthlyScoresPdf(
         email: profile?.email ?? '—',
         course: a.course?.title ?? courseTitleById.get(a.course_id) ?? 'Course',
         score: resolveAssignmentScore(a),
-        status: STATUS_LABELS[a.status] ?? a.status,
+        status: assignmentStatusLabel(a, options?.activeCourseIds),
         completedOn: a.status === 'completed' ? formatDate(a.completed_at ?? null) : '—',
       }
     })

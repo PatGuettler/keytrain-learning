@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { STATUS_LABELS } from '@/lib/constants'
 import { formatAttemptsLabel, formatMaxAttempts } from '@/lib/course-attempts'
 import {
-  buildScoreHistory,
+  buildCourseAttemptSummaries,
+  buildScoreHistoryFromAttemptSummaries,
   extractModuleIssues,
   type StaffTrainingRow,
 } from '@/lib/dashboard-stats'
@@ -75,10 +76,12 @@ export function StaffCourseDetailSections({
   const courseModuleAttempts = moduleAttempts.filter(
     (a) => a.module?.course_id === courseRow.courseId
   )
-  const scoreHistory = buildScoreHistory(courseSessions)
-  const completedSessions = courseSessions
-    .filter((s) => s.completed_at)
-    .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime())
+  const courseAttempts = buildCourseAttemptSummaries(
+    courseSessions,
+    courseModuleAttempts,
+    courseRow.courseId
+  )
+  const scoreHistory = buildScoreHistoryFromAttemptSummaries(courseAttempts)
   const attemptsBySession = groupModuleAttemptsBySession(courseModuleAttempts, courseSessions)
 
   return (
@@ -201,27 +204,37 @@ export function StaffCourseDetailSections({
           <CardTitle className="text-base">Course attempt history</CardTitle>
         </CardHeader>
         <CardContent>
-          {completedSessions.length === 0 ? (
+          {courseAttempts.length === 0 ? (
             <p className="text-sm text-muted-foreground">No completed course attempts yet.</p>
           ) : (
             <ul className="space-y-2">
-              {completedSessions.map((session) => (
+              {[...courseAttempts].reverse().map((attempt) => (
                 <li
-                  key={session.id}
+                  key={attempt.sessionId}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-3"
                 >
                   <div>
-                    <p className="font-medium text-sm">Attempt {session.attempt_number}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(session.completed_at)}</p>
+                    <p className="font-medium text-sm">Attempt {attempt.attemptNumber}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(attempt.completedAt)}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {session.score != null && (
-                      <span className="text-sm font-medium tabular-nums">
-                        {Math.round(Number(session.score))}%
-                      </span>
+                    {attempt.score != null && (
+                      <span className="text-sm font-medium tabular-nums">{attempt.score}%</span>
                     )}
-                    <Badge variant={session.passed ? 'success' : 'warning'}>
-                      {session.passed ? 'Passed' : 'Failed'}
+                    <Badge
+                      variant={
+                        attempt.finished
+                          ? attempt.passed
+                            ? 'success'
+                            : 'warning'
+                          : 'secondary'
+                      }
+                    >
+                      {attempt.finished
+                        ? attempt.passed
+                          ? 'Passed'
+                          : 'Failed'
+                        : 'Incomplete'}
                     </Badge>
                   </div>
                 </li>
