@@ -38,11 +38,15 @@ export function ManagerStaffTrainingPage({
   courseDetailPathPrefix?: string
 }) {
   const navigate = useNavigate()
-  const { userId: employeeId } = useParams<{ userId: string }>()
+  const { userId, employeeId: teamEmployeeId } = useParams<{
+    userId?: string
+    employeeId?: string
+  }>()
+  const employeeId = userId ?? teamEmployeeId
   const managerId = useAuthStore((s) => s.userId)
   const orgId = useAuthStore((s) => s.profile?.org_id)
 
-  const { data: team = [] } = useQuery({
+  const { data: team = [], isLoading: teamLoading } = useQuery({
     queryKey: ['team', managerId],
     queryFn: () => fetchProfiles({ managerId: managerId! }),
     enabled: Boolean(managerId),
@@ -73,7 +77,21 @@ export function ManagerStaffTrainingPage({
       })
     : 'none'
 
-  if (!employee) {
+  if (teamLoading) {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" size="sm" asChild>
+          <Link to={backPath}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            {backLabel}
+          </Link>
+        </Button>
+        <p className="text-sm text-muted-foreground">Loading employee…</p>
+      </div>
+    )
+  }
+
+  if (!employeeId || !employee) {
     return (
       <div className="space-y-4">
         <Button variant="ghost" size="sm" asChild>
