@@ -23,7 +23,6 @@ export async function fetchMyOrgMemberships(): Promise<OrganizationMembership[]>
   const { data, error } = await supabase
     .from('organization_memberships')
     .select('id, user_id, org_id, role, is_active, created_at, updated_at, organization:organizations(*)')
-    .eq('is_active', true)
     .order('created_at', { ascending: true })
 
   if (error) throw new Error(error.message)

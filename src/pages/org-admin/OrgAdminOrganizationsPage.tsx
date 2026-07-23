@@ -40,6 +40,7 @@ export function OrgAdminOrganizationsPage() {
       id: m.org_id,
       name: m.organization?.name ?? m.org_id,
       membershipId: m.id,
+      membershipActive: m.is_active,
     }))
     .sort((a, b) => a.name.localeCompare(b.name))
 
@@ -80,8 +81,15 @@ export function OrgAdminOrganizationsPage() {
 
       {!canCreateOrgs && adminOrgs.length > 0 && (
         <p className="text-sm text-muted-foreground rounded-lg border bg-muted/30 px-4 py-3">
-          Creating additional organizations is a paid add-on. Contact KeyTrain if you need to
-          manage more than one organization.
+          Creating additional organizations is a paid add-on. Ask your KeyTrain admin to enable
+          &ldquo;Create additional organizations&rdquo; under Organizations → UAB → Paid features.
+        </p>
+      )}
+
+      {!canCreateOrgs && adminOrgs.length === 0 && profile?.role === 'org_admin' && (
+        <p className="text-sm text-muted-foreground rounded-lg border bg-muted/30 px-4 py-3">
+          If you should manage UAB or other organizations, ask your KeyTrain admin to confirm your
+          account is active and multi-org creation is enabled for your organization.
         </p>
       )}
 

@@ -1,5 +1,6 @@
 import { getSupabase } from '@/services/supabase'
 import type { Profile } from '@/types/user.types'
+import { useAuthStore } from '@/store/authStore'
 import {
   type OrgBillingTerms,
   type OrgPlan,
@@ -103,9 +104,15 @@ export function canAccessPhishing(
 /** True when the signed-in org admin has the multi-org creation add-on. */
 export async function orgAdminCanCreateOrganizations(): Promise<boolean> {
   const supabase = requireSupabase()
+  const profile = useAuthStore.getState().profile
+
   const { data, error } = await supabase.rpc('org_admin_can_create_organizations')
-  if (error) throw new Error(error.message)
-  return data === true
+  if (!error) return data === true
+
+  // Before migration 061 is applied, fall back to the active org license row.
+  if (!profile?.org_id || profile.role !== 'org_admin') return false
+  const license = await fetchOrgLicense(profile.org_id)
+  return license?.can_create_orgs === true
 }
 
 export async function fetchOrgLicense(orgId: string): Promise<OrgLicense | null> {

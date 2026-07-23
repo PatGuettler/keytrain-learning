@@ -135,14 +135,12 @@ WHERE l.can_create_orgs = false
       FROM organization_memberships m
       WHERE m.org_id = l.org_id
         AND m.role = 'org_admin'
-        AND m.is_active = true
     )
     OR EXISTS (
       SELECT 1
       FROM profiles p
       WHERE p.org_id = l.org_id
         AND p.role = 'org_admin'
-        AND p.is_active = true
     )
   );
 
