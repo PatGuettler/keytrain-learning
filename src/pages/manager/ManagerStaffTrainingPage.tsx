@@ -1,21 +1,15 @@
-import { useMemo } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Award, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react'
-import { fetchAssignmentsForManager } from '@/services/assignments.service'
 import { fetchProfiles } from '@/services/users.service'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
-import { StaffCourseDirectory } from '@/components/dashboard/StaffCourseDirectory'
+import { GradeHistoryPanel, useGradeHistorySummary } from '@/components/training/GradeHistoryPanel'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { exportStaffDashboardPdf } from '@/lib/pdf/dashboard-reports'
-import {
-  buildStaffSummaryRows,
-  buildStaffTrainingRows,
-  staffOverallStatus,
-} from '@/lib/dashboard-stats'
+import { buildStaffTrainingRows, staffOverallStatus } from '@/lib/dashboard-stats'
 import { useAuthStore } from '@/store/authStore'
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
@@ -41,11 +35,12 @@ export function ManagerStaffTrainingPage({
 }: {
   backPath?: string
   backLabel?: string
-  /** Path prefix before `/:userId/courses/:courseId` */
   courseDetailPathPrefix?: string
 }) {
+  const navigate = useNavigate()
   const { userId: employeeId } = useParams<{ userId: string }>()
   const managerId = useAuthStore((s) => s.userId)
+  const orgId = useAuthStore((s) => s.profile?.org_id)
 
   const { data: team = [] } = useQuery({
     queryKey: ['team', managerId],
@@ -55,26 +50,28 @@ export function ManagerStaffTrainingPage({
 
   const employee = team.find((p) => p.id === employeeId && p.role === 'employee')
 
-  const { data: allTeamAssignments = [], isLoading } = useQuery({
-    queryKey: ['assignments', 'manager', managerId, 'reports'],
-    queryFn: () => fetchAssignmentsForManager(managerId!),
-    enabled: Boolean(managerId),
-  })
+  const { assignments, summary, isLoading } = useGradeHistorySummary(employeeId, orgId)
 
-  const assignments = useMemo(
-    () => allTeamAssignments.filter((a) => a.user_id === employeeId),
-    [allTeamAssignments, employeeId]
-  )
+  const trainingRows = employee ? buildStaffTrainingRows(assignments, [employee]) : []
 
-  const trainingRows = useMemo(
-    () => (employee ? buildStaffTrainingRows(assignments, [employee]) : []),
-    [assignments, employee]
-  )
-
-  const summary = useMemo(() => {
-    if (!employee) return null
-    return buildStaffSummaryRows([employee], assignments)[0] ?? null
-  }, [employee, assignments])
+  const overallStatus = summary
+    ? staffOverallStatus({
+        userId: employeeId!,
+        userName: employee?.full_name ?? '',
+        userEmail: employee?.email ?? null,
+        role: 'employee',
+        isActive: true,
+        totalCourses: summary.totalCourses,
+        completedCourses: summary.completedCourses,
+        inProgressCourses: 0,
+        overdueCourses: summary.overdueCourses,
+        pendingCourses: 0,
+        lockedCourses: 0,
+        currentMonthOpen: 0,
+        avgScore: summary.avgScore,
+        completionRate: summary.completionRate,
+      })
+    : 'none'
 
   if (!employee) {
     return (
@@ -90,7 +87,22 @@ export function ManagerStaffTrainingPage({
     )
   }
 
-  const overall = summary ? staffOverallStatus(summary) : 'none'
+  const pdfSummary = {
+    userId: employee.id,
+    userName: employee.full_name,
+    userEmail: employee.email,
+    role: employee.role,
+    isActive: employee.is_active,
+    totalCourses: summary.totalCourses,
+    completedCourses: summary.completedCourses,
+    inProgressCourses: trainingRows.filter((r) => r.status === 'in_progress').length,
+    overdueCourses: summary.overdueCourses,
+    pendingCourses: trainingRows.filter((r) => r.status === 'pending').length,
+    lockedCourses: trainingRows.filter((r) => r.locked).length,
+    currentMonthOpen: 0,
+    avgScore: summary.avgScore,
+    completionRate: summary.completionRate,
+  }
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -101,54 +113,49 @@ export function ManagerStaffTrainingPage({
             {backLabel}
           </Link>
         </Button>
-        {summary && (
-          <ExportPdfButton
-            allowNonAdmin
-            label="Download report (PDF)"
-            onExport={() => exportStaffDashboardPdf(employee, summary, trainingRows)}
-          />
-        )}
+        <ExportPdfButton
+          allowNonAdmin
+          label="Download report (PDF)"
+          onExport={() => exportStaffDashboardPdf(employee, pdfSummary, trainingRows)}
+        />
       </div>
 
       <div className="space-y-2">
         <PageHeader
           title={employee.full_name}
-          description={employee.email ?? 'Team member training record'}
+          description="All courses assigned — available, completed, expired, and closed training."
         />
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">Employee</Badge>
-          {summary && <Badge variant={statusVariant[overall]}>{statusLabel[overall]}</Badge>}
+          <Badge variant={statusVariant[overallStatus]}>{statusLabel[overallStatus]}</Badge>
         </div>
       </div>
 
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading courses…</p>
-      ) : (
-        <>
-          {summary && (
-            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                title="Courses complete"
-                value={`${summary.completedCourses}/${summary.totalCourses}`}
-                icon={BookOpen}
-              />
-              <StatCard title="Completion rate" value={`${summary.completionRate}%`} icon={TrendingUp} />
-              <StatCard
-                title="Avg score"
-                value={summary.avgScore != null ? `${summary.avgScore}%` : '—'}
-                icon={Award}
-              />
-              <StatCard title="Overdue" value={summary.overdueCourses} icon={AlertTriangle} />
-            </div>
-          )}
-
-          <StaffCourseDirectory
-            rows={trainingRows}
-            getCourseDetailPath={(courseId) =>
-              `${courseDetailPathPrefix}/${employeeId}/courses/${courseId}`
-            }
+      {!isLoading && summary.totalCourses > 0 && (
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Courses complete"
+            value={`${summary.completedCourses}/${summary.totalCourses}`}
+            icon={BookOpen}
           />
-        </>
+          <StatCard title="Completion rate" value={`${summary.completionRate}%`} icon={TrendingUp} />
+          <StatCard
+            title="Avg score"
+            value={summary.avgScore != null ? `${summary.avgScore}%` : '—'}
+            icon={Award}
+          />
+          <StatCard title="Overdue / expired" value={summary.overdueCourses} icon={AlertTriangle} />
+        </div>
+      )}
+
+      {employeeId && (
+        <GradeHistoryPanel
+          userId={employeeId}
+          orgId={orgId}
+          onCourseClick={(courseId) =>
+            navigate(`${courseDetailPathPrefix}/${employeeId}/courses/${courseId}`)
+          }
+        />
       )}
     </div>
   )
