@@ -19,9 +19,12 @@ import { SPIRITUAL_FEATURES_ENABLED } from '@/lib/spiritual-features'
 import {
   SUPPORT_CATEGORIES,
   TRAINING_REQUEST_GUIDANCE,
-  TRAINING_REQUEST_MESSAGE_TEMPLATE,
   TRAINING_REQUEST_SUBJECT_SUGGESTION,
+  TRAINING_REQUEST_FIELDS,
+  buildTrainingRequestMessage,
+  emptyTrainingRequestFields,
   type SupportCategory,
+  type TrainingRequestFieldId,
 } from '@/lib/support-categories'
 
 const selectClass =
@@ -60,6 +63,7 @@ export function ProfilePage() {
   const [category, setCategory] = useState<SupportCategory>('question')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
+  const [trainingFields, setTrainingFields] = useState(emptyTrainingRequestFields)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -73,20 +77,17 @@ export function ProfilePage() {
       if (!subject.trim()) {
         setSubject(TRAINING_REQUEST_SUBJECT_SUGGESTION)
       }
-      if (!message.trim()) {
-        setMessage(TRAINING_REQUEST_MESSAGE_TEMPLATE)
-      }
     } else if (category === 'training_request') {
-      // Leaving "Request training": clear the prefilled template only if the
-      // user hasn't edited it, so real edits are never discarded.
       if (subject === TRAINING_REQUEST_SUBJECT_SUGGESTION) {
         setSubject('')
       }
-      if (message === TRAINING_REQUEST_MESSAGE_TEMPLATE) {
-        setMessage('')
-      }
+      setTrainingFields(emptyTrainingRequestFields())
     }
     setCategory(next)
+  }
+
+  const setTrainingField = (id: TrainingRequestFieldId, value: string) => {
+    setTrainingFields((prev) => ({ ...prev, [id]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,7 +97,21 @@ export function ProfilePage() {
     setSuccess('')
     setDeliveryWarning('')
     try {
-      const result = await submitSupportRequest({ category, subject, message })
+      const outboundMessage =
+        category === 'training_request' ? buildTrainingRequestMessage(trainingFields) : message.trim()
+
+      if (category === 'training_request') {
+        const missing = TRAINING_REQUEST_FIELDS.filter(
+          (f) => f.required && !trainingFields[f.id]?.trim()
+        )
+        if (missing.length > 0) {
+          setError(`Please fill in: ${missing.map((f) => f.label).join(', ')}`)
+          setLoading(false)
+          return
+        }
+      }
+
+      const result = await submitSupportRequest({ category, subject, message: outboundMessage })
       setSuccess(result.message)
       if (result.saved && !result.emailSent) {
         setDeliveryWarning(
@@ -105,6 +120,7 @@ export function ProfilePage() {
       }
       setSubject('')
       setMessage('')
+      setTrainingFields(emptyTrainingRequestFields())
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not send request'
       setError(message)
@@ -252,8 +268,8 @@ export function ProfilePage() {
                 </p>
                 <p className="text-muted-foreground">
                   If KeyTrain or RailNet surfaced alerts, weak scores, or trends you want addressed,
-                  tell us what you saw and who should be trained. The message below is a starting
-                  template — edit or replace any section.
+                  answer the questions below. The more specific you are, the faster we can scope
+                  training for your organization.
                 </p>
                 <p className="text-muted-foreground font-medium">Please include:</p>
                 <ul className="list-disc pl-5 text-muted-foreground space-y-1">
@@ -277,22 +293,38 @@ export function ProfilePage() {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="support-message">Message</Label>
-              <textarea
-                id="support-message"
-                className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={category === 'training_request' ? 16 : undefined}
-                placeholder={
-                  category === 'training_request'
-                    ? 'Use the template above or write your own — the more specific, the better.'
-                    : undefined
-                }
-                required
-              />
-            </div>
+            {category === 'training_request' ? (
+              <div className="space-y-4">
+                {TRAINING_REQUEST_FIELDS.map((field) => (
+                  <div key={field.id} className="space-y-2">
+                    <Label htmlFor={`training-${field.id}`}>
+                      {field.label}
+                      {field.required ? '' : ' (optional)'}
+                    </Label>
+                    <textarea
+                      id={`training-${field.id}`}
+                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      rows={field.rows}
+                      value={trainingFields[field.id]}
+                      onChange={(e) => setTrainingField(field.id, e.target.value)}
+                      placeholder={field.placeholder}
+                      required={field.required}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="support-message">Message</Label>
+                <textarea
+                  id="support-message"
+                  className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  required
+                />
+              </div>
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
             {deliveryWarning && (
               <p className="text-sm text-amber-600 dark:text-amber-500">{deliveryWarning}</p>
