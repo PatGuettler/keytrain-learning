@@ -6,6 +6,11 @@ import { Badge } from '@/components/ui/badge'
 import type { Assignment, Course } from '@/types/course.types'
 import { STATUS_LABELS } from '@/lib/constants'
 import { isUnlimitedAttempts } from '@/lib/course-attempts'
+import {
+  learnerAvailabilityLabel,
+  learnerAvailabilityVariant,
+  type CatalogAvailability,
+} from '@/lib/learner-course-availability'
 import { formatDate } from '@/lib/utils'
 
 interface CourseCardProps {
@@ -13,6 +18,7 @@ interface CourseCardProps {
   assignment?: Assignment
   playHref: string
   hasCompletedAttempt?: boolean
+  catalogAvailability?: CatalogAvailability
 }
 
 export function CourseCard({
@@ -20,6 +26,7 @@ export function CourseCard({
   assignment,
   playHref,
   hasCompletedAttempt = false,
+  catalogAvailability = 'available',
 }: CourseCardProps) {
   const takeBy = course.publication?.available_until ?? assignment?.due_date
   const unlimited = isUnlimitedAttempts(course.max_attempts)
@@ -49,6 +56,15 @@ export function CourseCard({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <CardTitle className="text-base sm:text-lg leading-snug min-w-0">{course.title}</CardTitle>
           <div className="flex flex-wrap gap-1.5 shrink-0 self-start">
+            <Badge
+              variant={learnerAvailabilityVariant(
+                catalogAvailability,
+                assignment?.status ?? 'pending'
+              )}
+              className="w-fit"
+            >
+              {learnerAvailabilityLabel(catalogAvailability, assignment?.status ?? 'pending')}
+            </Badge>
             <Badge variant="outline" className="w-fit">
               Required
             </Badge>

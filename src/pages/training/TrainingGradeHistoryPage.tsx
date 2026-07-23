@@ -5,11 +5,19 @@ import { Search, ChevronRight, FileDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { LearnerCourseAvailabilityFilter } from '@/components/training/LearnerCourseAvailabilityFilter'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { fetchAssignmentHistory } from '@/services/assignments.service'
+import { fetchPublicationsForOrg } from '@/services/course-publications.service'
 import { useAuthStore } from '@/store/authStore'
 import { buildGradeHistoryRows } from '@/lib/dashboard-stats'
 import { formatAttemptsLabel } from '@/lib/course-attempts'
+import { activePublicationCourseIds } from '@/lib/course-publications'
+import {
+  learnerAvailabilityVariant,
+  matchesAvailabilityFilter,
+  type AvailabilityFilter,
+} from '@/lib/learner-course-availability'
 import { STATUS_LABELS } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
 
@@ -23,7 +31,9 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warni
 export function TrainingGradeHistoryPage({ basePath }: { basePath: string }) {
   const navigate = useNavigate()
   const userId = useAuthStore((s) => s.userId)
+  const orgId = useAuthStore((s) => s.profile?.org_id)
   const [query, setQuery] = useState('')
+  const [availabilityFilter, setAvailabilityFilter] = useState<AvailabilityFilter>('all')
 
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ['assignment-history', userId],
@@ -31,13 +41,39 @@ export function TrainingGradeHistoryPage({ basePath }: { basePath: string }) {
     enabled: Boolean(userId),
   })
 
-  const rows = useMemo(() => buildGradeHistoryRows(assignments), [assignments])
+  const { data: publications = [] } = useQuery({
+    queryKey: ['publications', orgId],
+    queryFn: () => fetchPublicationsForOrg(orgId!),
+    enabled: Boolean(orgId),
+  })
+
+  const activeCourseIds = useMemo(
+    () => activePublicationCourseIds(publications),
+    [publications]
+  )
+
+  const rows = useMemo(
+    () => buildGradeHistoryRows(assignments, activeCourseIds),
+    [assignments, activeCourseIds]
+  )
+
+  const counts = useMemo(
+    () => ({
+      all: rows.length,
+      available: rows.filter((r) => r.catalogAvailability === 'available').length,
+      closed: rows.filter((r) => r.catalogAvailability === 'closed').length,
+    }),
+    [rows]
+  )
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return rows
-    return rows.filter((row) => row.courseTitle.toLowerCase().includes(q))
-  }, [rows, query])
+    return rows.filter((row) => {
+      if (!matchesAvailabilityFilter(row.catalogAvailability, availabilityFilter)) return false
+      if (!q) return true
+      return row.courseTitle.toLowerCase().includes(q)
+    })
+  }, [rows, query, availabilityFilter])
 
   const openCourse = (courseId: string) => {
     navigate(`${basePath}/history/${courseId}`)
@@ -47,7 +83,7 @@ export function TrainingGradeHistoryPage({ basePath }: { basePath: string }) {
     <div className="space-y-5 sm:space-y-6">
       <PageHeader
         title="Grade history"
-        description="All courses you have been assigned, including published and unpublished training."
+        description="All courses you have been assigned — available, completed, expired, and closed training."
       />
 
       {isLoading ? (
@@ -65,6 +101,11 @@ export function TrainingGradeHistoryPage({ basePath }: { basePath: string }) {
                   : `Showing ${filtered.length} of ${rows.length} courses`}
               </p>
             </div>
+            <LearnerCourseAvailabilityFilter
+              value={availabilityFilter}
+              onChange={setAvailabilityFilter}
+              counts={counts}
+            />
             <div className="relative max-w-md">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -80,7 +121,9 @@ export function TrainingGradeHistoryPage({ basePath }: { basePath: string }) {
           <CardContent>
             {filtered.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No courses match &ldquo;{query.trim()}&rdquo;.
+                {query.trim()
+                  ? `No courses match "${query.trim()}".`
+                  : 'No courses match this filter.'}
               </p>
             ) : (
               <>
@@ -97,8 +140,13 @@ export function TrainingGradeHistoryPage({ basePath }: { basePath: string }) {
                           <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant={row.isPublished ? 'success' : 'secondary'}>
-                            {row.isPublished ? 'Published' : 'Unpublished'}
+                          <Badge
+                            variant={learnerAvailabilityVariant(
+                              row.catalogAvailability,
+                              row.status
+                            )}
+                          >
+                            {row.availabilityLabel}
                           </Badge>
                           <Badge variant={statusVariant[row.status]}>{STATUS_LABELS[row.status]}</Badge>
                         </div>
@@ -121,8 +169,8 @@ export function TrainingGradeHistoryPage({ basePath }: { basePath: string }) {
                     <thead>
                       <tr className="border-b text-left text-muted-foreground">
                         <th className="pb-2 pr-4">Course</th>
-                        <th className="pb-2 pr-4">Status</th>
-                        <th className="pb-2 pr-4">Publication</th>
+                        <th className="pb-2 pr-4">Progress</th>
+                        <th className="pb-2 pr-4">Availability</th>
                         <th className="pb-2 pr-4">Score</th>
                         <th className="pb-2 pr-4">Attempts</th>
                         <th className="pb-2 pr-4">Completed</th>
@@ -144,8 +192,13 @@ export function TrainingGradeHistoryPage({ basePath }: { basePath: string }) {
                             </Badge>
                           </td>
                           <td className="py-3 pr-4">
-                            <Badge variant={row.isPublished ? 'success' : 'secondary'}>
-                              {row.isPublished ? 'Published' : 'Unpublished'}
+                            <Badge
+                              variant={learnerAvailabilityVariant(
+                                row.catalogAvailability,
+                                row.status
+                              )}
+                            >
+                              {row.availabilityLabel}
                             </Badge>
                           </td>
                           <td className="py-3 pr-4 tabular-nums">

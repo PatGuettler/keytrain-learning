@@ -1,6 +1,11 @@
-import type { Assignment, Course, CoursePublication, Module, ModuleAttempt, TrainingSession } from '@/types/course.types'
+import type { Assignment, AssignmentStatus, Course, CoursePublication, Module, ModuleAttempt, TrainingSession } from '@/types/course.types'
 import type { Profile } from '@/types/user.types'
 import { isPublicationActive } from '@/lib/course-publications'
+import {
+  learnerAvailabilityLabel,
+  resolveCatalogAvailability,
+  type CatalogAvailability,
+} from '@/lib/learner-course-availability'
 
 /** Assignments that count toward staff progress (active courses + completed history). */
 export function filterAssignmentsForReporting(
@@ -130,8 +135,9 @@ export interface GradeHistoryRow {
   assignmentId: string
   courseId: string
   courseTitle: string
-  isPublished: boolean
-  status: Assignment['status']
+  catalogAvailability: CatalogAvailability
+  availabilityLabel: string
+  status: AssignmentStatus
   score: number | null
   attemptsUsed: number
   maxAttempts: number
@@ -140,21 +146,28 @@ export interface GradeHistoryRow {
   completedSessions: number
 }
 
-export function buildGradeHistoryRows(assignments: Assignment[]): GradeHistoryRow[] {
+export function buildGradeHistoryRows(
+  assignments: Assignment[],
+  activeCourseIds: Set<string> = new Set()
+): GradeHistoryRow[] {
   return assignments
-    .map((a) => ({
-      assignmentId: a.id,
-      courseId: a.course_id,
-      courseTitle: a.course?.title ?? 'Course',
-      isPublished: a.course?.is_published ?? false,
-      status: a.status,
-      score: resolveAssignmentScore(a),
-      attemptsUsed: resolveAttemptsUsed(a),
-      maxAttempts: a.course?.max_attempts ?? 3,
-      completedAt: a.completed_at,
-      assignedAt: a.assigned_at,
-      completedSessions: (a.training_sessions ?? []).filter((s) => s.completed_at != null).length,
-    }))
+    .map((a) => {
+      const catalogAvailability = resolveCatalogAvailability(a.course_id, activeCourseIds)
+      return {
+        assignmentId: a.id,
+        courseId: a.course_id,
+        courseTitle: a.course?.title ?? 'Course',
+        catalogAvailability,
+        availabilityLabel: learnerAvailabilityLabel(catalogAvailability, a.status),
+        status: a.status,
+        score: resolveAssignmentScore(a),
+        attemptsUsed: resolveAttemptsUsed(a),
+        maxAttempts: a.course?.max_attempts ?? 3,
+        completedAt: a.completed_at,
+        assignedAt: a.assigned_at,
+        completedSessions: (a.training_sessions ?? []).filter((s) => s.completed_at != null).length,
+      }
+    })
     .sort((a, b) => {
       const aTime = a.completedAt ? new Date(a.completedAt).getTime() : 0
       const bTime = b.completedAt ? new Date(b.completedAt).getTime() : 0
