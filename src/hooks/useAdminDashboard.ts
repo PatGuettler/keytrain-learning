@@ -2,11 +2,12 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchAllAssignments, fetchAssignmentsForOrg } from '@/services/assignments.service'
 import { fetchCourses, fetchHospitalCourses } from '@/services/courses.service'
-import { fetchActivePublications } from '@/services/course-publications.service'
+import { fetchActivePublications, fetchPublicationsForOrg } from '@/services/course-publications.service'
 import { fetchHospitalOrganizations } from '@/services/organizations.service'
 import { fetchProfiles } from '@/services/users.service'
 import { fetchOrgModuleAttempts } from '@/services/sessions.service'
 import { computeOrgMetrics, type OrgDashboardMetrics } from '@/lib/dashboard-stats'
+import { isPublicationActive } from '@/lib/course-publications'
 import { countProfileStatuses } from '@/lib/user-status'
 import type { Organization } from '@/types/user.types'
 
@@ -65,11 +66,13 @@ export function useAdminDashboard() {
       lockedUsers: userStatusCounts.login_locked,
       totalUsers: users.length,
       totalCourses: courses.length,
-      publishedCourses: courses.filter((c) => c.is_published).length,
+      publishedCourses: new Set(
+        publications.filter(isPublicationActive).map((p) => p.course_id)
+      ).size,
       completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
       overdueCount: allAssignments.filter((a) => a.status === 'overdue').length,
     }
-  }, [hospitals.length, users, courses, assignments])
+  }, [hospitals.length, users, courses, assignments, publications])
 
   return {
     hospitals: hospitalSummaries,
@@ -111,6 +114,12 @@ export function useOrgDashboard(orgId: string | undefined) {
     enabled: Boolean(orgId),
   })
 
+  const { data: publications = [], isLoading: publicationsLoading } = useQuery({
+    queryKey: ['publications', orgId],
+    queryFn: () => fetchPublicationsForOrg(orgId!),
+    enabled: Boolean(orgId),
+  })
+
   const { data: moduleAttempts = [], isLoading: attemptsLoading } = useQuery({
     queryKey: ['org-module-attempts', orgId],
     queryFn: () => fetchOrgModuleAttempts(orgId!),
@@ -120,8 +129,8 @@ export function useOrgDashboard(orgId: string | undefined) {
   const org = hospitals.find((h) => h.id === orgId)
 
   const metrics = useMemo(
-    () => (orgId ? computeOrgMetrics(orgId, users, courses, assignments) : null),
-    [orgId, users, courses, assignments]
+    () => (orgId ? computeOrgMetrics(orgId, users, courses, assignments, publications) : null),
+    [orgId, users, courses, assignments, publications]
   )
 
   return {
@@ -129,8 +138,9 @@ export function useOrgDashboard(orgId: string | undefined) {
     users,
     courses,
     assignments,
+    publications,
     moduleAttempts,
     metrics,
-    isLoading: usersLoading || coursesLoading || assignmentsLoading || attemptsLoading,
+    isLoading: usersLoading || coursesLoading || assignmentsLoading || publicationsLoading || attemptsLoading,
   }
 }

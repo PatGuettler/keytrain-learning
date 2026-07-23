@@ -1,6 +1,6 @@
 import type { Assignment, AssignmentStatus, Course, CoursePublication, Module, ModuleAttempt, TrainingSession } from '@/types/course.types'
 import type { Profile } from '@/types/user.types'
-import { isPublicationActive } from '@/lib/course-publications'
+import { isCoursePublishedToOrg, isPublicationActive } from '@/lib/course-publications'
 import {
   learnerAvailabilityLabel,
   resolveCatalogAvailability,
@@ -434,6 +434,14 @@ export function computeTrainingNeeds(
   return needs.sort((a, b) => a.passRate - b.passRate || a.avgScore - b.avgScore)
 }
 
+export function filterResolvedTrainingNeeds(
+  needs: TrainingNeed[],
+  resolvedModuleIds: Iterable<string>
+): TrainingNeed[] {
+  const resolved = new Set(resolvedModuleIds)
+  return needs.filter((need) => !resolved.has(need.moduleId))
+}
+
 export function computeCompletionRate(assignments: Assignment[]): number {
   if (assignments.length === 0) return 0
   const completed = assignments.filter((a) => a.status === 'completed').length
@@ -463,9 +471,8 @@ export function computeOrgMetrics(
   return {
     userCount: orgUsers.length,
     totalCourses: orgCourses.length,
-    publishedCourses: orgCourses.filter(
-      (c) => c.is_published || Boolean(c.publication) || publishedToOrgIds.has(c.id)
-    ).length,
+    publishedCourses: orgCourses.filter((c) => isCoursePublishedToOrg(c, orgId, publications))
+      .length,
     assignmentCount: orgAssignments.length,
     completionRate: computeCompletionRate(orgAssignments),
     overdueCount: orgAssignments.filter((a) => a.status === 'overdue').length,

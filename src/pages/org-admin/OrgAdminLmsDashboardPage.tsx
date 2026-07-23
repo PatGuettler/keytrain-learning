@@ -23,6 +23,7 @@ export function OrgAdminLmsDashboardPage() {
     users,
     courses,
     assignments,
+    publications,
     metrics,
     staffSummaries,
     avgScore,
@@ -137,7 +138,13 @@ export function OrgAdminLmsDashboardPage() {
         showOrgColumn={showOrgColumn}
       />
 
-      <OrgCourseTable orgSlug={orgSlug} courses={courses} assignments={assignments} />
+      <OrgCourseTable
+        orgSlug={orgSlug}
+        orgId={selectedOrg?.id}
+        publications={publications}
+        courses={courses}
+        assignments={assignments}
+      />
     </div>
   )
 }

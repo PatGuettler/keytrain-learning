@@ -12,6 +12,7 @@ import { UserTrainingPanel } from '@/components/admin/UserTrainingPanel'
 import { getProfileStatusBadge } from '@/lib/user-status'
 import { adminOrgDashboardPath, getOrgSlug } from '@/lib/org-slugs'
 import type { UserAdminTab } from '@/lib/user-admin-paths'
+import { orgAdminManagedOrgIds } from '@/lib/org-admin-access'
 import { adminUserPath, orgAdminUserPath } from '@/lib/user-admin-paths'
 import { fetchProfile } from '@/services/auth.service'
 import { fetchOrganizationById, fetchHospitalOrganizations } from '@/services/organizations.service'
@@ -58,9 +59,8 @@ export function UserAdminPage({ scope }: { scope: Scope }) {
   })
 
   const adminOrgIds = useMemo(
-    () =>
-      memberships.filter((m) => m.role === 'org_admin' && m.is_active).map((m) => m.org_id),
-    [memberships]
+    () => orgAdminManagedOrgIds(actor, memberships),
+    [actor, memberships]
   )
 
   const canAccess = useMemo(() => {
@@ -117,7 +117,7 @@ export function UserAdminPage({ scope }: { scope: Scope }) {
   const backPath =
     scope === 'admin'
       ? '/admin/dashboard/users'
-      : `/org-admin/organizations/${user?.org_id ?? adminOrgIds[0] ?? ''}`
+      : `/org-admin/organizations/${user?.org_id ?? actor?.org_id ?? adminOrgIds[0] ?? ''}`
 
   const userPath = (t: UserAdminTab) =>
     scope === 'admin' ? adminUserPath(userId!, t) : orgAdminUserPath(userId!, t)

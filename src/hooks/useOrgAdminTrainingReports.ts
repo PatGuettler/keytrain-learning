@@ -4,9 +4,11 @@ import { fetchAssignmentsForOrg } from '@/services/assignments.service'
 import { fetchCourses } from '@/services/courses.service'
 import { fetchMyOrgMemberships } from '@/services/org-memberships.service'
 import { fetchProfiles } from '@/services/users.service'
-import { buildStaffSummaryRows, computeAvgScore } from '@/lib/dashboard-stats'
+import { buildStaffSummaryRows, computeAvgScore, computeOrgMetrics } from '@/lib/dashboard-stats'
+import { isPublicationActive } from '@/lib/course-publications'
+import { fetchPublicationsForOrg } from '@/services/course-publications.service'
 import { useAuthStore } from '@/store/authStore'
-import type { Assignment, Course } from '@/types/course.types'
+import type { Assignment, Course, CoursePublication } from '@/types/course.types'
 import type { Organization, Profile } from '@/types/user.types'
 
 export type OrgFilterId = 'all' | string
@@ -45,11 +47,12 @@ export function useOrgAdminTrainingReports() {
     queries: selectedOrgIds.map((orgId) => ({
       queryKey: ['org-admin-training', orgId],
       queryFn: async () => {
-        const [users, ownedCourses, publishedCourses, assignments] = await Promise.all([
+        const [users, ownedCourses, publishedCourses, assignments, publications] = await Promise.all([
           fetchProfiles({ orgId, includeInactive: true, excludeAdmins: true }),
           fetchCourses(orgId, false),
           fetchCourses(orgId, true),
           fetchAssignmentsForOrg(orgId),
+          fetchPublicationsForOrg(orgId),
         ])
         const courseById = new Map<string, Course>()
         for (const c of [...ownedCourses, ...publishedCourses]) courseById.set(c.id, c)
@@ -58,6 +61,7 @@ export function useOrgAdminTrainingReports() {
           users,
           courses: [...courseById.values()],
           assignments,
+          publications,
         }
       },
       enabled: selectedOrgIds.length > 0,
@@ -71,7 +75,9 @@ export function useOrgAdminTrainingReports() {
     const users: Profile[] = []
     const courses: Course[] = []
     const assignments: Assignment[] = []
+    const publications: CoursePublication[] = []
     const courseIds = new Set<string>()
+    const publicationKeys = new Set<string>()
 
     for (const q of perOrgQueries) {
       if (!q.data) continue
@@ -82,26 +88,41 @@ export function useOrgAdminTrainingReports() {
         courses.push(c)
       }
       assignments.push(...q.data.assignments)
+      for (const p of q.data.publications) {
+        const key = `${p.org_id}:${p.course_id}`
+        if (publicationKeys.has(key)) continue
+        publicationKeys.add(key)
+        publications.push(p)
+      }
     }
 
-    return { users, courses, assignments }
+    return { users, courses, assignments, publications }
   }, [perOrgQueries])
 
   const metrics = useMemo(() => {
+    if (orgFilter !== 'all' && selectedOrgIds.length === 1) {
+      return computeOrgMetrics(
+        selectedOrgIds[0],
+        aggregated.users,
+        aggregated.courses,
+        aggregated.assignments,
+        aggregated.publications
+      )
+    }
     const completed = aggregated.assignments.filter((a) => a.status === 'completed').length
     const total = aggregated.assignments.length
     return {
       userCount: aggregated.users.length,
       totalCourses: aggregated.courses.length,
-      publishedCourses: aggregated.courses.filter(
-        (c) => c.is_published || Boolean(c.publication)
+      publishedCourses: aggregated.courses.filter((c) =>
+        aggregated.publications.some((p) => p.course_id === c.id && isPublicationActive(p))
       ).length,
       assignmentCount: total,
       completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
       overdueCount: aggregated.assignments.filter((a) => a.status === 'overdue').length,
       inProgressCount: aggregated.assignments.filter((a) => a.status === 'in_progress').length,
     }
-  }, [aggregated])
+  }, [aggregated, orgFilter, selectedOrgIds])
 
   const staffSummaries = useMemo(
     () =>
@@ -131,6 +152,7 @@ export function useOrgAdminTrainingReports() {
     users: aggregated.users,
     courses: aggregated.courses,
     assignments: aggregated.assignments,
+    publications: aggregated.publications,
     metrics,
     staffSummaries,
     avgScore,

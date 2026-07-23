@@ -12,6 +12,7 @@ import { fetchMyOrgMemberships } from '@/services/org-memberships.service'
 import { fetchOrgMembers } from '@/services/users.service'
 import { computeOrgBill } from '@/lib/org-billing'
 import { PLAN_LABELS, formatUsdFromCents } from '@/lib/seat-pricing'
+import { orgAdminManagedOrgIds } from '@/lib/org-admin-access'
 import { useAuthStore } from '@/store/authStore'
 import {
   canAccessPhishing,
@@ -60,11 +61,20 @@ export function OrgAdminDashboardPage() {
   })
 
   const adminOrgs = useMemo(() => {
-    return memberships
-      .filter((m) => m.role === 'org_admin' && m.is_active && m.organization)
-      .map((m) => m.organization!)
-      .sort((a, b) => a.name.localeCompare(b.name))
-  }, [memberships])
+    const managedIds = orgAdminManagedOrgIds(profile, memberships)
+    const byId = new Map<string, NonNullable<(typeof memberships)[number]['organization']>>()
+    for (const m of memberships) {
+      if (m.role === 'org_admin' && m.organization && managedIds.includes(m.org_id)) {
+        byId.set(m.org_id, m.organization)
+      }
+    }
+    return managedIds
+      .map((id) => byId.get(id))
+      .filter(Boolean)
+      .sort((a, b) => a!.name.localeCompare(b!.name)) as NonNullable<
+      (typeof memberships)[number]['organization']
+    >[]
+  }, [memberships, profile])
 
   useEffect(() => {
     if (orgFilter === 'all') return

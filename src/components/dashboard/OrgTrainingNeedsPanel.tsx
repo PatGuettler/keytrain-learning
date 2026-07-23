@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, ChevronRight } from 'lucide-react'
+import { AlertTriangle, Check, ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { TrainingNeed } from '@/lib/dashboard-stats'
@@ -11,11 +12,15 @@ export function OrgTrainingNeedsPanel({
   highlightModuleId,
   /** When true (course detail page), show summary only — no navigation. */
   disableNavigation = false,
+  onResolve,
+  resolvingModuleId,
 }: {
   needs: TrainingNeed[]
   orgSlug: string
   highlightModuleId?: string | null
   disableNavigation?: boolean
+  onResolve?: (moduleId: string) => void
+  resolvingModuleId?: string | null
 }) {
   const navigate = useNavigate()
 
@@ -33,7 +38,7 @@ export function OrgTrainingNeedsPanel({
         <CardDescription>
           {disableNavigation
             ? 'Quiz/module results for this course — pass rate and missed questions (not the same as course attempts below). Open a staff member for per-person scores and mistakes.'
-            : 'Click a module to open that course’s training data. Quiz takes here are not the same as course attempts on the staff list.'}
+            : 'Click a module to open that course’s training data. Mark resolved when you have addressed a gap — it will no longer appear here.'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -72,9 +77,27 @@ export function OrgTrainingNeedsPanel({
                       <li key={issue}>{issue}</li>
                     ))}
                   </ul>
-                  {!disableNavigation && (
-                    <p className="text-xs text-primary">View training data →</p>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {!disableNavigation && (
+                      <p className="text-xs text-primary">View training data →</p>
+                    )}
+                    {onResolve ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                        disabled={resolvingModuleId === need.moduleId}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onResolve(need.moduleId)
+                        }}
+                      >
+                        <Check className="h-3.5 w-3.5 mr-1" />
+                        {resolvingModuleId === need.moduleId ? 'Saving…' : 'Mark resolved'}
+                      </Button>
+                    ) : null}
+                  </div>
                 </>
               )
 

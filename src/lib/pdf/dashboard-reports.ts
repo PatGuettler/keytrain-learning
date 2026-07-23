@@ -9,8 +9,9 @@ import {
   type StaffTrainingRow,
   type TrainingNeed,
 } from '@/lib/dashboard-stats'
-import type { Assignment, Course, ModuleAttempt, TrainingSession } from '@/types/course.types'
+import type { Assignment, Course, CoursePublication, ModuleAttempt, TrainingSession } from '@/types/course.types'
 import type { Profile } from '@/types/user.types'
+import { courseStatusLabelForOrg } from '@/lib/course-publications'
 import type { HospitalDashboardSummary } from '@/hooks/useAdminDashboard'
 import type { OrgDashboardMetrics } from '@/lib/dashboard-stats'
 import {
@@ -155,7 +156,8 @@ export function exportOrgDashboardPdf(
   staffRows: StaffSummaryRow[],
   courses: Course[],
   assignments: Assignment[],
-  trainingNeeds: TrainingNeed[]
+  trainingNeeds: TrainingNeed[],
+  options?: { orgId?: string; publications?: CoursePublication[] }
 ) {
   const doc = createDashboardPdf(`${orgName} Training Report`, 'Organization dashboard summary')
   let y = pdfStartY('Organization dashboard summary')
@@ -198,7 +200,11 @@ export function exportOrgDashboardPdf(
     ['Course', 'Status', 'Assigned', 'Completed', 'Completion', 'Avg score', 'Overdue'],
     courseMetrics.map(({ course, assignmentCount, completedCount, completionRate, avgScore, overdueCount }) => [
       course.title,
-      course.is_published ? 'Published' : 'Draft',
+      options?.orgId
+        ? courseStatusLabelForOrg(course, options.orgId, options.publications ?? [])
+        : course.publication && !course.publication.unpublished_at
+          ? 'Published'
+          : 'Draft',
       assignmentCount,
       completedCount,
       `${completionRate}%`,
@@ -227,7 +233,8 @@ export function exportOrgCoursePdf(
     avgScore: number | null
   },
   trainingNeeds: TrainingNeed[],
-  staffRows: StaffTrainingRow[]
+  staffRows: StaffTrainingRow[],
+  options?: { orgId?: string; publications?: CoursePublication[] }
 ) {
   const subtitle = `${orgName} · Course training report`
   const doc = createDashboardPdf(course.title, subtitle)
@@ -236,7 +243,14 @@ export function exportOrgCoursePdf(
   y = addMetricsSection(
     doc,
     [
-      { label: 'Status', value: course.is_published ? 'Published' : 'Draft' },
+      {
+        label: 'Status',
+        value: options?.orgId
+          ? courseStatusLabelForOrg(course, options.orgId, options.publications ?? [])
+          : course.publication && !course.publication.unpublished_at
+            ? 'Published'
+            : 'Draft',
+      },
       { label: 'Assigned', value: String(metrics.assignmentCount) },
       { label: 'Completed', value: String(metrics.completedCount) },
       { label: 'In progress', value: String(metrics.inProgressCount) },

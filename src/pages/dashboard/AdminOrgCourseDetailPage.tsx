@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useOrgRoute } from '@/hooks/useOrgRoute'
 import { adminOrgDashboardPath } from '@/lib/org-slugs'
 import { ArrowLeft, BookOpen, TrendingUp, Award, AlertTriangle } from 'lucide-react'
@@ -11,20 +12,36 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useOrgDashboard } from '@/hooks/useAdminDashboard'
+import { courseStatusLabelForOrg } from '@/lib/course-publications'
 import {
   buildStaffTrainingRows,
   computeCourseMetrics,
   computeTrainingNeeds,
+  filterResolvedTrainingNeeds,
 } from '@/lib/dashboard-stats'
 import { exportOrgCoursePdf } from '@/lib/pdf/dashboard-reports'
+import {
+  fetchResolvedTrainingNeedModuleIds,
+  resolveTrainingNeed,
+} from '@/services/training-needs.service'
+import { useAuthStore } from '@/store/authStore'
 
 export function AdminOrgCourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>()
   const { orgId, orgSlug } = useOrgRoute()
+  const adminId = useAuthStore((s) => s.userId)
+  const queryClient = useQueryClient()
+  const [resolvingModuleId, setResolvingModuleId] = useState<string | null>(null)
   const [searchParams] = useSearchParams()
   const highlightModuleId = searchParams.get('module')
 
-  const { org, users, courses, assignments, moduleAttempts, isLoading } = useOrgDashboard(orgId)
+  const { org, users, courses, assignments, publications, moduleAttempts, isLoading } = useOrgDashboard(orgId)
+
+  const { data: resolvedModuleIds = [] } = useQuery({
+    queryKey: ['resolved-training-needs', orgId],
+    queryFn: () => fetchResolvedTrainingNeedModuleIds(orgId!),
+    enabled: Boolean(orgId),
+  })
 
   const course = courses.find((c) => c.id === courseId)
   const courseMetrics = useMemo(() => {
@@ -33,14 +50,28 @@ export function AdminOrgCourseDetailPage() {
   }, [course, assignments])
 
   const trainingNeeds = useMemo(() => {
-    const needs = computeTrainingNeeds(moduleAttempts, courses).filter((n) => n.courseId === courseId)
+    const needs = filterResolvedTrainingNeeds(
+      computeTrainingNeeds(moduleAttempts, courses),
+      resolvedModuleIds
+    ).filter((n) => n.courseId === courseId)
     if (!highlightModuleId) return needs
     return [...needs].sort((a, b) => {
       if (a.moduleId === highlightModuleId) return -1
       if (b.moduleId === highlightModuleId) return 1
       return 0
     })
-  }, [moduleAttempts, courses, courseId, highlightModuleId])
+  }, [moduleAttempts, courses, courseId, highlightModuleId, resolvedModuleIds])
+
+  const handleResolveTrainingNeed = async (moduleId: string) => {
+    if (!orgId || !adminId) return
+    setResolvingModuleId(moduleId)
+    try {
+      await resolveTrainingNeed(orgId, moduleId, adminId)
+      await queryClient.invalidateQueries({ queryKey: ['resolved-training-needs', orgId] })
+    } finally {
+      setResolvingModuleId(null)
+    }
+  }
 
   const staffRows = useMemo(
     () => buildStaffTrainingRows(assignments, users).filter((r) => r.courseId === courseId),
@@ -73,15 +104,24 @@ export function AdminOrgCourseDetailPage() {
         </Button>
         <ExportPdfButton
           onExport={() =>
-            exportOrgCoursePdf(org.name, course, courseMetrics, trainingNeeds, staffRows)
+            exportOrgCoursePdf(org.name, course, courseMetrics, trainingNeeds, staffRows, {
+              orgId,
+              publications,
+            })
           }
         />
       </div>
 
       <div className="space-y-2">
         <PageHeader title={course.title} description={course.description ?? 'Course training overview'} />
-        <Badge variant={course.is_published ? 'success' : 'secondary'}>
-          {course.is_published ? 'Published' : 'Draft'}
+        <Badge
+          variant={
+            orgId && courseStatusLabelForOrg(course, orgId, publications) === 'Published'
+              ? 'success'
+              : 'secondary'
+          }
+        >
+          {orgId ? courseStatusLabelForOrg(course, orgId, publications) : 'Draft'}
         </Badge>
       </div>
 
@@ -102,6 +142,8 @@ export function AdminOrgCourseDetailPage() {
           orgSlug={orgSlug!}
           highlightModuleId={highlightModuleId}
           disableNavigation
+          onResolve={handleResolveTrainingNeed}
+          resolvingModuleId={resolvingModuleId}
         />
       )}
 

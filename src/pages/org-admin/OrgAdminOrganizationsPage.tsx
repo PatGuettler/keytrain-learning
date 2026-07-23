@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Building2, ChevronRight, Plus } from 'lucide-react'
@@ -14,6 +14,7 @@ import {
   switchActiveOrganization,
 } from '@/services/org-memberships.service'
 import { orgAdminCanCreateOrganizations } from '@/services/org-license.service'
+import { orgAdminManagedOrgIds } from '@/lib/org-admin-access'
 import { useAuthStore } from '@/store/authStore'
 
 export function OrgAdminOrganizationsPage() {
@@ -34,15 +35,27 @@ export function OrgAdminOrganizationsPage() {
     enabled: Boolean(userId),
   })
 
-  const adminOrgs = memberships
-    .filter((m) => m.role === 'org_admin')
-    .map((m) => ({
-      id: m.org_id,
-      name: m.organization?.name ?? m.org_id,
-      membershipId: m.id,
-      membershipActive: m.is_active,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name))
+  const adminOrgs = useMemo(() => {
+    const managedIds = orgAdminManagedOrgIds(profile, memberships)
+    const byId = new Map<string, { id: string; name: string; membershipActive: boolean }>()
+    for (const m of memberships) {
+      if (m.role !== 'org_admin' || !managedIds.includes(m.org_id)) continue
+      byId.set(m.org_id, {
+        id: m.org_id,
+        name: m.organization?.name ?? m.org_id,
+        membershipActive: m.is_active,
+      })
+    }
+    for (const orgId of managedIds) {
+      if (byId.has(orgId)) continue
+      byId.set(orgId, {
+        id: orgId,
+        name: orgId === profile?.org_id ? 'Your organization' : orgId,
+        membershipActive: profile?.is_active !== false,
+      })
+    }
+    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name))
+  }, [memberships, profile])
 
   const { data: canCreateOrgs = false } = useQuery({
     queryKey: ['org-admin-can-create-orgs', userId],

@@ -627,6 +627,51 @@ export interface Database {
           },
         ]
       }
+      resolved_training_needs: {
+        Row: {
+          id: string
+          org_id: string
+          module_id: string
+          resolved_by: string
+          resolved_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          module_id: string
+          resolved_by: string
+          resolved_at?: string
+        }
+        Update: Partial<{
+          org_id: string
+          module_id: string
+          resolved_by: string
+          resolved_at: string
+        }>
+        Relationships: [
+          {
+            foreignKeyName: 'resolved_training_needs_org_id_fkey'
+            columns: ['org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'resolved_training_needs_module_id_fkey'
+            columns: ['module_id']
+            isOneToOne: false
+            referencedRelation: 'modules'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'resolved_training_needs_resolved_by_fkey'
+            columns: ['resolved_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       phishing_templates: {
         Row: {
           id: string

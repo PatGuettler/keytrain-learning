@@ -16,6 +16,7 @@ import {
   fetchMyOrgMemberships,
   switchActiveOrganization,
 } from '@/services/org-memberships.service'
+import { orgAdminManagesOrg } from '@/lib/org-admin-access'
 import { useAuthStore } from '@/store/authStore'
 
 export function OrgAdminUsersPage() {
@@ -28,15 +29,13 @@ export function OrgAdminUsersPage() {
   const [switchError, setSwitchError] = useState('')
   const [ready, setReady] = useState(false)
 
-  const { data: memberships = [] } = useQuery({
+  const { data: memberships = [], isLoading: membershipsLoading } = useQuery({
     queryKey: ['my-org-memberships', userId],
     queryFn: fetchMyOrgMemberships,
     enabled: Boolean(userId),
   })
 
-  const canManage = Boolean(
-    orgId && memberships.some((m) => m.org_id === orgId && m.role === 'org_admin' && m.is_active)
-  )
+  const canManage = Boolean(orgId && orgAdminManagesOrg(orgId, profile, memberships))
 
   // Ensure this org is active so manage-users / RLS match the UI context
   useEffect(() => {
@@ -44,12 +43,11 @@ export function OrgAdminUsersPage() {
     async function ensureActive() {
       setReady(false)
       setSwitchError('')
-      if (!orgId || !userId || !email) return
-      if (!canManage && memberships.length > 0) {
+      if (!orgId || !userId || !email || membershipsLoading) return
+      if (!canManage) {
         setSwitchError('You do not administer this organization.')
         return
       }
-      if (!canManage) return
       try {
         if (profile?.org_id !== orgId) {
           const next = await switchActiveOrganization(orgId)
@@ -68,7 +66,16 @@ export function OrgAdminUsersPage() {
     return () => {
       cancelled = true
     }
-  }, [orgId, canManage, memberships.length, profile?.org_id, userId, email, setAuth, queryClient])
+  }, [
+    orgId,
+    canManage,
+    membershipsLoading,
+    profile?.org_id,
+    userId,
+    email,
+    setAuth,
+    queryClient,
+  ])
 
   const activeOrgId = ready ? orgId : undefined
 
@@ -102,7 +109,11 @@ export function OrgAdminUsersPage() {
 
       {switchError ? <p className="text-sm text-destructive">{switchError}</p> : null}
 
-      {!ready && !switchError ? (
+      {!ready && !switchError && membershipsLoading ? (
+        <p className="text-sm text-muted-foreground">Loading organizations…</p>
+      ) : null}
+
+      {!ready && !switchError && !membershipsLoading ? (
         <p className="text-sm text-muted-foreground">Opening organization…</p>
       ) : null}
 

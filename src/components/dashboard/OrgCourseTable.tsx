@@ -3,16 +3,21 @@ import { ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { computeCourseMetrics } from '@/lib/dashboard-stats'
-import type { Assignment, Course } from '@/types/course.types'
+import { courseStatusLabelForOrg } from '@/lib/course-publications'
+import type { Assignment, Course, CoursePublication } from '@/types/course.types'
 
 export function OrgCourseTable({
   orgSlug,
+  orgId,
+  publications = [],
   courses,
   assignments,
   courseDetailBasePath,
   getCourseDetailPath,
 }: {
   orgSlug: string
+  orgId?: string
+  publications?: CoursePublication[]
   courses: Course[]
   assignments: Assignment[]
   /** When omitted, rows are display-only (no deep link). Legacy admin path pattern. */
@@ -22,6 +27,16 @@ export function OrgCourseTable({
 }) {
   const navigate = useNavigate()
   const rows = computeCourseMetrics(courses, assignments)
+
+  const statusLabel = (course: Course) => {
+    if (!orgId) {
+      return course.publication && !course.publication.unpublished_at ? 'Published' : 'Draft'
+    }
+    return courseStatusLabelForOrg(course, orgId, publications)
+  }
+
+  const statusVariant = (course: Course) =>
+    statusLabel(course) === 'Published' ? 'success' : 'secondary'
 
   const openCourse = (courseId: string) => {
     if (getCourseDetailPath) {
@@ -73,8 +88,8 @@ export function OrgCourseTable({
               >
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium text-sm leading-snug text-foreground">{course.title}</p>
-                  <Badge variant={course.is_published ? 'success' : 'secondary'}>
-                    {course.is_published ? 'Published' : 'Draft'}
+                  <Badge variant={statusVariant(course)}>
+                    {statusLabel(course)}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -114,8 +129,8 @@ export function OrgCourseTable({
                 >
                   <td className="py-3 pr-4 font-medium text-primary">{course.title}</td>
                   <td className="py-3 pr-4">
-                    <Badge variant={course.is_published ? 'success' : 'secondary'}>
-                      {course.is_published ? 'Published' : 'Draft'}
+                    <Badge variant={statusVariant(course)}>
+                      {statusLabel(course)}
                     </Badge>
                   </td>
                   <td className="py-3 pr-4 text-foreground">{course.estimated_minutes} min</td>

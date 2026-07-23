@@ -95,6 +95,7 @@ export function ManagerReportsPage() {
 
       <OrgCourseTable
         orgSlug="team"
+        orgId={organization?.id}
         courses={courses}
         assignments={assignments}
         getCourseDetailPath={(courseId) => `/manager/reports/courses/${courseId}`}

@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Award, BookOpen, Building2, TrendingUp, Users, AlertTriangle } from 'lucide-react'
 import { CompletionChart } from '@/components/dashboard/CompletionChart'
 import { ExportPdfButton } from '@/components/dashboard/ExportPdfButton'
@@ -12,15 +14,52 @@ import { Button } from '@/components/ui/button'
 import { useOrgDashboard } from '@/hooks/useAdminDashboard'
 import { useOrgRoute } from '@/hooks/useOrgRoute'
 import { adminOrgDashboardPath, adminOrganizationPath } from '@/lib/org-slugs'
-import { buildStaffSummaryRows, computeAvgScore, computeTrainingNeeds } from '@/lib/dashboard-stats'
+import {
+  buildStaffSummaryRows,
+  computeAvgScore,
+  computeTrainingNeeds,
+  filterResolvedTrainingNeeds,
+} from '@/lib/dashboard-stats'
+import {
+  fetchResolvedTrainingNeedModuleIds,
+  resolveTrainingNeed,
+} from '@/services/training-needs.service'
+import { useAuthStore } from '@/store/authStore'
 
 export function HospitalDashboardPage() {
   const { orgId, orgSlug } = useOrgRoute()
-  const { org, users, courses, assignments, moduleAttempts, metrics, isLoading } = useOrgDashboard(orgId)
+  const adminId = useAuthStore((s) => s.userId)
+  const queryClient = useQueryClient()
+  const [resolvingModuleId, setResolvingModuleId] = useState<string | null>(null)
+  const { org, users, courses, assignments, publications, moduleAttempts, metrics, isLoading } = useOrgDashboard(orgId)
+
+  const { data: resolvedModuleIds = [] } = useQuery({
+    queryKey: ['resolved-training-needs', orgId],
+    queryFn: () => fetchResolvedTrainingNeedModuleIds(orgId!),
+    enabled: Boolean(orgId),
+  })
 
   const staffSummaries = buildStaffSummaryRows(users, assignments)
-  const trainingNeeds = computeTrainingNeeds(moduleAttempts, courses)
+  const trainingNeeds = useMemo(
+    () =>
+      filterResolvedTrainingNeeds(
+        computeTrainingNeeds(moduleAttempts, courses),
+        resolvedModuleIds
+      ),
+    [moduleAttempts, courses, resolvedModuleIds]
+  )
   const avgScore = computeAvgScore(assignments)
+
+  const handleResolveTrainingNeed = async (moduleId: string) => {
+    if (!orgId || !adminId) return
+    setResolvingModuleId(moduleId)
+    try {
+      await resolveTrainingNeed(orgId, moduleId, adminId)
+      await queryClient.invalidateQueries({ queryKey: ['resolved-training-needs', orgId] })
+    } finally {
+      setResolvingModuleId(null)
+    }
+  }
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading organization dashboard…</p>
@@ -68,7 +107,8 @@ export function HospitalDashboardPage() {
                 staffSummaries,
                 courses,
                 assignments,
-                trainingNeeds
+                trainingNeeds,
+                { orgId, publications }
               )
             }
           />
@@ -96,7 +136,12 @@ export function HospitalDashboardPage() {
           remaining={100 - metrics.completionRate}
           title="Organization completion"
         />
-        <OrgTrainingNeedsPanel needs={trainingNeeds} orgSlug={orgSlug!} />
+        <OrgTrainingNeedsPanel
+          needs={trainingNeeds}
+          orgSlug={orgSlug!}
+          onResolve={handleResolveTrainingNeed}
+          resolvingModuleId={resolvingModuleId}
+        />
       </div>
 
       <OrgStaffDirectory
@@ -107,6 +152,8 @@ export function HospitalDashboardPage() {
 
       <OrgCourseTable
         orgSlug={orgSlug!}
+        orgId={orgId}
+        publications={publications}
         courses={courses}
         assignments={assignments}
         courseDetailBasePath="/admin/dashboard"

@@ -136,4 +136,12 @@ BEGIN
   VALUES (v_org_id, true, true, true, true, 'both')
   ON CONFLICT (org_id) DO UPDATE SET
     updated_at = now();
+
+  INSERT INTO organization_memberships (user_id, org_id, role, is_active)
+  VALUES (v_user_id, v_org_id, 'org_admin', true)
+  ON CONFLICT (user_id, org_id) DO UPDATE SET
+    role = 'org_admin',
+    is_active = true,
+    updated_at = now();
+
 END $$;
