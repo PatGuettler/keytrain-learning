@@ -8,6 +8,12 @@ import {
   extractModuleIssues,
   type StaffTrainingRow,
 } from '@/lib/dashboard-stats'
+import {
+  effectiveProgressLabel,
+  effectiveProgressVariant,
+  resolveEffectiveProgressStatus,
+  type CatalogAvailability,
+} from '@/lib/learner-course-availability'
 import { formatDate } from '@/lib/utils'
 import type { CourseUnlockRequest, ModuleAttempt, TrainingSession } from '@/types/course.types'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
@@ -51,6 +57,7 @@ export function StaffCourseDetailSections({
   unlockRequests = [],
   userId,
   readOnly = false,
+  catalogAvailability,
 }: {
   courseRow: StaffTrainingRow
   sessions: TrainingSession[]
@@ -58,7 +65,12 @@ export function StaffCourseDetailSections({
   unlockRequests?: CourseUnlockRequest[]
   userId: string
   readOnly?: boolean
+  /** When set, status reflects closed catalog (Incomplete / Expired). */
+  catalogAvailability?: CatalogAvailability
 }) {
+  const effectiveProgress = catalogAvailability
+    ? resolveEffectiveProgressStatus(catalogAvailability, courseRow.status)
+    : courseRow.status
   const courseSessions = sessions.filter((s) => s.course_id === courseRow.courseId)
   const courseModuleAttempts = moduleAttempts.filter(
     (a) => a.module?.course_id === courseRow.courseId
@@ -80,7 +92,17 @@ export function StaffCourseDetailSections({
             <div>
               <dt className="text-muted-foreground">Status</dt>
               <dd className="mt-1">
-                <Badge variant={statusVariant[courseRow.status]}>{STATUS_LABELS[courseRow.status]}</Badge>
+                <Badge
+                  variant={
+                    catalogAvailability
+                      ? effectiveProgressVariant(effectiveProgress)
+                      : statusVariant[courseRow.status]
+                  }
+                >
+                  {catalogAvailability
+                    ? effectiveProgressLabel(effectiveProgress)
+                    : STATUS_LABELS[courseRow.status]}
+                </Badge>
               </dd>
             </div>
             <div>

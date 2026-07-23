@@ -4,6 +4,7 @@ import { useCourses } from '@/hooks/useCourses'
 import { useAssignments } from '@/hooks/useAssignments'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { ChevronRight } from 'lucide-react'
 import { fetchSessions } from '@/services/sessions.service'
 import { fetchOrganizationById } from '@/services/organizations.service'
 import { fetchAssignmentHistory } from '@/services/assignments.service'
@@ -17,19 +18,11 @@ import { buildGradeHistoryRows } from '@/lib/dashboard-stats'
 import { activePublicationCourseIds } from '@/lib/course-publications'
 import {
   learnerAvailabilityVariant,
+  effectiveProgressVariant,
   type AvailabilityFilter,
 } from '@/lib/learner-course-availability'
 import { formatAttemptsLabel } from '@/lib/course-attempts'
-import { STATUS_LABELS } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
-import { ChevronRight } from 'lucide-react'
-
-const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
-  pending: 'secondary',
-  in_progress: 'default',
-  completed: 'success',
-  overdue: 'destructive',
-}
 
 export function CourseListPage({ basePath }: { basePath: string }) {
   const profile = useAuthStore((s) => s.profile)
@@ -173,7 +166,9 @@ export function CourseListPage({ basePath }: { basePath: string }) {
                           >
                             {row.availabilityLabel}
                           </Badge>
-                          <Badge variant={statusVariant[row.status]}>{STATUS_LABELS[row.status]}</Badge>
+                          <Badge variant={effectiveProgressVariant(row.effectiveProgress)}>
+                            {row.progressLabel}
+                          </Badge>
                         </div>
                       </div>
                       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />

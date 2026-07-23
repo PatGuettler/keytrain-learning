@@ -15,18 +15,11 @@ import { formatAttemptsLabel } from '@/lib/course-attempts'
 import { activePublicationCourseIds } from '@/lib/course-publications'
 import {
   learnerAvailabilityVariant,
+  effectiveProgressVariant,
   matchesAvailabilityFilter,
   type AvailabilityFilter,
 } from '@/lib/learner-course-availability'
-import { STATUS_LABELS } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
-
-const statusVariant: Record<string, 'default' | 'secondary' | 'success' | 'warning' | 'destructive'> = {
-  pending: 'secondary',
-  in_progress: 'default',
-  completed: 'success',
-  overdue: 'destructive',
-}
 
 export function TrainingGradeHistoryPage({ basePath }: { basePath: string }) {
   const navigate = useNavigate()
@@ -148,7 +141,9 @@ export function TrainingGradeHistoryPage({ basePath }: { basePath: string }) {
                           >
                             {row.availabilityLabel}
                           </Badge>
-                          <Badge variant={statusVariant[row.status]}>{STATUS_LABELS[row.status]}</Badge>
+                          <Badge variant={effectiveProgressVariant(row.effectiveProgress)}>
+                            {row.progressLabel}
+                          </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Score {row.score != null ? `${row.score}%` : '—'} ·{' '}
@@ -187,8 +182,8 @@ export function TrainingGradeHistoryPage({ basePath }: { basePath: string }) {
                         >
                           <td className="py-3 pr-4 font-medium text-primary">{row.courseTitle}</td>
                           <td className="py-3 pr-4">
-                            <Badge variant={statusVariant[row.status]}>
-                              {STATUS_LABELS[row.status]}
+                            <Badge variant={effectiveProgressVariant(row.effectiveProgress)}>
+                              {row.progressLabel}
                             </Badge>
                           </td>
                           <td className="py-3 pr-4">

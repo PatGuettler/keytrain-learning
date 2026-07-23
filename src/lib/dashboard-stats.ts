@@ -4,6 +4,8 @@ import { isPublicationActive } from '@/lib/course-publications'
 import {
   learnerAvailabilityLabel,
   resolveCatalogAvailability,
+  resolveEffectiveProgressStatus,
+  effectiveProgressLabel,
   type CatalogAvailability,
 } from '@/lib/learner-course-availability'
 
@@ -137,6 +139,8 @@ export interface GradeHistoryRow {
   courseTitle: string
   catalogAvailability: CatalogAvailability
   availabilityLabel: string
+  effectiveProgress: ReturnType<typeof resolveEffectiveProgressStatus>
+  progressLabel: string
   status: AssignmentStatus
   score: number | null
   attemptsUsed: number
@@ -153,12 +157,15 @@ export function buildGradeHistoryRows(
   return assignments
     .map((a) => {
       const catalogAvailability = resolveCatalogAvailability(a.course_id, activeCourseIds)
+      const effectiveProgress = resolveEffectiveProgressStatus(catalogAvailability, a.status)
       return {
         assignmentId: a.id,
         courseId: a.course_id,
         courseTitle: a.course?.title ?? 'Course',
         catalogAvailability,
         availabilityLabel: learnerAvailabilityLabel(catalogAvailability, a.status),
+        effectiveProgress,
+        progressLabel: effectiveProgressLabel(effectiveProgress),
         status: a.status,
         score: resolveAssignmentScore(a),
         attemptsUsed: resolveAttemptsUsed(a),

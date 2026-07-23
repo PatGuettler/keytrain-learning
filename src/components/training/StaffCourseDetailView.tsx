@@ -159,6 +159,7 @@ export function StaffCourseDetailView({
         unlockRequests={unlockRequests}
         userId={userId}
         readOnly={readOnly}
+        catalogAvailability={catalogAvailability}
       />
     </div>
   )
