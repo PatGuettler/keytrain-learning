@@ -100,17 +100,12 @@ export function canAccessPhishing(
   return license?.phishing_enabled === true
 }
 
-/** True when any org the user administers has the multi-org creation add-on. */
-export async function orgAdminCanCreateOrganizations(orgIds: string[]): Promise<boolean> {
-  if (orgIds.length === 0) return false
+/** True when the signed-in org admin has the multi-org creation add-on. */
+export async function orgAdminCanCreateOrganizations(): Promise<boolean> {
   const supabase = requireSupabase()
-  const { data, error } = await supabase
-    .from('org_license')
-    .select('org_id, can_create_orgs')
-    .in('org_id', orgIds)
-
+  const { data, error } = await supabase.rpc('org_admin_can_create_organizations')
   if (error) throw new Error(error.message)
-  return (data ?? []).some((row) => row.can_create_orgs === true)
+  return data === true
 }
 
 export async function fetchOrgLicense(orgId: string): Promise<OrgLicense | null> {

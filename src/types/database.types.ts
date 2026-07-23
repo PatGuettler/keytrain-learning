@@ -955,6 +955,10 @@ export interface Database {
         Args: { p_org_id: string }
         Returns: Database['public']['Tables']['profiles']['Row']
       }
+      org_admin_can_create_organizations: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
       create_organization_as_org_admin: {
         Args: { p_name: string }
         Returns: Database['public']['Tables']['organizations']['Row']

@@ -44,9 +44,9 @@ export function OrgAdminOrganizationsPage() {
     .sort((a, b) => a.name.localeCompare(b.name))
 
   const { data: canCreateOrgs = false } = useQuery({
-    queryKey: ['org-admin-can-create-orgs', adminOrgs.map((o) => o.id).join(',')],
-    queryFn: () => orgAdminCanCreateOrganizations(adminOrgs.map((o) => o.id)),
-    enabled: adminOrgs.length > 0,
+    queryKey: ['org-admin-can-create-orgs', userId],
+    queryFn: orgAdminCanCreateOrganizations,
+    enabled: Boolean(userId && profile?.role === 'org_admin'),
   })
 
   const createMutation = useMutation({
@@ -127,8 +127,16 @@ export function OrgAdminOrganizationsPage() {
         <p className="text-sm text-muted-foreground">Loading organizations…</p>
       ) : adminOrgs.length === 0 ? (
         <Card className="bg-muted/50">
-          <CardContent className="p-6 text-sm text-muted-foreground">
-            No organizations yet. Create an organization to start inviting users.
+          <CardContent className="p-6 space-y-3 text-sm text-muted-foreground">
+            <p>No organizations on your account yet.</p>
+            {canCreateOrgs ? (
+              <Button type="button" size="sm" onClick={() => setShowForm(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                Create organization
+              </Button>
+            ) : (
+              <p>Contact KeyTrain to enable organization creation for your account.</p>
+            )}
           </CardContent>
         </Card>
       ) : (

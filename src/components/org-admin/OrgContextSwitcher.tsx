@@ -17,6 +17,7 @@ import {
   fetchMyOrgMemberships,
   switchActiveOrganization,
 } from '@/services/org-memberships.service'
+import { orgAdminCanCreateOrganizations } from '@/services/org-license.service'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
 
@@ -33,6 +34,12 @@ export function OrgContextSwitcher({ className }: { className?: string }) {
   const { data: memberships = [], isLoading } = useQuery({
     queryKey: ['my-org-memberships', userId],
     queryFn: fetchMyOrgMemberships,
+    enabled: Boolean(userId && profile?.role === 'org_admin'),
+  })
+
+  const { data: canCreateOrgs = false } = useQuery({
+    queryKey: ['org-admin-can-create-orgs', userId],
+    queryFn: orgAdminCanCreateOrganizations,
     enabled: Boolean(userId && profile?.role === 'org_admin'),
   })
 
@@ -107,19 +114,23 @@ export function OrgContextSwitcher({ className }: { className?: string }) {
             ))
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault()
-              setCreateOpen((v) => !v)
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create organization
-          </DropdownMenuItem>
+          {canCreateOrgs ? (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault()
+                setCreateOpen((v) => !v)
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create organization
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem disabled>Create organization (contact KeyTrain)</DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {createOpen ? (
+      {createOpen && canCreateOrgs ? (
         <form
           className="mt-1 space-y-2 rounded-md border bg-card p-3 shadow-sm"
           onSubmit={(e) => {
