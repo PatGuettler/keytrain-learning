@@ -26,6 +26,8 @@ import { AdminStaffTrainingPage } from '@/pages/admin/AdminStaffTrainingPage'
 import { AdminStaffCourseDetailPage } from '@/pages/admin/AdminStaffCourseDetailPage'
 import { EmployeeListPage } from '@/pages/manager/EmployeeListPage'
 import { ManagerEmployeeDetailPage } from '@/pages/manager/ManagerEmployeeDetailPage'
+import { ManagerStaffTrainingPage } from '@/pages/manager/ManagerStaffTrainingPage'
+import { ManagerStaffCourseDetailPage } from '@/pages/manager/ManagerStaffCourseDetailPage'
 import { ManagerReportsPage } from '@/pages/manager/ManagerReportsPage'
 import { ManagerCourseReportPage } from '@/pages/manager/ManagerCourseReportPage'
 import { MyTrainingPage } from '@/pages/employee/MyTrainingPage'
@@ -345,6 +347,18 @@ export default function App() {
             <Route
               path="/manager/reports/courses/:courseId"
               element={<RoleGuard roles={['manager']}><ManagerCourseReportPage /></RoleGuard>}
+            />
+            <Route
+              path="/manager/reports/courses/:courseId/staff/:userId"
+              element={<RoleGuard roles={['manager']}><ManagerStaffCourseDetailPage /></RoleGuard>}
+            />
+            <Route
+              path="/manager/reports/staff/:userId"
+              element={<RoleGuard roles={['manager']}><ManagerStaffTrainingPage /></RoleGuard>}
+            />
+            <Route
+              path="/manager/reports/staff/:userId/courses/:courseId"
+              element={<RoleGuard roles={['manager']}><ManagerStaffCourseDetailPage /></RoleGuard>}
             />
             <Route path="/manager/assignments" element={<Navigate to="/manager/training" replace />} />
             <Route

@@ -89,7 +89,7 @@ export function ManagerReportsPage() {
 
       <OrgStaffDirectory
         rows={staffSummaries}
-        getStaffDetailPath={(userId) => `/manager/team/${userId}`}
+        getStaffDetailPath={(userId) => `/manager/reports/staff/${userId}`}
         title="Team training summary"
       />
 

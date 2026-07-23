@@ -76,7 +76,9 @@ export function ManagerCourseReportPage() {
 
       <OrgCourseStaffDirectory
         rows={staffRows}
-        getStaffCoursePath={(userId) => `/manager/team/${userId}`}
+        getStaffCoursePath={(userId) =>
+          `/manager/reports/courses/${courseId}/staff/${userId}`
+        }
       />
     </div>
   )
